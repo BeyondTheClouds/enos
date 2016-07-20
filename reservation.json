@@ -1,13 +1,20 @@
 {
 	"resources": {
-		"paravance": 2
+		"griffon": 6
 	},
 
 	"subnets": {
-		"rennes": "slash_22=1"
+		"nancy": "slash_22=1"
 	},
 
-	"walltime": "08:00:00",
+	"openstack": {
+		"controllers": 2,
+		"compute":		2,
+		"network":		1,
+		"storage":		1
+	},
+
+	"walltime": "05:00:00",
 
 	"job_name": "discovery-kolla"
 }

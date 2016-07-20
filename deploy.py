@@ -23,6 +23,14 @@ class KollaG5k(G5kEngine):
 
 	def run(self):
 		self.load()
+
+		# Check we wil have enough nodes
+		n_resources = reduce(lambda a, b: int(a) + int(b), self.config['resources'].values())
+		n_services = reduce(lambda a, b: int(a) + int(b), self.config['openstack'].values())
+		if n_resources < n_services:
+			logger.error("The requested OpenStack services require %d nodes, but your job specification only includes %d" % (n_services, n_resources))
+			sys.exit(32)
+
 		self.get_job()
 		
 		# Deploy all the nodes
@@ -45,6 +53,38 @@ class KollaG5k(G5kEngine):
 
 		logger.info("Nodes deployed: %s" % deployed)
 
+		# Distributed the nodes into roles
+		roles = {}
+		i = 0
+		for role in self.config['openstack']:
+			n = int(self.config['openstack'][role])
+			roles[role] = map(lambda n: n.address, self.nodes[i:i+n])
+			i += n
+
+		logger.info("Roles: %s" % roles)
+
+		# Generate Kolla's configuration file
+		subnet = self.get_subnets().values()[0]
+		ip = subnet[0][0][0]
+		vars = {
+			'kolla_internal_vip_address': ip
+		}
+		globals_path = os.path.join(self.result_dir, 'globals.yml')
+		render_template('templates/globals.yml.jinja2', vars, globals_path)
+
+		# Generate the inventory file
+		vars = {
+			'control_nodes':		'\n'.join(roles['controllers']),
+			'network_nodes':		'\n'.join(roles['network']),
+			'compute_nodes':		'\n'.join(roles['compute']),
+			'storage_nodes':		'\n'.join(roles['storage'])
+		}
+		inventory_path = os.path.join(self.result_dir, 'mulitnode')
+		render_template('templates/multinode.jinja2', vars, inventory_path)
+		logger.info("Inventory file written to " + inventory_path)
+
+		sys.exit(0)
+
 		commands = [
 			# Installing the requirements
 			('apt-get update', 'Updating packages...'),
@@ -65,29 +105,17 @@ class KollaG5k(G5kEngine):
 		for c in commands:
 			exec_command_on_nodes(self.nodes, c[0], c[1])
 
-		# Get an IP from the subnet
-		subnet = self.get_subnets().values()[0]
-		ip = subnet[0][0][0]
-
-		logger.info("Using IP %s for internal vip address" % ip)
-
-		# Generate Kolla's configuration file
-		vars = {
-			'kolla_internal_vip_address': ip,
-		}
-
-		globals_yml_path = os.path.join(self.result_dir, 'globals.yml')
-		render_template('templates/globals.yml.jinja2', vars, globals_yml_path)
 
 		# Sending globals.yml
 		logger.info("Sending /etc/kolla/globals.yml to all nodes...")
 		EX.Put(self.nodes, [globals_yml_path], '/etc/kolla/').run()
 
 		# Deploying Kolla
-		exec_command_on_nodes(self.nodes, 'kolla-genpwd', 'Generating Kolla passwords...')
-		exec_command_on_nodes(self.nodes, 'kolla-ansible precheck', 'Running prechecks...')
-		exec_command_on_nodes(self.nodes, 'kolla-ansible pull -vvv', 'Pulling containers...')
-		exec_command_on_nodes(self.nodes, 'kolla-ansible deploy -vvv', 'Deploying kolla-ansible...')
+		master = self.nodes[1]
+		exec_command_on_nodes(master, 'kolla-genpwd', 'Generating Kolla passwords...')
+		exec_command_on_nodes(master, 'kolla-ansible precheck', 'Running prechecks...')
+		exec_command_on_nodes(master, 'kolla-ansible pull -vvv', 'Pulling containers...')
+		exec_command_on_nodes(master, 'kolla-ansible deploy -vvv', 'Deploying kolla-ansible...')
 
 
 def exec_command_on_nodes(nodes, cmd, label, conn_params=None):
