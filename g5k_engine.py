@@ -75,7 +75,12 @@ class G5kEngine(Engine):
 
 		self.nodes = EX5.get_oargrid_job_nodes(self.gridjob)
 		self.oarjobs = EX5.get_oargrid_job_oar_jobs(self.gridjob)
-		self.start_date = EX5.get_oargrid_job_info(self.gridjob)['start_date']
+
+		self.start_date = None
+		job_info = EX5.get_oargrid_job_info(self.gridjob)
+		if 'start_date' in job_info:
+			self.start_date = ['start_date']
+
 		self.subnets = None
 
 		return self.gridjob
