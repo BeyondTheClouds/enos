@@ -1,8 +1,20 @@
+{% macro write_nodes(nodes) -%}
+{% for node in nodes -%}
+{{node.address}} ansible_ssh_user=root
+{% endfor %}
+{%- endmacro -%}
+# These groups were added by Discovery
+[hosts]
+{{ write_nodes(all_nodes) }}
+
+[docker-registry]
+{{ write_nodes(docker_registry_nodes) }}
+
 # These initial groups are the only groups required to be modified. The
 # additional groups are for more control of the environment.
 [control]
 # These hostname must be resolvable from your deployment host
-{{control_nodes}}
+{{ write_nodes(control_nodes) }}
 
 # The above can also be specified as follows:
 #control[01:03]     ansible_ssh_user=kolla
@@ -10,17 +22,17 @@
 # The network nodes are where your l3-agent and loadbalancers will run
 # This can be the same as a host in the control group
 [network]
-{{network_nodes}}
+{{ write_nodes(network_nodes) }}
 
 [compute]
-{{compute_nodes}}
+{{ write_nodes(compute_nodes) }}
 
 # When compute nodes and control nodes use different interfaces,
 # you can specify "api_interface" and another interfaces like below:
 #compute01 neutron_external_interface=eth0 api_interface=em1 storage_interface=em1 tunnel_interface=em1
 
 [storage]
-{{storage_nodes}}
+{{ write_nodes(storage_nodes) }}
 
 
 # You can explicitly specify which hosts run each project by updating the

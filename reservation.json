@@ -1,10 +1,10 @@
 {
 	"resources": {
-		"griffon": 6
+		"paravance": 6
 	},
 
 	"subnets": {
-		"nancy": "slash_22=1"
+		"rennes": "slash_22=1"
 	},
 
 	"openstack": {

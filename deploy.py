@@ -2,6 +2,10 @@
 
 import sys, os
 
+from ansible.inventory import Inventory
+import ansible.callbacks
+import ansible.playbook
+
 import jinja2
 import execo as EX
 import execo_g5k as EX5
@@ -58,65 +62,95 @@ class KollaG5k(G5kEngine):
 		i = 0
 		for role in self.config['openstack']:
 			n = int(self.config['openstack'][role])
-			roles[role] = map(lambda n: n.address, self.nodes[i:i+n])
+			roles[role] = self.nodes[i:i+n]
 			i += n
 
 		logger.info("Roles: %s" % roles)
 
-		# Generate Kolla's configuration file
+		master = self.nodes[0]
+		logger.info("The master is " + master.address)
+
+		# Get an IP for 'Kolla internal vip address'
 		subnet = self.get_subnets().values()[0]
 		ip = subnet[0][0][0]
-		vars = {
-			'kolla_internal_vip_address': ip
-		}
-		globals_path = os.path.join(self.result_dir, 'globals.yml')
-		render_template('templates/globals.yml.jinja2', vars, globals_path)
+
+		# These will be the Docker registries
+		registry_nodes = [master]
 
 		# Generate the inventory file
 		vars = {
-			'control_nodes':		'\n'.join(roles['controllers']),
-			'network_nodes':		'\n'.join(roles['network']),
-			'compute_nodes':		'\n'.join(roles['compute']),
-			'storage_nodes':		'\n'.join(roles['storage'])
+			'all_nodes':					self.nodes,
+			'docker_registry_nodes':	registry_nodes,
+			'control_nodes':				roles['controllers'],
+			'network_nodes':				roles['network'],
+			'compute_nodes':				roles['compute'],
+			'storage_nodes':				roles['storage'],
+			'kolla_internal_vip_address': ip
 		}
-		inventory_path = os.path.join(self.result_dir, 'mulitnode')
+		inventory_path = os.path.join(self.result_dir, 'multinode')
 		render_template('templates/multinode.jinja2', vars, inventory_path)
 		logger.info("Inventory file written to " + inventory_path)
 
-		sys.exit(0)
+		# Install python on the nodes
+		exec_command_on_nodes(self.nodes, 'apt-get update && apt-get -y install python',
+			'Installing Python on all the nodes...')
 
-		commands = [
-			# Installing the requirements
-			('apt-get update', 'Updating packages...'),
-			('apt-get -y install python-pip git libffi-dev libssl-dev python-dev curl', 'Installing Kolla dependencies...'),
-			('DEBIAN_FRONTEND=noninteractive apt-get -y install linux-image-generic-lts-wily', 'Installing new Linux Kernel...'),
-			# Installing Docker
-			('docker -v || curl -sSL https://get.docker.io | bash', 'Installing Docker...'),
-			('mkdir -p /etc/systemd/system/docker.service.d', 'Setting up Docker...'),
-			# Installing Kolla
-			('mount --make-shared /run', 'Mounting /run...'),
-			('pip install -U docker-py', 'Installing docker-py...'),
-			('pip install -U ansible==1.9.4', 'Installing ansible...'),
-			('test -d kolla || git clone -b stable/mitaka https://git.openstack.org/openstack/kolla', 'Cloning Kolla...'),
-			('pip install kolla/', 'Installing Kolla...'),
-			('cp -r kolla/etc/kolla /etc/', 'Copying into /etc/kolla...')
+		# Run the Ansible playbooks
+		playbooks = [
+			'ansible/setup_hosts.yml'
+			#'ansible/docker_registry.yml'
 		]
 
-		for c in commands:
-			exec_command_on_nodes(self.nodes, c[0], c[1])
+		extra_vars = {
+			'kolla_internal_vip_address': ip
+		}
 
+		run_ansible(playbooks, inventory_path, extra_vars)
 
-		# Sending globals.yml
-		logger.info("Sending /etc/kolla/globals.yml to all nodes...")
-		EX.Put(self.nodes, [globals_yml_path], '/etc/kolla/').run()
+		sys.exit(0)
 
 		# Deploying Kolla
-		master = self.nodes[1]
 		exec_command_on_nodes(master, 'kolla-genpwd', 'Generating Kolla passwords...')
 		exec_command_on_nodes(master, 'kolla-ansible precheck', 'Running prechecks...')
 		exec_command_on_nodes(master, 'kolla-ansible pull -vvv', 'Pulling containers...')
 		exec_command_on_nodes(master, 'kolla-ansible deploy -vvv', 'Deploying kolla-ansible...')
 
+def run_ansible(playbooks, inventory_path, extra_vars):
+		inventory = Inventory(inventory_path)
+
+		for path in playbooks:
+			logger.info("Running playbook: " + path)
+			stats = ansible.callbacks.AggregateStats()
+			playbook_cb = ansible.callbacks.PlaybookCallbacks(verbose=1)
+
+			pb = ansible.playbook.PlayBook(
+				playbook=path,
+				inventory=inventory,
+				extra_vars=extra_vars,
+				stats=stats,
+				callbacks=playbook_cb,
+				runner_callbacks=ansible.callbacks.PlaybookRunnerCallbacks(stats, verbose=1),
+				forks=10
+			)
+
+			pb.run()
+			
+			hosts = pb.stats.processed.keys()
+			failed_hosts = []
+			unreachable_hosts = []
+			
+			for h in hosts:
+				t = pb.stats.summarize(h)
+				if t['failures'] > 0:
+					failed_hosts.append(h)
+					
+				if t['unreachable'] > 0:
+					unreachable_hosts.append(h)
+				
+			if len(failed_hosts) > 0:
+				logger.error("Failed hosts: %s" % failed_hosts)
+			if len(unreachable_hosts) > 0:
+				logger.error("Unreachable hosts: %s" % unreachable_hosts)
 
 def exec_command_on_nodes(nodes, cmd, label, conn_params=None):
 	"""Execute a command on a node (id or hostname) or on a set of nodes"""

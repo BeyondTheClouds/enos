@@ -1,0 +1,12 @@
+---
+- name: Setup a Docker registry
+  hosts: docker-registry
+  sudo: True
+  tasks:
+    - name: Starting the Docker registry
+      command: docker run -d -p 4000:5000 --restart=always --name registry registry:2
+
+    - name: Allow Docker to run with an insecure registry
+      lineinfile: >
+        dest=/etc/default/docker
+        line='DOCKER_OPTS="--insecure-registry 192.168.1.100:4000"'
