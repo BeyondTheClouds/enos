@@ -29,6 +29,10 @@ Then, to run launch the deployment, run:
 ./deploy.py -f reservation.json
 ```
 
+On the first run, the script will create an OAR Grid job with a specific name. On subsequent
+runs, it will find the running job and use it. The job name can be specified in the JSON
+configuration file.
+
 Run `./deploy.py -h` for a full list of command-line arguments.
 
 After the execution, a new directory will contain some generated files.
