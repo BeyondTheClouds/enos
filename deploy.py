@@ -97,12 +97,16 @@ class KollaG5k(G5kEngine):
 
 		# Run the Ansible playbooks
 		playbooks = [
-			'ansible/setup_hosts.yml'
-			#'ansible/docker_registry.yml'
+			'ansible/setup_hosts.yml',
+			'ansible/docker_registry.yml'
 		]
 
 		extra_vars = {
-			'kolla_internal_vip_address': ip
+			'kolla_internal_vip_address': ip,
+			'kolla_external_vip_address':	'',
+			'network_interface':				'',
+			'node_config_directory':		'',
+			'enable_ceph':						''
 		}
 
 		run_ansible(playbooks, inventory_path, extra_vars)

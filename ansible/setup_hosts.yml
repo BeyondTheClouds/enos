@@ -17,10 +17,10 @@
         - libssl-dev
         - python-dev
         - curl
-        - linux-image-generic-lts-wily
+        #- linux-image-generic-lts-wily
 
     - name: Install Docker
-      shell: which docker || curl -sSL https://get.docker.io | bash
+      shell: which docker > /dev/null || curl -sSL https://get.docker.io | bash
 
     - name: Configure Docker
       command: mkdir -p /etc/systemd/system/docker.service.d
@@ -32,13 +32,18 @@
       pip: name=docker-py
 
     - name: Clone Kolla
-      git: repo=https://git.openstack.org/openstack/kolla version=stable/mitaka
+      git: >
+        repo=https://git.openstack.org/openstack/kolla
+        version=stable/mitaka
+        dest=kolla
 
     - name: Install Kolla
-      pip: name=kolla/
+      command: python setup.py install
+      args: 
+        chdir: kolla/
 
     - name: Copy kolla/etc/kolla to /etc/kolla
       command: cp -r kolla/etc/kolla /etc/
   
     - name: Send /etc/kolla/globals.yml
-      template: src=templates/globals.yml.jinja2 dest=/etc/kolla/globals.yml
+      template: src=../templates/globals.yml.jinja2 dest=/etc/kolla/globals.yml
