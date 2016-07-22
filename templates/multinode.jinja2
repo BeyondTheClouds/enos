@@ -7,6 +7,9 @@
 [hosts]
 {{ write_nodes(all_nodes) }}
 
+[master]
+{{ master.address }}
+
 [docker-registry]
 {{ write_nodes(docker_registry_nodes) }}
 

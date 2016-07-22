@@ -8,6 +8,7 @@ import ansible.playbook
 
 import jinja2
 import execo as EX
+from execo.log import style
 import execo_g5k as EX5
 from execo_engine import logger
 from g5k_engine import G5kEngine
@@ -68,11 +69,20 @@ class KollaG5k(G5kEngine):
 		logger.info("Roles: %s" % roles)
 
 		master = self.nodes[0]
-		logger.info("The master is " + master.address)
+		logger.info("The master is " + style.host(master.address))
 
 		# Get an IP for 'Kolla internal vip address'
 		subnet = self.get_subnets().values()[0]
-		ip = subnet[0][0][0]
+		master_ip = subnet[0][0][0]
+		internal_vip_address = subnet[0][1][0]
+
+		logger.info("internal vip address: %s, master_ip: %s" % (internal_vip_address, master_ip))
+
+		# Change the ip address of the master on eth0
+		exec_command_on_nodes([master], 'ip addr flush dev eth1', 'Flushing eth1')
+		exec_command_on_nodes([master],
+			"ip address add %s/22 brd + dev eth1" % master_ip, 
+			"Setting master ip address to %s" % style.emph(master_ip))
 
 		# These will be the Docker registries
 		registry_nodes = [master]
@@ -81,19 +91,32 @@ class KollaG5k(G5kEngine):
 		vars = {
 			'all_nodes':					self.nodes,
 			'docker_registry_nodes':	registry_nodes,
+			'master':						master,
 			'control_nodes':				roles['controllers'],
 			'network_nodes':				roles['network'],
 			'compute_nodes':				roles['compute'],
 			'storage_nodes':				roles['storage'],
-			'kolla_internal_vip_address': ip
+			'kolla_internal_vip_address': internal_vip_address
 		}
 		inventory_path = os.path.join(self.result_dir, 'multinode')
 		render_template('templates/multinode.jinja2', vars, inventory_path)
 		logger.info("Inventory file written to " + inventory_path)
+		logger.info("Uploading inventory file to the master...")
+		EX.Put([master], [inventory_path]).run()
 
 		# Install python on the nodes
 		exec_command_on_nodes(self.nodes, 'apt-get update && apt-get -y install python',
 			'Installing Python on all the nodes...')
+
+		# Setting up SSH keys so the master can connect to all the nodes
+		ssh_key_path = os.path.join(self.result_dir, 'id_rsa')
+
+		logger.info("Genating a new SSH key into " + style.emph(ssh_key_path))
+		os.system("ssh-keygen -t rsa -f %s -N '' > /dev/null" % ssh_key_path)
+
+		logger.info("Uploading the SSH key to all the nodes...")
+		EX.Put(self.nodes, [ssh_key_path, ssh_key_path + '.pub'], remote_location='.ssh').run()
+		exec_command_on_nodes(self.nodes, 'cat .ssh/id_rsa.pub >> .ssh/authorized_keys', 'Allowing all the nodes to connect with the SSH key...')
 
 		# Run the Ansible playbooks
 		playbooks = [
@@ -102,7 +125,7 @@ class KollaG5k(G5kEngine):
 		]
 
 		extra_vars = {
-			'kolla_internal_vip_address': ip,
+			'kolla_internal_vip_address': internal_vip_address,
 			'kolla_external_vip_address':	'',
 			'network_interface':				'',
 			'node_config_directory':		'',
@@ -123,7 +146,7 @@ def run_ansible(playbooks, inventory_path, extra_vars):
 		inventory = Inventory(inventory_path)
 
 		for path in playbooks:
-			logger.info("Running playbook: " + path)
+			logger.info("Running playbook: " + style.emph(path))
 			stats = ansible.callbacks.AggregateStats()
 			playbook_cb = ansible.callbacks.PlaybookCallbacks(verbose=1)
 

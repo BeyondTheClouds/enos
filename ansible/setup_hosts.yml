@@ -1,15 +1,12 @@
 ---
-- name: Installing Docker (with a registry) and Kolla on the node
+- name: Installing Docker and Kolla on all the nodes
   hosts: hosts
   sudo: True
   vars:
     kolla_internal_vip_address: ${kolla_internal_vip_address}
   tasks:
-    - name: Update cache
-      apt: update_cache=yes
-
     - name: Installing dependencies
-      apt: name={{ item }} state=present
+      apt: name={{ item }} state=present update_cache=yes
       with_items:
         - python-pip
         - git
@@ -17,7 +14,6 @@
         - libssl-dev
         - python-dev
         - curl
-        #- linux-image-generic-lts-wily
 
     - name: Install Docker
       shell: which docker > /dev/null || curl -sSL https://get.docker.io | bash
@@ -47,3 +43,10 @@
   
     - name: Send /etc/kolla/globals.yml
       template: src=../templates/globals.yml.jinja2 dest=/etc/kolla/globals.yml
+
+- name: Install Ansible on the master
+  hosts: master
+  sudo: True
+  tasks:
+    - name: Installing Ansible
+      apt: name=ansible state=present
