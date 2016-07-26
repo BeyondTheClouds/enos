@@ -134,7 +134,7 @@ class KollaG5k(G5kEngine):
 		if not run_kolla(inventory_path, self.result_dir, 'deploy'):
 			sys.exit(11)
 
-		if not run_kolla(inventory_path, self.result_dir, 'postdeploy'):
+		if not run_kolla(inventory_path, self.result_dir, 'post-deploy'):
 			sys.exit(12)
 	
 
