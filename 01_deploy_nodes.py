@@ -13,6 +13,8 @@ import execo_g5k as EX5
 from execo_engine import logger
 from g5k_engine import G5kEngine
 
+SYMLINK_NAME = 'current'
+
 DEFAULT_CONN_PARAMS = {'user': 'root'}
 ENV_NAME = 'ubuntu-x64-1404'
 KOLLA_REPO = 'https://git.openstack.org/openstack/kolla'
@@ -91,7 +93,7 @@ class KollaG5k(G5kEngine):
 
 		inventory_path = os.path.join(self.result_dir, 'multinode')
 		render_template('templates/multinode.jinja2', vars, inventory_path)
-		logger.info("Inventory file written to " + inventory_path)
+		logger.info("Inventory file written to " + style.emph(inventory_path))
 
 		# Install python on the nodes
 		exec_command_on_nodes(self.nodes, 'apt-get update && apt-get -y install python',
@@ -112,13 +114,10 @@ class KollaG5k(G5kEngine):
 		os.system("cp templates/passwords.yml %s/" % self.result_dir)
 
 		# Run the Ansible playbooks
-		playbooks = [
-			'ansible/setup_hosts.yml',
-			'ansible/docker_registry.yml'
-		]
+		playbooks = ['site.yml']
 
 		extra_vars = {
-			'kolla_internal_vip_address': internal_vip_address,
+			'registry_hostname':				registry_nodes[0].address,
 			'kolla_external_vip_address':	'',
 			'network_interface':				'',
 			'node_config_directory':		'',
@@ -127,16 +126,15 @@ class KollaG5k(G5kEngine):
 
 		run_ansible(playbooks, inventory_path, extra_vars)
 
-		# Deploying OpenStack with Kolla
-		if not run_kolla(inventory_path, self.result_dir, 'pull'):
-			sys.exit(10)
-	
-		if not run_kolla(inventory_path, self.result_dir, 'deploy'):
-			sys.exit(11)
+		link = os.path.abspath(SYMLINK_NAME)
+		if os.path.exists(link):
+			os.remove(link)
+		os.symlink(self.result_dir, link)
 
-		if not run_kolla(inventory_path, self.result_dir, 'post-deploy'):
-			sys.exit(12)
-	
+		logger.info("Symlinked %s to %s" % (self.result_dir, link))
+		logger.info("You can now run ./02_deploy_kolla.sh or connect to horizon on %s:80" % roles['controllers'][0].address)
+
+		sys.exit(0)
 
 
 def run_kolla(inventory_path, config_path, action):

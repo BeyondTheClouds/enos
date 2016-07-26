@@ -1,0 +1,14 @@
+---
+- name: Pre-configure all the nodes
+  hosts: hosts
+  sudo: True
+  
+  roles:
+    - common
+
+- name: Configure the Docker registry
+  hosts: docker-registry
+  sudo: True
+
+  roles:
+    - registry

@@ -1,0 +1,12 @@
+---
+  - name: Starting the Docker registry
+    docker:
+      image: registry:2
+      name: registry
+      state: started
+      restart_policy: always
+      detach: true
+      ports:
+        - '4000:5000'
+      volumes:
+        - /config-registry.yml:/etc/docker/registry/config.yml
