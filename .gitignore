@@ -1,3 +1,7 @@
+kolla/
+current/
+KollaG5k_*/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
