@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-import sys, os
+import sys, os, subprocess
 
 from ansible.inventory import Inventory
 import ansible.callbacks
@@ -15,6 +15,8 @@ from g5k_engine import G5kEngine
 
 DEFAULT_CONN_PARAMS = {'user': 'root'}
 ENV_NAME = 'ubuntu-x64-1404'
+KOLLA_REPO = 'https://git.openstack.org/openstack/kolla'
+KOLLA_BRANCH = 'stable/mitaka'
 
 class KollaG5k(G5kEngine):
 	def __init__(self):
@@ -68,55 +70,46 @@ class KollaG5k(G5kEngine):
 
 		logger.info("Roles: %s" % roles)
 
-		master = self.nodes[0]
-		logger.info("The master is " + style.host(master.address))
-
 		# Get an IP for 'Kolla internal vip address'
 		subnet = self.get_subnets().values()[0]
-		master_ip = subnet[0][0][0]
-		internal_vip_address = subnet[0][1][0]
-
-		logger.info("internal vip address: %s, master_ip: %s" % (internal_vip_address, master_ip))
-
-		# Change the ip address of the master on eth0
-		exec_command_on_nodes([master], 'ip addr flush dev eth1', 'Flushing eth1')
-		exec_command_on_nodes([master],
-			"ip address add %s/22 brd + dev eth1" % master_ip, 
-			"Setting master ip address to %s" % style.emph(master_ip))
+		available_ips = map(lambda ip: ip[0], subnet[0])
+		internal_vip_address = available_ips.pop(0)
 
 		# These will be the Docker registries
-		registry_nodes = [master]
+		registry_nodes = [self.nodes[0]]
 
 		# Generate the inventory file
 		vars = {
 			'all_nodes':					self.nodes,
 			'docker_registry_nodes':	registry_nodes,
-			'master':						master,
 			'control_nodes':				roles['controllers'],
 			'network_nodes':				roles['network'],
 			'compute_nodes':				roles['compute'],
 			'storage_nodes':				roles['storage'],
 			'kolla_internal_vip_address': internal_vip_address
 		}
+
 		inventory_path = os.path.join(self.result_dir, 'multinode')
 		render_template('templates/multinode.jinja2', vars, inventory_path)
 		logger.info("Inventory file written to " + inventory_path)
-		logger.info("Uploading inventory file to the master...")
-		EX.Put([master], [inventory_path]).run()
 
 		# Install python on the nodes
 		exec_command_on_nodes(self.nodes, 'apt-get update && apt-get -y install python',
 			'Installing Python on all the nodes...')
 
-		# Setting up SSH keys so the master can connect to all the nodes
-		ssh_key_path = os.path.join(self.result_dir, 'id_rsa')
+		# Clone or pull Kolla
+		if os.path.isdir('kolla'):
+			logger.info("Pulling Kolla...")
+			os.system("cd kolla; git pull > /dev/null")
+		else:
+			logger.info("Cloning Kolla...")
+			os.system("git clone %s -b %s > /dev/null" % (KOLLA_REPO, KOLLA_BRANCH))
 
-		logger.info("Genating a new SSH key into " + style.emph(ssh_key_path))
-		os.system("ssh-keygen -t rsa -f %s -N '' > /dev/null" % ssh_key_path)
-
-		logger.info("Uploading the SSH key to all the nodes...")
-		EX.Put(self.nodes, [ssh_key_path, ssh_key_path + '.pub'], remote_location='.ssh').run()
-		exec_command_on_nodes(self.nodes, 'cat .ssh/id_rsa.pub >> .ssh/authorized_keys', 'Allowing all the nodes to connect with the SSH key...')
+		# Generating Ansible globals.yml
+		globals_path = os.path.join(self.result_dir, 'globals.yml')
+		render_template('templates/globals.yml.jinja2', vars, globals_path)
+		logger.info("Wrote " + style.emph(globals_path))
+		os.system("cp templates/passwords.yml %s/" % self.result_dir)
 
 		# Run the Ansible playbooks
 		playbooks = [
@@ -134,13 +127,36 @@ class KollaG5k(G5kEngine):
 
 		run_ansible(playbooks, inventory_path, extra_vars)
 
-		sys.exit(0)
+		# Deploying OpenStack with Kolla
+		if not run_kolla(inventory_path, self.result_dir, 'pull'):
+			sys.exit(10)
+	
+		if not run_kolla(inventory_path, self.result_dir, 'deploy'):
+			sys.exit(11)
 
-		# Deploying Kolla
-		exec_command_on_nodes(master, 'kolla-genpwd', 'Generating Kolla passwords...')
-		exec_command_on_nodes(master, 'kolla-ansible precheck', 'Running prechecks...')
-		exec_command_on_nodes(master, 'kolla-ansible pull -vvv', 'Pulling containers...')
-		exec_command_on_nodes(master, 'kolla-ansible deploy -vvv', 'Deploying kolla-ansible...')
+		if not run_kolla(inventory_path, self.result_dir, 'postdeploy'):
+			sys.exit(12)
+	
+
+
+def run_kolla(inventory_path, config_path, action):
+	kolla_args = ['-i', inventory_path, '--configdir', config_path]
+	cmd = ['kolla/tools/kolla-ansible', action] + kolla_args
+
+	logger.info("Running %s" % style.emph(' '.join(cmd)))
+
+	try:
+		p = subprocess.Popen(cmd)
+		p.communicate()
+		p.wait()
+
+		if p.returncode != 0:
+			logger.error("kolla-ansible returned a non-zero code: %d" % p.returncode)
+	except KeyboardInterrupt:
+		sys.exit(1)
+
+	return p.returncode == 0
+
 
 def run_ansible(playbooks, inventory_path, extra_vars):
 		inventory = Inventory(inventory_path)

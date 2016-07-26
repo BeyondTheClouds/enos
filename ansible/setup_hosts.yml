@@ -1,5 +1,5 @@
 ---
-- name: Installing Docker and Kolla on all the nodes
+- name: Installing Docker on all the nodes
   hosts: hosts
   sudo: True
   vars:
@@ -27,26 +27,26 @@
     - name: Install docker-py
       pip: name=docker-py
 
-    - name: Clone Kolla
-      git: >
-        repo=https://git.openstack.org/openstack/kolla
-        version=stable/mitaka
-        dest=kolla
-
-    - name: Install Kolla
-      command: python setup.py install
-      args: 
-        chdir: kolla/
-
-    - name: Copy kolla/etc/kolla to /etc/kolla
-      command: cp -r kolla/etc/kolla /etc/
-  
-    - name: Send /etc/kolla/globals.yml
-      template: src=../templates/globals.yml.jinja2 dest=/etc/kolla/globals.yml
-
-- name: Install Ansible on the master
-  hosts: master
-  sudo: True
-  tasks:
-    - name: Installing Ansible
-      apt: name=ansible state=present
+#    - name: Clone Kolla
+#      git: >
+#        repo=https://git.openstack.org/openstack/kolla
+#        version=stable/mitaka
+#        dest=kolla
+#
+#    - name: Install Kolla
+#      command: python setup.py install
+#      args: 
+#        chdir: kolla/
+#
+#    - name: Copy kolla/etc/kolla to /etc/kolla
+#      command: cp -r kolla/etc/kolla /etc/
+#  
+#    - name: Send /etc/kolla/globals.yml
+#      template: src=../templates/globals.yml.jinja2 dest=/etc/kolla/globals.yml
+#
+#- name: Install Ansible on the master
+#  hosts: master
+#  sudo: True
+#  tasks:
+#    - name: Installing Ansible
+#      apt: name=ansible state=present
