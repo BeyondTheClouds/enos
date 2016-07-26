@@ -16,6 +16,8 @@ funk = EX5.planning
 # Default values
 DEFAULT_JOB_NAME = 'FUNK'
 
+MAX_ATTEMPTS = 5
+
 class G5kEngine(Engine):
 	def __init__(self):
 		"""Initialize the Execo Engine"""
@@ -73,7 +75,12 @@ class G5kEngine(Engine):
 		else:
 			logger.info("Using running oargrid job %s" % style.emph(self.gridjob))
 
-		self.nodes = EX5.get_oargrid_job_nodes(self.gridjob)
+		attempts = 0
+		self.nodes = None
+		while self.nodes is None and attempts < MAX_ATTEMPTS:
+			self.nodes = EX5.get_oargrid_job_nodes(self.gridjob)
+			attempts += 1
+
 		self.oarjobs = EX5.get_oargrid_job_oar_jobs(self.gridjob)
 
 		self.start_date = None
