@@ -122,10 +122,6 @@ class KollaG5k(G5kEngine):
 
 		extra_vars = {
 			'registry_hostname':				registry_nodes[0].address,
-			'kolla_external_vip_address':	'',
-			'network_interface':				'',
-			'node_config_directory':		'',
-			'enable_ceph':						''
 		}
 
 		run_ansible(playbooks, inventory_path, extra_vars)
@@ -164,7 +160,7 @@ def run_ansible(playbooks, inventory_path, extra_vars):
 		inventory = Inventory(inventory_path)
 
 		for path in playbooks:
-			logger.info("Running playbook: " + style.emph(path))
+			logger.info("Running playbook %s with vars:\n%s" % (style.emph(path), extra_vars))
 			stats = ansible.callbacks.AggregateStats()
 			playbook_cb = ansible.callbacks.PlaybookCallbacks(verbose=1)
 
