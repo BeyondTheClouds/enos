@@ -2,3 +2,6 @@ Jinja2
 execo
 # This is required for kolla:stable/mitaka
 ansible < 2
+
+python-openstackclient
+python-neutronclient
