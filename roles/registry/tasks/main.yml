@@ -8,5 +8,5 @@
       detach: true
       ports:
         - '4000:5000'
-      volumes:
-        - /config-registry.yml:/etc/docker/registry/config.yml
+      env:
+        REGISTRY_PROXY_REMOTEURL=https://registry-1.docker.io

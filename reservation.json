@@ -14,7 +14,7 @@
 		"storage":		1
 	},
 
-	"walltime": "07:30:00",
+	"walltime": "03:00:00",
 
 	"job_name": "discovery-kolla"
 }
