@@ -126,6 +126,13 @@ class KollaG5k(G5kEngine):
 
 		run_ansible(playbooks, inventory_path, extra_vars)
 
+                admin_openrc_path = os.path.join(self.result_dir, 'admin-openrc')
+                logger.info("Generating the admin-openrc file to %s" % (admin_openrc_path))
+                admin_openrc_vars = {
+                        'keystone_address': internal_vip_address
+                }
+                render_template('templates/admin-openrc.jinja2', admin_openrc_vars, admin_openrc_path)
+
 		link = os.path.abspath(SYMLINK_NAME)
 		if os.path.exists(link):
 			os.remove(link)

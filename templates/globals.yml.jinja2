@@ -57,7 +57,7 @@ docker_registry: "{{ docker_registry_node.address }}:4000"
 # This interface is what all your api services will be bound to by default.
 # Additionally, all vxlan/tunnel and storage network traffic will go over this
 # interface by default. This interface must contain an IPv4 address.
-network_interface: "eth0"
+network_interface: "eth1"
 
 # These can be adjusted for even more customization. The default is the same as
 # the 'network_interface'. These interfaces must contain an IPv4 address.
@@ -71,7 +71,7 @@ network_interface: "eth0"
 # though an IP address can exist on this interface, it will be unusable in most
 # configurations. It is recommended this interface not be configured with any IP
 # addresses for that reason.
-neutron_external_interface: "eth1"
+neutron_external_interface: "eth2"
 
 # Valid options are [ openvswitch, linuxbridge ]
 #neutron_plugin_agent: "openvswitch"
