@@ -10,14 +10,16 @@ Kolla-G5K-Multinode requires pip, [Execo](http://execo.gforge.inria.fr/) and [Ji
 ## Installation
 To install Kolla-G5K-Multinode, first clone the repository:
 ```
-https://github.com/asimonet/kolla_g5k_multinodes
+https://github.com/BeyondTheClouds/kolla-g5k
 ```
 
 Then install the dependencies:
 ```
-cd kolla_g5k_multinodes
-pip install -r requirements.txt
+cd kolla_g5k
+pip install -r requirements.txt --user
 ```
+
+Make sure to add ansible binaries to your PATH.
 
 ## Running
 To deploy a full stack, you need to provide a configuration file in the JSON format. This

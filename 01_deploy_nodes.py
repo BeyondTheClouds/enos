@@ -78,17 +78,17 @@ class KollaG5k(G5kEngine):
 		internal_vip_address = available_ips.pop(0)
 
 		# These will be the Docker registries
-		registry_nodes = [self.nodes[0]]
+		registry_node = self.nodes[0]
 
 		# Generate the inventory file
 		vars = {
-			'all_nodes':					self.nodes,
-			'docker_registry_nodes':	registry_nodes,
-			'control_nodes':				roles['controllers'],
-			'network_nodes':				roles['network'],
-			'compute_nodes':				roles['compute'],
-			'storage_nodes':				roles['storage'],
-			'kolla_internal_vip_address': internal_vip_address
+			'all_nodes'                  : self.nodes,
+			'docker_registry_node'       : registry_node,
+			'control_nodes'              : roles['controllers'],
+			'network_nodes'              : roles['network'],
+			'compute_nodes'              : roles['compute'],
+			'storage_nodes'              : roles['storage'],
+			'kolla_internal_vip_address' : internal_vip_address
 		}
 
 		inventory_path = os.path.join(self.result_dir, 'multinode')
@@ -121,10 +121,17 @@ class KollaG5k(G5kEngine):
 		playbooks = ['site.yml']
 
 		extra_vars = {
-			'registry_hostname':				registry_nodes[0].address,
+			'registry_hostname': registry_node.address,
 		}
 
 		run_ansible(playbooks, inventory_path, extra_vars)
+
+                admin_openrc_path = os.path.join(self.result_dir, 'admin-openrc')
+                logger.info("Generating the admin-openrc file to %s" % (admin_openrc_path))
+                admin_openrc_vars = {
+                        'keystone_address': internal_vip_address
+                }
+                render_template('templates/admin-openrc.jinja2', admin_openrc_vars, admin_openrc_path)
 
 		link = os.path.abspath(SYMLINK_NAME)
 		if os.path.exists(link):
