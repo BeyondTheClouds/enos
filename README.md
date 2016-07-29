@@ -39,6 +39,12 @@ Run `./deploy.py -h` for a full list of command-line arguments.
 
 After the execution, a new directory will contain some generated files.
 
+
+## Limitations
+
+* The network interfaces are specified in the ``` templates/globals.yml.jinja2``` file.
+ The mapping isn't generated (yet), an may vary according to the nodes of your reservation.
+
 ## License
 This code is released under the GNU General Public License. It is also worth
 mentionning here that it is being developped by [me](http://www.anthony-simonet.fr)
