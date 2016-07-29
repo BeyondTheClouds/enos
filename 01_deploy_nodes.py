@@ -134,7 +134,7 @@ class KollaG5k(G5kEngine):
                 render_template('templates/admin-openrc.jinja2', admin_openrc_vars, admin_openrc_path)
 
 		link = os.path.abspath(SYMLINK_NAME)
-		if os.path.exists(link):
+		if os.path.lexists(link):
 			os.remove(link)
 		os.symlink(self.result_dir, link)
 
