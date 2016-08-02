@@ -42,8 +42,11 @@ After the execution, a new directory will contain some generated files.
 
 ## Limitations
 
-* The network interfaces are specified in the ``` templates/globals.yml.jinja2``` file.
- The mapping isn't generated (yet), an may vary according to the nodes of your reservation.
+* The network interfaces inserted in the `templates/globals.yml.jinja2` file are taken from the
+Grid'5000 API for the first cluster specified in the YAML file.
+This may be a problem if you reservation contains multiple Grid'5000 clusters composed of nodes that
+have different network device names, e.g. paravance that has `eth0` andl `eth1`, and parapluie that
+has devices `eth1` and `eth2`.
 
 ## License
 This code is released under the GNU General Public License. It is also worth

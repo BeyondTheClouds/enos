@@ -101,11 +101,11 @@ class G5kEngine(Engine):
     def deploy(self):
         # Deploy all the nodes
         logger.info("Deploying %s on %d nodes %s" %
-            (ENV_NAME, len(self.nodes), '(forced)' if self.options.force_deploy else ''))
+            (self.config['env_name'], len(self.nodes), '(forced)' if self.options.force_deploy else ''))
         deployed, undeployed = EX5.deploy(
         EX5.Deployment(
             self.nodes,
-            env_name=ENV_NAME
+            env_name=self.config['env_name']
         ), check_deployed_command=not self.options.force_deploy)
 
         # Check the deployment
@@ -190,6 +190,12 @@ class G5kEngine(Engine):
                 self.subnets[site] = EX5.get_oar_job_subnets(job, site)
         
         return self.subnets
+    
+    def get_cluster_nics(self, cluster):
+        site = EX5.get_cluster_site(cluster)
+        nics = EX5.get_resource_attributes('/sites/%s/clusters/%s/nodes' % (site, cluster))['items'][0]['network_adapters']
+        
+        return [nic['device'] for nic in nics if nic['mountable']]
     
     def delete_job(self):
         EX5.oardel([self.gridjob])

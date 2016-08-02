@@ -39,6 +39,7 @@ class KollaG5k(G5kEngine):
 
         self.get_job()
         
+        
         deployed, undeployed = self.deploy()
         if len(undeployed) > 0:
             sys.exit(31)
@@ -58,18 +59,25 @@ class KollaG5k(G5kEngine):
         available_ips = map(lambda ip: ip[0], subnet[0])
         internal_vip_address = available_ips.pop(0)
 
+        # Get the NIC devices of the reserved cluster
+        # TODO this only works if all nodes are on the same cluster, or if nodes from
+        # different clusters have the same devices
+        interfaces = self.get_cluster_nics(self.config['resources'].keys()[0])
+        
         # These will be the Docker registries
         registry_node = self.nodes[0]
 
         # Generate the inventory file
         vars = {
-            'all_nodes'          : self.nodes,
+            'all_nodes'                  : self.nodes,
             'docker_registry_node'       : registry_node,
-            'control_nodes'          : roles['controllers'],
-            'network_nodes'          : roles['network'],
-            'compute_nodes'          : roles['compute'],
-            'storage_nodes'          : roles['storage'],
-            'kolla_internal_vip_address' : internal_vip_address
+            'control_nodes'              : roles['controllers'],
+            'network_nodes'              : roles['network'],
+            'compute_nodes'              : roles['compute'],
+            'storage_nodes'              : roles['storage'],
+            'kolla_internal_vip_address' : internal_vip_address,
+            'network_interface'          : interfaces[0],
+            'neutron_external_interface' : interfaces[1]
         }
 
         inventory_path = os.path.join(self.result_dir, 'multinode')
@@ -121,7 +129,7 @@ class KollaG5k(G5kEngine):
         os.symlink(self.result_dir, link)
 
         logger.info("Symlinked %s to %s" % (self.result_dir, link))
-        logger.info("You can now run ./02_deploy_kolla.sh or connect to horizon on %s:80" % roles['controllers'][0].address)
+        logger.info("You can now run ./02_deploy_kolla.sh")
 
         sys.exit(0)
 
