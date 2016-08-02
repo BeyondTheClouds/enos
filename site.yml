@@ -5,6 +5,7 @@
   
   roles:
     - common
+    - cadvisor
 
 - name: Configure the Docker registry
   hosts: docker-registry
@@ -12,3 +13,6 @@
 
   roles:
     - registry
+    - influx
+    - grafana
+
