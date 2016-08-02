@@ -22,17 +22,17 @@ pip install -r requirements.txt --user
 Make sure to add ansible binaries to your PATH.
 
 ## Running
-To deploy a full stack, you need to provide a configuration file in the JSON format. This
+To deploy a full stack, you need to provide a configuration file in the YAML format. This
 file must include information about the Grid'5000 job and how the OpenStack services must
-be deployed. `reservation.json` is given as an example.
+be deployed. `reservation.yml` is given as an example.
 
 Then, to run launch the deployment, run:
 ```
-./deploy.py -f reservation.json
+./deploy.py -f reservation.yml
 ```
 
 On the first run, the script will create an OAR Grid job with a specific name. On subsequent
-runs, it will find the running job and use it. The job name can be specified in the JSON
+runs, it will find the running job and use it. The job name can be specified in the YAML
 configuration file.
 
 Run `./deploy.py -h` for a full list of command-line arguments.
