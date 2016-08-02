@@ -40,7 +40,10 @@ class KollaG5k(G5kEngine):
         self.get_job()
         
         deployed, undeployed = self.deploy()
-               # Distributed the nodes into roles
+        if len(undeployed) > 0:
+            sys.exit(31)
+        
+       # Distributed the nodes into roles
         roles = {}
         i = 0
         for role in self.config['openstack']:

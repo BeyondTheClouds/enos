@@ -15,10 +15,10 @@ funk = EX5.planning
 
 # Default values
 DEFAULT_JOB_NAME = 'FUNK'
+DEFAULT_ENV_NAME = 'ubuntu-x64-1404'
 
 MAX_ATTEMPTS = 5
 
-ENV_NAME = 'ubuntu-x64-1404'
 
 DEFAULT_CONN_PARAMS = {'user': 'root'}
 class G5kEngine(Engine):
@@ -49,6 +49,9 @@ class G5kEngine(Engine):
 
         if 'job_name' not in self.config:
             self.config['job_name'] = DEFAULT_JOB_NAME
+        
+        if 'env_name' not in self.config:
+            self.config['env_name'] = DEFAULT_ENV_NAME
 
         if 'reservation' not in self.config:
             self.config['reservation'] = None
@@ -110,7 +113,7 @@ class G5kEngine(Engine):
             logger.error("%d nodes where not deployed correctly:" % len(undeployed))
             for n in undeployed:
                 logger.error(style.emph(undeployed.address))
-            sys.exit(31)
+        
         logger.info("Nodes deployed: %s" % deployed)
 
         return deployed, undeployed
