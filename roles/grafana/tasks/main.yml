@@ -14,3 +14,17 @@
       INFLUXDB_USER: root
       INFLUXDB_PASS: root
 
+- name: Install httplib2
+  pip: name=httplib2
+     
+- name: Add the influx data source
+  uri:
+    url: http://{{ influx_ip }}:3000/api/datasources
+    user: admin
+    password: admin
+    force_basic_auth: yes
+    body_format: json
+    HEADER_Content-Type: application/json
+    method: POST
+    status_code: 200,500
+    body: "{ \"name\": \"influx\", \"type\": \"influxdb\", \"url\": \"http://{{ influx_ip }}\", \"access\": \"proxy\", \"database\": \"cadvisor\", \"user\": \"root\", \"password\": \"root\\" }"

@@ -14,5 +14,5 @@
   roles:
     - registry
     - influx
-    - grafana
+    - { role: grafana, tags: ['grafana'] }
 
