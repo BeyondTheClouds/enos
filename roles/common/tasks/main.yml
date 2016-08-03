@@ -11,6 +11,7 @@
     - python-pip
     - docker-engine
     - python-dev
+    - curl
 
 - name: Allow Docker to use an insecure registry
   lineinfile: dest=/etc/default/docker line="DOCKER_OPTS='--insecure-registry {{ registry_hostname }}:4000'"

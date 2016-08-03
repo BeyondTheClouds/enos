@@ -66,6 +66,7 @@ class KollaG5k(G5kEngine):
         
         # These will be the Docker registries
         registry_node = self.nodes[0]
+        influx_node = registry_node
 
         # Generate the inventory file
         vars = {
@@ -97,6 +98,7 @@ class KollaG5k(G5kEngine):
 
         extra_vars = {
             'registry_hostname': registry_node.address,
+            'influx_ip': influx_node.address
         }
 
         run_ansible(playbooks, inventory_path, extra_vars)

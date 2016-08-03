@@ -1,0 +1,16 @@
+---
+- name: Start the graphana container
+  docker:
+    detach: True
+    image: "grafana/grafana:3.1.0"
+    name: "grafana"
+    ports: 
+      - "3000:3000"
+    state: started
+    env: 
+      INFLUXDB_HOST: "{{ influx_ip }}"
+      INFLUXDB_PORT: 8086
+      INFLUXDB_NAME: cadvisor
+      INFLUXDB_USER: root
+      INFLUXDB_PASS: root
+
