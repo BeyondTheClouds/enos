@@ -14,17 +14,26 @@
       INFLUXDB_USER: root
       INFLUXDB_PASS: root
 
-- name: Install httplib2
-  pip: name=httplib2
-     
+- name: Waiting for the grafana service to become available
+  wait_for: 
+    host: "{{ influx_ip }}"
+    port: 3000
+    state: started
+    delay: 2
+    timeout: 20
+
 - name: Add the influx data source
   uri:
-    url: http://{{ influx_ip }}:3000/api/datasources
+    url: "http://{{ influx_ip }}:3000/api/datasources"
     user: admin
     password: admin
     force_basic_auth: yes
     body_format: json
     HEADER_Content-Type: application/json
     method: POST
-    status_code: 200,500
-    body: "{ \"name\": \"influx\", \"type\": \"influxdb\", \"url\": \"http://{{ influx_ip }}\", \"access\": \"proxy\", \"database\": \"cadvisor\", \"user\": \"root\", \"password\": \"root\\" }"
+    # we workaround this issue : 
+    # https://github.com/ansible/ansible-modules-core/issues/265
+    # by adding an empty space at the beginning of the json ...
+    body: " { \"name\": \"influx\", \"type\": \"influxdb\", \"url\": \"http://{{ influx_ip }}:8086\", \"access\": \"proxy\", \"database\": \"cadvisor\", \"user\": \"root\", \"password\": \"root\", \"isDefault\": true }"
+    return_content: yes
+    status: 200

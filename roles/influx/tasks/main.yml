@@ -13,6 +13,14 @@
       - "8099
       "
 
+- name: Waiting for the influx service to become available
+  wait_for: 
+    host: "{{ influx_ip }}"
+    port: 8086
+    state: started
+    delay: 2
+    timeout: 20
+
 - name: Create the cadvisor database
   shell: "curl -s -G http://{{ influx_ip }}:8086/query --data-urlencode 'q=CREATE DATABASE cadvisor'"
   register: result
