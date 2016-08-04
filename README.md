@@ -1,4 +1,4 @@
-# Kolla-G5K-Multinode
+# Kolla-G5K
 ## Synopsis
 This script deploys an OpenStack on Grid'5000 using [Kolla](https://wiki.openstack.org/wiki/Kolla),
 isolating some services on different nodes. Everything must be configured in a single JSON file
@@ -8,6 +8,7 @@ and then the deployment can be run in one command.
 Kolla-G5K-Multinode requires pip, [Execo](http://execo.gforge.inria.fr/) and [Jinja](http://jinja.pocoo.org/).
 
 ## Installation
+
 To install Kolla-G5K-Multinode, first clone the repository:
 ```
 https://github.com/BeyondTheClouds/kolla-g5k
@@ -21,11 +22,22 @@ pip install -r requirements.txt --user
 
 Make sure to add ansible binaries to your PATH.
 
-## Running
+## Configuration
 To deploy a full stack, you need to provide a configuration file in the YAML format. This
 file must include information about the Grid'5000 job and how the OpenStack services must
 be deployed. `reservation.yml` is given as an example.
 
+You also need to provide credentials to a Ceph cluster for the Docker registry. Just place you
+`.ceph` directory in `roles/registry/files/`:
+```
+$ ls -l ~/.ceph
+total 8
+-rw-r--r-- 1 you users 68 Aug  3 14:58 ceph.client.discovery.keyring
+-rw-r--r-- 1 you users 91 Aug  3 14:59 config
+$ cp -r ~/.ceph roles/registry/files/
+```
+
+## Running
 Then, to run launch the deployment, run:
 ```
 ./deploy.py -f reservation.yml
@@ -38,7 +50,6 @@ configuration file.
 Run `./deploy.py -h` for a full list of command-line arguments.
 
 After the execution, a new directory will contain some generated files.
-
 
 ## Limitations
 

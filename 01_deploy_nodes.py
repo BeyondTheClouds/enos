@@ -37,6 +37,11 @@ class KollaG5k(G5kEngine):
             logger.error("The requested OpenStack services require %d nodes, but your job specification only includes %d" % (n_services, n_resources))
             sys.exit(32)
 
+        # Let's fail now if there is no ceph configuration
+        if not os.path.isdir('roles/registry/files/.ceph'):
+            logger.error("You must place your Ceph configuration in 'roles/registry/files/.ceph'. Please see README.md'")
+            sys.exit(33)
+            
         self.get_job()
         
         
