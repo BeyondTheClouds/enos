@@ -1,0 +1,35 @@
+---
+- name: Install Ceph
+  apt: name={{ item }} state=present
+  with_items:
+    - ceph
+    - ceph-common
+      
+- name: Copy Ceph configuration
+  copy: src=ceph.conf dest=/etc/ceph/ceph.conf
+
+- name: Copy Ceph Keyring
+  copy: src={{ registry.ceph_keyring }} dest=/etc/ceph/
+
+- name: Add rbd kernel module
+  modprobe: name=rbd state=present
+
+- name: Checking rbd maps
+  shell: "rbd --id {{ registry.ceph_id }} showmapped --format json"
+  register: rbd_maps
+
+# don't add a new mapping if there's already one
+# TODO: be more precise: 
+# check if the rbd is already in the mapped rbd
+- name: Add rbd mapping
+  command: "rbd --id {{ registry.ceph_id }} map {{ registry.ceph_rbd }}"
+  when: rbd_maps.stdout == "{}"
+
+- name: Create the registry directory
+  file: 
+    path: /mnt/registry
+    state: directory  
+
+- name: Mount the Ceph device
+  mount: name=/mnt/registry src=/dev/rbd1 state=mounted fstype=auto
+

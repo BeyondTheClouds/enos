@@ -1,36 +1,18 @@
 ---
-  - name: Install Ceph
-    apt: name={{ item }} state=present
-    with_items:
-      - ceph
-      - ceph-common
-        
-  - name: Copy Ceph configuration
-    copy: src=.ceph dest=/root/
-  
-  - name: Add rbd kernel module
-    modprobe: name=rbd state=present
-  
-  - name: Add rbd mapping
-    command: rbd --id discovery map discovery_kolla_registry/datas creates=/dev/rbd1
-    environment:
-      CEPH_CONF: .ceph/config
-      CEPH_ARGS: "--id discovery"
-        
-  - name: Mount the Ceph device
-    mount: name=/mnt/registry src=/dev/rbd1 state=mounted fstype=ext4
-      
-  - name: Starting the Docker registry
-    docker:
-      image: registry:2
-      name: registry
-      state: started
-      restart_policy: always
-      detach: true
-      ports:
-        - '4000:5000'
-      env:
-        REGISTRY_PROXY_REMOTEURL: https://registry-1.docker.io
-        REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /mnt/registry
-      volumes:
-        - '/mnt/registry:/mnt/registry'
+- include: ceph.yml
+  when: registry.ceph
+
+- name: Starting the Docker registry
+  docker:
+    image: registry:2
+    name: registry
+    state: started
+    restart_policy: always
+    detach: true
+    ports:
+      - '4000:5000'
+    env:
+      REGISTRY_PROXY_REMOTEURL: https://registry-1.docker.io
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /mnt/registry
+    volumes:
+      - '/mnt/registry:/mnt/registry'

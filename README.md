@@ -27,16 +27,6 @@ To deploy a full stack, you need to provide a configuration file in the YAML for
 file must include information about the Grid'5000 job and how the OpenStack services must
 be deployed. `reservation.yml` is given as an example.
 
-You also need to provide credentials to a Ceph cluster for the Docker registry. Just place you
-`.ceph` directory in `roles/registry/files/`:
-```
-$ ls -l ~/.ceph
-total 8
--rw-r--r-- 1 you users 68 Aug  3 14:58 ceph.client.discovery.keyring
--rw-r--r-- 1 you users 91 Aug  3 14:59 config
-$ cp -r ~/.ceph roles/registry/files/
-```
-
 ## Running
 Then, to run launch the deployment, run:
 ```
@@ -59,7 +49,23 @@ This may be a problem if you reservation contains multiple Grid'5000 clusters co
 have different network device names, e.g. paravance that has `eth0` andl `eth1`, and parapluie that
 has devices `eth1` and `eth2`.
 
+## Registry backends
+
+The deployment makes use of a private docker registry configured as a mirror of the official docker registry.
+There are two modes :
+
+* `ceph: false`. It will start a fresh registry that will cache the images for the duration of the experiment
+* `ceph: true`. It will use an existing Ceph rados block device of the Rennes cluster.
+The block device will be mounted and used as the registry storage. Setting this is usefull as the cache will persist different experiments.
+
+[The G5k ceph tutorial ](https://www.grid5000.fr/mediawiki/index.php/Ceph) will guid you on how to create your rados block device.
+
+
+
 ## License
-This code is released under the GNU General Public License. It is also worth
-mentionning here that it is being developped by [me](http://www.anthony-simonet.fr)
-as part of my work at [Inria](http://www.inria.fr).
+This code is released under the GNU General Public License.
+
+## Contributors
+
+* [Anthony Simonet](http://www.anthony-simonet.fr)
+* [Matthieu Simonin](http://people.irisa.fr/Matthieu.Simonin)
