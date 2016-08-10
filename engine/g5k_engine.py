@@ -16,6 +16,7 @@ funk = EX5.planning
 # Default values
 DEFAULT_JOB_NAME = 'FUNK'
 DEFAULT_ENV_NAME = 'ubuntu-x64-1404'
+DEFAULT_CONF_FILE = 'reservation.yaml'
 
 MAX_ATTEMPTS = 5
 
@@ -34,9 +35,9 @@ class G5kEngine(Engine):
         """Load the JSON configuration file"""
 
         if self.options.config_path is None:
-            logger.error("You must specify a configuration file with '-f'")
-            sys.exit(22)
-
+            self.options.config_path = DEFAULT_CONF_FILE
+        
+        logger.info("Configuration file loaded : %s" % self.options.config_path)
         # Load the configuration file
         try:
             with open(self.options.config_path) as config_file:
