@@ -23,15 +23,26 @@ pip install -r requirements.txt --user
 Make sure to add ansible binaries to your PATH.
 
 ## Configuration
+
 To deploy a full stack, you need to provide a configuration file in the YAML format. This
 file must include information about the Grid'5000 job and how the OpenStack services must
-be deployed. `reservation.yml` is given as an example.
+be deployed. `reservation.yaml.sample` is given as an example.
+
+```
+# copy the sample file
+cp reservation.yaml.sample reservation.yaml
+
+#edit it with your parameters
+<editor> reservation.yaml
+```
 
 ## Running
 Then, to run launch the deployment, run:
 ```
-./deploy.py -f reservation.yml
+./01_deploy_nodes.py
 ```
+
+> by default the script use the file `reservation.yaml` as configuration file
 
 On the first run, the script will create an OAR Grid job with a specific name. On subsequent
 runs, it will find the running job and use it. The job name can be specified in the YAML

@@ -1,6 +1,6 @@
 ---
 resources:
-  parapluie: 4
+  paravance: 4
 
 subnets:
   rennes: slash_22=1
@@ -11,7 +11,7 @@ openstack:
   network: 1
   storage: 1
 
-walltime: 03:00:00
+walltime: 04:00:00
 job_name: discovery-kolla
 
 # docker registry parameters

@@ -1,6 +1,7 @@
 kolla/
 current
 KollaG5k_*/
+reservation.yaml
 
 # Vim backup files
 .*.swp
