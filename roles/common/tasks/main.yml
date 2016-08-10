@@ -15,7 +15,7 @@
     - python-httplib2
 
 - name: Allow Docker to use an insecure registry
-  lineinfile: dest=/etc/default/docker line="DOCKER_OPTS='--insecure-registry {{ registry_hostname }}:4000'"
+  lineinfile: dest=/etc/default/docker line="DOCKER_OPTS='--insecure-registry {{ registry_hostname }}:4000 --registry-mirror=http://{{ registry_hostname }}:4000'"
 
 - name: Restart Docker
   service: name=docker state=restarted

@@ -12,7 +12,7 @@
   sudo: True
 
   roles:
-    - registry
+    - { role: registry, tags: ['registry'] }
     - influx
     - { role: grafana, tags: ['grafana'] }
 

@@ -100,6 +100,7 @@ class KollaG5k(G5kEngine):
             'registry_hostname': registry_node.address,
             'influx_ip': influx_node.address
         }
+        extra_vars.update(self.config)
 
         run_ansible(playbooks, inventory_path, extra_vars)
 

@@ -2,6 +2,9 @@ kolla/
 current
 KollaG5k_*/
 
+# Vim backup files
+.*.swp
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
