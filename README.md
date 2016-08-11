@@ -20,7 +20,7 @@ cd kolla_g5k
 pip install -r requirements.txt --user
 ```
 
-Make sure to add ansible binaries to your PATH.
+Make sure to add ansible binaries to your PATH (export PATH=YOUR_HOME/.local/bin:$PATH).
 
 ## Configuration
 
@@ -48,9 +48,11 @@ On the first run, the script will create an OAR Grid job with a specific name. O
 runs, it will find the running job and use it. The job name can be specified in the YAML
 configuration file.
 
-Run `./deploy.py -h` for a full list of command-line arguments.
+#Run `./deploy.py -h` for a full list of command-line arguments.
 
-After the execution, a new directory will contain some generated files.
+After the execution, the `./current` directory will contain some generated
+files (please note that `current` is a symbolic link toward the real directory
+associated to your deployment)  
 
 ## Limitations
 
