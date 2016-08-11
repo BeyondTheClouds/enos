@@ -127,10 +127,10 @@ class KollaG5k(G5kEngine):
         render_template('templates/admin-openrc.jinja2', admin_openrc_vars, admin_openrc_path)
 
         link = os.path.abspath(SYMLINK_NAME)
-	try:
-		os.remove(link)
-	except OSError:
-    		pass
+        try:
+            os.remove(link)
+        except OSError:
+            pass
         os.symlink(self.result_dir, link)
 
         logger.info("Symlinked %s to %s" % (self.result_dir, link))
