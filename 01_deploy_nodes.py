@@ -30,7 +30,7 @@ class KollaG5k(G5kEngine):
     def run(self):
         self.load()
 
-        # Check we wil have enough nodes
+        # Check we will have enough nodes
         n_resources = reduce(lambda a, b: int(a) + int(b), self.config['resources'].values())
         n_services = reduce(lambda a, b: int(a) + int(b), self.config['openstack'].values())
         if n_resources < n_services:
