@@ -133,6 +133,10 @@ class KollaG5k(G5kEngine):
             pass
         os.symlink(self.result_dir, link)
 
+        ## create ssh tunnels file
+        self.generate_sshtunnels()
+       ##
+
         logger.info("Symlinked %s to %s" % (self.result_dir, link))
         logger.info("You can now run ./02_deploy_kolla.sh")
 
