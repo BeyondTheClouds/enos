@@ -17,7 +17,7 @@ job_name: discovery-kolla
 # docker registry parameters
 registry:
   ceph: true 
-  ceph_keyring: /home/msimonin/.ceph/ceph.client.msimonin.keyring
-  ceph_id: msimonin
-  ceph_rbd: msimonin_registry0/datas
+  ceph_keyring: /home/discovery/.ceph/ceph.client.discovery.keyring
+  ceph_id: discovery
+  ceph_rbd: discovery_kolla_registry/datas
 
