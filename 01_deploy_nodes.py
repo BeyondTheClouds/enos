@@ -21,12 +21,6 @@ class KollaG5k(G5kEngine):
         """Just add a couple command line arguments"""
         super(KollaG5k, self).__init__()
 
-        self.options_parser.add_option("--force-deploy", dest="force_deploy",
-            help="Force deployment",
-            default=False,
-            action="store_true")
-
-
     def run(self):
         self.load()
 

@@ -45,6 +45,11 @@ class G5kEngine(Engine):
         self.options_parser.add_option("-f", dest="config_path",
             help="Path to the configuration file describing the Grid'5000 the deployment.")
 
+        self.options_parser.add_option("--force-deploy", dest="force_deploy",
+            help="Force deployment",
+            default=False,
+            action="store_true")
+
     def load(self):
         """Load the configuration file"""
         if self.options.config_path is None:
