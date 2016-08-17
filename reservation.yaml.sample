@@ -8,10 +8,10 @@ resources:
     compute: 1
     network: 1
     storage: 1
+    util: 1 # You should define at least one util node
 
 subnets:
   rennes: slash_22=1
-
 
 # docker registry parameters
 registry:

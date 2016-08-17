@@ -39,15 +39,12 @@ class KollaG5k(G5kEngine):
         # XXX: this only works if all nodes are on the same cluster,
         # or if nodes from different clusters have the same devices
         interfaces = self.get_cluster_nics(self.config['resources'].keys()[0])
-        
-        # These will be the Docker registries
-        registry_node = self.nodes[0]
-        influx_node = registry_node
 
         # Generate the inventory file
         vars = {
             'all_nodes'                  : self.nodes,
-            'docker_registry_node'       : registry_node,
+            # TODO: Handle the case of 0/many util.
+            'util_node'                  : roles['util'][0],
             'control_nodes'              : roles['controller'],
             'network_nodes'              : roles['network'],
             'compute_nodes'              : roles['compute'],
@@ -72,9 +69,10 @@ class KollaG5k(G5kEngine):
         # Run the Ansible playbooks
         playbooks = ['site.yml']
 
+        # TODO: Handle the case of 0/many util.
         extra_vars = {
-            'registry_hostname': registry_node.address,
-            'influx_ip': influx_node.address
+            'registry_hostname': roles['util'][0].address,
+            'influx_ip': roles['util'][0].address
         }
         extra_vars.update(self.config)
 
@@ -111,7 +109,6 @@ class KollaG5k(G5kEngine):
 
         ## create ssh tunnels file
         self.generate_sshtunnels(internal_vip_address)
-       ##
 
         logger.info("Symlinked %s to %s" % (self.result_dir, link))
         logger.info("You can now run ./02_deploy_kolla.sh")
@@ -120,41 +117,41 @@ class KollaG5k(G5kEngine):
 
 
 def run_ansible(playbooks, inventory_path, extra_vars):
-        inventory = Inventory(inventory_path)
+    inventory = Inventory(inventory_path)
 
-        for path in playbooks:
-            logger.info("Running playbook %s with vars:\n%s" % (style.emph(path), extra_vars))
-            stats = ansible.callbacks.AggregateStats()
-            playbook_cb = ansible.callbacks.PlaybookCallbacks(verbose=1)
+    for path in playbooks:
+        logger.info("Running playbook %s with vars:\n%s" % (style.emph(path), extra_vars))
+        stats = ansible.callbacks.AggregateStats()
+        playbook_cb = ansible.callbacks.PlaybookCallbacks(verbose=1)
 
-            pb = ansible.playbook.PlayBook(
-                playbook=path,
-                inventory=inventory,
-                extra_vars=extra_vars,
-                stats=stats,
-                callbacks=playbook_cb,
-                runner_callbacks=ansible.callbacks.PlaybookRunnerCallbacks(stats, verbose=1),
-                forks=10
-            )
+        pb = ansible.playbook.PlayBook(
+            playbook=path,
+            inventory=inventory,
+            extra_vars=extra_vars,
+            stats=stats,
+            callbacks=playbook_cb,
+            runner_callbacks=ansible.callbacks.PlaybookRunnerCallbacks(stats, verbose=1),
+            forks=10
+        )
 
-            pb.run()
+        pb.run()
 
-            hosts = pb.stats.processed.keys()
-            failed_hosts = []
-            unreachable_hosts = []
+        hosts = pb.stats.processed.keys()
+        failed_hosts = []
+        unreachable_hosts = []
 
-            for h in hosts:
-                t = pb.stats.summarize(h)
-                if t['failures'] > 0:
-                    failed_hosts.append(h)
+        for h in hosts:
+            t = pb.stats.summarize(h)
+            if t['failures'] > 0:
+                failed_hosts.append(h)
 
-                if t['unreachable'] > 0:
-                    unreachable_hosts.append(h)
+            if t['unreachable'] > 0:
+                unreachable_hosts.append(h)
 
-            if len(failed_hosts) > 0:
-                logger.error("Failed hosts: %s" % failed_hosts)
-            if len(unreachable_hosts) > 0:
-                logger.error("Unreachable hosts: %s" % unreachable_hosts)
+        if len(failed_hosts) > 0:
+            logger.error("Failed hosts: %s" % failed_hosts)
+        if len(unreachable_hosts) > 0:
+            logger.error("Unreachable hosts: %s" % unreachable_hosts)
 
 def render_template(template_path, vars, output_path):
     loader = jinja2.FileSystemLoader(searchpath='.')
