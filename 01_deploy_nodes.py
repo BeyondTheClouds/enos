@@ -30,38 +30,20 @@ class KollaG5k(G5kEngine):
     def run(self):
         self.load()
 
-        # Check we will have enough nodes
-        n_resources = reduce(lambda a, b: int(a) + int(b), self.config['resources'].values())
-        n_services = reduce(lambda a, b: int(a) + int(b), self.config['openstack'].values())
-        if n_resources < n_services:
-            logger.error("The requested OpenStack services require %d nodes, but your job specification only includes %d" % (n_services, n_resources))
-            sys.exit(32)
-
         self.get_job()
-        
-        
+
         deployed, undeployed = self.deploy()
         if len(undeployed) > 0:
             sys.exit(31)
-        
-       # Distributed the nodes into roles
-        roles = {}
-        i = 0
-        for role in self.config['openstack']:
-            n = int(self.config['openstack'][role])
-            roles[role] = self.nodes[i:i+n]
-            i += n
 
-        logger.info("Roles: %s" % roles)
+        roles = self.build_roles()
 
         # Get an IP for 'Kolla internal vip address'
-        subnet = self.get_subnets().values()[0]
-        available_ips = map(lambda ip: ip[0], subnet[0])
-        internal_vip_address = available_ips.pop(0)
+        internal_vip_address = self.get_free_ip()
 
         # Get the NIC devices of the reserved cluster
-        # TODO this only works if all nodes are on the same cluster, or if nodes from
-        # different clusters have the same devices
+        # XXX: this only works if all nodes are on the same cluster,
+        # or if nodes from different clusters have the same devices
         interfaces = self.get_cluster_nics(self.config['resources'].keys()[0])
         
         # These will be the Docker registries
@@ -72,7 +54,7 @@ class KollaG5k(G5kEngine):
         vars = {
             'all_nodes'                  : self.nodes,
             'docker_registry_node'       : registry_node,
-            'control_nodes'              : roles['controllers'],
+            'control_nodes'              : roles['controller'],
             'network_nodes'              : roles['network'],
             'compute_nodes'              : roles['compute'],
             'storage_nodes'              : roles['storage'],
@@ -111,7 +93,7 @@ class KollaG5k(G5kEngine):
         else:
             logger.info("Cloning Kolla...")
             os.system("git clone %s -b %s > /dev/null" % (KOLLA_REPO, KOLLA_BRANCH))
-    
+
 
         # Generating Ansible globals.yml
         globals_path = os.path.join(self.result_dir, 'globals.yml')
@@ -134,7 +116,7 @@ class KollaG5k(G5kEngine):
         os.symlink(self.result_dir, link)
 
         ## create ssh tunnels file
-        self.generate_sshtunnels()
+        self.generate_sshtunnels(internal_vip_address)
        ##
 
         logger.info("Symlinked %s to %s" % (self.result_dir, link))
@@ -162,19 +144,19 @@ def run_ansible(playbooks, inventory_path, extra_vars):
             )
 
             pb.run()
-            
+
             hosts = pb.stats.processed.keys()
             failed_hosts = []
             unreachable_hosts = []
-            
+
             for h in hosts:
                 t = pb.stats.summarize(h)
                 if t['failures'] > 0:
                     failed_hosts.append(h)
-                    
+
                 if t['unreachable'] > 0:
                     unreachable_hosts.append(h)
-                
+
             if len(failed_hosts) > 0:
                 logger.error("Failed hosts: %s" % failed_hosts)
             if len(unreachable_hosts) > 0:
@@ -184,7 +166,7 @@ def render_template(template_path, vars, output_path):
     loader = jinja2.FileSystemLoader(searchpath='.')
     env = jinja2.Environment(loader=loader)
     template = env.get_template(template_path)
-    
+
     rendered_text = template.render(vars)
     with open(output_path, 'w') as f:
         f.write(rendered_text)
