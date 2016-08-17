@@ -1,7 +1,7 @@
 # Kolla-G5K
 ## Synopsis
 This script deploys an OpenStack on Grid'5000 using [Kolla](https://wiki.openstack.org/wiki/Kolla),
-isolating some services on different nodes. Everything must be configured in a single JSON file
+isolating some services on different nodes. Everything must be configured in a single YAML file
 and then the deployment can be run in one command.
 
 ## Requirements

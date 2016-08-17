@@ -1,5 +1,5 @@
 import pprint, os, sys
-pp = pprint.PrettyPrinter(indent=4).pprint
+pf = pprint.PrettyPrinter(indent=4).pformat
 import yaml
 
 import execo as EX
@@ -8,20 +8,34 @@ from execo import configuration
 from execo.log import style
 import execo_g5k as EX5
 from execo_g5k.api_utils import get_cluster_site
+from execo_g5k import OarSubmission
 from execo_engine import Engine, logger
 
-# Shortcut
-funk = EX5.planning
+from itertools import groupby
+import operator
 
 # Default values
-DEFAULT_JOB_NAME = 'FUNK'
-DEFAULT_ENV_NAME = 'ubuntu-x64-1404'
 DEFAULT_CONF_FILE = 'reservation.yaml'
 
 MAX_ATTEMPTS = 5
 
-
 DEFAULT_CONN_PARAMS = {'user': 'root'}
+
+DEFAULT_ROLES = {
+    "controller": 0,
+    "compute": 0,
+    "network": 0,
+    "storage": 0,
+}
+
+DEFAULT_CONFIG = {
+    "name": "kolla-discovery",
+    "walltime": "02:00:00",
+    "env_name": 'ubuntu1404-x64-min',
+    "reservation": None,
+    "subnets": {}
+}
+
 class G5kEngine(Engine):
     def __init__(self):
         """Initialize the Execo Engine"""
@@ -29,54 +43,43 @@ class G5kEngine(Engine):
 
         # Add some command line arguments
         self.options_parser.add_option("-f", dest="config_path",
-            help="Path to the JSON file describing the Grid'5000 deployment and the deployment.")
+            help="Path to the configuration file describing the Grid'5000 the deployment.")
 
     def load(self):
-        """Load the JSON configuration file"""
-
+        """Load the configuration file"""
         if self.options.config_path is None:
             self.options.config_path = DEFAULT_CONF_FILE
-        
-        logger.info("Configuration file loaded : %s" % self.options.config_path)
+
         # Load the configuration file
         try:
             with open(self.options.config_path) as config_file:
-                self.config = yaml.load(config_file)
+                config = yaml.load(config_file)
         except:
-            logger.error("Error reading configuration file %s" % self.options.config_path)
+            logger.error("Error reading configuration file %s" %
+                         self.options.config_path)
             t, value, tb = sys.exc_info()
             print("%s %s" % (str(t), str(value)))
             sys.exit(23)
 
-        if 'job_name' not in self.config:
-            self.config['job_name'] = DEFAULT_JOB_NAME
-        
-        if 'env_name' not in self.config:
-            self.config['env_name'] = DEFAULT_ENV_NAME
+        self.config = {}
+        self.config.update(DEFAULT_CONFIG)
+        self.config.update(config)
 
-        if 'reservation' not in self.config:
-            self.config['reservation'] = None
+        # We rebuild the resources to apply default values
+        self.config["resources"] = {}
+        for cluster, roles in config['resources'].items():
+            self.config['resources'][cluster] = DEFAULT_ROLES.copy()
+            self.config['resources'][cluster].update(roles)
 
-        # Nothing is excluded by default
-        if 'excluded_elements' not in self.config:
-            self.config['excluded_elements'] = []
+        logger.info("Configuration file loaded : %s" % self.options.config_path)
+        logger.info(pf(self.config))
 
-        # Count the number of nodes we are requesting
-        self.total_nodes = 0
-        for cluster in self.config['resources']:
-            if isinstance(self.config['resources'][cluster], int):
-                self.total_nodes += self.config['resources'][cluster]
-            else:
-                print("Invalid number of nodes: %s" % self.config['resources'][cluster])
-                sys.exit(24)
-    
     def get_job(self):
         """Get the hosts from an existing job (if any) or from a new job.
         This will perform a reservation if necessary."""
 
-        # Look if there is a running job
-
-        self.gridjob, _ = funk.get_job_by_name(self.config['job_name'])
+        # Look if there is a running job or make a new reservation
+        self.gridjob, _ = EX5.planning.get_job_by_name(self.config['name'])
 
         if self.gridjob is None:
             self._make_reservation()
@@ -105,11 +108,12 @@ class G5kEngine(Engine):
         self.subnets = None
 
         return self.gridjob
-    
+
     def deploy(self):
         # Deploy all the nodes
         logger.info("Deploying %s on %d nodes %s" %
-            (self.config['env_name'], len(self.nodes), '(forced)' if self.options.force_deploy else ''))
+            (self.config['env_name'], len(self.nodes),
+             '(forced)' if self.options.force_deploy else ''))
         deployed, undeployed = EX5.deploy(
         EX5.Deployment(
             self.nodes,
@@ -121,7 +125,7 @@ class G5kEngine(Engine):
             logger.error("%d nodes where not deployed correctly:" % len(undeployed))
             for n in undeployed:
                 logger.error(style.emph(undeployed.address))
-        
+
         logger.info("Nodes deployed: %s" % deployed)
 
         return deployed, undeployed
@@ -141,39 +145,62 @@ class G5kEngine(Engine):
         if not remote.finished_ok:
             sys.exit(31)
 
+    def build_roles(self):
+        """
+        Returns a dict that maps each role to a list of G5K nodes::
+
+          { 'controller': [paravance-1, paravance-5], 'compute': [econome-1] }
+        """
+        def mk_pools():
+            "Indexes each node by its cluster to construct pools of nodes."
+            pools = {}
+            for cluster, nodes in groupby(
+                    self.nodes, lambda node: node.address.split('-')[0]):
+                pools.setdefault(cluster, []).extend(list(nodes))
+
+            return pools
+
+        def pick_nodes(pool, n):
+            "Picks n node in a pool of nodes."
+            nodes = pool[:n]
+            del pool[:n]
+            return nodes
+
+        # Maps a role (eg, controller) with a list of G5K node.
+        roles = {}
+        pools = mk_pools()
+        for cluster, rs in self.config['resources'].items():
+            for r, n in rs.items():
+                roles.setdefault(r, []).extend(pick_nodes(pools[cluster], n))
+
+        logger.info("Roles: %s" % pf(roles))
+        return roles
+
     def _make_reservation(self):
         """Make a new reservation."""
-        
-        logger.info('Finding slot for the job...')
-        elements = self.config['resources']
-        
-        # Do we want subnets?
-        if 'subnets' in self.config:
-            elements['subnets'] = self._subnet_to_string(self.config['subnets'])
 
-        planning = funk.get_planning(elements.keys(),
-                starttime=self.config['reservation'])
-        slots = funk.compute_slots(planning,
-                walltime=self.config['walltime'].encode('ascii', 'ignore'),
-                excluded_elements=self.config['excluded_elements'])
+        # Extract the list of criteria (ie, `oarsub -l
+        # *criteria*`) in order to compute a specification for the
+        # reservation.
+        criteria = {}
+        # Actual criteria are :
+        # - Number of node per site
+        for cluster, roles in self.config["resources"].items():
+            site = get_cluster_site(cluster)
+            nb_nodes = reduce(operator.add, map(int, roles.values()))
+            criterion = "{cluster='%s'}/nodes=%s" % (cluster, nb_nodes)
+            criteria.setdefault(site, []).append(criterion)
+        # - Subnet per site (if any)
+        for site, subnet in self.config["subnets"].items():
+            criteria.setdefault(site, []).append(subnet)
 
-        startdate, enddate, resources = funk.find_free_slot(slots, elements)
-        resources = funk.distribute_hosts(resources, elements,
-                self.config['excluded_elements'])
+        # Compute the specification for the reservation
+        jobs_specs = [(OarSubmission(resources = '+'.join(c),
+                                     name = self.config["name"]), s)
+                      for s, c in criteria.items()]
+        logger.info("Criteria for the reservation: %s" % pf(jobs_specs))
 
-        if startdate is None:
-            logger.error('Could not find a slot for the requested resources.')
-            sys.exit(25)
-
-        jobs_specs = funk.get_jobs_specs(resources, name=self.config['job_name'],
-                excluded_elements=self.config['excluded_elements'])
-
-        for job, frontend in jobs_specs:
-            if frontend in self.config['subnets']:
-                job.resources = self.config['subnets'][frontend] + \
-                    '+' + job.resources
-
-        logger.info(jobs_specs)
+        # Make the reservation
         gridjob, _ = EX5.oargridsub(
             jobs_specs,
             reservation_date=self.config['reservation'],
@@ -193,44 +220,41 @@ class G5kEngine(Engine):
             self.subnets = {}
             for job, site in self.oarjobs:
                 self.subnets[site] = EX5.get_oar_job_subnets(job, site)
-        
         return self.subnets
-    
+
+    def get_free_ip(self):
+        subnet = self.get_subnets().values()[0]
+        available_ips = map(lambda ip: ip[0], subnet[0])
+        return available_ips.pop(0)
+
     def get_cluster_nics(self, cluster):
         site = EX5.get_cluster_site(cluster)
         nics = EX5.get_resource_attributes('/sites/%s/clusters/%s/nodes' % (site, cluster))['items'][0]['network_adapters']
-        
+
         return [nic['device'] for nic in nics if nic['mountable']]
-    
+
     def delete_job(self):
         EX5.oardel([self.gridjob])
-    
-    def _subnet_to_string(self, subnet):
-        tmp = map(lambda res: "%s:%s" % (res[0], res[1]), subnet.items())
-        return reduce(lambda a, b: "%s,%s" % (a, b), tmp)
-    
-    def generate_sshtunnels(self):
+
+    def generate_sshtunnels(self, internal_vip_address):
         logger.info("ssh tunnel informations:")
         logger.info("___")
-        
+
         script = "cat > /tmp/openstack_ssh_config <<EOF\n"
         script += "Host *.grid5000.fr\n"
-        script += "  User " + self.user + " \n" 
+        script += "  User " + self.user + " \n"
         script += "  ProxyCommand ssh -q " + self.user + "@194.254.60.4 nc -w1 %h %p # Access South\n"
         script += "EOF\n"
-        
-        port = 8080
-        for host in roles['controllers']:
-            port = port + 1
-            script += "ssh -F /tmp/openstack_ssh_config -N -L " + `port` + ":" + host.address + ":80 " + self.user + "@access.grid5000.fr &\n" 
 
-        script += "echo 'http://localhost:8080'\n" 
+        port = 8080
+        script += "ssh -F /tmp/openstack_ssh_config -N -L " + `port` + ":" + internal_vip_address + ":80 " + self.user + "@access.grid5000.fr &\n"
+
+        script += "echo 'http://localhost:8080'\n"
         logger.info(script)
         logger.info("___")
 
         with open(self.result_dir + "/dashboard_tunnels.sh", 'w') as f:
             f.write(script)
-   
+
         logger.info("ssh tunnel informations:")
         logger.info("___")
-      
