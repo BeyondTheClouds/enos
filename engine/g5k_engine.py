@@ -75,6 +75,7 @@ class G5kEngine(Engine):
         This will perform a reservation if necessary."""
 
         # Look if there is a running job
+
         self.gridjob, _ = funk.get_job_by_name(self.config['job_name'])
 
         if self.gridjob is None:
@@ -90,10 +91,16 @@ class G5kEngine(Engine):
 
         self.oarjobs = EX5.get_oargrid_job_oar_jobs(self.gridjob)
 
+        # TODO - Start_date is never used, deadcode ? Ad_rien_ - August 11th 2016
         self.start_date = None
         job_info = EX5.get_oargrid_job_info(self.gridjob)
         if 'start_date' in job_info:
-            self.start_date = ['start_date']
+            self.start_date = job_info['start_date']
+
+        self.user = None
+        job_info = EX5.get_oargrid_job_info(self.gridjob)
+        if 'user' in job_info:
+            self.user = job_info['user']
 
         self.subnets = None
 
@@ -133,9 +140,6 @@ class G5kEngine(Engine):
 
         if not remote.finished_ok:
             sys.exit(31)
-
-
-
 
     def _make_reservation(self):
         """Make a new reservation."""
@@ -204,4 +208,29 @@ class G5kEngine(Engine):
     def _subnet_to_string(self, subnet):
         tmp = map(lambda res: "%s:%s" % (res[0], res[1]), subnet.items())
         return reduce(lambda a, b: "%s,%s" % (a, b), tmp)
+    
+    def generate_sshtunnels(self):
+        logger.info("ssh tunnel informations:")
+        logger.info("___")
+        
+        script = "cat > /tmp/openstack_ssh_config <<EOF\n"
+        script += "Host *.grid5000.fr\n"
+        script += "  User " + self.user + " \n" 
+        script += "  ProxyCommand ssh -q " + self.user + "@194.254.60.4 nc -w1 %h %p # Access South\n"
+        script += "EOF\n"
+        
+        port = 8080
+        for host in roles['controllers']:
+            port = port + 1
+            script += "ssh -F /tmp/openstack_ssh_config -N -L " + `port` + ":" + host.address + ":80 " + self.user + "@access.grid5000.fr &\n" 
 
+        script += "echo 'http://localhost:8080'\n" 
+        logger.info(script)
+        logger.info("___")
+
+        with open(self.result_dir + "/dashboard_tunnels.sh", 'w') as f:
+            f.write(script)
+   
+        logger.info("ssh tunnel informations:")
+        logger.info("___")
+      
