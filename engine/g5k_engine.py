@@ -36,7 +36,6 @@ DEFAULT_CONFIG = {
     "walltime": "02:00:00",
     "env_name": 'ubuntu1404-x64-min',
     "reservation": None,
-    "subnets": {},
     "vlans": {}
 }
 
@@ -144,9 +143,6 @@ class G5kEngine(Engine):
             if vlan_id is not None:
                 self.vlans.append((site, EX5.get_oar_job_kavlan(job_id, site))) 
 
-        # TODO - If it's still needed we maybe need to load subnets aswell 
-        self.subnets = None
-        
         return self.gridjob
 
     def deploy(self):
@@ -240,10 +236,6 @@ class G5kEngine(Engine):
             criterion = "{cluster='%s'}/nodes=%s" % (cluster, nb_nodes)
             criteria.setdefault(site, []).append(criterion)
 
-        # - Subnet per site (if any)
-        for site, subnet in self.config["subnets"].items():
-            criteria.setdefault(site, []).append(subnet)
-        
         for site, vlan in self.config["vlans"].items():
             criteria.setdefault(site, []).append(vlan)
 
@@ -269,20 +261,10 @@ class G5kEngine(Engine):
             logger.error("No oar job was created.")
             sys.exit(26)
 
-    def get_subnets(self):
-        if self.subnets is None:
-            self.subnets = {}
-            for job, site in self.oarjobs:
-                self.subnets[site] = EX5.get_oar_job_subnets(job, site)
-        return self.subnets
-
     def get_free_ip(self):
         """
         Gets a free ip.
         Originally it was done by reserving a subnet
-        #subnet = self.get_subnets().values()[0]
-        #available_ips = map(lambda ip: ip[0], subnet[0])
-        #return available_ips.pop(0)
         we now moves this implementation to a vlan based implementation
 
         Prerequisite : 
