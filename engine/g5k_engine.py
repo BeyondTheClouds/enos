@@ -12,10 +12,12 @@ from execo_g5k import OarSubmission
 from execo_engine import Engine, logger
 
 from itertools import groupby
+from netaddr import IPNetwork, IPSet
 import operator
 
 # Default values
 DEFAULT_CONF_FILE = 'reservation.yaml'
+NETWORK_FILE = 'g5k_networks.yaml'
 
 MAX_ATTEMPTS = 5
 
@@ -34,14 +36,29 @@ DEFAULT_CONFIG = {
     "walltime": "02:00:00",
     "env_name": 'ubuntu1404-x64-min',
     "reservation": None,
-    "subnets": {}
+    "subnets": {},
+    "vlans": {}
 }
+
+def translate_to_vlan(nodes, vlan_id):
+    """
+    When using a vlan, we need to *manually* translate 
+    the node name. We can't access nodes with their original names
+    e.g : parapluie-1.rennes.grid5000.fr -> parapluie-1-kavlan-4.rennes.grid5000.fr
+    
+    """
+    def translate(node):
+        splitted = node.address.split(".")   
+        splitted[0] = "%s-kavlan-%s" % (splitted[0], vlan_id)
+        return EX.Host(".".join(splitted))
+    return map(translate, nodes)
 
 class G5kEngine(Engine):
     def __init__(self):
         """Initialize the Execo Engine"""
         super(G5kEngine, self).__init__()
-
+        self.config = None
+        self.networks = None
         # Add some command line arguments
         self.options_parser.add_option("-f", dest="config_path",
             help="Path to the configuration file describing the Grid'5000 the deployment.")
@@ -66,6 +83,11 @@ class G5kEngine(Engine):
             t, value, tb = sys.exc_info()
             print("%s %s" % (str(t), str(value)))
             sys.exit(23)
+        
+        # Load g5k networks
+        with open(NETWORK_FILE) as network_file:
+            self.networks = yaml.load(network_file)
+        
 
         self.config = {}
         self.config.update(DEFAULT_CONFIG)
@@ -105,25 +127,41 @@ class G5kEngine(Engine):
         job_info = EX5.get_oargrid_job_info(self.gridjob)
         if 'start_date' in job_info:
             self.start_date = job_info['start_date']
-
+        
+        ## filling some information about the jobs here
         self.user = None
         job_info = EX5.get_oargrid_job_info(self.gridjob)
         if 'user' in job_info:
             self.user = job_info['user']
 
-        self.subnets = None
+        ## vlans information
+        job_sites = EX5.get_oargrid_job_oar_jobs(self.gridjob)
+        self.jobs = []
+        self.vlans = []
+        for (job_id, site) in job_sites:
+            self.jobs.append((site, job_id))
+            vlan_id = EX5.get_oar_job_kavlan(job_id, site)
+            if vlan_id is not None:
+                self.vlans.append((site, EX5.get_oar_job_kavlan(job_id, site))) 
 
+        # TODO - If it's still needed we maybe need to load subnets aswell 
+        self.subnets = None
+        
         return self.gridjob
 
     def deploy(self):
-        # Deploy all the nodes
-        logger.info("Deploying %s on %d nodes %s" %
-            (self.config['env_name'], len(self.nodes),
-             '(forced)' if self.options.force_deploy else ''))
+        # we put the nodes in the first vlan we have
+        vlan = self._get_primary_vlan()
+         # Deploy all the nodes
+        logger.info("Deploying %s on %d nodes %s" % (self.config['env_name'],
+            len(self.nodes),
+            '(forced)' if self.options.force_deploy else ''))
+        
         deployed, undeployed = EX5.deploy(
         EX5.Deployment(
             self.nodes,
-            env_name=self.config['env_name']
+            env_name=self.config['env_name'],
+            vlan = vlan[1]
         ), check_deployed_command=not self.options.force_deploy)
 
         # Check the deployment
@@ -133,6 +171,10 @@ class G5kEngine(Engine):
                 logger.error(style.emph(undeployed.address))
 
         logger.info("Nodes deployed: %s" % deployed)
+
+        # Updating nodes names with vlans
+        self.nodes = translate_to_vlan(self.nodes, vlan[1])
+        logger.info(self.nodes)
 
         return deployed, undeployed
 
@@ -197,9 +239,13 @@ class G5kEngine(Engine):
             nb_nodes = reduce(operator.add, map(int, roles.values()))
             criterion = "{cluster='%s'}/nodes=%s" % (cluster, nb_nodes)
             criteria.setdefault(site, []).append(criterion)
+
         # - Subnet per site (if any)
         for site, subnet in self.config["subnets"].items():
             criteria.setdefault(site, []).append(subnet)
+        
+        for site, vlan in self.config["vlans"].items():
+            criteria.setdefault(site, []).append(vlan)
 
         # Compute the specification for the reservation
         jobs_specs = [(OarSubmission(resources = '+'.join(c),
@@ -214,7 +260,8 @@ class G5kEngine(Engine):
             walltime=self.config['walltime'].encode('ascii', 'ignore'),
             job_type='deploy'
         )
-
+        
+        # TODO - move this upper to not have a side effect here 
         if gridjob is not None:
             self.gridjob = gridjob
             logger.info("Using new oargrid job %s" % style.emph(self.gridjob))
@@ -230,9 +277,25 @@ class G5kEngine(Engine):
         return self.subnets
 
     def get_free_ip(self):
-        subnet = self.get_subnets().values()[0]
-        available_ips = map(lambda ip: ip[0], subnet[0])
-        return available_ips.pop(0)
+        """
+        Gets a free ip.
+        Originally it was done by reserving a subnet
+        #subnet = self.get_subnets().values()[0]
+        #available_ips = map(lambda ip: ip[0], subnet[0])
+        #return available_ips.pop(0)
+        we now moves this implementation to a vlan based implementation
+
+        Prerequisite : 
+            - a vlan must be reserved
+            - g5k networks must be loaded before
+        """
+        vlan = self._get_primary_vlan()
+        cidr = self.networks[vlan[0]]["vlans"][vlan[1]]
+        logger.info("cidr : %s" % (cidr))
+        range_ips = IPSet(IPNetwork(cidr)).iprange()
+        # the last ip is reserved x.x.x.255
+        # the previous one also x.x.x..254 (gw)
+        return str(range_ips[-3])
 
     def get_cluster_nics(self, cluster):
         site = EX5.get_cluster_site(cluster)
@@ -253,7 +316,7 @@ class G5kEngine(Engine):
         script += "EOF\n"
 
         port = 8080
-        script += "ssh -F /tmp/openstack_ssh_config -N -L " + `port` + ":" + internal_vip_address + ":80 " + self.user + "@access.grid5000.fr &\n"
+        script += "ssh -F /tmp/openstack_ssh_config -N -L " + str(port) + ":" + internal_vip_address + ":80 " + self.user + "@access.grid5000.fr &\n"
 
         script += "echo 'http://localhost:8080'\n"
         logger.info(script)
@@ -264,3 +327,16 @@ class G5kEngine(Engine):
 
         logger.info("ssh tunnel informations:")
         logger.info("___")
+
+    def _get_primary_vlan(self): 
+        """
+        Returns the primary vlan
+        It's the vlan where node are put in when deploying
+        """
+        vlan = None
+        if len(self.vlans) > 0:
+            vlan = self.vlans[0]
+            logger.info("Using vlan %s" % str(vlan))
+        return vlan
+
+
