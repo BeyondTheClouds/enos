@@ -7,8 +7,8 @@
 [hosts]
 {{ write_nodes(all_nodes) }}
 
-[docker-registry]
-{{ docker_registry_node.address }}
+[util]
+{{ util_node.address }}
 
 # These initial groups are the only groups required to be modified. The
 # additional groups are for more control of the environment.

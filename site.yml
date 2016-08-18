@@ -2,17 +2,15 @@
 - name: Pre-configure all the nodes
   hosts: hosts
   sudo: True
-  
   roles:
     - common
     - cadvisor
 
 - name: Configure the Docker registry
-  hosts: docker-registry
+  hosts: util
   sudo: True
 
   roles:
     - { role: registry, tags: ['registry'] }
     - influx
     - { role: grafana, tags: ['grafana'] }
-

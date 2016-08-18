@@ -26,6 +26,7 @@ DEFAULT_ROLES = {
     "compute": 0,
     "network": 0,
     "storage": 0,
+    "util": 0
 }
 
 DEFAULT_CONFIG = {
@@ -44,6 +45,11 @@ class G5kEngine(Engine):
         # Add some command line arguments
         self.options_parser.add_option("-f", dest="config_path",
             help="Path to the configuration file describing the Grid'5000 the deployment.")
+
+        self.options_parser.add_option("--force-deploy", dest="force_deploy",
+            help="Force deployment",
+            default=False,
+            action="store_true")
 
     def load(self):
         """Load the configuration file"""
@@ -173,6 +179,7 @@ class G5kEngine(Engine):
             for r, n in rs.items():
                 roles.setdefault(r, []).extend(pick_nodes(pools[cluster], n))
 
+        # TODO: Be sure that there is at least one util.
         logger.info("Roles: %s" % pf(roles))
         return roles
 
@@ -230,7 +237,6 @@ class G5kEngine(Engine):
     def get_cluster_nics(self, cluster):
         site = EX5.get_cluster_site(cluster)
         nics = EX5.get_resource_attributes('/sites/%s/clusters/%s/nodes' % (site, cluster))['items'][0]['network_adapters']
-
         return [nic['device'] for nic in nics if nic['mountable']]
 
     def delete_job(self):
