@@ -10,8 +10,7 @@
     state: started
     expose: 
       - "8090"
-      - "8099
-      "
+      - "8099"
 
 - name: Waiting for the influx service to become available
   wait_for: 
@@ -19,7 +18,7 @@
     port: 8086
     state: started
     delay: 2
-    timeout: 20
+    timeout: 120
 
 - name: Create the cadvisor database
   shell: "curl -s -G http://{{ influx_ip }}:8086/query --data-urlencode 'q=CREATE DATABASE cadvisor'"

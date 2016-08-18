@@ -295,7 +295,8 @@ class G5kEngine(Engine):
         range_ips = IPSet(IPNetwork(cidr)).iprange()
         # the last ip is reserved x.x.x.255
         # the previous one also x.x.x..254 (gw)
-        return str(range_ips[-3])
+        # the x.x.x.253 seems to be pingable as well (seems undocumented in g5k wiki)
+        return str(range_ips[-4])
 
     def get_cluster_nics(self, cluster):
         site = EX5.get_cluster_site(cluster)
