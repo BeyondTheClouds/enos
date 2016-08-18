@@ -16,6 +16,8 @@ util
 [disco/influx:children]
 util
 
+[disco/rally:children]
+util
 # You can explicitly specify which hosts run each project by updating the
 # groups in the sections below. Common services are grouped together.
 [kibana:children]
@@ -31,7 +33,7 @@ network
 control
 
 [rabbitmq:children]
-network
+control
 
 [mongodb:children]
 control
