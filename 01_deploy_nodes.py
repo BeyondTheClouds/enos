@@ -42,7 +42,7 @@ class KollaG5k(G5kEngine):
 
         # Generate the inventory file
         vars = {
-            'all_nodes'                  : self.nodes,
+            'all_nodes'                  : self.deployed_nodes,
             # TODO: Handle the case of 0/many util.
             'util_node'                  : roles['util'][0],
             'control_nodes'              : roles['controller'],
@@ -59,11 +59,11 @@ class KollaG5k(G5kEngine):
         logger.info("Inventory file written to " + style.emph(inventory_path))
 
         # TODO workarround
-        self.exec_command_on_nodes(self.nodes, 'apt-get update && apt-get -y --force-yes install apt-transport-https',
+        self.exec_command_on_nodes(self.deployed_nodes, 'apt-get update && apt-get -y --force-yes install apt-transport-https',
             'Workarround: installing apt-transport-https...')
 
         # Install python on the nodes
-        self.exec_command_on_nodes(self.nodes, 'apt-get -y install python',
+        self.exec_command_on_nodes(self.deployed_nodes, 'apt-get -y install python',
             'Installing Python on all the nodes...')
 
         # Run the Ansible playbooks
