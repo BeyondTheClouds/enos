@@ -21,3 +21,7 @@ registry:
   ceph_id: discovery
   ceph_rbd: discovery_kolla_registry/datas
 
+# Be less strict on node distribution especially
+# when nodes are missing in the reservation
+# or not deployed
+role_distribution: debug
