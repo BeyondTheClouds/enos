@@ -23,6 +23,8 @@ MAX_ATTEMPTS = 5
 
 DEFAULT_CONN_PARAMS = {'user': 'root'}
 
+ROLE_DISTRIBUTION_MODE_STRICT = "strict"
+
 DEFAULT_ROLES = {
     "controller": 0,
     "compute": 0,
@@ -36,8 +38,9 @@ DEFAULT_CONFIG = {
     "walltime": "02:00:00",
     "env_name": 'ubuntu1404-x64-min',
     "reservation": None,
-    "vlans": {}
-}
+    "vlans": {},
+    "role_distribution": ROLE_DISTRIBUTION_MODE_STRICT
+};
 
 def translate_to_vlan(nodes, vlan_id):
     """
@@ -51,6 +54,21 @@ def translate_to_vlan(nodes, vlan_id):
         splitted[0] = "%s-kavlan-%s" % (splitted[0], vlan_id)
         return EX.Host(".".join(splitted))
     return map(translate, nodes)
+
+def check_nodes(nodes = [], resources = {}, mode = ROLE_DISTRIBUTION_MODE_STRICT):
+    """
+    Do we have enough nodes according to the 
+    - resources
+    - mode
+    """
+    wanted_nodes = 0
+    for cluster, roles in resources.items():
+        wanted_nodes += reduce(operator.add, map(int, roles.values()))
+
+    if mode == ROLE_DISTRIBUTION_MODE_STRICT and wanted_nodes > len(nodes):
+        raise Exception("Not enough nodes to continue")
+
+    return True
 
 class G5kEngine(Engine):
     def __init__(self):
@@ -93,7 +111,7 @@ class G5kEngine(Engine):
         self.config.update(config)
 
         # We rebuild the resources to apply default values
-        self.config["resources"] = {}
+        self.config['resources'] = {}
         for cluster, roles in config['resources'].items():
             self.config['resources'][cluster] = DEFAULT_ROLES.copy()
             self.config['resources'][cluster].update(roles)
@@ -119,7 +137,10 @@ class G5kEngine(Engine):
             self.nodes = EX5.get_oargrid_job_nodes(self.gridjob)
             attempts += 1
 
-        self.oarjobs = EX5.get_oargrid_job_oar_jobs(self.gridjob)
+        check_nodes(
+                nodes = self.nodes,
+                resources = self.config['resources'],
+                mode = self.config['role_distribution'])
 
         # TODO - Start_date is never used, deadcode ? Ad_rien_ - August 11th 2016
         self.start_date = None
@@ -166,11 +187,15 @@ class G5kEngine(Engine):
             for n in undeployed:
                 logger.error(style.emph(undeployed.address))
 
-        logger.info("Nodes deployed: %s" % deployed)
-
         # Updating nodes names with vlans
         self.nodes = translate_to_vlan(self.nodes, vlan[1])
         logger.info(self.nodes)
+        self.deployed_nodes = translate_to_vlan(map(lambda n: EX.Host(n), deployed), vlan[1])
+        logger.info(self.deployed_nodes)
+        check_nodes(
+                nodes = self.deployed_nodes,
+                resources = self.config['resources'],
+                mode = self.config['role_distribution'])
 
         return deployed, undeployed
 
@@ -199,7 +224,7 @@ class G5kEngine(Engine):
             "Indexes each node by its cluster to construct pools of nodes."
             pools = {}
             for cluster, nodes in groupby(
-                    self.nodes, lambda node: node.address.split('-')[0]):
+                    self.deployed_nodes, lambda node: node.address.split('-')[0]):
                 pools.setdefault(cluster, []).extend(list(nodes))
 
             return pools
@@ -211,15 +236,27 @@ class G5kEngine(Engine):
             return nodes
 
         # Maps a role (eg, controller) with a list of G5K node.
-        roles = {}
+        roles = {k: [] for k in DEFAULT_ROLES.keys()}
         pools = mk_pools()
         for cluster, rs in self.config['resources'].items():
-            for r, n in rs.items():
-                roles.setdefault(r, []).extend(pick_nodes(pools[cluster], n))
-
-        # TODO: Be sure that there is at least one util.
+            current = pick_nodes(pools[cluster], 1)
+            # distribute node into roles
+            for r in rs.keys() * len(self.deployed_nodes): 
+                if current == []:
+                    break
+                if current != [] and len(roles[r]) < rs[r]:
+                    roles.setdefault(r, []).extend(current)
+                    current = pick_nodes(pools[cluster], 1)
+ 
         logger.info("Roles: %s" % pf(roles))
+        at_least_one = all(len(n) >= 1 for n in roles.values())
+        if not at_least_one:
+            # Even if we aren't in strict mode we garantee that
+            # there will be at least on node per role
+            raise Exception("Role doesn't have at least one node each")
+
         return roles
+
 
     def _make_reservation(self):
         """Make a new reservation."""
