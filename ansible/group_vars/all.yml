@@ -1,0 +1,6 @@
+cadvisor:
+  housekeeping_interval: 5s
+
+g5k_role: unknown
+
+enable_monitoring: true

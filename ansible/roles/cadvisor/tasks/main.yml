@@ -3,8 +3,9 @@
   docker:
     detach: True
     image: "google/cadvisor:v0.23.2"
-    command: "-storage_driver_db=cadvisor -storage_driver_host={{ influx_ip }}:8086 -storage_driver=influxdb --housekeeping_interval={{ cadvisor.housekeeping_interval }}" 
+    command: "-storage_driver_db=cadvisor -storage_driver_host={{ influx_vip }}:8086 -storage_driver=influxdb --housekeeping_interval={{ cadvisor.housekeeping_interval }}" 
     name: "cadvisor"
+    hostname: "{{ g5k_role }} - {{ ansible_hostname }}"
     ports: 
       # don't bind to the host port 8080 since swift is using it by default
       - "8888:8080"
@@ -14,4 +15,5 @@
       - "/var/run:/var/run:rw"
       - "/sys:/sys:ro"
       - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/etc/hostname:/etc/machine-id"
 

@@ -1,4 +1,12 @@
 ---
+- name: Checking that the vip is free on this host
+  command: "ip addr show {{ network_interface }}"
+  register: result
+
+- name: Add a vip address for influx db
+  command: "ip addr add {{ influx_vip }} dev {{ network_interface }}"
+  when: result.stdout.find("{{ influx_vip }}") == -1
+
 - name: Start the influx container
   docker:
     detach: True
@@ -14,14 +22,14 @@
 
 - name: Waiting for the influx service to become available
   wait_for: 
-    host: "{{ influx_ip }}"
+    host: "{{ influx_vip }}"
     port: 8086
     state: started
     delay: 2
     timeout: 120
 
 - name: Create the cadvisor database
-  shell: "curl -s -G http://{{ influx_ip }}:8086/query --data-urlencode 'q=CREATE DATABASE cadvisor'"
+  shell: "curl -s -G http://{{ influx_vip }}:8086/query --data-urlencode 'q=CREATE DATABASE cadvisor'"
   register: result
   until: result.stdout == '{"results":[{}]}'
   retries: 10

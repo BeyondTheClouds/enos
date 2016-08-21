@@ -1,27 +1,49 @@
 ---
+# ############################################### #
+# Grid'5000 reservation parameters                #
+# ############################################### #
+
 name: discovery-kolla
-walltime: 03:00:00
+walltime: "2:00:00"
 
 resources:
-  paravance: 
-    controller: 1
+  rennes: 
+    control: 1
     compute: 1
     network: 1
-    storage: 1
-    util: 1 # You should define at least one util node
-
+    
 vlans:
   # mandatory : you need to have exacly one vlan
   rennes: "{type='kavlan'}/vlan=1"
 
+# Be less strict on node distribution especially
+# when nodes are missing in the reservation
+# or not deployed
+role_distribution: debug
+
+enable_monitoring: true
+
+# ############################################### #
+# Inventory to use                                #
+# ############################################### #
+
+# This will describe the topology of your services
+inventory: inventories/inventory.sample
+
+# ############################################### #
 # docker registry parameters
+# ############################################### #
 registry:
   ceph: true 
   ceph_keyring: /home/discovery/.ceph/ceph.client.discovery.keyring
   ceph_id: discovery
   ceph_rbd: discovery_kolla_registry/datas
 
-# Be less strict on node distribution especially
-# when nodes are missing in the reservation
-# or not deployed
-role_distribution: debug
+
+# ############################################### #
+# Kolla parameteres (globals.yml)                 # 
+# ############################################### #
+kolla:
+  kolla_base_distro: "centos"
+  openstack_release: "2.0.1"
+  enable_heat: "no"

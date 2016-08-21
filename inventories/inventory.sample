@@ -1,39 +1,16 @@
-{% macro write_nodes(nodes) -%}
-{% for node in nodes -%}
-{{node.address}} ansible_ssh_user=root
-{% endfor %}
-{%- endmacro -%}
-# These groups were added by Discovery
-[hosts]
-{{ write_nodes(all_nodes) }}
+## This is the original kolla multinode inventory
+## augmented with some monitoring services
+## disabling it will lead to a vanilla kolla openstack installation
 
-[util]
-{{ util_node.address }}
+## Discovery specicifics
+[disco/registry:children]
+control
 
-# These initial groups are the only groups required to be modified. The
-# additional groups are for more control of the environment.
-[control]
-# These hostname must be resolvable from your deployment host
-{{ write_nodes(control_nodes) }}
+[disco/grafana:children]
+control
 
-# The above can also be specified as follows:
-#control[01:03]     ansible_ssh_user=kolla
-
-# The network nodes are where your l3-agent and loadbalancers will run
-# This can be the same as a host in the control group
-[network]
-{{ write_nodes(network_nodes) }}
-
-[compute]
-{{ write_nodes(compute_nodes) }}
-
-# When compute nodes and control nodes use different interfaces,
-# you can specify "api_interface" and another interfaces like below:
-#compute01 neutron_external_interface=eth0 api_interface=em1 storage_interface=em1 tunnel_interface=em1
-
-[storage]
-{{ write_nodes(storage_nodes) }}
-
+[disco/influx:children]
+control
 
 # You can explicitly specify which hosts run each project by updating the
 # groups in the sections below. Common services are grouped together.
@@ -50,7 +27,7 @@ network
 control
 
 [rabbitmq:children]
-control
+network
 
 [mongodb:children]
 control

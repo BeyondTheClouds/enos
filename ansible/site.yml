@@ -1,0 +1,33 @@
+---
+- name: install common dependencies
+  hosts: all
+  roles:
+    - { role: common,
+        tags: ['common'] }
+
+- name: Configure the Docker registry
+  hosts: disco/registry
+  roles:
+    - { role: registry,
+        tags: ['registry'] }
+      
+- name: install cadvisor
+  hosts: all
+  roles:
+    - { role: cadvisor,
+        tags: ['cadvisor'],
+        when: enable_monitoring | bool }
+
+- name: Configure the influx database
+  hosts: disco/influx
+  roles:
+    - { role: influx, 
+        tags: ['influx'],
+        when: enable_monitoring | bool } 
+
+- name: Configure grafana
+  hosts: disco/grafana
+  roles:
+    - { role: grafana, 
+        tags: ['grafana'],
+        when: enable_monitoring | bool }
