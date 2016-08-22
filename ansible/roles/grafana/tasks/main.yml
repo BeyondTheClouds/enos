@@ -8,7 +8,7 @@
       - "3000:3000"
     state: started
     env: 
-      INFLUXDB_HOST: "{{ influx_ip }}"
+      INFLUXDB_HOST: "{{ influx_vip }}"
       INFLUXDB_PORT: 8086
       INFLUXDB_NAME: cadvisor
       INFLUXDB_USER: root
@@ -16,7 +16,7 @@
 
 - name: Waiting for the grafana service to become available
   wait_for: 
-    host: "{{ influx_ip }}"
+    host: "localhost"
     port: 3000
     state: started
     delay: 2
@@ -24,7 +24,7 @@
 
 - name: Add the influx data source
   uri:
-    url: "http://{{ influx_ip }}:3000/api/datasources"
+    url: "http://localhost:3000/api/datasources"
     user: admin
     password: admin
     force_basic_auth: yes
@@ -34,6 +34,6 @@
     # we workaround this issue : 
     # https://github.com/ansible/ansible-modules-core/issues/265
     # by adding an empty space at the beginning of the json ...
-    body: " { \"name\": \"influx\", \"type\": \"influxdb\", \"url\": \"http://{{ influx_ip }}:8086\", \"access\": \"proxy\", \"database\": \"cadvisor\", \"user\": \"root\", \"password\": \"root\", \"isDefault\": true }"
+    body: " { \"name\": \"influx\", \"type\": \"influxdb\", \"url\": \"http://{{ influx_vip }}:8086\", \"access\": \"proxy\", \"database\": \"cadvisor\", \"user\": \"root\", \"password\": \"root\", \"isDefault\": true }"
     return_content: yes
     status: 200

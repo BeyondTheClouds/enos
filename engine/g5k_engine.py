@@ -25,14 +25,6 @@ DEFAULT_CONN_PARAMS = {'user': 'root'}
 
 ROLE_DISTRIBUTION_MODE_STRICT = "strict"
 
-DEFAULT_ROLES = {
-    "controller": 0,
-    "compute": 0,
-    "network": 0,
-    "storage": 0,
-    "util": 0
-}
-
 DEFAULT_CONFIG = {
     "name": "kolla-discovery",
     "walltime": "02:00:00",
@@ -78,7 +70,7 @@ class G5kEngine(Engine):
         self.networks = None
         # Add some command line arguments
         self.options_parser.add_option("-f", dest="config_path",
-            help="Path to the configuration file describing the Grid'5000 the deployment.")
+            help="directory containing the configuration of the deployment")
 
         self.options_parser.add_option("--force-deploy", dest="force_deploy",
             help="Force deployment",
@@ -88,7 +80,7 @@ class G5kEngine(Engine):
     def load(self):
         """Load the configuration file"""
         if self.options.config_path is None:
-            self.options.config_path = DEFAULT_CONF_FILE
+            self.options.config_path = "reservation.yaml"
 
         # Load the configuration file
         try:
@@ -109,12 +101,6 @@ class G5kEngine(Engine):
         self.config = {}
         self.config.update(DEFAULT_CONFIG)
         self.config.update(config)
-
-        # We rebuild the resources to apply default values
-        self.config['resources'] = {}
-        for cluster, roles in config['resources'].items():
-            self.config['resources'][cluster] = DEFAULT_ROLES.copy()
-            self.config['resources'][cluster].update(roles)
 
         logger.info("Configuration file loaded : %s" % self.options.config_path)
         logger.info(pf(self.config))
@@ -236,7 +222,11 @@ class G5kEngine(Engine):
             return nodes
 
         # Maps a role (eg, controller) with a list of G5K node.
-        roles = {k: [] for k in DEFAULT_ROLES.keys()}
+        roles_set = set()
+        for roles in self.config['resources'].values():
+            roles_set.update(roles.keys())
+        roles = {k: [] for k in roles_set}
+
         pools = mk_pools()
         for cluster, rs in self.config['resources'].items():
             current = pick_nodes(pools[cluster], 1)
@@ -298,7 +288,7 @@ class G5kEngine(Engine):
             logger.error("No oar job was created.")
             sys.exit(26)
 
-    def get_free_ip(self):
+    def get_free_ip(self, count):
         """
         Gets a free ip.
         Originally it was done by reserving a subnet
@@ -315,7 +305,7 @@ class G5kEngine(Engine):
         # the last ip is reserved x.x.x.255
         # the previous one also x.x.x..254 (gw)
         # the x.x.x.253 seems to be pingable as well (seems undocumented in g5k wiki)
-        return str(range_ips[-4])
+        return list(range_ips[-3-count:-3])
 
     def get_cluster_nics(self, cluster):
         site = EX5.get_cluster_site(cluster)

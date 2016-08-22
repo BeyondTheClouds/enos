@@ -73,11 +73,7 @@ class TestCheckNodes(unittest.TestCase):
     def test_not_enough_nodes_not_strict(self):
         nodes = [1, 2, 3, 4, 5]
         self.assertTrue(check_nodes(nodes, self.roles, ""))
-
-
             
-            
-
 if __name__ == '__main__':
     unittest.main()
 
