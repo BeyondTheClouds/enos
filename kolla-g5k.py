@@ -13,8 +13,8 @@ Usage:
 Options:
   -h --help       Show this help message.
   -f CONFIG_PATH  Path to the configuration file describing the
-                  Grid'5000 deployment [default: ./reservation.yaml]
-  --force-deploy  Force deployment
+                  Grid'5000 deployment [default: ./reservation.yaml].
+  --force-deploy  Force deployment.
 
 Commands:
   prepare-node  Make a G5K reservation and install the docker registry
@@ -219,10 +219,10 @@ def prepare_node(conf_file, force_deploy):
 
     # Get an IP for
     # kolla (haproxy)
-    # docker registry
-    # influx db
-    vip_addresses = g5k.get_free_ip(3)
-    print(vip_addresses)
+    # docker registry 
+    # influx db 
+    # grafana
+    vip_addresses = g5k.get_free_ip(4)
     # Get the NIC devices of the reserved cluster
     # XXX: this only works if all nodes are on the same cluster,
     # or if nodes from different clusters have the same devices
@@ -247,6 +247,7 @@ def prepare_node(conf_file, force_deploy):
         'vip': str(vip_addresses[0]),
         'registry_vip': str(vip_addresses[1]),
         'influx_vip': str(vip_addresses[2]),
+        'grafana_vip': str(vip_addresses[3]),
         'network_interface': str(interfaces[0])
     }
 

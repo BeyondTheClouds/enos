@@ -222,12 +222,18 @@ class G5kEngine(Engine):
             del pool[:n]
             return nodes
 
-        # Maps a role (eg, controller) with a list of G5K node.
+        # Maps a role (eg, controller) with a list of G5K node
         roles_set = set()
         for roles in self.config['resources'].values():
             roles_set.update(roles.keys())
         roles = {k: [] for k in roles_set}
+        roles_goal = {k: 0 for k in roles_set}
 
+        # compute the aggregated number of nodes per roles 
+        for r in self.config['resources'].values():
+            for k,v in r.items():
+                roles_goal[k] = roles_goal[k] + v
+        
         pools = mk_pools()
         for cluster, rs in self.config['resources'].items():
             current = pick_nodes(pools[cluster], 1)
@@ -235,7 +241,7 @@ class G5kEngine(Engine):
             for r in rs.keys() * len(self.deployed_nodes):
                 if current == []:
                     break
-                if current != [] and len(roles[r]) < rs[r]:
+                if current != [] and len(roles[r]) < roles_goal[r]:
                     roles.setdefault(r, []).extend(current)
                     current = pick_nodes(pools[cluster], 1)
 
