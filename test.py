@@ -40,6 +40,32 @@ class TestBuildRoles(unittest.TestCase):
         self.assertEquals(1, len(roles["compute"]))
         self.assertEquals(1, len(roles["network"]))
         self.assertEquals(1, len(roles["util"]))
+    
+    def test_build_roles_with_multiple_clusters(self):
+        self.engine.config = {
+            "resources": {
+                "a": {
+                    "controller": 1,
+                    "compute" : 2,
+                    "network" : 1,
+                    "storage" : 1,
+                    "util"    : 1
+                },
+                "b": {
+                    "compute": 2  
+                 }
+            }
+        }
+        self.engine.deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4", "a-5", "a-6", "b-1", "b-2"])
+        roles = self.engine.build_roles()
+        self.assertEquals(1, len(roles["controller"]))
+        self.assertEquals(1, len(roles["storage"]))
+        self.assertEquals(4, len(roles["compute"]))
+        self.assertEquals(1, len(roles["network"]))
+        self.assertEquals(1, len(roles["util"]))
+    
+
+
 
 class TestCheckNodes(unittest.TestCase):
 
