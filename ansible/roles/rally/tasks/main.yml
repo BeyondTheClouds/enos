@@ -1,0 +1,43 @@
+---
+- name: Install result directory
+  # TODO: link this with execo result dir
+  file: path=/root/rally_home state=directory owner=65500
+
+- name: Test whether the rally database has been initialized or not
+  stat: path=/root/rally_home/.rally.sqlite
+  register: sqlite
+
+- name: Initialize database
+  when: not sqlite.stat.exists
+  docker:
+    image: rallyforge/rally
+    state: started
+    volumes:
+    - /root/rally_home:/home/rally
+    command: rally-manage db recreate
+
+- name: Test whether the rally deployment has been created or not
+  command: docker run -v /root/rally_home:/home/rally rallyforge/rally rally deployment list
+  register: deployment
+
+- name: Deploy discovery context
+  when: "'discovery' not in deployment.stdout"
+  docker:
+    image: rallyforge/rally
+    state: started
+    volumes:
+    - /root/rally_home:/home/rally
+    env:
+      OS_PROJECT_DOMAIN_ID: default
+      OS_PROJECT_DOMAIN_NAME: default
+      OS_USER_DOMAIN_ID: Default
+      OS_USER_DOMAIN_NAME: Default
+      OS_PROJECT_NAME: admin
+      OS_PROJECT_DOMAIN_NAME: default
+      OS_TENANT_NAME: admin
+      OS_USERNAME: admin
+      OS_PASSWORD: demo
+      OS_AUTH_URL: "http://{{ vip }}:5000/v3"
+      OS_IDENTITY_API_VERSION: 3
+      OS_REGION_NAME: "RegionOne"
+    command: rally deployment create --fromenv --name=discovery

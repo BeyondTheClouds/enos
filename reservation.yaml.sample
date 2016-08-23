@@ -7,7 +7,7 @@ name: discovery-kolla
 walltime: "2:00:00"
 
 resources:
-  rennes: 
+  paravance: 
     control: 1
     compute: 1
     network: 1
@@ -21,7 +21,8 @@ vlans:
 # or not deployed
 role_distribution: debug
 
-enable_monitoring: true
+#enable_monitoring: true
+#enable_rally: true
 
 # ############################################### #
 # Inventory to use                                #

@@ -22,6 +22,8 @@
     delay: 2
     timeout: 120
 
+- pause: seconds=20
+
 - name: Add the influx data source
   uri:
     url: "http://localhost:3000/api/datasources"

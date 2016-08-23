@@ -31,3 +31,10 @@
     - { role: grafana, 
         tags: ['grafana'],
         when: enable_monitoring | bool }
+
+- name: Configure Rally
+  hosts: disco/rally
+  roles:
+    - { role: rally, 
+        tags: ['rally'],
+        when: enable_rally | bool }

@@ -4,3 +4,4 @@ cadvisor:
 g5k_role: unknown
 
 enable_monitoring: true
+enable_rally: true
