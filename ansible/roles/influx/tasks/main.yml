@@ -10,7 +10,7 @@
 - name: Start the influx container
   docker:
     detach: True
-    image: "tutum/influxdb:0.9"
+    image: "tutum/influxdb:0.13"
     name: "influx"
     ports: 
       - "8083:8083"
@@ -29,7 +29,7 @@
     timeout: 120
 
 - name: Create the cadvisor database
-  shell: "curl -s -G http://{{ influx_vip }}:8086/query --data-urlencode 'q=CREATE DATABASE cadvisor'"
+  shell: "curl -s -XPOST http://{{ influx_vip }}:8086/query --data-urlencode 'q=CREATE DATABASE cadvisor'"
   register: result
   until: result.stdout == '{"results":[{}]}'
   retries: 10

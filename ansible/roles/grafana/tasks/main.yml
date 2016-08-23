@@ -1,4 +1,12 @@
 ---
+- name: Checking that the {{ grafana_vip }} is free on this host
+  command: "ip addr show {{ network_interface }}"
+  register: result
+
+- name: Add a vip address for grafana
+  command: "ip addr add {{ grafana_vip }} dev {{ network_interface }}"
+  when: result.stdout.find("{{ grafana_vip }}") == -1
+
 - name: Start the graphana container
   docker:
     detach: True
@@ -16,17 +24,15 @@
 
 - name: Waiting for the grafana service to become available
   wait_for: 
-    host: "localhost"
+    host: "{{ grafana_vip }}"
     port: 3000
     state: started
     delay: 2
     timeout: 120
 
-- pause: seconds=20
-
 - name: Add the influx data source
   uri:
-    url: "http://localhost:3000/api/datasources"
+    url: "http://{{ grafana_vip }}:3000/api/datasources"
     user: admin
     password: admin
     force_basic_auth: yes
