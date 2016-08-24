@@ -3,23 +3,24 @@
 
 Usage:
   kolla-g5k.py [-h | --help] [-f CONFIG_PATH] [--force-deploy]
-  kolla-g5k.py prepare-node [-f CONFIG_PATH] [--force-deploy]
-  kolla-g5k.py install-os
+  kolla-g5k.py prepare-node [-f CONFIG_PATH] [--force-deploy] [-t TAGS | --tags=TAGS]
+  kolla-g5k.py install-os [-t TAGS | --tags=TAGS]
   kolla-g5k.py init-os
-  kolla-g5k.py run-rally
+  kolla-g5k.py bench TASK
   kolla-g5k.py ssh-tunnel
   kolla-g5k.py info
 
 Options:
-  -h --help       Show this help message.
-  -f CONFIG_PATH  Path to the configuration file describing the
-                  Grid'5000 deployment [default: ./reservation.yaml].
-  --force-deploy  Force deployment.
+  -h --help           Show this help message.
+  -f CONFIG_PATH      Path to the configuration file describing the
+                      Grid'5000 deployment [default: ./reservation.yaml].
+  -t TAGS --tags=TAGS Only run ansible tasks tagged with these values.
+  --force-deploy      Force deployment.
 
 Commands:
   prepare-node  Make a G5K reservation and install the docker registry
   install-os    Run kolla and install OpenStack
-  run-rally     Run rally on this OpenStack
+  bench         Run rally on this OpenStack
   ssh-tunnel    Print configuration for port forwarding with horizon
   info          Show information of the actual deployment
 """
@@ -34,7 +35,6 @@ from keystoneauth1.identity import v3
 from keystoneauth1 import session
 from glanceclient import client as gclient
 from keystoneclient.v3 import client as kclient
-
 
 import sys, os, subprocess
 from ansible.inventory import Inventory
@@ -68,9 +68,9 @@ KOLLA_MANDATORY_GROUPS = [
 
 # State of the script
 STATE = {
-    'phase'  : '', # Last phase that have been run
     'config' : {}, # The config
     'nodes'  : {}, # Roles with nodes
+    'phase'  : '', # Last phase that have been run
     'user'   : ''  # User id for this job
 }
 
@@ -86,7 +86,7 @@ def load_state():
             STATE.update(pickle.load(state_file))
 
 
-def run_ansible(playbooks, inventory_path, extra_vars={}):
+def run_ansible(playbooks, inventory_path, extra_vars={}, tags=None):
     inventory = Inventory(inventory_path)
 
     for path in playbooks:
@@ -100,8 +100,10 @@ def run_ansible(playbooks, inventory_path, extra_vars={}):
             extra_vars=extra_vars,
             stats=stats,
             callbacks=playbook_cb,
-            runner_callbacks=ansible.callbacks.PlaybookRunnerCallbacks(stats, verbose=1),
-            forks=10
+            forks=10,
+            only_tags=tags,
+            runner_callbacks=
+              ansible.callbacks.PlaybookRunnerCallbacks(stats, verbose=1)
         )
 
         pb.run()
@@ -202,12 +204,12 @@ def generate_kolla_files(config_vars, kolla_vars, directory):
     logger.info("admin-openrc generated in %s" % (admin_openrc_path))
 
 
-def prepare_node(conf_file, force_deploy):
-    g5k = G5kEngine()
+def prepare_node(conf_file, force_deploy, tags):
+    g5k = G5kEngine(conf_file, force_deploy)
 
-    g5k.start()
+    g5k.start(args=[])
 
-    g5k.load()
+    STATE['config'].update(g5k.load())
 
     g5k.get_job()
 
@@ -219,40 +221,38 @@ def prepare_node(conf_file, force_deploy):
 
     # Get an IP for
     # kolla (haproxy)
-    # docker registry 
-    # influx db 
+    # docker registry
+    # influx db
     # grafana
     vip_addresses = g5k.get_free_ip(4)
     # Get the NIC devices of the reserved cluster
     # XXX: this only works if all nodes are on the same cluster,
     # or if nodes from different clusters have the same devices
-    interfaces = g5k.get_cluster_nics(g5k.config['resources'].keys()[0])
+    interfaces = g5k.get_cluster_nics(STATE['config']['resources'].keys()[0])
 
-    # TODO workarround
-    g5k.exec_command_on_nodes(g5k.deployed_nodes, 'apt-get update && apt-get -y --force-yes install apt-transport-https',
-        'Workarround: installing apt-transport-https...')
+    g5k.exec_command_on_nodes(
+        g5k.deployed_nodes,
+        'apt-get update && apt-get -y --force-yes install apt-transport-https',
+        'Installing apt-transport-https...')
 
     # Install python on the nodes
-    g5k.exec_command_on_nodes(g5k.deployed_nodes, 'apt-get -y install python',
+    g5k.exec_command_on_nodes(
+        g5k.deployed_nodes,
+        'apt-get -y install python',
         'Installing Python on all the nodes...')
 
-    # Run the Ansible playbooks
-    playbooks = ['ansible/site.yml']
-
+    # Generates files for ansible/kolla
     inventory_path = os.path.join(g5k.result_dir, 'multinode')
-    base_inventory = g5k.config['inventory']
+    base_inventory = STATE['config']['inventory']
     generate_inventory(roles, base_inventory, inventory_path)
 
-    extra_vars = {
-        'vip': str(vip_addresses[0]),
-        'registry_vip': str(vip_addresses[1]),
-        'influx_vip': str(vip_addresses[2]),
-        'grafana_vip': str(vip_addresses[3]),
-        'network_interface': str(interfaces[0])
+    kolla_vars = {
+        'kolla_internal_vip_address' : str(vip_addresses[0]),
+        'network_interface'          : str(interfaces[0]),
+        'neutron_external_interface' : str(interfaces[1])
     }
-
-    extra_vars.update(g5k.config)
-    run_ansible(playbooks, inventory_path, extra_vars)
+    # global.yml, password.yml ...
+    generate_kolla_files(STATE['config']['kolla'], kolla_vars, g5k.result_dir)
 
     # Clone or pull Kolla
     if os.path.isdir('kolla'):
@@ -262,40 +262,46 @@ def prepare_node(conf_file, force_deploy):
         logger.info("Cloning Kolla...")
         os.system("git clone %s -b %s > /dev/null" % (KOLLA_REPO, KOLLA_BRANCH))
 
-    # Generate the inventory file
-    kolla_vars = {
-        'kolla_internal_vip_address' : str(vip_addresses[0]),
-        'network_interface'          : str(interfaces[0]),
-        'neutron_external_interface' : str(interfaces[1])
-    }
-
-    # Generating Ansible globals.yml
-    generate_kolla_files(g5k.config["kolla"], kolla_vars, g5k.result_dir)
-
+    # Symlink current directory
     link = os.path.abspath(SYMLINK_NAME)
     try:
         os.remove(link)
     except OSError:
         pass
     os.symlink(g5k.result_dir, link)
-
     logger.info("Symlinked %s to %s" % (g5k.result_dir, link))
+
+    STATE['config'].update({
+        'vip': str(vip_addresses[0]),
+        'registry_vip': str(vip_addresses[1]),
+        'influx_vip': str(vip_addresses[2]),
+        'grafana_vip': str(vip_addresses[3]),
+        'network_interface': str(interfaces[0])
+    })
+
+    # Run the Ansible playbooks
+    playbook_path = os.path.join(SCRIPT_PATH, 'ansible', 'prepare-node.yml')
+    inventory_path = os.path.join(SYMLINK_NAME, 'multinode')
+    run_ansible([playbook_path], inventory_path, STATE['config'], tags)
 
     # Fills the state and save it in the `current` directory
     # TODO: Manage STATE at __main__ level
-    STATE['config'] = extra_vars
     STATE['nodes']  = roles
     STATE['user']   = g5k.user
 
-def install_os():
-    kolla_args = ["-i %s/multinode" % SYMLINK_NAME,
-                  "--configdir %s" % SYMLINK_NAME]
+def install_os(tags=None):
+    args = ["-i %s/multinode" % SYMLINK_NAME,
+            "--configdir %s" % SYMLINK_NAME]
 
-    # call(" ".join(["./kolla/tools/kolla-ansible prechecks"] + kolla_args),
+    if tags:
+        args.append("--tags=%s" % tags)
+
+    # call(" ".join(["./kolla/tools/kolla-ansible prechecks"] + args),
     #      shell=True)
-    # call(" ".join(["./kolla/tools/kolla-ansible pull"] + kolla_args),
+    # call(" ".join(["./kolla/tools/kolla-ansible pull"] + args),
     #      shell=True)
-    call(" ".join(["./kolla/tools/kolla-ansible deploy"] + kolla_args),
+
+    call(" ".join(["./kolla/tools/kolla-ansible deploy"] + args),
          shell=True)
 
 def init_os():
@@ -336,11 +342,11 @@ def init_os():
         glance.images.upload(cirros.id, cirros_img.content)
         logger.info("%s has been created on OpenStack" %  cirros_name)
 
-def run_rally():
-    # TODO: Run task
-    # rally task start /usr/share/rally/samples/tasks/scenarios/nova/boot-and-delete.json
-    pass
-
+def bench(task):
+    playbook_path = os.path.join(SCRIPT_PATH, 'ansible', 'run-bench.yml')
+    inventory_path = os.path.join(SYMLINK_NAME, 'multinode')
+    STATE['config']['task'] = task
+    run_ansible([playbook_path], inventory_path, STATE['config'])
 
 def ssh_tunnel():
     user = STATE['user']
@@ -367,50 +373,52 @@ def ssh_tunnel():
 
 
 if __name__ == "__main__":
-    arguments = docopt(__doc__)
+    args = docopt(__doc__)
 
     load_state()
 
     # If the user doesn't specify a phase in particular, then run all
-    if not arguments['prepare-node'] and \
-       not arguments['install-os'] and \
-       not arguments['init-os'] and \
-       not arguments['run-rally'] and \
-       not arguments['ssh-tunnel'] and \
-       not arguments['info']:
-       arguments['prepare-node'] = True
-       arguments['install-os'] = True
-       arguments['init-os'] = True
-       arguments['run-rally'] = True
+    if not args['prepare-node'] and \
+       not args['install-os'] and \
+       not args['init-os'] and \
+       not args['bench'] and \
+       not args['ssh-tunnel'] and \
+       not args['info']:
+       args['prepare-node'] = True
+       args['install-os'] = True
+       args['init-os'] = True
 
     # Prepare node phase
-    if arguments['prepare-node']:
-        prepare_node(arguments['-f'],arguments['--force-deploy'])
-        STATE['phase']  = 'prepare-node'
+    if args['prepare-node']:
+        STATE['phase'] = 'prepare-node'
+        config_file = args['-f']
+        force_deploy = args['--force-deploy']
+        tags = args['--tags'].split(',') if args['--tags'] else None
+        prepare_node(config_file, force_deploy, tags)
         save_state()
 
     # Run kolla phase
-    if arguments['install-os']:
-        install_os()
-        STATE['phase']  = 'install-os'
+    if args['install-os']:
+        STATE['phase'] = 'install-os'
+        install_os(args['--tags'])
         save_state()
 
-    # Run rally phase
-    if arguments['init-os']:
+    # Run init phase
+    if args['init-os']:
+        STATE['phase'] = 'init-os'
         init_os()
-        STATE['phase']  = 'init-os'
         save_state()
 
-    # Run rally phase
-    if arguments['run-rally']:
-        run_rally()
-        STATE['phase']  = 'run-rally'
+    # Run bench phase
+    if args['bench']:
+        STATE['phase'] = 'run-bench'
+        bench(os.path.join(SCRIPT_PATH, args['TASK']))
         save_state()
 
     # Print information for port forwarding
-    if arguments['ssh-tunnel']:
+    if args['ssh-tunnel']:
         ssh_tunnel()
 
     # Show info
-    if arguments ['info']:
+    if args ['info']:
         pprint.pprint(STATE)

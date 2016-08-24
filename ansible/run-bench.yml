@@ -1,0 +1,9 @@
+---
+- name: Run Bench
+  hosts:
+    - disco/rally
+    - disco/influx
+  roles:
+    - { role: bench,
+        tags: ['bench'],
+        when: enable_rally | bool }

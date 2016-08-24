@@ -1,0 +1,3 @@
+# TODO: implement influx backup
+# - name: Influxdb backup
+#   fetch: src=/etc/hosts dest={{ playbook_dir }}/../current/{{ inventory_hostname }}-influx flat=yes
