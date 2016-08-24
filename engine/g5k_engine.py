@@ -121,7 +121,8 @@ class G5kEngine(Engine):
         attempts = 0
         self.nodes = None
         while self.nodes is None and attempts < MAX_ATTEMPTS:
-            self.nodes = EX5.get_oargrid_job_nodes(self.gridjob)
+            self.nodes = sorted(EX5.get_oargrid_job_nodes(self.gridjob),
+                                    key = lambda n: n.address)
             attempts += 1
 
         check_nodes(
@@ -175,9 +176,12 @@ class G5kEngine(Engine):
                 logger.error(style.emph(undeployed.address))
 
         # Updating nodes names with vlans
-        self.nodes = translate_to_vlan(self.nodes, vlan[1])
+        self.nodes = sorted(translate_to_vlan(self.nodes, vlan[1]),
+                            key = lambda n: n.address)
         logger.info(self.nodes)
-        self.deployed_nodes = translate_to_vlan(map(lambda n: EX.Host(n), deployed), vlan[1])
+        self.deployed_nodes = sorted(translate_to_vlan(
+                                        map(lambda n: EX.Host(n), deployed), vlan[1]),
+                                key = lambda n: n.address)
         logger.info(self.deployed_nodes)
         check_nodes(
                 nodes = self.deployed_nodes,
