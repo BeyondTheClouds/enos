@@ -4,7 +4,7 @@
 Usage:
   kolla-g5k.py [-h | --help] [-f CONFIG_PATH] [--force-deploy]
   kolla-g5k.py prepare-node [-f CONFIG_PATH] [--force-deploy] [-t TAGS | --tags=TAGS]
-  kolla-g5k.py install-os [-t TAGS | --tags=TAGS]
+  kolla-g5k.py install-os [--reconfigure] [-t TAGS | --tags=TAGS]
   kolla-g5k.py init-os
   kolla-g5k.py bench TASK
   kolla-g5k.py ssh-tunnel
@@ -16,6 +16,7 @@ Options:
                       Grid'5000 deployment [default: ./reservation.yaml].
   -t TAGS --tags=TAGS Only run ansible tasks tagged with these values.
   --force-deploy      Force deployment.
+  --reconfigure   Reconfigure the services after a deployment.
 
 Commands:
   prepare-node  Make a G5K reservation and install the docker registry
@@ -69,6 +70,7 @@ KOLLA_MANDATORY_GROUPS = [
 # State of the script
 STATE = {
     'config' : {}, # The config
+    'config_file' : '', # The initial config file
     'nodes'  : {}, # Roles with nodes
     'phase'  : '', # Last phase that have been run
     'user'   : ''  # User id for this job
@@ -84,6 +86,15 @@ def load_state():
     if os.path.isfile(state_path):
         with open(state_path, 'rb') as state_file:
             STATE.update(pickle.load(state_file))
+
+def update_config_state():
+    """
+    Update STATE['config'] with the config file options
+    """
+    config_file = STATE['config_file']
+    with open(config_file, 'r') as f:
+        STATE['config'].update(yaml.load(f))
+    logger.info("Reloaded config %s", STATE['config'] )
 
 
 def run_ansible(playbooks, inventory_path, extra_vars={}, tags=None):
@@ -192,7 +203,7 @@ def generate_kolla_files(config_vars, kolla_vars, directory):
 
     # copy the passwords file
     passwords_path = os.path.join(directory, "passwords.yml")
-    os.system("cp %s/passwords.yml %s" % (TEMPLATE_DIR, passwords_path))
+    call("cp %s/passwords.yml %s" % (TEMPLATE_DIR, passwords_path), shell=True)
     logger.info("Password file is copied to  %s" % (passwords_path))
 
     # admin openrc
@@ -246,22 +257,6 @@ def prepare_node(conf_file, force_deploy, tags):
     base_inventory = STATE['config']['inventory']
     generate_inventory(roles, base_inventory, inventory_path)
 
-    kolla_vars = {
-        'kolla_internal_vip_address' : str(vip_addresses[0]),
-        'network_interface'          : str(interfaces[0]),
-        'neutron_external_interface' : str(interfaces[1])
-    }
-    # global.yml, password.yml ...
-    generate_kolla_files(STATE['config']['kolla'], kolla_vars, g5k.result_dir)
-
-    # Clone or pull Kolla
-    if os.path.isdir('kolla'):
-        logger.info("Pulling Kolla...")
-        os.system("cd kolla; git pull > /dev/null")
-    else:
-        logger.info("Cloning Kolla...")
-        os.system("git clone %s -b %s > /dev/null" % (KOLLA_REPO, KOLLA_BRANCH))
-
     # Symlink current directory
     link = os.path.abspath(SYMLINK_NAME)
     try:
@@ -284,25 +279,54 @@ def prepare_node(conf_file, force_deploy, tags):
     inventory_path = os.path.join(SYMLINK_NAME, 'multinode')
     run_ansible([playbook_path], inventory_path, STATE['config'], tags)
 
+    kolla_vars = {
+        'kolla_internal_vip_address' : str(vip_addresses[0]),
+        'network_interface'          : str(interfaces[0]),
+        'neutron_external_interface' : str(interfaces[1])
+    }
+    # Generating Ansible globals.yml, passwords.yml
+    generate_kolla_files(g5k.config["kolla"], kolla_vars, g5k.result_dir)
+
     # Fills the state and save it in the `current` directory
     # TODO: Manage STATE at __main__ level
+    STATE['config_file'] = conf_file
     STATE['nodes']  = roles
     STATE['user']   = g5k.user
 
-def install_os(tags=None):
-    args = ["-i %s/multinode" % SYMLINK_NAME,
-            "--configdir %s" % SYMLINK_NAME]
+def install_os(reconfigure, tags = None):
+    update_config_state()
 
-    if tags:
-        args.append("--tags=%s" % tags)
+    # Clone or pull Kolla
+    if os.path.isdir('kolla'):
+        logger.info("Remove previous Kolla installation")
+        kolla_path = os.path.join(SCRIPT_PATH, "kolla")
+        call("rm -rf %s" % kolla_path, shell=True)
 
-    # call(" ".join(["./kolla/tools/kolla-ansible prechecks"] + args),
-    #      shell=True)
-    # call(" ".join(["./kolla/tools/kolla-ansible pull"] + args),
-    #      shell=True)
+    logger.info("Cloning Kolla")
+    call("cd %s ; git clone %s -b %s > /dev/null" % (SCRIPT_PATH, KOLLA_REPO, KOLLA_BRANCH), shell=True)
+    
+    logger.warning("Patching kolla, this should be \
+            deprecated with the new version of Kolla")
 
-    call(" ".join(["./kolla/tools/kolla-ansible deploy"] + args),
-         shell=True)
+    playbook = os.path.join(SCRIPT_PATH, "ansible/patches.yml")
+    inventory_path = os.path.join(SYMLINK_NAME, 'multinode')
+    run_ansible([playbook], inventory_path, STATE['config'])
+   
+    kolla_cmd = [os.path.join(SCRIPT_PATH, "kolla", "tools", "kolla-ansible")]
+
+    if reconfigure:
+        kolla_cmd.append('reconfigure')
+    else:
+        kolla_cmd.append('deploy')
+
+    kolla_cmd.extend(["-i", "%s/multinode" % SYMLINK_NAME,
+                  "--configdir", "%s" % SYMLINK_NAME])
+    
+    if tags is not None:
+        kolla_cmd.extend(["--tags", args])
+
+    call(kolla_cmd) 
+   
 
 def init_os():
     # Authenticate to keystone
@@ -400,7 +424,7 @@ if __name__ == "__main__":
     # Run kolla phase
     if args['install-os']:
         STATE['phase'] = 'install-os'
-        install_os(args['--tags'])
+        install_os(args['--reconfigure'], args['--tags'])
         save_state()
 
     # Run init phase

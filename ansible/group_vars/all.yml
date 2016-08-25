@@ -5,3 +5,16 @@ g5k_role: unknown
 
 enable_monitoring: true
 enable_rally: true
+
+# list of available patchs
+# to enable one patch copy past its description
+# to your local config file and enable it
+patches:
+  - name: patch galera.cnf.j2
+    src: galera.cnf.j2
+    dst: kolla/ansible/roles/mariadb/templates/galera.cnf.j2
+    enabled: "no"
+  - name: patch wsgi-keystone.conf.j2
+    src: wsgi-keystone.conf.j2
+    dst: kolla/ansible/roles/keystone/templates/wsgi-keystone.conf.j2
+    enabled: "no"
