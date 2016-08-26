@@ -111,7 +111,6 @@ def run_ansible(playbooks, inventory_path, extra_vars={}, tags=None):
             extra_vars=extra_vars,
             stats=stats,
             callbacks=playbook_cb,
-            forks=10,
             only_tags=tags,
             runner_callbacks=
               ansible.callbacks.PlaybookRunnerCallbacks(stats, verbose=1)
