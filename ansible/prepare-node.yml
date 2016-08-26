@@ -1,5 +1,5 @@
 ---
-- name: install common dependencies
+- name: Install common dependencies
   hosts: all
   roles:
     - { role: common,
@@ -10,8 +10,8 @@
   roles:
     - { role: registry,
         tags: ['registry'] }
-      
-- name: install cadvisor
+
+- name: Install cadvisor
   hosts: all
   roles:
     - { role: cadvisor,
@@ -21,20 +21,34 @@
 - name: Configure the influx database
   hosts: disco/influx
   roles:
-    - { role: influx, 
+    - { role: influx,
         tags: ['influx'],
-        when: enable_monitoring | bool } 
+        when: enable_monitoring | bool }
 
 - name: Configure grafana
   hosts: disco/grafana
   roles:
-    - { role: grafana, 
+    - { role: grafana,
         tags: ['grafana'],
         when: enable_monitoring | bool }
 
 - name: Configure Rally
   hosts: disco/rally
+  vars:
+    os_env:
+      OS_PROJECT_DOMAIN_ID: default
+      OS_PROJECT_DOMAIN_NAME: default
+      OS_USER_DOMAIN_ID: Default
+      OS_USER_DOMAIN_NAME: Default
+      OS_PROJECT_NAME: admin
+      OS_PROJECT_DOMAIN_NAME: default
+      OS_TENANT_NAME: admin
+      OS_USERNAME: admin
+      OS_PASSWORD: demo
+      OS_AUTH_URL: "http://{{ vip }}:5000/v3"
+      OS_IDENTITY_API_VERSION: 3
+      OS_REGION_NAME: "RegionOne"
   roles:
-    - { role: rally, 
+    - { role: rally,
         tags: ['rally'],
         when: enable_rally | bool }

@@ -63,33 +63,23 @@ def check_nodes(nodes = [], resources = {}, mode = ROLE_DISTRIBUTION_MODE_STRICT
     return True
 
 class G5kEngine(Engine):
-    def __init__(self):
+    def __init__(self, conf_file, force_deploy):
         """Initialize the Execo Engine"""
         super(G5kEngine, self).__init__()
 
-        self.options_parser.add_option(
-            "-f",
-            dest="config_path",
-            default='reservation.yaml',
-            help="directory containing the configuration of the deployment")
-
-        self.options_parser.add_option(
-            "--force-deploy",
-            dest="force_deploy",
-            help="Force deployment",
-            default=False,
-            action="store_true")
+        self.config_path = conf_file
+        self.force_deploy = force_deploy
 
     def load(self):
         """Load the configuration file"""
 
         # Load the configuration file
         try:
-            with open(self.options.config_path) as config_file:
+            with open(self.config_path) as config_file:
                 config = yaml.load(config_file)
         except:
             logger.error("Error reading configuration file %s" %
-                         self.options.config_path)
+                         self.config_path)
             t, value, tb = sys.exc_info()
             print("%s %s" % (str(t), str(value)))
             sys.exit(23)
@@ -103,8 +93,10 @@ class G5kEngine(Engine):
         self.config.update(DEFAULT_CONFIG)
         self.config.update(config)
 
-        logger.info("Configuration file loaded : %s" % self.options.config_path)
+        logger.info("Configuration file loaded : %s" % self.config_path)
         logger.info(pf(self.config))
+
+        return self.config
 
     def get_job(self):
         """Get the hosts from an existing job (if any) or from a new job.
@@ -160,14 +152,14 @@ class G5kEngine(Engine):
          # Deploy all the nodes
         logger.info("Deploying %s on %d nodes %s" % (self.config['env_name'],
             len(self.nodes),
-            '(forced)' if self.options.force_deploy else ''))
+            '(forced)' if self.force_deploy else ''))
 
         deployed, undeployed = EX5.deploy(
         EX5.Deployment(
             self.nodes,
             env_name=self.config['env_name'],
             vlan = vlan[1]
-        ), check_deployed_command=not self.options.force_deploy)
+        ), check_deployed_command=not self.force_deploy)
 
         # Check the deployment
         if len(undeployed) > 0:
@@ -233,11 +225,11 @@ class G5kEngine(Engine):
         roles = {k: [] for k in roles_set}
         roles_goal = {k: 0 for k in roles_set}
 
-        # compute the aggregated number of nodes per roles 
+        # compute the aggregated number of nodes per roles
         for r in self.config['resources'].values():
             for k,v in r.items():
                 roles_goal[k] = roles_goal[k] + v
-        
+
         pools = mk_pools()
         for cluster, rs in self.config['resources'].items():
             current = pick_nodes(pools[cluster], 1)
