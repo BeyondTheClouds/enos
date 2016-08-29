@@ -5,18 +5,21 @@ Usage:
   kolla-g5k.py [-h | --help] [-f CONFIG_PATH] [--force-deploy]
   kolla-g5k.py prepare-node [-f CONFIG_PATH] [--force-deploy] [-t TAGS | --tags=TAGS]
   kolla-g5k.py install-os [--reconfigure] [-t TAGS | --tags=TAGS]
+  kolla-g5k.py bench [--scenarios=SCENARIOS] [--times=TIMES] [--concurrency=CONCURRENCY]
   kolla-g5k.py init-os
-  kolla-g5k.py bench TASK
   kolla-g5k.py ssh-tunnel
   kolla-g5k.py info
 
 Options:
-  -h --help           Show this help message.
-  -f CONFIG_PATH      Path to the configuration file describing the
-                      Grid'5000 deployment [default: ./reservation.yaml].
-  -t TAGS --tags=TAGS Only run ansible tasks tagged with these values.
-  --force-deploy      Force deployment.
-  --reconfigure   Reconfigure the services after a deployment.
+  -h --help                             Show this help message.
+  -f CONFIG_PATH                        Path to the configuration file describing the
+                                        Grid'5000 deployment [default: ./reservation.yaml].
+  -t TAGS --tags=TAGS                   Only run ansible tasks tagged with these values.
+  --force-deploy                        Force deployment.
+  --reconfigure                         Reconfigure the services after a deployment.
+  --scenarios=SCENARIOS                 Name of the files containing the scenarios to launch 
+  --times=TIMES                         Number of times to run each scenario [default: 1].
+  --concurrency=CONCURRENCY             Concurrency level of the tasks in each scenario [default: 1].
 
 Commands:
   prepare-node  Make a G5K reservation and install the docker registry
@@ -365,10 +368,12 @@ def init_os():
         glance.images.upload(cirros.id, cirros_img.content)
         logger.info("%s has been created on OpenStack" %  cirros_name)
 
-def bench(task):
+def bench(scenario_list, times, concurrency):
     playbook_path = os.path.join(SCRIPT_PATH, 'ansible', 'run-bench.yml')
     inventory_path = os.path.join(SYMLINK_NAME, 'multinode')
-    STATE['config']['task'] = task
+    STATE['config']['rally_scenarios_list'] = scenario_list
+    STATE['config']['rally_times'] = times
+    STATE['config']['rally_concurrency'] = concurrency
     run_ansible([playbook_path], inventory_path, STATE['config'])
 
 def ssh_tunnel():
@@ -435,7 +440,7 @@ if __name__ == "__main__":
     # Run bench phase
     if args['bench']:
         STATE['phase'] = 'run-bench'
-        bench(os.path.join(SCRIPT_PATH, args['TASK']))
+        bench(args['--scenarios'], args['--times'], args['--concurrency'])
         save_state()
 
     # Print information for port forwarding

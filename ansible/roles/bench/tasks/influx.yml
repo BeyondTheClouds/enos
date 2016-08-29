@@ -5,8 +5,14 @@
 #- name: Backup influxdb datas
 #  command: docker exec influx influxd backup -database cadvisor /backup
 
+- name: Stopping influxdb
+  command: docker stop influx
+
 - name: Make a tar of the files
   command: tar -czf /influx-data.tar.gz /influx-data
 
 - name: Pull back execution environment
   fetch: src=/influx-data.tar.gz dest={{ backup_dir }}/{{ inventory_hostname }}-incluxdb.tar.gz flat=yes
+
+- name: Restarting influxdb
+  command: docker start influx
