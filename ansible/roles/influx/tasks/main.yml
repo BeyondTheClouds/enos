@@ -19,6 +19,8 @@
     expose: 
       - "8090"
       - "8099"
+    volumes:
+      - "/influx-data:/data"
 
 - name: Waiting for the influx service to become available
   wait_for: 

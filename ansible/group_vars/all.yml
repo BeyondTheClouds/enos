@@ -6,6 +6,8 @@ g5k_role: unknown
 enable_monitoring: true
 enable_rally: true
 
+backup_dir: "{{ playbook_dir }}/../current"
+
 # list of available patchs
 # to enable one patch copy past its description
 # to your local config file and enable it

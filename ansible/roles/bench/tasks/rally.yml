@@ -13,6 +13,7 @@
     volumes:
     - /root/rally_home:/home/rally
     command: rally task start the-task --tag {{ tag.stdout }}
+  when: False
 
 - name: Wait for the end of the test, this may take a while...
   command: docker run -v /root/rally_home:/home/rally rallyforge/rally rally task list --status finished
@@ -20,9 +21,17 @@
   until: "tag.stdout in finished.stdout"
   delay: 20
   retries: 10000
+  when: False
+
+- name: Generating reports
+  command: docker run -v /root/rally_home:/home/rally rallyforge/rally  rally task list --uuids-only
+  register: list
+
+- name: Generating reports
+  command: docker run -v /root/rally_home:/home/rally rallyforge/rally  rally task report --tasks {{ list.stdout | replace('\n', ' ') }} --out report.html
 
 - name: Make a tar of the execution environment
   command: tar -czf /root/rally.tar.gz /root/rally_home
 
 - name: Pull back execution environment
-  fetch: src=/root/rally.tar.gz dest={{ playbook_dir }}/../current/{{ inventory_hostname }}-rally.tar.gz flat=yes
+  fetch: src=/root/rally.tar.gz dest={{ backup_dir }}/{{ inventory_hostname }}-rally.tar.gz flat=yes
