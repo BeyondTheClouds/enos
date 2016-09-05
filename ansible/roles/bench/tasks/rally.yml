@@ -1,10 +1,6 @@
 ---
-- name: Copy the scenario
-  copy: src="{{ task }}" dest=/root/rally_home/the-task owner=655500
-
-- name: Generate a tag for the task
-  command: uuidgen
-  register: tag
+- name: Copy the scenarios
+  copy: src={{ rally_scenarios_dir }} dest=/root/rally_home owner=655500
 
 - name: Run the scenario
   docker:
@@ -12,17 +8,24 @@
     state: started
     volumes:
     - /root/rally_home:/home/rally
-    command: rally task start the-task --tag {{ tag.stdout }}
+    command: sh ./launch_scenarios.sh ./{{ rally_scenarios_list }} {{ rally_times }} {{ rally_concurrency }}
 
 - name: Wait for the end of the test, this may take a while...
-  command: docker run -v /root/rally_home:/home/rally rallyforge/rally rally task list --status finished
+  command: docker ps 
   register: finished
-  until: "tag.stdout in finished.stdout"
+  until: finished.stdout.find("rally") == -1
   delay: 20
   retries: 10000
+
+- name: Generating reports
+  command: docker run -v /root/rally_home:/home/rally rallyforge/rally  rally task list --uuids-only
+  register: list
+
+- name: Generating reports
+  command: docker run -v /root/rally_home:/home/rally rallyforge/rally  rally task report --tasks {{ list.stdout | replace('\n', ' ') }} --out report.html
 
 - name: Make a tar of the execution environment
   command: tar -czf /root/rally.tar.gz /root/rally_home
 
 - name: Pull back execution environment
-  fetch: src=/root/rally.tar.gz dest={{ playbook_dir }}/../current/{{ inventory_hostname }}-rally.tar.gz flat=yes
+  fetch: src=/root/rally.tar.gz dest={{ backup_dir }}/{{ inventory_hostname }}-rally.tar.gz flat=yes

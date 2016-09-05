@@ -11,18 +11,22 @@
     - { role: registry,
         tags: ['registry'] }
 
-- name: Install cadvisor
-  hosts: all
-  roles:
-    - { role: cadvisor,
-        tags: ['cadvisor'],
-        when: enable_monitoring | bool }
-
 - name: Configure the influx database
   hosts: disco/influx
   roles:
     - { role: influx,
         tags: ['influx'],
+        when: enable_monitoring | bool }
+
+
+- name: Install monitoring agent
+  hosts: all
+  roles:
+    - { role: cadvisor,
+        tags: ['cadvisor'],
+        when: enable_monitoring | bool }
+    - { role: collectd,
+        tags: ['collectd'],
         when: enable_monitoring | bool }
 
 - name: Configure grafana

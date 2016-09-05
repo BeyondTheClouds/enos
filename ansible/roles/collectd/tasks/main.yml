@@ -1,0 +1,26 @@
+---
+- name: Install collectd agent
+  apt: name=collectd state=present
+
+- name: Install the influxdb connector
+  template: src=influx.conf.j2 dest=/etc/collectd/collectd.conf.d/influx.conf
+
+- name: Install the configuration file
+  copy: src=collectd.conf dest=/etc/collectd/collectd.conf
+
+- name: Install the protocols plugin
+  copy: src=protocols.conf dest=/etc/collectd/collectd.conf.d/protocols.conf
+
+- name: Install the tcpconns plugin
+  copy: src="tcpconns-{{ item }}.conf" dest="/etc/collectd/collectd.conf.d/tcpconns-{{ item }}.conf"
+  when: inventory_hostname in groups['{{ item }}'] 
+  with_items: 
+    - mariadb
+    - keystone
+    - rabbitmq
+    - compute
+    - haproxy
+    - network
+
+- name: Restart collectd
+  service: name=collectd state=restarted

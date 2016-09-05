@@ -7,18 +7,30 @@
   command: "ip addr add {{ influx_vip }} dev {{ network_interface }}"
   when: result.stdout.find("{{ influx_vip }}") == -1
 
+- name: Copying over the influx conf
+  copy: src=config.toml dest=/config.toml
+
 - name: Start the influx container
   docker:
     detach: True
     image: "tutum/influxdb:0.13"
     name: "influx"
-    ports: 
-      - "8083:8083"
-      - "8086:8086"
+    # putting in the host network
+    # udp port binding seems to not work as expected
+    net: host
+    # for the record
+    # ports: 
+    #  - "8083:8083"
+    #  - "8086:8086"
+    #  # collectd metrics
+    #  - "25826:25826/udp"
     state: started
     expose: 
       - "8090"
       - "8099"
+    volumes:
+      - "/influx-data:/data"
+      - "/config.toml:/config/config.toml"
 
 - name: Waiting for the influx service to become available
   wait_for: 

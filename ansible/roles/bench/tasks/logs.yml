@@ -1,0 +1,16 @@
+---
+- name: Testing if they are some kolla logs to collect
+  stat: path=/var/lib/docker/volumes/kolla_logs/_data
+  register: logs
+
+- name: Making a tar of the log files
+  command: tar -czf /kolla-logs.tar.gz /var/lib/docker/volumes/kolla_logs/_data/
+  when: logs.stat.exists and logs.stat.isdir
+
+- name: Pull back kolla logs
+  fetch: 
+    src: /kolla-logs.tar.gz
+    dest: "{{ backup_dir }}/{{ inventory_hostname }}-kolla-logs.tar.gz"
+    flat: yes
+  when: logs.stat.exists and logs.stat.isdir
+

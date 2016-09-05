@@ -1,3 +1,12 @@
-# TODO: implement influx backup
-# - name: Influxdb backup
-#   fetch: src=/etc/hosts dest={{ playbook_dir }}/../current/{{ inventory_hostname }}-influx flat=yes
+---
+- name: Stopping influxdb
+  command: docker stop influx
+
+- name: Make a tar of the files
+  command: tar -czf /influx-data.tar.gz /influx-data
+
+- name: Pull back execution environment
+  fetch: src=/influx-data.tar.gz dest={{ backup_dir }}/{{ inventory_hostname }}-influxdb.tar.gz flat=yes
+
+- name: Restarting influxdb
+  command: docker start influx
