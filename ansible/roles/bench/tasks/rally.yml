@@ -2,17 +2,13 @@
 - name: Copy the scenarios
   copy: src={{ rally_scenarios_dir }} dest=/root/rally_home owner=655500
 
-#- name: Generate a tag for the task
-#  command: uuidgen
-#  register: tag
-#
 - name: Run the scenario
   docker:
     image: rallyforge/rally
     state: started
     volumes:
     - /root/rally_home:/home/rally
-    command: ./launch_scenarios.sh ./{{ rally_scenarios_list }} {{ rally_times }} {{ rally_concurrency }}
+    command: sh ./launch_scenarios.sh ./{{ rally_scenarios_list }} {{ rally_times }} {{ rally_concurrency }}
 
 - name: Wait for the end of the test, this may take a while...
   command: docker ps 

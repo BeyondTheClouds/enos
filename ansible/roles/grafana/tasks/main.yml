@@ -42,6 +42,9 @@
     # we workaround this issue : 
     # https://github.com/ansible/ansible-modules-core/issues/265
     # by adding an empty space at the beginning of the json ...
-    body: " { \"name\": \"influx\", \"type\": \"influxdb\", \"url\": \"http://{{ influx_vip }}:8086\", \"access\": \"proxy\", \"database\": \"cadvisor\", \"user\": \"root\", \"password\": \"root\", \"isDefault\": true }"
+    body: " { \"name\": \"{{ item.name }}\", \"type\": \"influxdb\", \"url\": \"http://{{ influx_vip }}:8086\", \"access\": \"proxy\", \"database\": \"{{ item.database }}\", \"user\": \"root\", \"password\": \"root\", \"isDefault\": true }"
     return_content: yes
     status: 200
+  with_items:
+    - { name: influx-cadvisor, database: cadvisor }
+    - { name: influx-collectd, database: collectd }

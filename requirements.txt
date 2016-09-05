@@ -6,3 +6,4 @@ docopt==0.6.2
 requests
 
 python-openstackclient==2.6.0
+python-neutronclient==4.2.0

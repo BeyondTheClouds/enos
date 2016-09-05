@@ -4,3 +4,7 @@
 
 - include: "influx.yml"
   when: inventory_hostname in groups['disco/influx']
+
+- include: "logs.yml"
+
+- include: "conf.yml"

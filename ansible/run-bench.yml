@@ -1,8 +1,6 @@
 ---
 - name: Run Bench
-  hosts:
-    - disco/rally
-    - disco/influx
+  hosts: all
   roles:
     - { role: bench,
         tags: ['bench'],
