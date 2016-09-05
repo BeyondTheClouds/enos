@@ -1,0 +1,28 @@
+<LoadPlugin python>
+  Globals true
+</LoadPlugin>
+
+# https://github.com/signalfx/collectd-rabbitmq/
+<Plugin python>
+  ModulePath "/opt/collectd-rabbitmq"
+
+  Import rabbitmq
+
+  <Module rabbitmq>
+    Username "openstack"     # From kolla configuration
+    Host "{{ hostvars[inventory_hostname]['ansible_' + network_interface]['ipv4']['address'] }}"
+    Password "{{ rabbitmq_password }}"
+    Port "15672"
+    CollectChannels false    # Collection of channel statistics
+    CollectConnections false # Collection of connection statistics
+    CollectExchanges true    # Collection of exchange statistics
+    CollectNodes false       # Collection of node statistics (cluster stuff)
+    CollectQueues true       # Collection of queue statistics
+    HTTPTimeout 60
+    # VerbosityLevel:
+    # - "info" :: Only the most commonly-used metrics are reported
+    # - "debug":: Additonal metrics useful for debugging are reported
+    # - "trace":: All available metrics are reported
+    VerbosityLevel "info"
+  </Module>
+</Plugin>

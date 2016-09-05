@@ -279,8 +279,13 @@ def prepare_node(conf_file, force_deploy, tags):
 
     # Run the Ansible playbooks
     playbook_path = os.path.join(SCRIPT_PATH, 'ansible', 'prepare-node.yml')
+    passwords_path = os.path.join(TEMPLATE_DIR, "passwords.yml")
     inventory_path = os.path.join(SYMLINK_NAME, 'multinode')
-    run_ansible([playbook_path], inventory_path, STATE['config'], tags)
+    config = STATE['config'].copy()
+    with open(passwords_path) as passwords_file:
+        config.update(yaml.load(passwords_file))
+
+    run_ansible([playbook_path], inventory_path, config, tags)
 
     kolla_vars = {
         'kolla_internal_vip_address' : str(vip_addresses[0]),
@@ -307,14 +312,14 @@ def install_os(reconfigure, tags = None):
 
     logger.info("Cloning Kolla")
     call("cd %s ; git clone %s -b %s > /dev/null" % (SCRIPT_PATH, KOLLA_REPO, KOLLA_BRANCH), shell=True)
-    
+
     logger.warning("Patching kolla, this should be \
             deprecated with the new version of Kolla")
 
     playbook = os.path.join(SCRIPT_PATH, "ansible/patches.yml")
     inventory_path = os.path.join(SYMLINK_NAME, 'multinode')
     run_ansible([playbook], inventory_path, STATE['config'])
-   
+
     kolla_cmd = [os.path.join(SCRIPT_PATH, "kolla", "tools", "kolla-ansible")]
 
     if reconfigure:
@@ -324,12 +329,12 @@ def install_os(reconfigure, tags = None):
 
     kolla_cmd.extend(["-i", "%s/multinode" % SYMLINK_NAME,
                   "--configdir", "%s" % SYMLINK_NAME])
-    
+
     if tags is not None:
         kolla_cmd.extend(["--tags", args])
 
-    call(kolla_cmd) 
-   
+    call(kolla_cmd)
+
 
 def init_os():
     # Authenticate to keystone
