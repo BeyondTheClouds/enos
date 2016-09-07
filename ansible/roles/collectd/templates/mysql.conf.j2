@@ -1,0 +1,14 @@
+LoadPlugin mysql
+
+# https://collectd.org/documentation/manpages/collectd.conf.5.shtml#plugin_mysql
+<Plugin mysql>
+	<Database openstack>
+		Host "{{ hostvars[inventory_hostname]['ansible_' + network_interface]['ipv4']['address'] }}"
+		Port "3306"
+		User "root"
+		Password "{{ database_password }}"
+    # In case of replication:
+		# MasterStats true # Collects statistics of master
+		# SlaveStats true  # Collects statistics of slaves
+	</Database>
+</Plugin>

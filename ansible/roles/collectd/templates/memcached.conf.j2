@@ -1,0 +1,10 @@
+LoadPlugin memcached
+
+<Plugin memcached>
+	<Instance local>
+    # The kolla way to target the host of memcached:
+    # https://github.com/openstack/kolla/blob/bddfb264e7eb13fa3ddaf310f2c8b7dcb31f14db/ansible/roles/keystone/templates/keystone.conf.j2#L16
+		Host "{{ hostvars[inventory_hostname]['ansible_' + network_interface]['ipv4']['address'] }}"
+		Port "11211"
+	</Instance>
+</Plugin>

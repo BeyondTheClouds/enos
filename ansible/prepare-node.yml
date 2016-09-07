@@ -16,7 +16,7 @@
   roles:
     - { role: influx,
         tags: ['influx'],
-        when: enable_monitoring | bool }
+        when: enable_monitoring | bool }
 
 
 - name: Install monitoring agent
@@ -27,7 +27,7 @@
         when: enable_monitoring | bool }
     - { role: collectd,
         tags: ['collectd'],
-        when: enable_monitoring | bool }
+        when: enable_monitoring | bool }
 
 - name: Configure grafana
   hosts: disco/grafana
