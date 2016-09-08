@@ -1,6 +1,6 @@
 ---
 - include: "rally.yml"
-  when: inventory_hostname in groups['disco/rally'] 
+  when: inventory_hostname in groups['disco/rally']
 
 - include: "influx.yml"
   when: inventory_hostname in groups['disco/influx']
