@@ -1,8 +1,8 @@
 ---
-- name: Copy the scenarios
+- name: Copy rally scenarios
   copy: src={{ rally_scenarios_dir }} dest=/root/rally_home owner=655500
 
-- name: Run the scenario
+- name: Run rally scenarios
   docker:
     image: rallyforge/rally
     state: started
@@ -11,21 +11,27 @@
     command: sh ./launch_scenarios.sh ./{{ rally_scenarios_list }} {{ rally_times }} {{ rally_concurrency }}
 
 - name: Wait for the end of the test, this may take a while...
-  command: docker ps 
+  command: docker ps
   register: finished
   until: finished.stdout.find("rally") == -1
   delay: 20
   retries: 10000
 
-- name: Generating reports
+- name: List available rally reports
   command: docker run -v /root/rally_home:/home/rally rallyforge/rally  rally task list --uuids-only
   register: list
 
-- name: Generating reports
-  command: docker run -v /root/rally_home:/home/rally rallyforge/rally  rally task report --tasks {{ list.stdout | replace('\n', ' ') }} --out report.html
+# Download rally results only if there are some reports to get back
 
-- name: Make a tar of the execution environment
+- name: Generating rally reports
+  command: docker run -v /root/rally_home:/home/rally rallyforge/rally  rally task report --tasks {{ list.stdout | replace('\n', ' ') }} --out report.html
+  when: list.stdout != ""
+
+- name: Make a tar of the rally execution environment
   command: tar -czf /root/rally.tar.gz /root/rally_home
+  when: list.stdout != ""
 
-- name: Pull back execution environment
-  fetch: src=/root/rally.tar.gz dest={{ backup_dir }}/{{ inventory_hostname }}-rally.tar.gz flat=yes
+- name: Pull back the rally execution environment
+  fetch: src=/root/rally.tar.gz
+         dest={{ backup_dir }}/{{ inventory_hostname }}-rally.tar.gz flat=yes
+  when: list.stdout != ""
