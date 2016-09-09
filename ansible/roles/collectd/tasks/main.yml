@@ -22,6 +22,7 @@
     - compute
     - haproxy
     - network
+    - memcached
 
 - name: Install the contextswitch plugin
   copy: src=contextswitch.conf dest=/etc/collectd/collectd.conf.d/
