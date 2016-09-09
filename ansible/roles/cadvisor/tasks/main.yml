@@ -5,7 +5,7 @@
     image: "google/cadvisor:v0.23.2"
     command: "-storage_driver_db=cadvisor -storage_driver_host={{ influx_vip }}:8086 -storage_driver=influxdb --housekeeping_interval={{ cadvisor.housekeeping_interval }}" 
     name: "cadvisor"
-    hostname: "{{ g5k_role }} - {{ ansible_hostname }}"
+    hostname: "{{ g5k_role }}-{{ ansible_hostname }}"
     ports: 
       # don't bind to the host port 8080 since swift is using it by default
       - "8888:8080"
@@ -24,7 +24,7 @@
     image: "google/cadvisor:v0.23.2"
     command: "-storage_driver_db=cadvisor -storage_driver_host={{ influx_vip }}:8086 -storage_driver=influxdb --housekeeping_interval={{ cadvisor.housekeeping_interval }}" 
     name: "cadvisor"
-    hostname: "{{ g5k_role }} - {{ ansible_hostname }}"
+    hostname: "{{ g5k_role }}-{{ ansible_hostname }}"
     ports: 
       # don't bind to the host port 8080 since swift is using it by default
       - "8888:8080"
