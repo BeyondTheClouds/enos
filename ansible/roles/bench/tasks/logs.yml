@@ -3,8 +3,12 @@
   stat: path=/var/lib/docker/volumes/kolla_logs/_data
   register: logs
 
+- name: Copying logs to /tmp
+  command: cp -r /var/lib/docker/volumes/kolla_logs/_data /tmp/kolla-logs
+  when: logs.stat.exists and logs.stat.isdir
+
 - name: Making a tar of the log files
-  command: tar -czf /kolla-logs.tar.gz /var/lib/docker/volumes/kolla_logs/_data/
+  command: tar -czf /kolla-logs.tar.gz /tmp/kolla-logs
   when: logs.stat.exists and logs.stat.isdir
 
 - name: Pull back kolla logs
