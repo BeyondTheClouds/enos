@@ -15,14 +15,6 @@
       "type": "datasource",
       "pluginId": "influxdb",
       "pluginName": "InfluxDB"
-    },
-    {
-      "name": "DS_--_MIXED --",
-      "label": "-- Mixed --",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "mixed",
-      "pluginName": "Mixed datasource"
     }
   ],
   "__requires": [
@@ -42,12 +34,6 @@
       "type": "datasource",
       "id": "influxdb",
       "name": "InfluxDB",
-      "version": "1.0.0"
-    },
-    {
-      "type": "datasource",
-      "id": "mixed",
-      "name": "Mixed datasource",
       "version": "1.0.0"
     }
   ],
@@ -1594,6 +1580,7 @@
           "steppedLine": false,
           "targets": [
             {
+              "alias": "used",
               "dsType": "influxdb",
               "groupBy": [
                 {
@@ -1616,20 +1603,20 @@
               "select": [
                 [
                   {
-                    "type": "field",
                     "params": [
                       "value"
-                    ]
+                    ],
+                    "type": "field"
                   },
                   {
-                    "type": "mean",
-                    "params": []
+                    "params": [],
+                    "type": "mean"
                   },
                   {
-                    "type": "math",
                     "params": [
                       " / (1024*1024*1024)"
-                    ]
+                    ],
+                    "type": "math"
                   }
                 ]
               ],
@@ -1639,10 +1626,10 @@
                   "operator": "=",
                   "value": "node.mem_used"
                 }
-              ],
-              "alias": "used"
+              ]
             },
             {
+              "alias": "limit",
               "dsType": "influxdb",
               "groupBy": [
                 {
@@ -1665,20 +1652,20 @@
               "select": [
                 [
                   {
-                    "type": "field",
                     "params": [
                       "value"
-                    ]
+                    ],
+                    "type": "field"
                   },
                   {
-                    "type": "mean",
-                    "params": []
+                    "params": [],
+                    "type": "mean"
                   },
                   {
-                    "type": "math",
                     "params": [
                       " / (1024*1024*1024)"
-                    ]
+                    ],
+                    "type": "math"
                   }
                 ]
               ],
@@ -1688,8 +1675,7 @@
                   "operator": "=",
                   "value": "node.mem_limit"
                 }
-              ],
-              "alias": "limit"
+              ]
             }
           ],
           "timeFrom": null,
@@ -2124,6 +2110,7 @@
           "steppedLine": false,
           "targets": [
             {
+              "alias": "used",
               "dsType": "influxdb",
               "groupBy": [
                 {
@@ -2146,14 +2133,14 @@
               "select": [
                 [
                   {
-                    "type": "field",
                     "params": [
                       "value"
-                    ]
+                    ],
+                    "type": "field"
                   },
                   {
-                    "type": "mean",
-                    "params": []
+                    "params": [],
+                    "type": "mean"
                   }
                 ]
               ],
@@ -2163,10 +2150,10 @@
                   "operator": "=",
                   "value": "node.fd_used"
                 }
-              ],
-              "alias": "used"
+              ]
             },
             {
+              "alias": "limit",
               "dsType": "influxdb",
               "groupBy": [
                 {
@@ -2189,14 +2176,14 @@
               "select": [
                 [
                   {
-                    "type": "field",
                     "params": [
                       "value"
-                    ]
+                    ],
+                    "type": "field"
                   },
                   {
-                    "type": "mean",
-                    "params": []
+                    "params": [],
+                    "type": "mean"
                   }
                 ]
               ],
@@ -2206,8 +2193,7 @@
                   "operator": "=",
                   "value": "node.fd_total"
                 }
-              ],
-              "alias": "limit"
+              ]
             }
           ],
           "timeFrom": null,
@@ -2285,6 +2271,7 @@
           "steppedLine": false,
           "targets": [
             {
+              "alias": "used",
               "dsType": "influxdb",
               "groupBy": [
                 {
@@ -2307,14 +2294,14 @@
               "select": [
                 [
                   {
-                    "type": "field",
                     "params": [
                       "value"
-                    ]
+                    ],
+                    "type": "field"
                   },
                   {
-                    "type": "mean",
-                    "params": []
+                    "params": [],
+                    "type": "mean"
                   }
                 ]
               ],
@@ -2324,10 +2311,10 @@
                   "operator": "=",
                   "value": "node.sockets_used"
                 }
-              ],
-              "alias": "used"
+              ]
             },
             {
+              "alias": "used",
               "dsType": "influxdb",
               "groupBy": [
                 {
@@ -2350,14 +2337,14 @@
               "select": [
                 [
                   {
-                    "type": "field",
                     "params": [
                       "value"
-                    ]
+                    ],
+                    "type": "field"
                   },
                   {
-                    "type": "mean",
-                    "params": []
+                    "params": [],
+                    "type": "mean"
                   }
                 ]
               ],
@@ -2367,8 +2354,7 @@
                   "operator": "=",
                   "value": "node.sockets_total"
                 }
-              ],
-              "alias": "used"
+              ]
             }
           ],
           "timeFrom": null,
@@ -4174,92 +4160,92 @@
           "steppedLine": false,
           "targets": [
             {
-              "policy": "default",
+              "alias": "rx",
               "dsType": "influxdb",
-              "resultFormat": "time_series",
-              "tags": [],
               "groupBy": [
                 {
-                  "type": "time",
                   "params": [
                     "$interval"
-                  ]
+                  ],
+                  "type": "time"
                 },
                 {
-                  "type": "fill",
                   "params": [
                     "null"
-                  ]
+                  ],
+                  "type": "fill"
                 }
               ],
+              "hide": false,
+              "measurement": "memcached_rx",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
               "select": [
                 [
                   {
-                    "type": "field",
                     "params": [
                       "value"
-                    ]
+                    ],
+                    "type": "field"
                   },
                   {
-                    "type": "mean",
-                    "params": []
+                    "params": [],
+                    "type": "mean"
                   },
                   {
-                    "type": "math",
                     "params": [
                       " / (1024 * 1024)"
-                    ]
+                    ],
+                    "type": "math"
                   }
                 ]
               ],
-              "refId": "A",
-              "measurement": "memcached_rx",
-              "alias": "rx",
-              "hide": false
+              "tags": []
             },
             {
-              "policy": "default",
+              "alias": "tx",
               "dsType": "influxdb",
-              "resultFormat": "time_series",
-              "tags": [],
               "groupBy": [
                 {
-                  "type": "time",
                   "params": [
                     "$interval"
-                  ]
+                  ],
+                  "type": "time"
                 },
                 {
-                  "type": "fill",
                   "params": [
                     "null"
-                  ]
+                  ],
+                  "type": "fill"
                 }
               ],
+              "hide": false,
+              "measurement": "memcached_tx",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
               "select": [
                 [
                   {
-                    "type": "field",
                     "params": [
                       "value"
-                    ]
+                    ],
+                    "type": "field"
                   },
                   {
-                    "type": "mean",
-                    "params": []
+                    "params": [],
+                    "type": "mean"
                   },
                   {
-                    "type": "math",
                     "params": [
                       " / (1024 * 1024)"
-                    ]
+                    ],
+                    "type": "math"
                   }
                 ]
               ],
-              "refId": "B",
-              "measurement": "memcached_tx",
-              "alias": "tx",
-              "hide": false
+              "tags": []
             }
           ],
           "timeFrom": null,
@@ -4297,7 +4283,7 @@
         {
           "aliasColors": {},
           "bars": false,
-          "datasource": "${DS_--_MIXED --}",
+          "datasource": "${DS_INFLUX_RALLY_20_50_CADVISOR}",
           "editable": true,
           "error": false,
           "fill": 1,
@@ -4332,54 +4318,53 @@
           "steppedLine": false,
           "targets": [
             {
-              "policy": "default",
               "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "hide": false,
+              "measurement": "memory_usage",
+              "policy": "default",
+              "refId": "B",
               "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  },
+                  {
+                    "params": [
+                      " / (1024 * 1024)"
+                    ],
+                    "type": "math"
+                  }
+                ]
+              ],
               "tags": [
                 {
                   "key": "container_name",
                   "operator": "=",
                   "value": "memcached"
                 }
-              ],
-              "groupBy": [
-                {
-                  "type": "time",
-                  "params": [
-                    "$interval"
-                  ]
-                },
-                {
-                  "type": "fill",
-                  "params": [
-                    "null"
-                  ]
-                }
-              ],
-              "select": [
-                [
-                  {
-                    "type": "field",
-                    "params": [
-                      "value"
-                    ]
-                  },
-                  {
-                    "type": "mean",
-                    "params": []
-                  },
-                  {
-                    "type": "math",
-                    "params": [
-                      " / (1024 * 1024)"
-                    ]
-                  }
-                ]
-              ],
-              "refId": "B",
-              "measurement": "memory_usage",
-              "hide": false,
-              "datasource": "influx_rally_20_50_cadvisor"
+              ]
             }
           ],
           "timeFrom": null,
@@ -4581,7 +4566,7 @@
   },
   "refresh": false,
   "schemaVersion": 12,
-  "version": 3,
+  "version": 8,
   "links": [],
   "gnetId": null
 }
