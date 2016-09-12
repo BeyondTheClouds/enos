@@ -8,7 +8,7 @@
     state: started
     volumes:
     - /root/rally_home:/home/rally
-    command: sh ./launch_scenarios.sh ./{{ rally_scenarios_list }} {{ rally_times }} {{ rally_concurrency }}
+    command: sh ./launch_scenarios.sh ./{{ rally_scenarios_list }} {{ rally_times }} {{ rally_concurrency }} {{ rally_wait }}
 
 - name: Wait for the end of the test, this may take a while...
   command: docker ps
@@ -33,5 +33,6 @@
 
 - name: Pull back the rally execution environment
   fetch: src=/root/rally.tar.gz
-         dest={{ backup_dir }}/{{ inventory_hostname }}-rally.tar.gz flat=yes
+         dest={{ backup_dir }}/{{ inventory_hostname }}-rally.tar.gz
+         flat=yes
   when: list.stdout != ""
