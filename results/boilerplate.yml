@@ -26,28 +26,27 @@
       creates: "/results/{{ item }}"
     with_items: "{{ xps }}"
 
-  # TODO: Ensures that there are rally report to extract
-  # - name: Extracting rally report
-  #   shell: "tar -C /results/{{ item }} -xzf /results/{{ item }}/*rally.tar.gz"
-  #   args:
-  #     creates: "/results/{{ item }}/report"
-  #   with_items: "{{ xps }}"
-
-  - name: Extracting influx database
-    shell: "tar -C /results/{{ item }} -xzf /results/{{ item }}/*-influxdb.tar.gz"
-    args:
-      creates: "/results/{{ item }}/influx-data"
+  - name: Extracting everything
+    shell: "for i in $(ls /results/{{ item }}/*.tar.gz); do tar -C /results/{{ item }} -xzf $i; done"
     with_items: "{{ xps }}"
 
-  # XXX: Bind each start to a specific port
   - name: Starting influx container
     docker:
+      name: "influx_{{ item.1 }}"
       detach: yes
       image: "tutum/influxdb:0.13"
-      net: host
       state: started
-      volumes: "/results/{{ item }}/influx-data:/data"
-    with_items: "{{ xps }}"
+      ports: 
+        - "{{ 8083 +  item.0 * 100 | int }}:8083"
+        - "{{ 18086 +  item.0 * 100 | int }}:8086"
+      volumes: "/results/{{ item.1 }}/influx-data:/data"
+    with_indexed_items: "{{ xps }}"
+
+  - name: Removing previous grafana container
+    docker:
+      image: "grafana/grafana:3.1.0"
+      name: "grafana"
+      state: absent
 
   - name: Starting grafana container
     docker:
@@ -56,6 +55,51 @@
       name: "grafana"
       ports: "3000:3000"
       state: started
+  
+
+  - name: Waiting for the grafana service to become available
+    wait_for: 
+      # we use the bridge interface of docker
+      # instead of localhost
+      # api is accessible on loopback too quickly and isn't ready
+      host: "172.17.0.1"
+      port: 3000
+      state: started
+      delay: 2
+      timeout: 120
+
+  - name: Add the influx cadvisor data source
+    uri:
+      url: "http://localhost:3000/api/datasources"
+      user: admin
+      password: admin
+      force_basic_auth: yes
+      body_format: json
+      HEADER_Content-Type: application/json
+      method: POST
+      # we workaround this issue : 
+      # https://github.com/ansible/ansible-modules-core/issues/265
+      # by adding an empty space at the beginning of the json ...
+      body: " { \"name\": \"cadvisor-{{ item.1 }}\", \"type\": \"influxdb\", \"url\": \"http://172.17.0.1:{{ 18086 + item.0 * 100 }}\", \"access\": \"proxy\", \"database\": \"cadvisor\", \"user\": \"root\", \"password\": \"root\", \"isDefault\": true }"
+      status: 200,500
+    with_indexed_items: "{{ xps }}"
+
+  - name: Add the influx collectd data source
+    uri:
+      url: "http://localhost:3000/api/datasources"
+      user: admin
+      password: admin
+      force_basic_auth: yes
+      body_format: json
+      HEADER_Content-Type: application/json
+      method: POST
+      # we workaround this issue : 
+      # https://github.com/ansible/ansible-modules-core/issues/265
+      # by adding an empty space at the beginning of the json ...
+      body: " { \"name\": \"collectd-{{ item.1 }}\", \"type\": \"influxdb\", \"url\": \"http://172.17.0.1:{{ 18086 + item.0 * 100 }}\", \"access\": \"proxy\", \"database\": \"collectd\", \"user\": \"root\", \"password\": \"root\", \"isDefault\": true }"
+      return_content: yes
+      status: 200
+    with_indexed_items: "{{ xps }}"
 
   - name: Coping the nginx configuration file
     copy: src="files/nginx.conf" dest="/nginx.conf"
@@ -64,8 +108,12 @@
     docker:
       detach: yes
       image: "nginx:alpine"
-      name: "influx"
+      name: "nginx"
       ports: "80:80"
       volumes:
         - "/results:/usr/share/nginx/html"
         - "/nginx.conf:/etc/nginx/nginx.conf"
+      state: started
+
+
+  
