@@ -5,9 +5,23 @@
 
 # The list of experimentation. There will be one VM per
 # experimentation. You can access it thought eg, `vagrant ssh idle`.
-XPS =
-[{ :name  => "idle",
-   :confs => [ "cpt20-nfk05", "cpt20-nfk10", "cpt20-nfk25", "cpt20-nfk50" ]}
+XPS =[
+  { 
+    :name  => "idle",
+    :confs => [ "cpt20-nfk05", "cpt20-nfk10", "cpt20-nfk25", "cpt20-nfk50" ]
+  },
+  { 
+    # dedicated 1 node  for each mariadb, haproxy, conductor, rabbitmq, memcached
+    # with rally benchmark 
+    :name  => "load-ded",
+    :confs => [ "cpt20-nfk05", "cpt20-nfk10", "cpt20-nfk25"]
+  },
+  { 
+    # default topology
+    # with rally benchmark
+    :name  => "load-default",
+    :confs => [ "cpt20-nfk05", "cpt20-nfk10", 'cpt20-nfk25']
+  }
  # Add another experimentation
  # ,{ :name  => "vanilla",
  #    :confs => [ "cpt20-nfk05", "cpt20-nfk10", "cpt20-nfk25", "cpt20-nfk50" ]}
@@ -17,7 +31,7 @@ Vagrant.configure(2) do |config|
     # user to log with inside the vm
     config.ssh.username = "root"
     # password to use to log inside the vm
-    # config.ssh.password = ""
+    config.ssh.password = ""
 
     config.vm.provider "g5k" do |g5k|
       # The project id.
@@ -75,11 +89,18 @@ Vagrant.configure(2) do |config|
         # name of the experimentation `xp[:name]` and the list of
         # experimentation done `xp[:confs]`
         xps = {:xps => xp[:confs].map { |cfg| xp[:name] + "-" + cfg } }
-
+        
+        # For the provision to run a dedicated proxy command seems necessary
+        # in your ssh config (the provisionner seems to not take into account 
+        # the ssh-config of vagrant)
+        # Host *.grid5000.fr
+        #   User <login>
+        #   StrictHostKeyChecking no
+        #   ProxyCommand ssh <login>@194.254.60.4 "nc %h %p"
         my.vm.provision :ansible do |ansible|
           ansible.playbook = "boilerplate.yml"
           ansible.extra_vars = xps
-          # ansible.verbose = "vvvvs
+          #ansible.verbose = "-vvvv"
         end
       end
     end
