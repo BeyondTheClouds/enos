@@ -44,5 +44,16 @@
   template: src=rabbitmq.conf.j2 dest=/etc/collectd/collectd.conf.d/rabbitmq.conf
   when: inventory_hostname in groups['rabbitmq']
 
+
+- name: Create haproxy plugin directory
+  file: path=/opt/collectd/haproxy state=directory
+
+- name: Install the haproxy plugin
+  copy: src={{ item.src }} dest={{ item.dst }}
+  when: inventory_hostname in groups['haproxy']
+  with_items: 
+    - { src: haproxy.conf, dst: /etc/collectd/collectd.conf.d/haproxy.conf}
+    - { src: haproxy.py, dst: /opt/collectd/haproxy/haproxy.py}
+
 - name: Restart collectd
   service: name=collectd state=restarted
