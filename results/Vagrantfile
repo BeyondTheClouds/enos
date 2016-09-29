@@ -6,21 +6,27 @@
 # The list of experimentation. There will be one VM per
 # experimentation. You can access it thought eg, `vagrant ssh idle`.
 XPS =[
-  { 
+  {
     :name  => "idle",
     :confs => [ "cpt20-nfk05", "cpt20-nfk10", "cpt20-nfk25", "cpt20-nfk50" ]
   },
-  { 
+  {
     # dedicated 1 node  for each mariadb, haproxy, conductor, rabbitmq, memcached
-    # with rally benchmark 
+    # with rally benchmark
     :name  => "load-ded",
     :confs => [ "cpt20-nfk05", "cpt20-nfk10", "cpt20-nfk25"]
   },
-  { 
+  {
     # default topology
     # with rally benchmark
     :name  => "load-default",
     :confs => [ "cpt20-nfk05", "cpt20-nfk10", 'cpt20-nfk25']
+  },
+  {
+    :name  => "concurrency",
+    :confs => [ "ccy0001-0015-cpt20-nfk50",
+                "ccy0025-0045-cpt20-nfk50",
+                "ccy0100-1000-cpt20-nfk05" ]
   }
  # Add another experimentation
  # ,{ :name  => "vanilla",
@@ -89,9 +95,9 @@ Vagrant.configure(2) do |config|
         # name of the experimentation `xp[:name]` and the list of
         # experimentation done `xp[:confs]`
         xps = {:xps => xp[:confs].map { |cfg| xp[:name] + "-" + cfg } }
-        
+
         # For the provision to run a dedicated proxy command seems necessary
-        # in your ssh config (the provisionner seems to not take into account 
+        # in your ssh config (the provisionner seems to not take into account
         # the ssh-config of vagrant)
         # Host *.grid5000.fr
         #   User <login>
