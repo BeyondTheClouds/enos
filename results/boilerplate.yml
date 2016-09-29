@@ -36,7 +36,8 @@
       detach: yes
       image: "tutum/influxdb:0.13"
       state: started
-      ports: 
+      restart_policy: always
+      ports:
         - "{{ 8083 +  item.0 * 100 | int }}:8083"
         - "{{ 18086 +  item.0 * 100 | int }}:8086"
       volumes: "/results/{{ item.1 }}/influx-data:/data"
@@ -55,10 +56,11 @@
       name: "grafana"
       ports: "3000:3000"
       state: started
-  
+      restart_policy: always
+
 
   - name: Waiting for the grafana service to become available
-    wait_for: 
+    wait_for:
       # we use the bridge interface of docker
       # instead of localhost
       # api is accessible on loopback too quickly and isn't ready
@@ -67,6 +69,9 @@
       state: started
       delay: 2
       timeout: 120
+
+  - name: Installing httplib2 library. Required by uri module
+    pip: name=httplib2
 
   - name: Add the influx cadvisor data source
     uri:
@@ -77,7 +82,7 @@
       body_format: json
       HEADER_Content-Type: application/json
       method: POST
-      # we workaround this issue : 
+      # we workaround this issue :
       # https://github.com/ansible/ansible-modules-core/issues/265
       # by adding an empty space at the beginning of the json ...
       body: " { \"name\": \"cadvisor-{{ item.1 }}\", \"type\": \"influxdb\", \"url\": \"http://172.17.0.1:{{ 18086 + item.0 * 100 }}\", \"access\": \"proxy\", \"database\": \"cadvisor\", \"user\": \"root\", \"password\": \"root\", \"isDefault\": true }"
@@ -93,7 +98,7 @@
       body_format: json
       HEADER_Content-Type: application/json
       method: POST
-      # we workaround this issue : 
+      # we workaround this issue :
       # https://github.com/ansible/ansible-modules-core/issues/265
       # by adding an empty space at the beginning of the json ...
       body: " { \"name\": \"collectd-{{ item.1 }}\", \"type\": \"influxdb\", \"url\": \"http://172.17.0.1:{{ 18086 + item.0 * 100 }}\", \"access\": \"proxy\", \"database\": \"collectd\", \"user\": \"root\", \"password\": \"root\", \"isDefault\": true }"
@@ -104,16 +109,20 @@
   - name: Coping the nginx configuration file
     copy: src="files/nginx.conf" dest="/nginx.conf"
 
+  - name: Removing previous nginx server container
+    docker:
+      image: "nginx:alpine"
+      name: "nginx"
+      state: absent
+
   - name: Starting the nginx server container
     docker:
       detach: yes
       image: "nginx:alpine"
       name: "nginx"
       ports: "80:80"
+      state: started
+      restart_policy: always
       volumes:
         - "/results:/usr/share/nginx/html"
         - "/nginx.conf:/etc/nginx/nginx.conf"
-      state: started
-
-
-  
