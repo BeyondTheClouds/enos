@@ -3,6 +3,11 @@
 # vi: set ft=ruby :
 
 
+# This Vagrantfile makes use of the plugin vagrant-g5k
+# https://github.com/msimonin/vagrant-g5k
+#
+# version 0.0.13
+
 # The list of experimentation. There will be one VM per
 # experimentation. You can access it thought eg, `vagrant ssh idle`.
 XPS =[
@@ -37,8 +42,8 @@ Vagrant.configure(2) do |config|
     # user to log with inside the vm
     config.ssh.username = "root"
     # password to use to log inside the vm
-    config.ssh.password = ""
-
+    config.ssh.private_key_path = File.join(ENV['HOME'], ".ssh/id_rsa_discovery")
+ 
     config.vm.provider "g5k" do |g5k|
       # The project id.
       # It is used to generate uniq remote storage for images
@@ -53,14 +58,15 @@ Vagrant.configure(2) do |config|
 
       # site to use
       g5k.site = "rennes"
+      g5k.gateway = "access.grid5000.fr"
 
       # walltime to use
-      g5k.walltime = "02:00:00"
+      g5k.walltime = "03:00:00"
 
       # image location
-      #g5k.image = {
-      #  "path" => "/grid5000/virt-images/alpine_docker.qcow2",
-      #  "backing" => "cow"
+      # g5k.image = {
+      #  "path" => "$HOME/public/ubuntu1404.qcow2",
+      #  "backing" => "copy"
       #}
 
       # it could be backed by the ceph
@@ -73,7 +79,7 @@ Vagrant.configure(2) do |config|
       }
 
       # ports to expose (at least ssh has to be forwarded)
-      g5k.ports = ['2222-:22','3000-:3000', '8000-:80']
+      g5k.ports = ['2222-:22','3000-:3000', '8000-:80', '5601-:5601']
     end
 
     XPS.each do |xp|
@@ -106,7 +112,7 @@ Vagrant.configure(2) do |config|
         my.vm.provision :ansible do |ansible|
           ansible.playbook = "boilerplate.yml"
           ansible.extra_vars = xps
-          #ansible.verbose = "-vvvv"
+#          ansible.verbose = "-vvvv"
         end
       end
     end
