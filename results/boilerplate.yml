@@ -30,6 +30,9 @@
     shell: "for i in $(ls /results/{{ item }}/*.tar.gz); do tar -C /results/{{ item }} -xzf $i; done"
     with_items: "{{ xps }}"
 
+  - name: Fixing permissions
+    command: chmod 755 -R /results
+
   - name: Starting influx container
     docker:
       name: "influx_{{ item.1 }}"
@@ -86,7 +89,7 @@
       # https://github.com/ansible/ansible-modules-core/issues/265
       # by adding an empty space at the beginning of the json ...
       body: " { \"name\": \"cadvisor-{{ item.1 }}\", \"type\": \"influxdb\", \"url\": \"http://172.17.0.1:{{ 18086 + item.0 * 100 }}\", \"access\": \"proxy\", \"database\": \"cadvisor\", \"user\": \"root\", \"password\": \"root\", \"isDefault\": true }"
-      status: 200,500
+      status_code: 200,500
     with_indexed_items: "{{ xps }}"
 
   - name: Add the influx collectd data source
@@ -103,7 +106,7 @@
       # by adding an empty space at the beginning of the json ...
       body: " { \"name\": \"collectd-{{ item.1 }}\", \"type\": \"influxdb\", \"url\": \"http://172.17.0.1:{{ 18086 + item.0 * 100 }}\", \"access\": \"proxy\", \"database\": \"collectd\", \"user\": \"root\", \"password\": \"root\", \"isDefault\": true }"
       return_content: yes
-      status: 200
+      status_code: 200
     with_indexed_items: "{{ xps }}"
 
   - name: Coping the nginx configuration file
@@ -121,8 +124,114 @@
       image: "nginx:alpine"
       name: "nginx"
       ports: "80:80"
-      state: started
       restart_policy: always
       volumes:
         - "/results:/usr/share/nginx/html"
         - "/nginx.conf:/etc/nginx/nginx.conf"
+      state: started
+
+  - name: Add elasticsearch
+    docker: 
+      detach: yes
+      image: elasticsearch
+      name: elasticsearch
+      ports: 
+        - "9200:9200"
+        - "9300:9300"
+
+  - name: Waiting for elasticsearch to become available
+    wait_for: 
+      # we use the bridge interface of docker
+      # instead of localhost
+      # api is accessible on loopback too quickly and isn't ready
+      host: "172.17.0.1"
+      port: 9200
+      state: started
+      delay: 2
+      timeout: 120
+
+ 
+  # We use the Type field to differentiate different xps 
+  # Do not analyse it will ease the analyse through kibana
+  #
+  - name: Check if heka index exists
+    uri : 
+      url: "http://localhost:9200/heka"
+      method: GET
+      body_format: json
+      status_code: 200,404
+    register: index
+
+  - debug: var=index
+
+  - name: Deleting old index
+    uri : 
+      url: "http://localhost:9200/heka"
+      method: DELETE
+      body_format: json
+    when: index.status == 200
+
+  - name: Create the heka index in elasticsearch
+    uri : 
+      url: "http://localhost:9200/heka"
+      method: PUT
+
+  # Ansible 1.9.x doesn't seem to be able to load a json 
+  # and use it in the body of the request properly
+  # e.g with ansible 2:
+  # body: "{{ lookup('file', 'files/mapping.json') | from_json | to_json}}"
+  # body_format: json
+  - name: Do not analyse some fields in elasticsearch (see mapping.json)
+    uri : 
+      url: "http://localhost:9200/heka/_mapping/message"
+      method: PUT
+      body: " { \"properties\": {\"{{ item }}\": {\"type\":\"string\", \"index\": \"not_analyzed\"}}}"
+      body_format: json
+    with_items: ["Type", "request_id", "tenant_id", "user_id", "programname"]
+
+  - name: Add kibana
+    docker: 
+      detach: yes
+      image: kibana
+      name: kibana
+      links: 
+        - "elasticsearch:elasticsearch"
+      ports:
+        - "5601:5601"
+
+  - name: Create heka configuration directory
+    file: path=/etc/heka state=directory
+
+  - name: Copying heka config files
+    copy: src=files/heka/ dest=/etc/heka/{{ item }}
+    with_items: "{{ xps }}"
+
+  - name: Generating heka specific configuration
+    template: src=templates/heka-{{ item[0] }}.toml.j2 dest=/etc/heka/{{ item[1] }}/heka-{{ item[0] }}.toml
+    with_nested: 
+      - ["elasticsearch", "openstack", "keystone", "mariadb", "rabbitmq"]
+      - "{{ xps }}"
+
+  - name: Add kolla/heka
+    docker: 
+      command: kolla_start
+      detach: yes
+      image: kolla/centos-binary-heka:2.0.2
+      name: "heka-{{ item }}"
+      links: 
+        - "elasticsearch:elasticsearch"
+      volumes:
+        - "/etc/heka/{{ item }}:/var/lib/kolla/config_files"
+        - "/etc/localtime:/etc/localtime:ro"
+        - "/results/{{ item }}/tmp/kolla-logs/_data:/var/log/kolla"
+        - "heka-{{ item }}:/var/cache/hekad"
+        - "heka_socket-{{ item }}:/var/lib/kolla/heka"
+        # patch to support custom types 
+        - "/etc/heka/{{ item }}/lua_decoders/os_openstack_log.lua:/usr/share/heka/lua_decoders/os_openstack_log.lua"
+        - "/etc/heka/{{ item }}/lua_decoders/os_keystone_apache_log.lua:/usr/share/heka/lua_decoders/os_keystone_apache_log.lua"
+        - "/etc/heka/{{ item }}/lua_decoders/os_mysql_log.lua:/usr/share/heka/lua_decoders/os_mysql_log.lua"
+        - "/etc/heka/{{ item }}/lua_decoders/os_rabbitmq_log.lua:/usr/share/heka/lua_decoders/os_rabbitmq_log.lua"
+      env:
+        SKIP_LOG_SETUP: true
+        KOLLA_CONFIG_STRATEGY: COPY_ALWAYS
+    with_items: "{{ xps }}"

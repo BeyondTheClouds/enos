@@ -1,0 +1,40 @@
+{
+    "command": "/usr/bin/hekad -config=/etc/heka/",
+    "config_files": [
+        {
+            "source": "/var/lib/kolla/config_files/heka-elasticsearch.toml",
+            "dest": "/etc/heka/heka-elasticsearch.toml",
+            "owner": "heka",
+            "perm": "0600",
+            "optional": true
+        },
+        {
+            "source": "/var/lib/kolla/config_files/heka-openstack.toml",
+            "dest": "/etc/heka/heka-openstack.toml",
+            "owner": "heka",
+            "perm": "0600",
+            "optional": true
+        },
+        {
+            "source": "/var/lib/kolla/config_files/heka-keystone.toml",
+            "dest": "/etc/heka/heka-keystone.toml",
+            "owner": "heka",
+            "perm": "0600",
+            "optional": true
+        },
+        {
+            "source": "/var/lib/kolla/config_files/heka-mariadb.toml",
+            "dest": "/etc/heka/heka-mariadb.toml",
+            "owner": "heka",
+            "perm": "0600",
+            "optional": true
+        },
+        {
+            "source": "/var/lib/kolla/config_files/heka-rabbitmq.toml",
+            "dest": "/etc/heka/heka-rabbitmq.toml",
+            "owner": "heka",
+            "perm": "0600",
+            "optional": true
+        }
+    ]
+}
