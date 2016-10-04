@@ -26,3 +26,7 @@ patches:
     src: wsgi-keystone.conf.j2
     dst: kolla/ansible/roles/keystone/templates/wsgi-keystone.conf.j2
     enabled: "no"
+  - name: patch haproxy.cfg.j2
+    src: haproxy.cfg.j2
+    dst: kolla/ansible/roles/haproxy/templates/haproxy.cfg.j2
+    enabled: "no"
