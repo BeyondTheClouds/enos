@@ -19,7 +19,7 @@ XPS =[
     # dedicated 1 node  for each mariadb, haproxy, conductor, rabbitmq, memcached
     # with rally benchmark
     :name  => "load-ded",
-    :confs => [ "cpt20-nfk05", "cpt20-nfk10", "cpt20-nfk25"]
+    :confs => [ "cpt20-nfk05", "cpt20-nfk10", "cpt20-nfk25", "cpt20-nfk50-stopped"]
   },
   {
     # default topology
