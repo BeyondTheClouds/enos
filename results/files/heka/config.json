@@ -35,6 +35,13 @@
             "owner": "heka",
             "perm": "0600",
             "optional": true
+        },
+        {
+            "source": "/var/lib/kolla/config_files/heka-globals.toml",
+            "dest": "/etc/heka/heka-globals.toml",
+            "owner": "heka",
+            "perm": "0600",
+            "optional": true
         }
     ]
 }
