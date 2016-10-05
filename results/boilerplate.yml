@@ -30,6 +30,10 @@
     shell: "for i in $(ls /results/{{ item }}/*.tar.gz); do tar -C /results/{{ item }} -xzf $i; done"
     with_items: "{{ xps }}"
 
+  - name: Extract haproxy logs from to one who holds it
+    shell: "cd /results/{{ item }}; for i in $(ls *.tar.gz); do tar -tvzf $i | grep haproxy.log | awk -v x=$i '$3 > 0 {print x}'; done | xargs -n 1 tar -xvzf"
+    with_items: "{{ xps }}"
+
   - name: Fixing permissions
     command: chmod 755 -R /results
 
