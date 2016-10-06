@@ -29,6 +29,12 @@
   - name: Extracting everything
     shell: "for i in $(ls /results/{{ item }}/*.tar.gz); do tar -C /results/{{ item }} -xzf $i; done"
     with_items: "{{ xps }}"
+  
+  # workaround the https://github.com/BeyondTheClouds/kolla-g5k/issues/44 for older results
+  # It will overwrite the logs from those in _data if this directory exists
+  - name: Unnesting directory structure (workaround https://github.com/BeyondTheClouds/kolla-g5k/issues/44)
+    shell: "cd /results/{{ item }}/tmp/kolla-logs; [ -d _data ] && cp -r _data/* . || echo 0"
+    with_items: "{{ xps }}"
 
   - name: Extract haproxy logs from to one who holds it
     shell: "cd /results/{{ item }}; for i in $(ls *.tar.gz); do tar -tvzf $i | grep haproxy.log | awk -v x=$i '$3 > 0 {print x}'; done | xargs -n 1 tar -xvzf"
@@ -227,7 +233,7 @@
       volumes:
         - "/etc/heka/{{ item }}:/var/lib/kolla/config_files"
         - "/etc/localtime:/etc/localtime:ro"
-        - "/results/{{ item }}/tmp/kolla-logs/_data:/var/log/kolla"
+        - "/results/{{ item }}/tmp/kolla-logs:/var/log/kolla"
         - "heka-{{ item }}:/var/cache/hekad"
         - "heka_socket-{{ item }}:/var/lib/kolla/heka"
         # patch to support custom types 
