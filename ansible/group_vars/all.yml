@@ -5,6 +5,7 @@ g5k_role: unknown
 
 enable_monitoring: true
 enable_rally: true
+enable_nova_tmp: false
 
 # will be copied on the rally host to launch scenarios
 rally_scenarios_dir: "{{ playbook_dir }}/../rally/"

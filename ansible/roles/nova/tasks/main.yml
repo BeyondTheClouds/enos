@@ -1,0 +1,28 @@
+---
+- name: Create /var/lib/docker/volumes
+  file: path=/var/lib/docker/volumes state=directory owner=65500
+
+- name: Create /tmp/docker/volumes
+  file: path=/tmp/docker/volumes state=directory owner=65500
+    
+- name: Bind /var/lib/docker/volumes to /tmp/docker/volumes
+  mount:
+    name: /var/lib/docker/volumes
+    src: /tmp/docker/volumes
+    opts: rw,bind
+    fstype: ext4
+    state: mounted
+
+- name: Create /var/lib/nova
+  file: path=/var/lib/nova state=directory owner=65500
+
+- name: Create /tmp/nova
+  file: path=/tmp/nova state=directory owner=65500
+
+- name: Bind /var/lib/nova to /tmp/nova
+  mount:
+    name: /var/lib/nova
+    src: /tmp/nova
+    opts: rw,bind
+    fstype: ext4
+    state: mounted

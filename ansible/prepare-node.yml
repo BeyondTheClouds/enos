@@ -56,3 +56,10 @@
     - { role: rally,
         tags: ['rally'],
         when: enable_rally | bool }
+
+- name: Bind /var/lib/nova to /tmp
+  hosts: compute
+  roles:
+    - { role: nova,
+        tags: ['nova-tmp'],
+        when: enable_nova_tmp | bool }
