@@ -31,3 +31,7 @@ patches:
     src: haproxy.cfg.j2
     dst: kolla/ansible/roles/haproxy/templates/haproxy.cfg.j2
     enabled: "no"
+  - name: patch site.yml
+    src: site.yml
+    dst: kolla/ansible/site.yml
+    enabled: "no"
