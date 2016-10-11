@@ -165,7 +165,7 @@ class G5kEngine(Engine):
         if len(undeployed) > 0:
             logger.error("%d nodes where not deployed correctly:" % len(undeployed))
             for n in undeployed:
-                logger.error(style.emph(undeployed.address))
+                logger.error(style.emph(n))
 
         # Updating nodes names with vlans
         self.nodes = sorted(translate_to_vlan(self.nodes, vlan[1]),
