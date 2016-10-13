@@ -239,11 +239,23 @@ def prepare_node(conf_file, force_deploy, tags):
     # docker registry
     # influx db
     # grafana
-    vip_addresses = g5k.get_free_ip(4)
+    vip_addresses = g5k.get_free_ip(5)
     # Get the NIC devices of the reserved cluster
     # XXX: this only works if all nodes are on the same cluster,
     # or if nodes from different clusters have the same devices
     interfaces = g5k.get_cluster_nics(STATE['config']['resources'].keys()[0])
+    network_interface = str(interfaces[0])
+    external_interface = None
+
+    if len(interfaces) > 1:
+        external_interface = str(interfaces[1])
+    else:
+        external_interface = 'veth0'
+        logger.warning("%s has only one NIC. The same interface "
+                       "will be used for network_interface and "
+                       "neutron_external_interface."
+                       % STATE['config']['resources'].keys()[0])
+
 
     g5k.exec_command_on_nodes(
         g5k.deployed_nodes,
@@ -275,7 +287,7 @@ def prepare_node(conf_file, force_deploy, tags):
         'registry_vip': str(vip_addresses[1]),
         'influx_vip': str(vip_addresses[2]),
         'grafana_vip': str(vip_addresses[3]),
-        'network_interface': str(interfaces[0])
+        'network_interface': network_interface
     })
 
     # Run the Ansible playbooks
@@ -286,13 +298,18 @@ def prepare_node(conf_file, force_deploy, tags):
     with open(passwords_path) as passwords_file:
         config.update(yaml.load(passwords_file))
 
-    run_ansible([playbook_path], inventory_path, config, tags)
-
     kolla_vars = {
         'kolla_internal_vip_address' : str(vip_addresses[0]),
-        'network_interface'          : str(interfaces[0]),
-        'neutron_external_interface' : str(interfaces[1])
+        'network_interface'          : network_interface,
+        'neutron_external_interface' : external_interface,
+        'enable_veth'                : external_interface == 'veth0',
+        'neutron_external_address'   : str(vip_addresses[4])
     }
+
+    config.update(kolla_vars)
+
+    run_ansible([playbook_path], inventory_path, config, tags)
+
     # Generating Ansible globals.yml, passwords.yml
     generate_kolla_files(g5k.config["kolla"], kolla_vars, g5k.result_dir)
 
