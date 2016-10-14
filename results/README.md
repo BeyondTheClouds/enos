@@ -16,6 +16,7 @@ You'll find :
 * idle : *todo wiki url*
 * load-ded : *todo wiki url*
 * load-default : *todo wiki url*
+* [load-clust-rabbit](https://github.com/BeyondTheClouds/kolla-g5k/wiki/load-clust-rabbitmq)
 * concurrency : *todo wiki url*
 
 ## Accessing the results

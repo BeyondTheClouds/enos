@@ -32,6 +32,19 @@ XPS =[
     :confs => [ "ccy0001-0015-cpt20-nfk50",
                 "ccy0025-0045-cpt20-nfk50",
                 "ccy0100-1000-cpt20-nfk05" ]
+  },
+  {
+    # load test with a clustered rabbitmq
+    :name  => "load-clust-rabbit",
+    :confs => [
+                "cpt20-nfk50",
+                "cpt20-nfk50-tuned-report-sync-intervals",
+                "cpt20-nfk50-tuned-report-sync-intervals-handshake-timeout",
+                "cpt20-nfk50-cond10-tuned-handshake-timeout",
+                "cpt20-nfk50-sched8-tuned-handshake-timeout",
+                "cpt20-nfk50-sched8-tuned-handshake-timeout-rally-1000-times",
+                "cpt20-nfk50-sched8-tuned-handshake-timeout-rally-times-10000"
+              ]
   }
  # Add another experimentation
  # ,{ :name  => "vanilla",
@@ -80,6 +93,7 @@ Vagrant.configure(2) do |config|
 
       # ports to expose (at least ssh has to be forwarded)
       g5k.ports = ['2222-:22','3000-:3000', '8000-:80', '5601-:5601']
+      g5k.oar = "virtual != 'none'"
     end
 
     XPS.each do |xp|
