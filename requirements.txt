@@ -1,13 +1,3 @@
-Jinja2
-execo==2.5.4
-ansible
-docopt==0.6.2
-requests
-
-python-cinderclient
-python-glanceclient
-python-keystoneclient
-python-neutronclient
-python-novaclient
-python-openstackclient
-
+# https://caremad.io/posts/2013/07/setup-vs-requirement/
+# get dependencies from `install_requires` of setup.py
+.
