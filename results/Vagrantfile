@@ -13,39 +13,73 @@
 XPS =[
   {
     :name  => "idle",
-    :confs => [ "cpt20-nfk05", "cpt20-nfk10", "cpt20-nfk25", "cpt20-nfk50" ]
+    :confs => [ 
+      "idle-cpt20-nfk05", 
+      "idle-cpt20-nfk10", 
+      "idle-cpt20-nfk25", 
+      "idle-cpt20-nfk50" 
+    ]
   },
   {
     # dedicated 1 node  for each mariadb, haproxy, conductor, rabbitmq, memcached
     # with rally benchmark
     :name  => "load-ded",
-    :confs => [ "cpt20-nfk05", "cpt20-nfk10", "cpt20-nfk25", "cpt20-nfk50-stopped"]
+    :confs => [ 
+      "load-ded-cpt20-nfk05", 
+      "load-ded-cpt20-nfk10", 
+      "load-ded-cpt20-nfk25", 
+      "load-ded-cpt20-nfk50-stopped"
+    ]
   },
   {
     # default topology
     # with rally benchmark
     :name  => "load-default",
-    :confs => [ "cpt20-nfk05", "cpt20-nfk10", 'cpt20-nfk25']
+    :confs => [ 
+      "load-default-cpt20-nfk05", 
+      "load-default-cpt20-nfk10", 
+      "load-default-cpt20-nfk25"
+    ]
   },
   {
     :name  => "concurrency",
-    :confs => [ "ccy0001-0015-cpt20-nfk50",
-                "ccy0025-0045-cpt20-nfk50",
-                "ccy0100-1000-cpt20-nfk05" ]
+    :confs => [ 
+      "concurrency-ccy0001-0015-cpt20-nfk50",
+      "concurrency-ccy0025-0045-cpt20-nfk50",
+      "concurrency-ccy0100-1000-cpt20-nfk05" 
+    ]
   },
   {
-    # load test with a clustered rabbitmq
-    :name  => "load-clust-rabbit",
+    # load test with a clustered rabbitmq first set of iterations
+    :name  => "load-clust-rabbit-1",
     :confs => [
-                "cpt20-nfk50",
-                "cpt20-nfk50-tuned-report-sync-intervals",
-                "cpt20-nfk50-tuned-report-sync-intervals-handshake-timeout",
-                "cpt20-nfk50-cond10-tuned-handshake-timeout",
-                "cpt20-nfk50-sched8-tuned-handshake-timeout",
-                "cpt20-nfk50-sched8-tuned-handshake-timeout-rally-1000-times",
-                "cpt20-nfk50-sched8-tuned-handshake-timeout-rally-times-10000"
+                "load-clust-rabbit-cpt20-nfk50",
+                "load-clust-rabbit-cpt20-nfk50-tuned-report-sync-intervals",
+                "load-clust-rabbit-cpt20-nfk50-tuned-report-sync-intervals-handshake-timeout",
+                "load-clust-rabbit-cpt20-nfk50-cond10-tuned-handshake-timeout",
+                "load-clust-rabbit-cpt20-nfk50-sched8-tuned-handshake-timeout-rally-1000-times",
+              ]
+  },
+  {
+    # load test with a clustered rabbitmq second set of iteration
+    :name  => "load-clust-rabbit-2",
+    :confs => [
+                "load-clust-rabbit-cpt20-nfk50-sched8-tuned-handshake-timeout-rally-times-10000",
+                "load-clust-rabbit-cpt20-nfk50-sched8-tuned-handshake-timeout-rally-times-10000-2",
+                "load-clust-rabbit-cpt20-nfk50-sched8-tuned-handshake-timeout-rally-times-10000-3",
+                "load-clust-rabbit-cpt20-nfk50-sched8-tuned-handshake-timeout-rally-times-10000-4",
+                "load-clust-rabbit-cpt20-nfk50-sched8-on-1-tuned-handshake-timeout-rally-20000"
+              ]
+  },
+  {
+    # load test with a clustered rabbitmq third set of iteration
+    :name  => "load-clust-rabbit-3",
+    :confs => [
+                "load-clust-rabbit-cpt20-nfk50-sched8-on-1-tuned-handshake-timeout-rally-20000",
+                "load-clust-rabbit-cpt20-nfk50-sched8-on-1-tuned-handshake-timeout-rally-20000-2"
               ]
   }
+
  # Add another experimentation
  # ,{ :name  => "vanilla",
  #    :confs => [ "cpt20-nfk05", "cpt20-nfk10", "cpt20-nfk25", "cpt20-nfk50" ]}
@@ -114,7 +148,7 @@ Vagrant.configure(2) do |config|
         # `ansible-playbook`. The construction of the list is based on the
         # name of the experimentation `xp[:name]` and the list of
         # experimentation done `xp[:confs]`
-        xps = {:xps => xp[:confs].map { |cfg| xp[:name] + "-" + cfg } }
+        xps = {:xps => xp[:confs]}
 
         # For the provision to run a dedicated proxy command seems necessary
         # in your ssh config (the provisionner seems to not take into account
@@ -126,7 +160,7 @@ Vagrant.configure(2) do |config|
         my.vm.provision :ansible do |ansible|
           ansible.playbook = "boilerplate.yml"
           ansible.extra_vars = xps
-#          ansible.verbose = "-vvvv"
+          ansible.verbose = "-vvvv"
         end
       end
     end
