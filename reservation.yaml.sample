@@ -50,5 +50,7 @@ registry:
 # ############################################### #
 kolla:
   kolla_base_distro: "centos"
-  openstack_release: "2.0.1"
+  kolla_install_type: "source"
+  openstack_release: "3.0.0"
+  docker_namespace: "beyondtheclouds"
   enable_heat: "no"

@@ -1,9 +1,13 @@
 Jinja2
-execo
-# This is required for kolla:stable/mitaka
-ansible < 2
+execo==2.5.4
+ansible
 docopt==0.6.2
 requests
 
-python-openstackclient==2.6.0
-python-neutronclient==4.2.0
+python-cinderclient
+python-glanceclient
+python-keystoneclient
+python-neutronclient
+python-novaclient
+python-openstackclient
+
