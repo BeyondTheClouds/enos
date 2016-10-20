@@ -39,8 +39,10 @@ from operator import itemgetter, attrgetter
 
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
+from novaclient import client as nclient
 from glanceclient import client as gclient
 from keystoneclient.v3 import client as kclient
+from neutronclient.neutron import client as ntnclient
 
 import sys, os, subprocess
 from collections import namedtuple
@@ -63,7 +65,7 @@ SYMLINK_NAME = os.path.join(SCRIPT_PATH, 'current')
 TEMPLATE_DIR = os.path.join(SCRIPT_PATH, 'templates')
 
 KOLLA_REPO = 'https://git.openstack.org/openstack/kolla'
-KOLLA_BRANCH = 'stable/mitaka'
+KOLLA_BRANCH = 'stable/newton'
 # These roles are mandatory for the
 # the original inventory to be valid
 # Note that they may be empy
@@ -145,14 +147,6 @@ def run_ansible(playbooks, inventory_path, extra_vars={}, tags=None):
             options=options,
             passwords=passwords
         )
-
-            #extra_vars=extra_vars,
-            #stats=stats,
-            #callbacks=playbook_cb,
-            #only_tags=tags,
-            #runner_callbacks=
-            #  ansible.callbacks.PlaybookRunnerCallbacks(stats, verbose=1)
-        #)
 
         code = pbex.run()
         stats = pbex._tqm._stats
@@ -243,7 +237,7 @@ def generate_kolla_files(config_vars, kolla_vars, directory):
     logger.info("Wrote " + style.emph(globals_path))
 
     # copy the passwords file
-    passwords_path = os.path.join(directory, "passwords.yml")
+    passwords_path = os.path.join(directory, 'passwords.yml')
     call("cp %s/passwords.yml %s" % (TEMPLATE_DIR, passwords_path), shell=True)
     logger.info("Password file is copied to  %s" % (passwords_path))
 
@@ -383,6 +377,7 @@ def install_os(reconfigure, tags = None):
         kolla_cmd.append('deploy')
 
     kolla_cmd.extend(["-i", "%s/multinode" % SYMLINK_NAME,
+                  "--passwords", "%s/passwords.yml" % SYMLINK_NAME,
                   "--configdir", "%s" % SYMLINK_NAME])
 
     if tags is not None:
@@ -400,7 +395,7 @@ def init_os():
                        username='admin',
                        password='demo',
                        project_name='admin',
-                       user_domain_id='Default',
+                       user_domain_id='default',
                        project_domain_id='default')
     sess = session.Session(auth=auth)
 
@@ -428,6 +423,55 @@ def init_os():
                                       visibility='public')
         glance.images.upload(cirros.id, cirros_img.content)
         logger.info("%s has been created on OpenStack" %  cirros_name)
+
+    # Install default flavors
+    nova = nclient.Client('2', session=sess)
+    default_flavors = [
+            # name, ram, disk, vcpus
+            ('m1.tiny', 512, 1, 1),
+            ('m1.small', 2048, 20, 1),
+            ('m1.medium', 4096, 40, 2),
+            ('m1.large', 8192, 80, 4),
+            ('m1.xlarge', 16384, 160,8)
+    ]
+    current_flavors = map(attrgetter('name'), nova.flavors.list())
+    for flavor in default_flavors:
+        if flavor[0] not in current_flavors:
+            nova.flavors.create(name=flavor[0],
+                        ram=flavor[1],
+                        disk=flavor[2],
+                        vcpus=flavor[3])
+            logger.info("%s has been created on OpenStack" % flavor[0])
+
+    # Install default network
+    neutron = ntnclient.Client('2', session=sess)
+    network_name = 'public1'
+    network_id = ''
+    networks = neutron.list_networks()['networks']
+    if network_name not in map(itemgetter('name'), networks):
+        network = {'name': network_name,
+                   'provider:network_type': 'flat',
+                   'provider:physical_network': 'physnet1',
+                   'router:external': True
+        }
+        res = neutron.create_network({'network': network})
+        network_id  = res['network']['id']
+        logger.info("%s network has been created on OpenStack" % network_name)
+
+    if not network_id:
+        logger.error("no network_id for %s network" % network_name)
+        sys.exit(32)
+
+    # Install default subnet
+    subnet_name = '1-subnet'
+    subnets = neutron.list_subnets()['subnets']
+    if subnet_name not in map(itemgetter('name'), subnets):
+        subnet = {'name': subnet_name,
+                  'network_id': network_id,
+                  'cidr': '10.0.2.0/24',
+                  'ip_version': 4}
+        neutron.create_subnet({'subnet': subnet})
+        logger.info("%s has been created on OpenStack" % subnet_name)
 
 def bench(scenario_list, times, concurrency, wait):
     playbook_path = os.path.join(SCRIPT_PATH, 'ansible', 'run-bench.yml')

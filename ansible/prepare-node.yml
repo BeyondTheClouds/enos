@@ -45,7 +45,6 @@
       OS_USER_DOMAIN_ID: Default
       OS_USER_DOMAIN_NAME: Default
       OS_PROJECT_NAME: admin
-      OS_PROJECT_DOMAIN_NAME: default
       OS_TENANT_NAME: admin
       OS_USERNAME: admin
       OS_PASSWORD: demo

@@ -50,5 +50,5 @@ registry:
 # ############################################### #
 kolla:
   kolla_base_distro: "centos"
-  openstack_release: "2.0.1"
+  openstack_release: "3.0.0"
   enable_heat: "no"
