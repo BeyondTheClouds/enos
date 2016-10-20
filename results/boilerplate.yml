@@ -141,16 +141,17 @@
       state: started
 
   - name: Add elasticsearch
-    docker: 
+    docker:
       detach: yes
       image: elasticsearch
       name: elasticsearch
-      ports: 
+      ports:
         - "9200:9200"
         - "9300:9300"
+      restart_policy: always
 
   - name: Waiting for elasticsearch to become available
-    wait_for: 
+    wait_for:
       # we use the bridge interface of docker
       # instead of localhost
       # api is accessible on loopback too quickly and isn't ready
@@ -160,12 +161,12 @@
       delay: 2
       timeout: 120
 
- 
-  # We use the Type field to differentiate different xps 
+
+  # We use the Type field to differentiate different xps
   # Do not analyse it will ease the analyse through kibana
   #
   - name: Check if heka index exists
-    uri : 
+    uri :
       url: "http://localhost:9200/heka"
       method: GET
       body_format: json
@@ -175,24 +176,24 @@
   - debug: var=index
 
   - name: Deleting old index
-    uri : 
+    uri :
       url: "http://localhost:9200/heka"
       method: DELETE
       body_format: json
     when: index.status == 200
 
   - name: Create the heka index in elasticsearch
-    uri : 
+    uri :
       url: "http://localhost:9200/heka"
       method: PUT
 
-  # Ansible 1.9.x doesn't seem to be able to load a json 
+  # Ansible 1.9.x doesn't seem to be able to load a json
   # and use it in the body of the request properly
   # e.g with ansible 2:
   # body: "{{ lookup('file', 'files/mapping.json') | from_json | to_json}}"
   # body_format: json
   - name: Do not analyse some fields in elasticsearch (see mapping.json)
-    uri : 
+    uri :
       url: "http://localhost:9200/heka/_mapping/message"
       method: PUT
       body: " { \"properties\": {\"{{ item }}\": {\"type\":\"string\", \"index\": \"not_analyzed\"}}}"
@@ -200,14 +201,15 @@
     with_items: ["Type", "request_id", "tenant_id", "user_id", "programname"]
 
   - name: Add kibana
-    docker: 
+    docker:
       detach: yes
       image: kibana
       name: kibana
-      links: 
+      links:
         - "elasticsearch:elasticsearch"
       ports:
         - "5601:5601"
+      restart_policy: always
 
   - name: Create heka configuration directory
     file: path=/etc/heka state=directory
@@ -218,25 +220,26 @@
 
   - name: Generating heka specific configuration
     template: src=templates/heka-{{ item[0] }}.toml.j2 dest=/etc/heka/{{ item[1] }}/heka-{{ item[0] }}.toml
-    with_nested: 
+    with_nested:
       - ["elasticsearch", "openstack", "keystone", "mariadb", "rabbitmq"]
       - "{{ xps }}"
 
   - name: Add kolla/heka
-    docker: 
+    docker:
       command: kolla_start
       detach: yes
       image: kolla/centos-binary-heka:2.0.2
       name: "heka-{{ item }}"
-      links: 
+      links:
         - "elasticsearch:elasticsearch"
+      restart_policy: always
       volumes:
         - "/etc/heka/{{ item }}:/var/lib/kolla/config_files"
         - "/etc/localtime:/etc/localtime:ro"
         - "/results/{{ item }}/tmp/kolla-logs:/var/log/kolla"
         - "heka-{{ item }}:/var/cache/hekad"
         - "heka_socket-{{ item }}:/var/lib/kolla/heka"
-        # patch to support custom types 
+        # patch to support custom types
         - "/etc/heka/{{ item }}/lua_decoders/os_openstack_log.lua:/usr/share/heka/lua_decoders/os_openstack_log.lua"
         - "/etc/heka/{{ item }}/lua_decoders/os_keystone_apache_log.lua:/usr/share/heka/lua_decoders/os_keystone_apache_log.lua"
         - "/etc/heka/{{ item }}/lua_decoders/os_mysql_log.lua:/usr/share/heka/lua_decoders/os_mysql_log.lua"

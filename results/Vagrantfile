@@ -43,11 +43,11 @@ XPS =[
   },
   {
     :name  => "concurrency",
-    :confs => [ 
-      "concurrency-ccy0001-0015-cpt20-nfk50",
-      "concurrency-ccy0025-0045-cpt20-nfk50",
-      "concurrency-ccy0100-1000-cpt20-nfk05" 
-    ]
+    :confs => [ "concurrency-ccy0001-0015-cpt20-nfk50",
+                "concurrency-ccy0025-0045-cpt20-nfk50",
+                "concurrency-ccy0100-1000-cpt20-nfk05",
+                "concurrency-ccy200x5-hap100000vs4000-cpt20-nfk05",
+                "concurrency-ccy100x5-key10vs20-cpt20-nfk05" ]
   },
   {
     # load test with a clustered rabbitmq first set of iterations
@@ -90,7 +90,7 @@ Vagrant.configure(2) do |config|
     config.ssh.username = "root"
     # password to use to log inside the vm
     config.ssh.private_key_path = File.join(ENV['HOME'], ".ssh/id_rsa_discovery")
- 
+
     config.vm.provider "g5k" do |g5k|
       # The project id.
       # It is used to generate uniq remote storage for images
