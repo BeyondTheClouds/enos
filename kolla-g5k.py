@@ -43,9 +43,13 @@ from glanceclient import client as gclient
 from keystoneclient.v3 import client as kclient
 
 import sys, os, subprocess
+from collections import namedtuple
+from ansible.parsing.dataloader import DataLoader
+from ansible.vars import VariableManager
 from ansible.inventory import Inventory
-import ansible.callbacks
-import ansible.playbook
+from ansible.executor.playbook_executor import PlaybookExecutor
+from ansible.executor.stats import AggregateStats
+import ansible.plugins.callback
 
 import jinja2
 from execo.log import style
@@ -103,32 +107,65 @@ def update_config_state():
 
 
 def run_ansible(playbooks, inventory_path, extra_vars={}, tags=None):
-    inventory = Inventory(inventory_path)
+    variable_manager = VariableManager()
+    loader = DataLoader()
+
+    inventory = Inventory(loader=loader,
+        variable_manager=variable_manager,
+        host_list=inventory_path)
+
+    variable_manager.set_inventory(inventory)
+
+    if extra_vars:
+        variable_manager.extra_vars=extra_vars
+
+    passwords = {}
+
+    Options = namedtuple('Options', ['listtags', 'listtasks', 'listhosts',
+        'syntax', 'connection','module_path', 'forks', 'private_key_file',
+        'ssh_common_args', 'ssh_extra_args', 'sftp_extra_args',
+        'scp_extra_args', 'become', 'become_method', 'become_user',
+        'remote_user', 'verbosity', 'check', 'tags'])
+
+    options = Options(listtags=False, listtasks=False, listhosts=False,
+            syntax=False, connection='ssh', module_path=None,
+            forks=100,private_key_file=None, ssh_common_args=None,
+            ssh_extra_args=None, sftp_extra_args=None, scp_extra_args=None,
+            become=False, become_method=None, become_user=None,
+            remote_user=None, verbosity=None, check=False, tags=tags)
 
     for path in playbooks:
         logger.info("Running playbook %s with vars:\n%s" % (style.emph(path), extra_vars))
-        stats = ansible.callbacks.AggregateStats()
-        playbook_cb = ansible.callbacks.PlaybookCallbacks(verbose=1)
 
-        pb = ansible.playbook.PlayBook(
-            playbook=path,
+        pbex = PlaybookExecutor(
+            playbooks=[path],
             inventory=inventory,
-            extra_vars=extra_vars,
-            stats=stats,
-            callbacks=playbook_cb,
-            only_tags=tags,
-            runner_callbacks=
-              ansible.callbacks.PlaybookRunnerCallbacks(stats, verbose=1)
+            variable_manager=variable_manager,
+            loader=loader,
+            options=options,
+            passwords=passwords
         )
 
-        pb.run()
+            #extra_vars=extra_vars,
+            #stats=stats,
+            #callbacks=playbook_cb,
+            #only_tags=tags,
+            #runner_callbacks=
+            #  ansible.callbacks.PlaybookRunnerCallbacks(stats, verbose=1)
+        #)
 
-        hosts = pb.stats.processed.keys()
+        code = pbex.run()
+        stats = pbex._tqm._stats
+        hosts = stats.processed.keys()
+        result = [{h: stats.summarize(h)} for h in hosts]
+        results = {'code': code, 'result': result, 'playbook': path}
+        print(results)
+
         failed_hosts = []
         unreachable_hosts = []
 
         for h in hosts:
-            t = pb.stats.summarize(h)
+            t = stats.summarize(h)
             if t['failures'] > 0:
                 failed_hosts.append(h)
 

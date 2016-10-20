@@ -1,7 +1,7 @@
 Jinja2
-execo
+execo==2.5.4
 # This is required for kolla:stable/mitaka
-ansible < 2
+ansible
 docopt==0.6.2
 requests
 
