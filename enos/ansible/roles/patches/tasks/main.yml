@@ -1,0 +1,7 @@
+---
+- name: Patching kolla
+  local_action: copy src={{ item.src }} dest={{ playbook_dir}}/../../current/{{ item.dst }}
+  with_items: patches
+  when: "{{ item.enabled | bool }}"
+  run_once: true
+

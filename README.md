@@ -1,27 +1,20 @@
-# Kolla-G5K
+# Enos
 
 ## Synopsis
+
 This script deploys an OpenStack on Grid'5000 using
-[Kolla](https://wiki.openstack.org/wiki/Kolla) and allows easy customization of the system (change in the default topology, configuration parameters) and reproductible experiments.
+[Kolla](https://wiki.openstack.org/wiki/Kolla) and allows easy
+customization of the system (change in the default topology,
+configuration parameters) and reproductible experiments.
 
 ## Installation
-To install Kolla-G5K, first connect to the Grid'5000 frontend of your choice :
-and clone the repository
+
+To install Enos, first connect to the Grid'5000 frontend of your
+choice and run.
 
 ```
-git clone https://github.com/BeyondTheClouds/kolla-g5k
+pip install git+git://github.com/BeyondTheClouds/enos@master#egg=enos
 ```
-
-Then install the dependencies:
-
-```
-cd kolla-g5k
-pip install -r requirements.txt --user
-```
-Make sure to add ansible binaries to your PATH (export
-PATH=YOUR_HOME/.local/bin:$PATH).
-
-> Using a virtualenv is encouraged
 
 ## Configuration
 
@@ -40,13 +33,12 @@ cp reservation.yaml.sample reservation.yaml
 
 ## Note on Registry backends
 
-The deployment makes use of a private docker registry configured as a mirror of
-the official docker registry.  There are two modes :
-
-* `ceph: false`. It will start a fresh registry that will cache the images for
-  the duration of the experiment
-* `ceph: true`. It will use an existing Ceph rados block device of the Rennes
-  cluster.
+The deployment makes use of a private docker registry configured as a
+mirror of the official docker registry. There are two modes
+* `ceph: false`. It will start a fresh registry that will cache the
+  images for the duration of the experiment.
+* `ceph: true`. It will use an existing Ceph rados block device of the
+  Rennes cluster.
 The block device will be mounted and used as the registry storage. Setting this
 is usefull as the cache will persist different experiments.
 
@@ -56,43 +48,73 @@ guide you on how to create your rados block device.
 
 ## Deploying
 
-Then, to launch the deployment :
+Then, to launch the deployment:
 ```
-./kolla-g5k.py
+enos deploy
 ```
 
 > by default the script use the file `reservation.yaml` as configuration file
 
-This will run all the following phases :
+This will run the following phases:
 
-* `prepare-node` : reserve physical machine on Grid'5000, deploys the base
-linux distribution, instruments nodes with the monitoring stack, installs Kolla
-prerequisites (runtime dependencies, input files.
+* `up`: reserve physical machine on Grid'5000, deploys the base linux
+  distribution, instruments nodes with the monitoring stack, installs
+  Kolla prerequisites (runtime dependencies, input files).
 
-* `install-os` : launch the Kolla deployment
+* `os`: launch the OpenStack deployment with Kolla
 
-* `init-os` : bootstrap the freshly deployed OpenStack with users, images...
+* `init`: bootstrap the freshly deployed OpenStack with users,
+  images...
 
 
-> Run `./kolla-g5k.py --help` for a full list of command-line arguments.
+> Run `enos --help` for a full list of command-line arguments.
 
-After the execution, the `./current` directory will contain some generated
-files (please note that `current` is a symbolic link toward the real directory
-associated to your deployment)  and the results of the benchmarks
+After the execution, the `./current` directory will contain some
+generated files (please note that `current` is a symbolic link toward
+the real directory associated to your deployment) and the results of
+the benchmarks.
+
+
+## Contribute
+
+```
+git clone https://github.com/BeyondTheClouds/enos
+```
+
+Then install the dependencies:
+
+```
+cd enos
+pip install -r requirements.txt --user
+```
+Make sure to add ansible binaries to your PATH (export
+PATH=YOUR_HOME/.local/bin:$PATH).
+
+Finally, to launch the deployment, run:
+```
+python -m enos.enos deploy
+```
+
+And, to command line arguments:
+```
+python -m enos.enos -h
+```
+
+> Using a virtualenv is encouraged
 
 
 ## Launch rally benchmarks
 
-You can launch a rally benchmark using :
+You can launch a rally benchmark using:
 
 ```
-./kolla-g5k.py --scenarios=<scenario file>
+enos bench --scenarios=<scenario file>
 ```
 
-Ansible will connect to the node(s) hosting Rally service and launch in sequence
-all the benchmarks described in the scenario file.
+Ansible will connect to the node(s) hosting Rally service and launch
+in sequence all the benchmarks described in the scenario file.
 
-> The scenario file must resides in the rally subdirectory
+> The scenario file must resides in the rally subdirectory.
 
 
 ## Post-mortem analysis
@@ -109,14 +131,14 @@ Please refer to the `result` directory to know how to get started with
 
 ### Changing Kolla / Ansible variables
 
-Custom Kolla / Ansible parameters can be put in the configuration file under the
- key `kolla`.
+Custom Kolla / Ansible parameters can be put in the configuration file
+under the key `kolla`.
 
 ### Changing the topology
 
-Let's assume you want to run the `nova-conductor` in a dedicated node :
+Let's assume you want to run the `nova-conductor` in a dedicated node:
 
-1) Add a new node reservation in the configuration file :
+1) Add a new node reservation in the configuration file:
 
 ```yaml
 paravance:
@@ -127,27 +149,30 @@ paravance:
 ```
 
 2) Create an new inventory file in the `inventories` subdirectory
-(copy paste the sample inventory) and change the group of the conductor service :
-
-
-### Configuration tuning
-
-At some point, Kolla default parameters won't fit your needs. Kolla provides a
-mechanism to override custom section of configuration files but isn't applicable
-in our case (at least in the corresponding branch). So we implement a *quick and dirty*
-way of patching Kolla code to enable custom configuration files to be used
-(and by extension custom kolla code).
-See the possible patch declaration in `ansible/group_vars/all.yml`. Patches should be added in the configuration file of the experiment.
+(copy paste the sample inventory) and change the group of the
+conductor service:
 
 ```
 [nova-conductor:children]
 conductor-node
 ```
 
-3) In the configuration file, points the inventory to use to this new inventory.
+3) In the configuration file, points the inventory to use to this new
+inventory.
 
-4) Launch the deployment as usual, and you'll get the `nova-conductor` on a
-dedicated node.
+4) Launch the deployment as usual, and you'll get the `nova-conductor`
+on a dedicated node.
+
+### Configuration tuning
+
+At some point, Kolla default parameters won't fit your needs. Kolla
+provides a mechanism to override custom section of configuration files
+but isn't applicable in our case (at least in the corresponding
+branch). So we implement a *quick and dirty* way of patching Kolla
+code to enable custom configuration files to be used (and by extension
+custom kolla code). See the possible patch declaration in
+`ansible/group_vars/all.yml`. Patches should be added in the
+configuration file of the experiment.
 
 ## Known limitations
 
@@ -157,5 +182,21 @@ dedicated node.
   and `eth2`.
 
 
+## Why Enos?
+https://en.wikipedia.org/wiki/Enos_(chimpanzee)
+
+
 ## License
-This code is released under the GNU General Public License.
+Copyright 2016 discovery
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.

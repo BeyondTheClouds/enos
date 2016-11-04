@@ -1,9 +1,9 @@
 # to allow personnal modification
-rally
-inventories
-kolla/
+/rally
+/inventories
+/kolla/
 current
-G5kEngine*/
+enos_*/
 reservation.yaml
 
 # Vim backup files
@@ -98,3 +98,6 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+### Ansible ###
+*.retry

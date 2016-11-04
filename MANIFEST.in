@@ -1,0 +1,7 @@
+# http://stackoverflow.com/a/24727824
+include README.md
+
+recursive-include enos/ansible *
+include enos/ansible.cfg
+recursive-include enos/templates *
+include enos/provider/g5k_networks.yaml

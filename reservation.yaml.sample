@@ -21,13 +21,6 @@ vlans:
 # or not deployed
 role_distribution: debug
 
-#enable_monitoring: true
-#enable_rally: true
-
-# Enable for Nova to run in /tmp, allowing larger flavors
-# to be deployed
-enable_nova_tmp: false
-
 # ############################################### #
 # Inventory to use                                #
 # ############################################### #
