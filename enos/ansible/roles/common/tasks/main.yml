@@ -24,4 +24,4 @@
   command: mount --make-shared /run
 
 - name: Install docker-py
-  pip: name=docker-py
+  pip: name=docker-py version=1.7.0
