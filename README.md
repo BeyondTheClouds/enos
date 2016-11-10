@@ -103,19 +103,49 @@ python -m enos.enos -h
 > Using a virtualenv is encouraged
 
 
-## Launch rally benchmarks
+## Launch a workload
 
-You can launch a rally benchmark using:
+A workload is a set of scenarios grouped by type.
+A workload is launched with the following command :
 
 ```
-enos bench --scenarios=<scenario file>
+python -m enos.enos bench --workload=workload
 ```
 
-Ansible will connect to the node(s) hosting Rally service and launch
-in sequence all the benchmarks described in the scenario file.
+enos will look into the `workload` directory for a file named
+`run.yml`. This file is the description of the workload to launch.
+One example is given below :
 
-> The scenario file must resides in the rally subdirectory.
+```
+rally:
+  enabled: true  # default is true
+  args:
+    concurrency:
+      - 1
+      - 2
+      - 4
+    times:
+      - 1
+  scenarios:
+    - name: boot and list servers
+      enabled: true # default is true
+      file: nova-boot-list-cc.yml
+      args:
+        sla_max_avg_duration: 30
+        times : 5
+```
 
+This will launch all the scenarios described under the scenarios keys with all
+the possible parameters. The parameters are calculated using the cartesian
+product of the parameters given under the args keys. Locally defined args
+(scenario level) shadow globally defined args (top level). The same mecanism is
+applied to the `enabled` values.  The scenario must be parameterized
+accordingly. The key (rally here) defines the type of benchmark to launch : in
+the future we may support other type of scenarios (Shaker, PerfkitBenchmarker
+...)
+
+After running the workload, a backup of the environment can be done through
+`enos backup`.
 
 ## Post-mortem analysis
 

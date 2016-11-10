@@ -15,6 +15,7 @@ Commands:
   os             Run kolla and install OpenStack.
   init           Initialise OpenStack with the bare necessities.
   bench          Run rally on this OpenStack.
+  backup         Backup the environment
   ssh-tunnel     Print configuration for port forwarding with horizon.
   info           Show information of the actual deployment.
   deploy         Shortcut for enos up, then enos os and enos config.
@@ -51,6 +52,8 @@ import sys
 from subprocess import call
 
 import yaml
+import json
+import itertools
 
 CALL_PATH = os.getcwd()
 
@@ -306,33 +309,70 @@ def init_os(env=None, **kwargs):
 
 
 @enostask("""
-usage: enos bench [--scenarios=SCENARIOS] [--times=TIMES]
-                  [--concurrency=CONCURRENCY] [--wait=WAIT]
+usage: enos bench [--workload=WORKLOAD]
                   [-vv|-s|--silent]
 
 Run rally on this OpenStack.
 
 Options:
   -h --help                 Show this help message.
-  --scenarios=SCENARIOS     Name of the files containing the scenarios
-                            to launch. The file must reside under the
-                            rally directory.
-  --times=TIMES             Number of times to run each scenario
-                            [default: 1].
-  --concurrency=CONCURRENCY Concurrency level of the tasks in each
-                            scenario [default: 1].
-  --wait=WAIT               Seconds to wait between two scenarios
-                            [default: 0].
+  --workload=WORKLOAD       Path to the workload directory.
+                            This directory must contain a run.yml file
+                            that contains the description of the different
+                            scenarios to launch
 """)
 def bench(env=None, **kwargs):
+    def cartesian(d):
+        """returns the cartesian product of the args."""
+        logging.debug(d)
+        f = []
+        for k, v in d.items():
+            if isinstance(v, list):
+              f.extend([[[k, vv] for vv in v]])
+            else:
+              f.append([[k,v]])
+        logging.debug(f)
+        product = []
+        for e in itertools.product(*f):
+            product.append(dict(e))
+        return product
+
     logging.debug('phase[bench]: args=%s' % kwargs)
-    playbook_path = os.path.join(ANSIBLE_DIR, 'run-bench.yml')
+    workload_dir = kwargs["--workload"]
+    with open(os.path.join(workload_dir, "run.yml")) as workload_f:
+        workload = yaml.load(workload_f)
+        for nature, desc in workload.items():
+            scenarios = desc.get("scenarios", [])
+            for scenario in scenarios:
+                # merging args 
+                top_args = desc.get("args", {})
+                args = scenario.get("args", {})
+                top_args.update(args)
+                # merging enabled, skipping if not enabled
+                top_enabled = desc.get("enabled", True)
+                enabled = scenario.get("enabled", True)
+                if not (top_enabled and enabled):
+                    continue
+                for a in cartesian(top_args):
+                    playbook_path = os.path.join(ANSIBLE_DIR, 'run-bench.yml')
+                    inventory_path = os.path.join(SYMLINK_NAME, 'multinode')
+                    # NOTE(msimonin) all the scenarios must reside on the workload directory
+                    env['config']['scenario_type'] = nature
+                    env['config']['scenario'] = os.path.abspath(os.path.join(workload_dir, scenario["file"]))
+                    env['config']['scenario_args'] = a
+                    run_ansible([playbook_path], inventory_path, env['config'])
+    
+@enostask("""
+usage: enos backup [-vv|-s|--silent]
+
+Backup the environment
+
+Options:
+  -h --help                 Show this help message.
+""")
+def backup(env = None, **kwargs):
+    playbook_path = os.path.join(ANSIBLE_DIR, 'backup.yml')
     inventory_path = os.path.join(SYMLINK_NAME, 'multinode')
-    if kwargs["--scenarios"]:
-        env['config']['rally_scenarios_list'] = kwargs["--scenarios"]
-    env['config']['rally_times'] = kwargs["--times"]
-    env['config']['rally_concurrency'] = kwargs["--concurrency"]
-    env['config']['rally_wait'] = kwargs["--wait"]
     run_ansible([playbook_path], inventory_path, env['config'])
 
 
@@ -411,6 +451,8 @@ def main():
         init_os(**docopt(init_os.__doc__, argv=argv))
     elif args['<command>'] == 'bench':
         bench(**docopt(bench.__doc__, argv=argv))
+    elif args['<command>'] == 'backup':
+        backup(**docopt(backup.__doc__, argv=argv))
     elif args['<command>'] == 'ssh-tunnel':
         ssh_tunnel(**docopt(ssh_tunnel.__doc__, argv=argv))
     elif args['<command>'] == 'info':

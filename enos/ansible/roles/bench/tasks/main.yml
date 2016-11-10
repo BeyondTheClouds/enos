@@ -1,13 +1,6 @@
 ---
 - include: "rally.yml"
-  when: inventory_hostname in groups['disco/rally']
+  when: 
+    - scenario_type == "rally"
+    - inventory_hostname in groups['disco/rally']
 
-- name: Wait few seconds that the system comes back in a stable state
-  pause: seconds=30
-
-- include: "influx.yml"
-  when: inventory_hostname in groups['disco/influx']
-
-- include: "logs.yml"
-
-- include: "conf.yml"
