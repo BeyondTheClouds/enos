@@ -15,7 +15,7 @@ setup(
     description='This is Enos!',
     long_description=read('README.md'),
     version=VERSION,
-    license='Apache-2.0',
+    license='GPL-3.0',
     packages=find_packages(),
     install_requires=[
         'Jinja2==2.8',
