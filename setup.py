@@ -19,7 +19,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'Jinja2==2.8',
-        'execo==2.5.4',
+        'execo==2.6.1',
         'ansible==2.1.2',
         'docopt==0.6.2',
         'requests==2.11.0',

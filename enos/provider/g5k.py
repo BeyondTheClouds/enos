@@ -296,7 +296,10 @@ class G5K(Provider):
         """
         vlan = None
         if len(self.vlans) > 0:
-            vlan = self.vlans[0]
+            # Each vlan is a pair of a name and a list of address.
+            # Following picks the first vlan and changes the second
+            # element of the pair to return the first address.
+            vlan = (self.vlans[0][0], self.vlans[0][1][0])
             logging.info("Using vlan %s" % str(vlan))
         return vlan
 
