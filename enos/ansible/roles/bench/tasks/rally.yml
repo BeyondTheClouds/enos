@@ -1,18 +1,18 @@
 ---
 - name: Copy rally scenarios
-  copy: src={{ rally_scenario }} dest=/root/rally_home/ owner=655500
+  copy: src={{ bench.location }} dest=/root/rally_home/ owner=655500
 
 - name: debug
-  debug: msg="rally task start {{ rally_scenario | basename }} --task-args '{{ rally_scenario_args}}'"
+  debug: msg="rally task start {{ bench.location | basename }} --task-args '{{ bench.args }}'"
 
-- name: Run rally scenario
+- name: Run rally benchmark
   docker_container:
-    name: "{{ rally_scenario | to_uuid }}"
+    name: "{{ bench.location | to_uuid }}"
     image: rallyforge/rally
     state: started
     volumes:
       - /root/rally_home:/home/rally
-    command: rally task start {{ rally_scenario | basename }} --task-args '{{ rally_scenario_args }}'
+    command: rally task start {{ bench.location | basename }} --task-args '{{ bench.args }}'
   register: docker_output
 
 - debug: var=docker_output.ansible_facts.ansible_docker_container.Id

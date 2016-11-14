@@ -341,7 +341,7 @@ def bench(env=None, **kwargs):
     workload_dir = kwargs["--workload"]
     with open(os.path.join(workload_dir, "run.yml")) as workload_f:
         workload = yaml.load(workload_f)
-        for nature, desc in workload.items():
+        for bench_type, desc in workload.items():
             scenarios = desc.get("scenarios", [])
             for scenario in scenarios:
                 # merging args 
@@ -357,9 +357,11 @@ def bench(env=None, **kwargs):
                     playbook_path = os.path.join(ANSIBLE_DIR, 'run-bench.yml')
                     inventory_path = os.path.join(SYMLINK_NAME, 'multinode')
                     # NOTE(msimonin) all the scenarios must reside on the workload directory
-                    env['config']['scenario_type'] = nature
-                    env['config']['scenario'] = os.path.abspath(os.path.join(workload_dir, scenario["file"]))
-                    env['config']['scenario_args'] = a
+                    env['config']['bench'] = {
+                        'type': bench_type,
+                        'location': os.path.abspath(os.path.join(workload_dir, scenario["file"])),
+                        'args': a
+                    }
                     run_ansible([playbook_path], inventory_path, env['config'])
     
 @enostask("""
