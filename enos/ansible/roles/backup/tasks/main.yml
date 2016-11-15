@@ -1,9 +1,13 @@
 ---
 - include: "rally.yml"
-  when: inventory_hostname in groups['disco/rally']
+  when: 
+    - inventory_hostname in groups['disco/rally']
+    - enable_rally
 
 - include: "influx.yml"
-  when: inventory_hostname in groups['disco/influx']
+  when:
+    - inventory_hostname in groups['disco/influx']
+    - enable_monitoring
 
 - include: "logs.yml"
 
