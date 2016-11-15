@@ -185,3 +185,14 @@ def generate_kolla_files(config_vars, kolla_vars, directory):
                     admin_openrc_vars,
                     admin_openrc_path)
     logging.info("admin-openrc generated in %s" % (admin_openrc_path))
+
+def to_abs_path(path):
+    """
+    if set, path is considered relative to the current working directory
+    if not just fail
+    Note: this does not check the existence
+    """
+    if os.path.isabs(path):
+        return path
+    else:
+       return os.path.join(os.getcwd(), path) 

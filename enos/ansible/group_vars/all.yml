@@ -12,8 +12,6 @@ rally_scenarios_list: "all-scenarios.txt.sample"
 rally_times: 1
 rally_concurrency: 1
 
-backup_dir: "{{ playbook_dir }}/../current"
-
 # list of available patchs
 # to enable one patch copy past its description
 # to your local config file and enable it
