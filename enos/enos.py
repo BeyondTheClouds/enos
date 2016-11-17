@@ -29,7 +29,7 @@ from utils.constants import (SYMLINK_NAME, TEMPLATE_DIR, ANSIBLE_DIR,
                              GRAFANA_IP, NEUTRON_IP, NETWORK_IFACE,
                              EXTERNAL_IFACE, VERSION)
 from utils.extra import (run_ansible, generate_inventory,
-                         generate_kolla_files)
+                         generate_kolla_files, to_abs_path)
 from utils.enostask import enostask
 
 from datetime import datetime
@@ -365,14 +365,25 @@ def bench(env=None, **kwargs):
                     run_ansible([playbook_path], inventory_path, env['config'])
     
 @enostask("""
-usage: enos backup [-vv|-s|--silent]
+usage: enos backup [--backup_dir=BACKUP_DIR ] [-vv|-s|--silent]
 
 Backup the environment
 
 Options:
+  --backup_dir=BACKUP_DIR   Backup directory.
   -h --help                 Show this help message.
 """)
 def backup(env = None, **kwargs):
+    backup_dir = kwargs['--backup_dir']
+    if backup_dir is None:
+        backup_dir = SYMLINK_NAME
+
+    backup_dir = to_abs_path(backup_dir)
+    # create if necessary
+    if not os.path.isdir(backup_dir):
+        os.mkdir(backup_dir)
+    # update the env
+    env['config']['backup_dir'] = backup_dir
     playbook_path = os.path.join(ANSIBLE_DIR, 'backup.yml')
     inventory_path = os.path.join(SYMLINK_NAME, 'multinode')
     run_ansible([playbook_path], inventory_path, env['config'])
