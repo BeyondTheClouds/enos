@@ -88,11 +88,12 @@ def up(provider=None, env=None, **kwargs):
         sys.exit(1)
 
     # Calls the provider and initialise resources
-    rsc, ips, eths = provider.init(env['config'], kwargs['--force-deploy'])
+    rsc, ips, eths, provider_network = provider.init(env['config'], kwargs['--force-deploy'])
 
     env['rsc'] = rsc
     env['ips'] = ips
     env['eths'] = eths
+    env['provider_network'] = provider_network
 
     # Generates a directory for results
     resultdir_name = 'enos_' + datetime.today().isoformat()
@@ -219,6 +220,33 @@ Options:
   -h --help            Show this help message.
 """)
 def init_os(env=None, **kwargs):
+    def create_network(neutron, network):
+        """ Note: This isn't idempotent"""
+        network_id = ''
+        networks = neutron.list_networks()['networks']
+        print(networks)
+        if network['name'] not in map(itemgetter('name'), networks):
+            res = neutron.create_network({'network': network})
+            print(res)
+            network_id = res['network']['id']
+            logging.info("%s network has been created on OpenStack" % network['name'])
+
+        if not network_id:
+            logging.error("no network_id for %s network" % network['name'])
+            sys.exit(32)
+        return network_id
+
+    def create_subnet(neutron, subnet):
+        """ Note: This isn't idempotent"""
+        subnets = neutron.list_subnets()['subnets']
+        if subnet['name'] not in map(itemgetter('name'), subnets):
+            s = neutron.create_subnet({'subnet': subnet})
+            logging.info("%s has been created on OpenStack" % subnet['name'])
+            return s['subnet']['id']
+        else:
+            sys.exit(32)
+
+
     logging.debug('phase[init]: args=%s' % kwargs)
     # Authenticate to keystone
     # http://docs.openstack.org/developer/keystoneauth/using-sessions.html
@@ -279,34 +307,47 @@ def init_os(env=None, **kwargs):
 
     # Install default network
     neutron = ntnclient.Client('2', session=sess)
-    network_name = 'public1'
-    network_id = ''
-    networks = neutron.list_networks()['networks']
-    if network_name not in map(itemgetter('name'), networks):
-        network = {'name': network_name,
-                   'provider:network_type': 'flat',
-                   'provider:physical_network': 'physnet1',
-                   'router:external': True
-        }
-        res = neutron.create_network({'network': network})
-        network_id = res['network']['id']
-        logging.info("%s network has been created on OpenStack" % network_name)
-
-    if not network_id:
-        logging.error("no network_id for %s network" % network_name)
-        sys.exit(32)
-
-    # Install default subnet
-    subnet_name = '1-subnet'
-    subnets = neutron.list_subnets()['subnets']
-    if subnet_name not in map(itemgetter('name'), subnets):
-        subnet = {'name': subnet_name,
-                  'network_id': network_id,
-                  'cidr': '10.0.2.0/24',
-                  'ip_version': 4}
-        neutron.create_subnet({'subnet': subnet})
-        logging.info("%s has been created on OpenStack" % subnet_name)
-
+    public_network_id = create_network(neutron, {
+        'name': 'public',
+        'provider:network_type': 'flat',
+        'provider:physical_network': 'physnet1',
+        'router:external': True
+    })
+    public_subnet_id = create_subnet(neutron, {
+        'name': 'public_subnet',
+        'network_id': public_network_id,
+        'enable_dhcp': False,
+        'allocation_pools': [{
+            'start': env['provider_network']['start'],
+            'end': env['provider_network']['end']
+         }],
+        'cidr': env['provider_network']['cidr'],
+        'gateway_ip': env['provider_network']['gateway'],
+        'ip_version': 4
+    })
+    private_network_id = create_network(neutron, {
+        'name': 'private',
+        'provider:network_type': 'vxlan'
+    })
+    private_subnet_id = create_subnet(neutron, {
+        'name': 'private_subnet',
+        'network_id': private_network_id,
+        'cidr': '192.168.0.0/24',
+        'gateway_ip': '192.168.0.1',
+        'dns_nameservers': [env['provider_network']['dns']],
+        'ip_version': 4
+    })
+    router = neutron.create_router({
+        'router': {
+            'name': 'router'
+            }
+    })
+    neutron.add_interface_router(router["router"]["id"], {
+        "subnet_id": private_subnet_id
+    })
+    neutron.add_gateway_router(router["router"]["id"], {
+        "network_id": public_network_id
+    })
 
 @enostask("""
 usage: enos bench [--workload=WORKLOAD]
