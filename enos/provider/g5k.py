@@ -413,7 +413,7 @@ class G5K(Provider):
 
     def _get_free_ip(self, count):
         """
-        Gets free ips an a provider network information used to create a
+        Gets free ips and a provider network information used to create a
         flat network external network during the init phase.
         Originally it was done by reserving a subnet
         we now moves this implementation to a vlan based implementation
