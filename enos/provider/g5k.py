@@ -11,6 +11,7 @@ import sys
 # from execo import configuration
 import execo as EX
 import execo_g5k as EX5
+from execo_g5k import api_utils as api
 from execo_g5k.api_utils import get_cluster_site
 from execo_g5k import OarSubmission
 
@@ -72,17 +73,30 @@ class G5K(Provider):
         # docker registry
         # influx db
         # grafana
-        vip_addresses = self._get_free_ip(5)
+        vip_addresses, provider_network = self._get_free_ip(5)
         # Get the NIC devices of the reserved cluster
         # XXX: this only works if all nodes are on the same cluster,
         # or if nodes from different clusters have the same devices
         interfaces = self._get_cluster_nics(self.config['resources'].keys()[0])
+
+
         network_interface = str(interfaces[0])
         external_interface = None
 
         if len(interfaces) > 1:
             external_interface = str(interfaces[1])
+            site, vlan = self._get_primary_vlan()
+            # NOTE(msimonin) deployed is composed of the list of hostnames
+            # unmodified with the vlan. This is required by set_nodes_vlan.
+            api.set_nodes_vlan(site, map(lambda d: EX.Host(d), deployed), external_interface, vlan)
+
+            self._exec_command_on_nodes(
+                self.deployed_nodes,
+                'ifconfig %s up && dhclient -nw %s' % (external_interface, external_interface),
+                'mounting secondary interface'
+             )
         else:
+            # TODO(msimonin) fix the network in this case as well.
             external_interface = 'veth0'
             logging.warning("%s has only one NIC. The same interface "
                            "will be used for network_interface and "
@@ -102,7 +116,8 @@ class G5K(Provider):
 
         return (roles,
                 map(str, vip_addresses),
-                [network_interface, external_interface])
+                [network_interface, external_interface],
+                provider_network)
 
     def before_preintsall(self, env):
         # Create a virtual interface for veth0 (if any)
@@ -398,7 +413,8 @@ class G5K(Provider):
 
     def _get_free_ip(self, count):
         """
-        Gets a free ip.
+        Gets free ips and a provider network information used to create a
+        flat network external network during the init phase.
         Originally it was done by reserving a subnet
         we now moves this implementation to a vlan based implementation
 
@@ -413,14 +429,25 @@ class G5K(Provider):
         # the last ip is reserved x.x.x.255, the previous one also
         # x.x.x..254 (gw), the x.x.x.253 seems to be pingable as well
         # (seems undocumented in g5k wiki)
-        return list(range_ips[-3 - count:-3])
+        reserved = 3 
+        start_index = -3-count-1024
+        end_index = -3-count-1
+        provider_network = {
+                'cidr': str(cidr),
+                'start': str(range_ips[start_index]),
+                'end': str(range_ips[end_index]),
+                'gateway': str(range_ips[-2]), 
+                'dns': '131.254.203.235'
+        }
+        return list(range_ips[end_index+1:-reserved]), provider_network
+
 
     def _get_cluster_nics(self, cluster):
         site = EX5.get_cluster_site(cluster)
         nics = EX5.get_resource_attributes(
             '/sites/%s/clusters/%s/nodes'
             % (site, cluster))['items'][0]['network_adapters']
-        return [nic['device'] for nic in nics if nic['mountable']]
+        return [nic['device'] for nic in nics if nic['mountable'] and nic['interface'] == 'Ethernet' ]
 
     def _exec_command_on_nodes(self, nodes, cmd, label, conn_params=None):
         """Execute a command on a node (id or hostname) or on a set of nodes"""

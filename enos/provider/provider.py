@@ -11,8 +11,8 @@ class Provider:
 
         The `config` parameter contains the client request (eg, number
         of compute per role among other things). This method returns a
-        list of the form [{Role: [Host]}] and a pool of 5 ips.
-
+        list of the form [{Role: [Host]}], a pool of 5 ips, and a usable
+        provider external network.
         """
         pass
 

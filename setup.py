@@ -22,7 +22,6 @@ setup(
         'execo==2.6.1',
         'ansible==2.1.2',
         'docopt==0.6.2',
-        'requests==2.11.0',
         'httplib2==0.9.2',
         'python-dateutil==2.2',
         'python-glanceclient==2.3.0',

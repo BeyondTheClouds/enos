@@ -36,16 +36,8 @@ from datetime import datetime
 import logging
 
 from docopt import docopt
-import requests
 import pprint
 from operator import itemgetter, attrgetter
-
-from keystoneauth1.identity import v3
-from keystoneauth1 import session
-from glanceclient import client as gclient
-from keystoneclient.v3 import client as kclient
-from novaclient import client as nclient
-from neutronclient.neutron import client as ntnclient
 
 import os
 import sys
@@ -88,11 +80,12 @@ def up(provider=None, env=None, **kwargs):
         sys.exit(1)
 
     # Calls the provider and initialise resources
-    rsc, ips, eths = provider.init(env['config'], kwargs['--force-deploy'])
+    rsc, ips, eths, provider_network = provider.init(env['config'], kwargs['--force-deploy'])
 
     env['rsc'] = rsc
     env['ips'] = ips
     env['eths'] = eths
+    env['provider_network'] = provider_network
 
     # Generates a directory for results
     resultdir_name = 'enos_' + datetime.today().isoformat()
@@ -220,47 +213,20 @@ Options:
 """)
 def init_os(env=None, **kwargs):
     logging.debug('phase[init]: args=%s' % kwargs)
-    # Authenticate to keystone
-    # http://docs.openstack.org/developer/keystoneauth/using-sessions.html
-    # http://docs.openstack.org/developer/python-glanceclient/apiv2.html
-    keystone_addr = env['config']['vip']
+    cmd = ['source %s' % os.path.join(SYMLINK_NAME, 'admin-openrc')]
+    # add cirros image
+    images = [{'name': 'cirros.uec', 'url':'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'}] 
+    for image in images:
+        cmd.append("/usr/bin/wget -q -O /tmp/%s %s" % (image['name'], image['url']))
+        cmd.append('openstack image create' \
+                ' --disk-format=qcow2' \
+                ' --container-format=bare' \
+                ' --property architecture=x86_64' \
+                ' --file /tmp/%s' \
+                ' %s' % (image['name'], image['name']))
 
-    auth = v3.Password(auth_url='http://%s:5000/v3' % keystone_addr,
-                       username='admin',
-                       password='demo',
-                       project_name='admin',
-                       user_domain_id='default',
-                       project_domain_id='default')
-    sess = session.Session(auth=auth)
-
-    # Install `member` role
-    keystone = kclient.Client(session=sess)
-    role_name = 'member'
-    if role_name not in map(attrgetter('name'), keystone.roles.list()):
-        logging.info("Creating role %s" % role_name)
-        keystone.roles.create(role_name)
-
-    # Install cirros with glance client if absent
-    glance = gclient.Client('2', session=sess)
-    cirros_name = 'cirros.uec'
-    if cirros_name not in map(itemgetter('name'), glance.images.list()):
-        # Download cirros
-        image_url = 'http://download.cirros-cloud.net/0.3.4/'
-        image_name = 'cirros-0.3.4-x86_64-disk.img'
-        logging.info("Downloading %s at %s..." % (cirros_name, image_url))
-        cirros_img = requests.get(image_url + '/' + image_name)
-
-        # Install cirros
-        cirros = glance.images.create(name=cirros_name,
-                                      container_format='bare',
-                                      disk_format='qcow2',
-                                      visibility='public')
-        glance.images.upload(cirros.id, cirros_img.content)
-        logging.info("%s has been created on OpenStack" % cirros_name)
-
-    # Install default flavors
-    nova = nclient.Client('2', session=sess)
-    default_flavors = [
+    # flavors
+    flavors = [
             # name, ram, disk, vcpus
             ('m1.tiny', 512, 1, 1),
             ('m1.small', 2048, 20, 1),
@@ -268,44 +234,69 @@ def init_os(env=None, **kwargs):
             ('m1.large', 8192, 80, 4),
             ('m1.xlarge', 16384, 160, 8)
     ]
-    current_flavors = map(attrgetter('name'), nova.flavors.list())
-    for flavor in default_flavors:
-        if flavor[0] not in current_flavors:
-            nova.flavors.create(name=flavor[0],
-                        ram=flavor[1],
-                        disk=flavor[2],
-                        vcpus=flavor[3])
-            logging.info("%s has been created on OpenStack" % flavor[0])
+    for flavor in flavors:
+        cmd.append('openstack flavor create %s' \
+                ' --id auto' \
+                ' --ram %s' \
+                ' --disk %s' \
+                ' --vcpus %s' \
+                ' --public' % (flavor[0], flavor[1], flavor[2], flavor[3]))
 
-    # Install default network
-    neutron = ntnclient.Client('2', session=sess)
-    network_name = 'public1'
-    network_id = ''
-    networks = neutron.list_networks()['networks']
-    if network_name not in map(itemgetter('name'), networks):
-        network = {'name': network_name,
-                   'provider:network_type': 'flat',
-                   'provider:physical_network': 'physnet1',
-                   'router:external': True
-        }
-        res = neutron.create_network({'network': network})
-        network_id = res['network']['id']
-        logging.info("%s network has been created on OpenStack" % network_name)
+    # security groups - allow everything 
+    protos = ['icmp', 'tcp', 'udp']
+    for proto in protos:
+        cmd.append('openstack security group rule create default' \
+                ' --protocol %s' \
+                ' --dst-port 1:65535' \
+                ' --src-ip 0.0.0.0/0' % proto)
+    
+    # quotas - set some unlimited for admin project
+    quotas = ['cores', 'ram', 'instances']
+    for quota in quotas:
+        cmd.append('nova quota-class-update --%s -1 default' % quota)
 
-    if not network_id:
-        logging.error("no network_id for %s network" % network_name)
-        sys.exit(32)
+    quotas = ['fixed-ips', 'floating-ips']
+    for quota in quotas:
+        cmd.append('openstack quota set --%s -1 admin' % quota)
 
-    # Install default subnet
-    subnet_name = '1-subnet'
-    subnets = neutron.list_subnets()['subnets']
-    if subnet_name not in map(itemgetter('name'), subnets):
-        subnet = {'name': subnet_name,
-                  'network_id': network_id,
-                  'cidr': '10.0.2.0/24',
-                  'ip_version': 4}
-        neutron.create_subnet({'subnet': subnet})
-        logging.info("%s has been created on OpenStack" % subnet_name)
+    # default network (one public / one provite)
+    cmd.append('openstack network create public' \
+            ' --share' \
+            ' --provider-physical-network physnet1' \
+            ' --provider-network-type flat' \
+            ' --external')
+    cmd.append('openstack subnet create public-subnet' \
+            ' --network public' \
+            ' --subnet-range %s' \
+            ' --no-dhcp'
+            ' --allocation-pool start=%s,end=%s' \
+            ' --gateway %s' \
+            ' --ip-version 4' % (
+                env["provider_network"]['cidr'],
+                env["provider_network"]['start'],
+                env["provider_network"]['end'],
+                env["provider_network"]['gateway'])
+            )
+    cmd.append('openstack network create private' \
+            ' --provider-network-type vxlan')
+
+    cmd.append('openstack subnet create private-subnet' \
+            ' --network private' \
+            ' --subnet-range 192.168.0.0/18' \
+            ' --gateway 192.168.0.1' \
+            ' --dns-nameserver %s' \
+            ' --ip-version 4' % (
+                env["provider_network"]['dns'])
+            )
+    # create a router between this two networks
+    cmd.append('openstack router create router')
+    # NOTE(msimonin): not sure how to handle these 2 with openstack cli 
+    cmd.append('neutron router-gateway-set router public')
+    cmd.append('neutron router-interface-add router private-subnet')
+
+    cmd = '\n'.join(cmd)
+    print(cmd)
+    call(cmd, shell = True)
 
 
 @enostask("""
