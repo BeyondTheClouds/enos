@@ -6,12 +6,6 @@ g5k_role: unknown
 enable_monitoring: true
 enable_rally: true
 
-# will be copied on the rally host to launch scenarios
-rally_scenarios_dir: "{{ playbook_dir }}/../../rally/"
-rally_scenarios_list: "all-scenarios.txt.sample"
-rally_times: 1
-rally_concurrency: 1
-
 # list of available patchs
 # to enable one patch copy past its description
 # to your local config file and enable it

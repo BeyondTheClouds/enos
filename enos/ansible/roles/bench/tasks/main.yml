@@ -1,6 +1,6 @@
 ---
 - include: "rally.yml"
   when: 
-    - scenario_type == "rally"
+    - bench.type == "rally"
     - inventory_hostname in groups['disco/rally']
 

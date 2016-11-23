@@ -222,6 +222,7 @@ def init_os(env=None, **kwargs):
                 ' --disk-format=qcow2' \
                 ' --container-format=bare' \
                 ' --property architecture=x86_64' \
+                ' --public' \
                 ' --file /tmp/%s' \
                 ' %s' % (image['name'], image['name']))
 
