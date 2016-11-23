@@ -5,89 +5,40 @@
 This script deploys an OpenStack on Grid'5000 using
 [Kolla](https://wiki.openstack.org/wiki/Kolla) and allows easy
 customization of the system (change in the default topology,
-configuration parameters) and reproductible experiments.
+configuration parameters) and reproducible experiments.
 
 ## Installation
 
 To install Enos, first connect to the Grid'5000 frontend of your
-choice and run.
-
+choice and run:
+<!--
 ```
 pip install git+git://github.com/BeyondTheClouds/enos@master#egg=enos
 ```
 
-## Configuration
-
-To deploy a full stack, you need to provide a configuration file in the YAML
-format. This file must include information about the Grid'5000 job and how the
-OpenStack services must be deployed. `reservation.yaml.sample` is given as an
-example.
-
-```
-# copy the sample file
-cp reservation.yaml.sample reservation.yaml
-
-#edit it with your parameters
-<editor> reservation.yaml
-```
-
-## Note on Registry backends
-
-The deployment makes use of a private docker registry configured as a
-mirror of the official docker registry. There are two modes
-* `ceph: false`. It will start a fresh registry that will cache the
-  images for the duration of the experiment.
-* `ceph: true`. It will use an existing Ceph rados block device of the
-  Rennes cluster.
-The block device will be mounted and used as the registry storage. Setting this
-is usefull as the cache will persist different experiments.
-
-[The G5k ceph tutorial ](https://www.grid5000.fr/mediawiki/index.php/Ceph) will
-guide you on how to create your rados block device.
-
-
-## Deploying
-
-Then, to launch the deployment:
-```
-enos deploy
-```
-
-> by default the script use the file `reservation.yaml` as configuration file
-
-This will run the following phases:
-
-* `up`: reserve physical machine on Grid'5000, deploys the base linux
-  distribution, instruments nodes with the monitoring stack, installs
-  Kolla prerequisites (runtime dependencies, input files).
-
-* `os`: launch the OpenStack deployment with Kolla
-
-* `init`: bootstrap the freshly deployed OpenStack with users,
-  images...
-
-
-> Run `enos --help` for a full list of command-line arguments.
-
-After the execution, the `./current` directory will contain some
-generated files (please note that `current` is a symbolic link toward
-the real directory associated to your deployment) and the results of
-the benchmarks.
-
-
 ## Contribute
-
+-->
 ```
-git clone https://github.com/BeyondTheClouds/enos
+$ git clone https://github.com/BeyondTheClouds/enos
+```
+
+You should also choose to go with a virtualenv. On Grid'5000, do the
+following if virtualenv is missing:
+```
+$ pip install virtualenv --user # Install virtualenv
+$ export PATH=~/.local/bin/:${PATH} # Put it into your path
 ```
 
 Then install the dependencies:
+```
+$ cd enos
+$ virtualenv venv
+$ source venv/bin/activate
+(venv)$ pip install -r requirements.txt
+```
 
-```
-cd enos
-pip install -r requirements.txt --user
-```
-Make sure to add ansible binaries to your PATH (export
+<!--
+Finally, make sure to add ansible binaries to your PATH (export
 PATH=YOUR_HOME/.local/bin:$PATH).
 
 Finally, to launch the deployment, run:
@@ -101,6 +52,67 @@ python -m enos.enos -h
 ```
 
 > Using a virtualenv is encouraged
+-->
+
+
+## Configuration
+
+To deploy a full stack, you need to provide a configuration file in the YAML
+format. This file must include information about the Grid'5000 job and how the
+OpenStack services must be deployed. `reservation.yaml.sample` is given as an
+example.
+
+```
+# copy the sample file
+$ cp reservation.yaml.sample reservation.yaml
+
+#edit it with your parameters
+$ <editor> reservation.yaml
+```
+
+## Note on Registry backends
+
+The deployment makes use of a private docker registry configured as a
+mirror of the official docker registry. There are two modes
+* `ceph: false`. It will start a fresh registry that will cache the
+  images for the duration of the experiment.
+* `ceph: true`. It will use an existing Ceph rados block device of the
+  Rennes cluster.
+The block device will be mounted and used as the registry storage.
+Setting this is useful as the cache will persist different
+experiments.
+
+[The G5k ceph tutorial ](https://www.grid5000.fr/mediawiki/index.php/Ceph) will
+guide you on how to create your rados block device.
+
+
+## Deploying
+
+Then, to launch the deployment:
+```
+(venv)$ python -m enos.enos deploy
+```
+
+> by default the script use the file `reservation.yaml` as configuration file
+
+This will run the following phases:
+
+* `up`: reserve physical machine on Grid'5000, deploys the base Linux
+  distribution, instruments nodes with the monitoring stack, installs
+  Kolla prerequisites (runtime dependencies, input files).
+
+* `os`: launch the OpenStack deployment with Kolla
+
+* `init`: bootstrap the freshly deployed OpenStack with users,
+  images...
+
+
+> Run `python -m enos.enos --help` for a full list of command-line arguments.
+
+After the execution, the `./current` directory will contain some
+generated files (please note that `current` is a symbolic link toward
+the real directory associated to your deployment) and the results of
+the benchmarks.
 
 
 ## Launch a workload
@@ -109,7 +121,7 @@ A workload is a set of scenarios grouped by type.
 A workload is launched with the following command :
 
 ```
-python -m enos.enos bench --workload=workload
+(venv)$ python -m enos.enos bench --workload=workload
 ```
 
 enos will look into the `workload` directory for a file named
@@ -138,14 +150,14 @@ rally:
 This will launch all the scenarios described under the scenarios keys with all
 the possible parameters. The parameters are calculated using the cartesian
 product of the parameters given under the args keys. Locally defined args
-(scenario level) shadow globally defined args (top level). The same mecanism is
+(scenario level) shadow globally defined args (top level). The same mechanism is
 applied to the `enabled` values.  The scenario must be parameterized
 accordingly. The key (rally here) defines the type of benchmark to launch : in
 the future we may support other type of scenarios (Shaker, PerfkitBenchmarker
 ...)
 
 After running the workload, a backup of the environment can be done through
-`enos backup`.
+`python -m enos.enos backup`.
 
 ## Post-mortem analysis
 
@@ -157,7 +169,7 @@ Please refer to the `result` directory to know how to get started with
 *post-mortem* analysis
 
 
-## Example of customizations
+## Examples of customization
 
 ### Changing Kolla / Ansible variables
 
@@ -217,7 +229,7 @@ https://en.wikipedia.org/wiki/Enos_(chimpanzee)
 
 
 ## License
-Enos runs performance stress workloads on OpenStack for postmortem analysis.  
+Enos runs performance stress workloads on OpenStack for postmortem analysis.
 Copyright (C) 2016 Didier Iscovery
 
 This program is free software: you can redistribute it and/or modify
