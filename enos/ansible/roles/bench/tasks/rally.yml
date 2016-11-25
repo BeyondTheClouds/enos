@@ -1,4 +1,37 @@
 ---
+# Install and launch a rally benchmark
+- name: Install rally result directory
+  file: path=/root/rally_home state=directory owner=65500
+
+- name: Test whether the rally database has been initialized or not
+  stat: path=/root/rally_home/.rally.sqlite
+  register: sqlite
+
+- name: Initialize database
+  when: not sqlite.stat.exists
+  docker_container:
+    name: "{{ 'database' | to_uuid }}"
+    image: rallyforge/rally
+    state: started
+    volumes:
+    - /root/rally_home:/home/rally
+    command: rally-manage db recreate
+
+- name: Test whether the rally deployment has been created or not
+  command: docker run -v /root/rally_home:/home/rally rallyforge/rally rally deployment list
+  register: deployment
+
+- name: Deploy discovery context
+  when: "'discovery' not in deployment.stdout"
+  docker_container:
+    name: "{{ 'deployment' | to_uuid }}"
+    image: rallyforge/rally
+    state: started
+    volumes:
+      - /root/rally_home:/home/rally
+    env: "{{ os_env }}"
+    command: rally deployment create --fromenv --name=discovery
+
 - name: Copy rally scenarios
   copy: src={{ bench.location }} dest=/root/rally_home/ owner=655500
 

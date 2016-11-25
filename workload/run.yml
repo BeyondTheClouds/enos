@@ -7,14 +7,19 @@ rally:
     enabled: true
     args: 
       concurrency:
-        - 1
+        - 5
       times: 
-        - 1
+        - 10
     scenarios:
       - name: boot and list servers 
-        enabled: true
         file: nova-boot-list-cc.yml
         args: 
-          # should override upper defined parameters
           sla_max_avg_duration: 30
+shaker:
+  enabled: false
+  scenarios:
+    - name: shaker instance_metadata
+      file: misc/instance_metadata
+    - name: shaker dense_l2
+      file: openstack/dense_l2
 

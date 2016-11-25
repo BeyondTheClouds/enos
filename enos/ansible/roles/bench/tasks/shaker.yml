@@ -1,0 +1,27 @@
+---
+# Launch a shaker benchmark
+# NOTE(msimonin): This is for currenly limited to benchmark aliases
+- name: debug
+  debug: msg="shaker bench --scenario {{ bench.file }} --server-endpoint {{ ansible_default_ipv4.address }}:11234"
+
+- name: Running shaker benchmark
+  docker_container:
+    name: "{{ bench.location | to_uuid }}"
+    image: beyondtheclouds/shaker
+    state: started
+    command: "--scenario {{ bench.file }} --server-endpoint {{ ansible_default_ipv4.address }}:11234"
+    ports: 
+      - "11234:11234"
+    volumes:
+      - /root/shaker_home:/artifacts
+    env : "{{ os_env }}"
+
+  register: docker_output
+
+- name: Wait for the end of the test, this may take a while...
+  command: "docker ps -q --filter id={{ docker_output.ansible_facts.ansible_docker_container.Id }}"
+  register: finished
+  until: finished.stdout == ""
+  delay: 20
+  retries: 10000
+

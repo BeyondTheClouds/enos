@@ -3,5 +3,4 @@
   hosts: all
   roles:
     - { role: bench,
-        tags: ['bench'],
-        when: enable_rally | bool }
+        tags: ['bench']}

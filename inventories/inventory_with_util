@@ -16,7 +16,7 @@ util
 [disco/influx:children]
 util
 
-[disco/rally:children]
+[disco/bench:children]
 util
 # You can explicitly specify which hosts run each project by updating the
 # groups in the sections below. Common services are grouped together.
