@@ -1,0 +1,14 @@
+---
+- name: Testing if they are some shaker logs to collect
+  stat: path=/root/shaker_home
+  register: conf
+
+- name: Make a tar of the shaker execution environment
+  command: tar -czf /root/shaker.tar.gz /root/shaker_home
+  when: conf.stat.exists and conf.stat.isdir
+
+- name: Pull back the shaker execution environment
+  fetch: src=/root/shaker.tar.gz
+         dest={{ backup_dir }}/{{ inventory_hostname }}-shaker.tar.gz
+         flat=yes
+  when: conf.stat.exists and conf.stat.isdir

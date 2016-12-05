@@ -352,6 +352,7 @@ def bench(env=None, **kwargs):
                     env['config']['bench'] = {
                         'type': bench_type,
                         'location': os.path.abspath(os.path.join(workload_dir, scenario["file"])),
+                        'file': scenario["file"],
                         'args': a
                     }
                     run_ansible([playbook_path], inventory_path, env['config'])

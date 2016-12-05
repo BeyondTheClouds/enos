@@ -4,8 +4,22 @@ cadvisor:
 g5k_role: unknown
 
 enable_monitoring: true
-enable_rally: true
 
+# default openstack env
+os_env:
+  OS_PROJECT_DOMAIN_ID: default
+  OS_PROJECT_DOMAIN_NAME: default
+  OS_USER_DOMAIN_ID: default
+  OS_USER_DOMAIN_NAME: default
+  OS_PROJECT_NAME: admin
+  OS_TENANT_NAME: admin
+  OS_USERNAME: admin
+  OS_PASSWORD: demo
+  OS_AUTH_URL: "http://{{ vip }}:5000/v3"
+  OS_IDENTITY_API_VERSION: 3
+  OS_REGION_NAME: "RegionOne"
+
+# list of 
 # list of available patchs
 # to enable one patch copy past its description
 # to your local config file and enable it
@@ -22,3 +36,4 @@ patches:
     src: haproxy.cfg.j2
     dst: kolla/ansible/roles/haproxy/templates/haproxy.cfg.j2
     enabled: "no"
+
