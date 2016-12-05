@@ -272,11 +272,13 @@ def init_os(env=None, **kwargs):
             ' --no-dhcp'
             ' --allocation-pool start=%s,end=%s' \
             ' --gateway %s' \
+            ' --dns-nameserver %s' \
             ' --ip-version 4' % (
                 env["provider_network"]['cidr'],
                 env["provider_network"]['start'],
                 env["provider_network"]['end'],
-                env["provider_network"]['gateway'])
+                env["provider_network"]['gateway'],
+                env["provider_network"]['dns'])
             )
     cmd.append('openstack network create private' \
             ' --provider-network-type vxlan')
