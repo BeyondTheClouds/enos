@@ -165,12 +165,18 @@ class G5K(Provider):
                 '(mount | grep /tmp/docker/volumes) || mount --bind /tmp/docker/volumes /var/lib/docker/volumes',
                 'Bind mount')
 
-        # Bind nova local storage
-        self._exec_command_on_nodes(
+        # Bind nova local storage if there is any nova compute
+        #
+        # FIXME: This does the hypotheses that nova is installed under
+        # compute node, but this is not necessarily. Nova could be
+        # installed on whatever the user choose. For this reason it
+        # will be a better strategy to parse the inventory file.
+        if 'compute' in env['rsc']:
+            self._exec_command_on_nodes(
                 env['rsc']['compute'],
                 'mkdir -p /tmp/nova ; mkdir -p /var/lib/nova',
                 'Creating nova directory in /tmp')
-        self._exec_command_on_nodes(
+            self._exec_command_on_nodes(
                 env['rsc']['compute'],
                 '(mount | grep /tmp/nova) || mount --bind /tmp/nova /var/lib/nova',
                 'Bind mount')
@@ -429,14 +435,14 @@ class G5K(Provider):
         # the last ip is reserved x.x.x.255, the previous one also
         # x.x.x..254 (gw), the x.x.x.253 seems to be pingable as well
         # (seems undocumented in g5k wiki)
-        reserved = 3 
+        reserved = 3
         start_index = -3-count-1024
         end_index = -3-count-1
         provider_network = {
                 'cidr': str(cidr),
                 'start': str(range_ips[start_index]),
                 'end': str(range_ips[end_index]),
-                'gateway': str(range_ips[-2]), 
+                'gateway': str(range_ips[-2]),
                 'dns': '131.254.203.235'
         }
         return list(range_ips[end_index+1:-reserved]), provider_network
