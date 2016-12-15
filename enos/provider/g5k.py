@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from provider import Provider
 from ..utils.constants import ENOS_PATH, EXTERNAL_IFACE
+from ..utils.extra import build_resources, expand_groups, expand_topology
 
 import yaml
 import os
@@ -53,6 +54,14 @@ class G5K(Provider):
         """
         self.config = DEFAULT_CONFIG
         self.config.update(config)
+        if 'topology' in self.config:
+            # expand the groups first
+            self.config['topology'] = expand_topology(self.config['topology'])
+            # Build the ressource claim to g5k 
+            # We are here using a flat combination of the resource
+            # resulting in (probably) deploying one single region
+            self.config['resources'] = build_resources(self.config['topology'])
+
 
         self.force_deploy = force_deploy
 
@@ -127,7 +136,8 @@ class G5K(Provider):
         return (roles,
                 map(str, vip_addresses),
                 [network_interface, external_interface],
-                provider_network)
+                provider_network
+                )
 
     def before_preintsall(self, env):
         # Create a virtual interface for veth0 (if any)
@@ -394,37 +404,71 @@ class G5K(Provider):
             nodes = pool[:n]
             del pool[:n]
             return nodes
+        
+        def mk_roles(pools, resources):
+            """
+            Distribute the nodes of pools according to the resources claim
+            resources : 
+                cluster1: 
+                    role11: n11
+                    role12: n12
+                    ...
+                cluster2:
+                    role21: n21
+                    role22: n22
+            pools:
+                cluster1: [node11, node12, ...]
+                cluster2: [node21, node22, ...]
 
-        # Maps a role (eg, controller) with a list of G5K node
-        roles_set = set()
-        for roles in self.config['resources'].values():
-            roles_set.update(roles.keys())
-        roles = {k: [] for k in roles_set}
-        roles_goal = {k: 0 for k in roles_set}
+            expected output
 
-        # compute the aggregated number of nodes per roles
-        for r in self.config['resources'].values():
-            for k, v in r.items():
-                roles_goal[k] = roles_goal[k] + v
+            roles:
+                role'1: [node'11, node'12 ...]
+                role'2: [node'21, node'22 ...]
+            """
+            roles_set = set()
+            for roles in resources.values():
+                roles_set.update(roles.keys())
 
+            roles = {k: [] for k in roles_set}
+            roles_goal = {k: 0 for k in roles_set}
+
+            # compute the aggregated number of nodes per roles
+            for r in resources.values():
+                for k, v in r.items():
+                    roles_goal[k] = roles_goal[k] + v
+
+            # Maps a role (eg, controller) with a list of G5K node
+            for cluster, rs in resources.items():
+                # distribute node into roles
+                for r in rs.keys() * len(self.deployed_nodes):
+                    if len(roles[r]) < roles_goal[r]:
+                        current = pick_nodes(pools[cluster], 1)
+                        if current == []:
+                            break
+                        else:
+                            roles.setdefault(r, []).extend(current)
+
+            at_least_one = all(len(n) >= 1 for n in roles.values())
+            if not at_least_one:
+                # Even if we aren't in strict mode we garantee that
+                # there will be at least on node per role
+                raise Exception("Role doesn't have at least one node each")
+            return roles
+
+        resources = self.config['resources']
         pools = mk_pools()
-        for cluster, rs in self.config['resources'].items():
-            current = pick_nodes(pools[cluster], 1)
-            # distribute node into roles
-            for r in rs.keys() * len(self.deployed_nodes):
-                if current == []:
-                    break
-                if current != [] and len(roles[r]) < roles_goal[r]:
-                    roles.setdefault(r, []).extend(current)
-                    current = pick_nodes(pools[cluster], 1)
+        roles = mk_roles(pools, resources)
+
+        # Extend roles with defined groups
+        # Distribute nodes into groups
+        pools = mk_pools()
+        for group, resources in self.config['topology'].items():
+            grp_roles = mk_roles(pools, resources)
+            # flattening the resources in this case 
+            roles[group] = sum(grp_roles.values(), [])
 
         logging.info("Roles: %s" % pf(roles))
-        at_least_one = all(len(n) >= 1 for n in roles.values())
-        if not at_least_one:
-            # Even if we aren't in strict mode we garantee that
-            # there will be at least on node per role
-            raise Exception("Role doesn't have at least one node each")
-
         return roles
 
     def _get_free_ip(self, count):

@@ -1,0 +1,43 @@
+---
+- name: Adding flent repository
+  apt_repository:
+    repo: deb http://download.opensuse.org/repositories/home:/tohojo:/flent/xUbuntu_14.04/ /
+    state: present
+
+- name: Installing flent
+  apt:
+    name: flent
+    allow_unauthenticated: yes
+    update_cache: true
+
+- name: Installing fping
+  apt: 
+   name: fping
+   update_cache: true
+
+- name: Uploading the host list
+  template: 
+    src: hosts.txt.j2
+    dest: /tmp/hosts
+
+- name: Get the latencies between all the nodes
+  shell: "fping -C 5 -q -s -e -f /tmp/hosts 2>/tmp/result"
+
+- name: Fetching the results
+  fetch:
+    src: /tmp/result
+    dest: "/{{ tc_output_dir }}/{{ inventory_hostname }}.out"
+    flat: yes
+
+- name: Running flent (tcp_upload)
+  shell: "flent tcp_upload -l 5 -H {{ hostvars[item]['ansible_default_ipv4']['address']   }} -f stats -o /tmp/tcp_upload_{{ inventory_hostname }}_{{ item  }}.stats || true 2>/dev/null"
+  when: inventory_hostname == groups.all[0]
+  with_items: "{{ groups.all }}"
+
+- name: Fetching the results
+  fetch:
+    src: "/tmp/tcp_upload_{{ inventory_hostname }}_{{ item  }}.stats"
+    dest: "{{ tc_output_dir }}/tcp_upload_{{ inventory_hostname }}_{{ item  }}.stats"
+    flat: yes
+  when: inventory_hostname == groups.all[0]
+  with_items: "{{ groups.all }}"

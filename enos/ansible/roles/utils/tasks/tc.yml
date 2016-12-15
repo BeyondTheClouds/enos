@@ -1,0 +1,38 @@
+---
+- name: Removing root qdisc for {{ network_interface }}
+  shell: "tc qdisc del dev {{ network_interface }} root || true"
+
+- name: Removing root qdisc for {{ neutron_external_interface }}
+  shell: "tc qdisc del dev {{ neutron_external_interface }} root || true"
+
+- name: Preparing htf for {{ network_interface }}
+  shell: "tc qdisc add dev {{ network_interface }} root handle 1: htb"
+  when: tc_enable
+
+- name: Preparing htf for {{ neutron_external_interface }}
+  shell: "tc qdisc add dev {{ neutron_external_interface }} root handle 1: htb"
+  when: tc_enable
+
+- name: Add rate limit
+  command: "tc class add dev {{ item.1.device }} parent 1: classid 1:{{ item.0 + 1 }} htb rate {{ item.1.rate }}"
+  with_indexed_items: "{{ tc }}"
+  when:
+    - tc_enable
+    - item[1].source == ansible_nodename 
+
+
+- name: Adding delay
+  command: "tc qdisc add dev {{ item.1.device }} parent 1:{{ item.0 + 1 }} handle {{ item.0 + 10 }}: netem delay {{ item.1.delay }}"
+  with_indexed_items: "{{ tc }}"
+  when:
+    - tc_enable
+    - item[1].source == ansible_nodename
+
+
+- name: Adding filter
+  command: "tc filter add dev {{ item.1.device }} parent 1: protocol ip  u32 match ip dst {{ item.1.target }} flowid 1:{{ item.0 + 1 }}"
+  with_indexed_items: "{{ tc }}"
+  when:
+    - tc_enable
+    - item[1].source == ansible_nodename
+

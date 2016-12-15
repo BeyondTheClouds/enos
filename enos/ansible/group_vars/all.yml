@@ -5,6 +5,11 @@ g5k_role: unknown
 
 enable_monitoring: true
 
+# enable tc constraints when invoking tc phase
+tc_enable: true
+# output dir to store test validation of tc rules enforcement 
+tc_output_dir: /tmp
+
 # default openstack env
 os_env:
   OS_PROJECT_DOMAIN_ID: default
