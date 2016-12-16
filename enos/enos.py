@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 """Enos: Monitor and test your OpenStack.
 
-usage: enos <command> [<args> ...] [-h|--help]
-            [-v|--version] [-vv|-s|--silent]
+usage: enos <command> [<args> ...] [-e ENV|--env=ENV]
+            [-h|--help] [-v|--version] [-vv|-s|--silent]
 
-Options:
-  -h --help      Show this help message.
-  -v --version   Show version number.
-  -vv            Verbose mode.
-  -s --silent    Quiet mode.
+General options:
+  -e ENV --env=ENV  Path to the environment yaml file. You should
+                    use this option when you wanna link to a specific
+                    experiment. Not specifying this value will
+                    discard the loading of the environment (it
+                    makes sens for `up`).
+  -h --help         Show this help message.
+  -v --version      Show version number.
+  -vv               Verbose mode.
+  -s --silent       Quiet mode.
 
 Commands:
   up             Get resources and install the docker registry.
@@ -51,22 +56,42 @@ CALL_PATH = os.getcwd()
 
 
 @enostask("""
-usage: enos up [-f CONFIG_PATH] [--force-deploy] [-t TAGS | --tags=TAGS]
-               [--provider=PROVIDER] [-vv|-s|--silent]
+usage: enos up [-f CONFIG_PATH] [--force-deploy] [-t TAGS|--tags=TAGS]
+               [--provider=PROVIDER] [-e ENV|--env=ENV]
 
 Get resources and install the docker registry.
 
 Options:
-  -h --help            Show this help message.
   -f CONFIG_PATH       Path to the configuration file describing the
                        deployment [default: ./reservation.yaml].
   --force-deploy       Force deployment [default: False].
   -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
+  -e ENV --env=ENV     Path to the environment yaml file. You should
+                       use this option when you wanna link to a specific
+                       experiment. Do not specify it in other cases.
   --provider=PROVIDER  The provider name [default: G5K].
 
 """)
 def up(provider=None, env=None, **kwargs):
     logging.debug('phase[up]: args=%s' % kwargs)
+
+    # Generates a directory for results
+    if '--env' not in kwargs or not kwargs['--env']:
+        resultdir_name = 'enos_' + datetime.today().isoformat()
+        resultdir = os.path.join(CALL_PATH, resultdir_name)
+        os.mkdir(resultdir)
+        logging.info('Generates result directory %s' % resultdir_name)
+
+        env['resultdir'] = resultdir
+
+    # Symlink the result directory with the current directory
+    link = os.path.abspath(SYMLINK_NAME)
+    try:
+        os.remove(link)
+    except OSError:
+        pass
+    os.symlink(env['resultdir'], link)
+    logging.info("Symlinked %s to %s" % (env['resultdir'], link))
 
     # Loads the configuration file
     config_file = kwargs['-f']
@@ -87,17 +112,9 @@ def up(provider=None, env=None, **kwargs):
     env['eths'] = eths
     env['provider_network'] = provider_network
 
-    # Generates a directory for results
-    resultdir_name = 'enos_' + datetime.today().isoformat()
-    resultdir = os.path.join(CALL_PATH, resultdir_name)
-    os.mkdir(resultdir)
-    logging.info('Generates result directory %s' % resultdir_name)
-
-    env['resultdir'] = resultdir
-
     # Generates inventory for ansible/kolla
     base_inventory = env['config']['inventory']
-    inventory = os.path.join(resultdir, 'multinode')
+    inventory = os.path.join(env['resultdir'], 'multinode')
     generate_inventory(env['rsc'], base_inventory, inventory)
     logging.info('Generates inventory %s' % inventory)
 
@@ -130,26 +147,23 @@ def up(provider=None, env=None, **kwargs):
     run_ansible([up_playbook], inventory, env['config'], kwargs['--tags'])
     provider.after_preintsall(env)
 
-    # Symlink current directory
-    link = os.path.abspath(SYMLINK_NAME)
-    try:
-        os.remove(link)
-    except OSError:
-        pass
-    os.symlink(resultdir, link)
-    logging.info("Symlinked %s to %s" % (resultdir, link))
-
 
 @enostask("""
-usage: enos os [--reconfigure] [-t TAGS | --tags=TAGS] [-vv|-s|--silent]
+usage: enos os [--reconfigure] [-t TAGS|--tags=TAGS] [-e ENV|--env=ENV]
 
 Run kolla and install OpenStack.
 
 Options:
-  -h --help            Show this help message.
   -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
   --reconfigure        Reconfigure the services after a deployment.
-""")
+  -e ENV --env=ENV     Path to the environment yaml file. You should
+                       use this option when you wanna link a specific
+                       experiment [default: %s].
+  -h --help            Show this help message.
+  -v --version         Show version number.
+  -vv                  Verbose mode.
+  -s --silent          Quiet mode.
+""" % os.path.join(SYMLINK_NAME, 'env'))
 def install_os(env=None, **kwargs):
     logging.debug('phase[os]: args=%s' % kwargs)
     # Generates kolla globals.yml, passwords.yml
@@ -200,7 +214,7 @@ def install_os(env=None, **kwargs):
 
 
 @enostask("""
-usage: enos init [-vv|-s|--silent]
+usage: enos init [-e ENV|--env=ENV]
 
 Initialise OpenStack with the bare necessities:
 - Install a 'member' role
@@ -209,13 +223,15 @@ Initialise OpenStack with the bare necessities:
 - Install default network
 
 Options:
-  -h --help            Show this help message.
-""")
+  -e ENV --env=ENV  Path to the environment yaml file. You should
+                    use this option when you wanna link a specific
+                    experiment [default: %s].
+""" % os.path.join(SYMLINK_NAME, 'env'))
 def init_os(env=None, **kwargs):
     logging.debug('phase[init]: args=%s' % kwargs)
     cmd = ['source %s' % os.path.join(SYMLINK_NAME, 'admin-openrc')]
     # add cirros image
-    images = [{'name': 'cirros.uec', 'url':'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'}] 
+    images = [{'name': 'cirros.uec', 'url':'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'}]
     for image in images:
         cmd.append("/usr/bin/wget -q -O /tmp/%s %s" % (image['name'], image['url']))
         cmd.append('openstack image create' \
@@ -243,14 +259,14 @@ def init_os(env=None, **kwargs):
                 ' --vcpus %s' \
                 ' --public' % (flavor[0], flavor[1], flavor[2], flavor[3]))
 
-    # security groups - allow everything 
+    # security groups - allow everything
     protos = ['icmp', 'tcp', 'udp']
     for proto in protos:
         cmd.append('openstack security group rule create default' \
                 ' --protocol %s' \
                 ' --dst-port 1:65535' \
                 ' --src-ip 0.0.0.0/0' % proto)
-    
+
     # quotas - set some unlimited for admin project
     quotas = ['cores', 'ram', 'instances']
     for quota in quotas:
@@ -293,7 +309,7 @@ def init_os(env=None, **kwargs):
             )
     # create a router between this two networks
     cmd.append('openstack router create router')
-    # NOTE(msimonin): not sure how to handle these 2 with openstack cli 
+    # NOTE(msimonin): not sure how to handle these 2 with openstack cli
     cmd.append('neutron router-gateway-set router public')
     cmd.append('neutron router-interface-add router private-subnet')
 
@@ -303,18 +319,19 @@ def init_os(env=None, **kwargs):
 
 
 @enostask("""
-usage: enos bench [--workload=WORKLOAD]
-                  [-vv|-s|--silent]
+usage: enos bench [--workload=WORKLOAD] [-e ENV|--env=ENV]
 
 Run rally on this OpenStack.
 
 Options:
-  -h --help                 Show this help message.
-  --workload=WORKLOAD       Path to the workload directory.
-                            This directory must contain a run.yml file
-                            that contains the description of the different
-                            scenarios to launch
-""")
+  --workload=WORKLOAD  Path to the workload directory.
+                       This directory must contain a run.yml file
+                       that contains the description of the different
+                       scenarios to launch
+  -e ENV --env=ENV     Path to the environment yaml file. You should
+                       use this option when you wanna link a specific
+                       experiment [default: %s].
+""" % os.path.join(SYMLINK_NAME, 'env'))
 def bench(env=None, **kwargs):
     def cartesian(d):
         """returns the cartesian product of the args."""
@@ -338,7 +355,7 @@ def bench(env=None, **kwargs):
         for bench_type, desc in workload.items():
             scenarios = desc.get("scenarios", [])
             for scenario in scenarios:
-                # merging args 
+                # merging args
                 top_args = desc.get("args", {})
                 args = scenario.get("args", {})
                 top_args.update(args)
@@ -358,16 +375,18 @@ def bench(env=None, **kwargs):
                         'args': a
                     }
                     run_ansible([playbook_path], inventory_path, env['config'])
-    
+
 @enostask("""
-usage: enos backup [--backup_dir=BACKUP_DIR ] [-vv|-s|--silent]
+usage: enos backup [--backup_dir=BACKUP_DIR  [-e ENV|--env=ENV]
 
 Backup the environment
 
 Options:
-  --backup_dir=BACKUP_DIR   Backup directory.
-  -h --help                 Show this help message.
-""")
+  --backup_dir=BACKUP_DIR  Backup directory.
+  -e ENV --env=ENV         Path to the environment yaml file. You should
+                           use this option when you wanna link a specific
+                           experiment [default: %s].
+""" % os.path.join(SYMLINK_NAME, 'env'))
 def backup(env = None, **kwargs):
     backup_dir = kwargs['--backup_dir']
     if backup_dir is None:
@@ -410,27 +429,44 @@ def ssh_tunnel(env=None, **kwargs):
     logging.info("___")
 
 
-@enostask("usage: enos info")
+@enostask("""
+usage: enos info [-e ENV|--env=ENV]
+
+
+Show information of the `ENV` deployment.
+
+Options:
+  -e ENV --env=ENV  Path to the environment yaml file. You should
+                    use this option when you wanna link a specific
+                    experiment [default: %s].
+""" % os.path.join(SYMLINK_NAME, 'env'))
 def info(env=None, **kwargs):
     pprint.pprint(env)
 
 
 @enostask("""
 usage: enos deploy [-f CONFIG_PATH] [--force-deploy]
-                   [--provider=PROVIDER] [-t TAGS | --tags=TAGS]
-                   [--reconfigure] [-vv|-s|--silent]
+                   [--provider=PROVIDER] [-e ENV|--env=ENV]
 
 Shortcut for enos up, then enos os, and finally enos config.
 
 Options:
-  -h --help            Show this help message.
   -f CONFIG_PATH       Path to the configuration file describing the
                        deployment [default: ./reservation.yaml].
   --force-deploy       Force deployment [default: False].
   --provider=PROVIDER  The provider name [default: G5K].
+  -e ENV --env=ENV     Path to the environment yaml file. You should
+                       use this option when you wanna link a specific
+                       experiment.
 """)
 def deploy(**kwargs):
     up(**kwargs)
+
+    # If the user doesn't specify an experiment, then set the ENV at
+    # the actual one.
+    if not kwargs['--env']:
+        kwargs['--env'] = os.path.join(kwargs['env']['resultdir'], 'env')
+
     install_os(**kwargs)
     init_os(**kwargs)
 
@@ -442,8 +478,13 @@ def main():
 
     if '-vv' in args['<args>']:
         logging.basicConfig(level=logging.DEBUG)
-    elif '-s' in args['<args>'] or '--silent' in args['<args>']:
+        args['<args>'].remove('-vv')
+    elif '-s' in args['<args>']:
         logging.basicConfig(level=logging.ERROR)
+        args['<args>'].remove('-s')
+    elif '--silent' in args['<args>']:
+        logging.basicConfig(level=logging.ERROR)
+        args['<args>'].remove('--silent')
     else:
         logging.basicConfig(level=logging.INFO)
 
