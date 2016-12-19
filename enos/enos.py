@@ -172,9 +172,9 @@ def install_os(env=None, **kwargs):
         call("rm -rf %s" % kolla_path, shell=True)
 
     logging.info("Cloning Kolla")
-    call("git clone %s -b %s %s > /dev/null" % (env['kolla_repo'],
-                                                env['kolla_branch'],
-                                                kolla_path), shell=True)
+    call("git clone --depth=1 %s --branch %s %s > /dev/null" % 
+            (env['kolla_repo'], env['kolla_branch'], kolla_path), 
+            shell=True)
 
     logging.warning(("Patching kolla, this should be ",
                      "deprecated with the new version of Kolla"))
