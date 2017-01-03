@@ -83,7 +83,7 @@ class G5K(Provider):
         network_interface = str(interfaces[0])
         external_interface = None
 
-        if len(interfaces) > 1:
+        if len(interfaces) > 1 and not config['single_interface']:
             external_interface = str(interfaces[1])
             site, vlan = self._get_primary_vlan()
             # NOTE(msimonin) deployed is composed of the list of hostnames
@@ -98,10 +98,13 @@ class G5K(Provider):
         else:
             # TODO(msimonin) fix the network in this case as well.
             external_interface = 'veth0'
-            logging.warning("%s has only one NIC. The same interface "
-                           "will be used for network_interface and "
-                           "neutron_external_interface."
-                           % self.config['resources'].keys()[0])
+            if config['single_interface']:
+                logging.warning("Forcing the use of a single network interface")
+            else:
+                logging.warning("%s has only one NIC. The same interface "
+                               "will be used for network_interface and "
+                               "neutron_external_interface."
+                               % self.config['resources'].keys()[0])
 
         self._exec_command_on_nodes(
             self.deployed_nodes,
