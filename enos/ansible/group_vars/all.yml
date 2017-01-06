@@ -4,7 +4,6 @@ cadvisor:
 g5k_role: unknown
 
 enable_monitoring: true
-single_interface: false
 
 # default openstack env
 os_env:
