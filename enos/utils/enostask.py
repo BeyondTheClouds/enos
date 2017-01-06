@@ -86,6 +86,6 @@ def enostask(doc):
             fn(*args, **kwargs)
 
             # Save the environment
-            save_env(env)
+            save_env(kwargs['env'])
         return decorated
     return decorator
