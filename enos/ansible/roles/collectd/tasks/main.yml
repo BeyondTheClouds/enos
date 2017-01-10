@@ -56,4 +56,7 @@
     - { src: haproxy.py, dst: /opt/collectd/haproxy/haproxy.py}
 
 - name: Restart collectd
-  service: name=collectd state=restarted
+  service:
+    name: collectd
+    state: restarted 
+

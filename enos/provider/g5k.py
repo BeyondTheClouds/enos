@@ -27,7 +27,7 @@ ROLE_DISTRIBUTION_MODE_STRICT = "strict"
 DEFAULT_CONFIG = {
     "name": "kolla-discovery",
     "walltime": "02:00:00",
-    "env_name": 'ubuntu1404-x64-min',
+    "env_name": 'jessie-x64-min',
     "reservation": None,
     "vlans": {},
     "role_distribution": ROLE_DISTRIBUTION_MODE_STRICT,
@@ -115,8 +115,14 @@ class G5K(Provider):
         # Install python on the nodes
         self._exec_command_on_nodes(
             self.deployed_nodes,
-            'apt-get -y install python',
+            'apt-get -y install python python-setuptools',
             'Installing Python on all the nodes...')
+        # fix installation of pip on jessie   
+        self._exec_command_on_nodes(
+            self.deployed_nodes,
+            'easy_install pip && ln -s /usr/local/bin /usr/bin/pip || true',
+            'Installing pip')
+
 
         return (roles,
                 map(str, vip_addresses),
