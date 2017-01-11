@@ -15,7 +15,12 @@
     state: started
     volumes:
     - /root/rally_home:/home/rally
-    command: rally-manage db recreate
+    command: rally-manage db create
+
+# NOTE(msimonin): without the pause
+# the file seems not to be synced in the next task.
+# Relaunching the play a second time is also a possible wokaround.
+- pause: seconds=1
 
 - name: Test whether the rally deployment has been created or not
   command: docker run -v /root/rally_home:/home/rally rallyforge/rally rally deployment list
@@ -38,6 +43,8 @@
 - name: debug
   debug: msg="rally task start {{ bench.location | basename }} --task-args '{{ bench.args }}'"
 
+# NOTE(msimonin): ansible 2.2.0 breaks the return value.
+# see https://github.com/BeyondTheClouds/enos/issues/41
 - name: Run rally benchmark
   docker_container:
     name: "{{ bench.location | to_uuid }}"
@@ -47,8 +54,6 @@
       - /root/rally_home:/home/rally
     command: rally task start {{ bench.location | basename }} --task-args '{{ bench.args }}'
   register: docker_output
-
-- debug: var=docker_output.ansible_facts.ansible_docker_container.Id
 
 - name: Wait for the end of the test, this may take a while...
   command: "docker ps -q --filter id={{ docker_output.ansible_facts.ansible_docker_container.Id }}"
