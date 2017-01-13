@@ -49,7 +49,6 @@ from subprocess import call
 import yaml
 import json
 import itertools
-import re
 
 CALL_PATH = os.getcwd()
 

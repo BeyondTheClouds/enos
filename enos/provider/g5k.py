@@ -410,21 +410,21 @@ class G5K(Provider):
             Distribute the nodes of pools according to the resources claim
             resources : 
                 cluster1: 
-                    role11: n11
-                    role12: n12
+                    control: 1
+                    compute: 2
                     ...
                 cluster2:
-                    role21: n21
-                    role22: n22
+                    compute: 3 
+
             pools:
-                cluster1: [node11, node12, ...]
-                cluster2: [node21, node22, ...]
+                cluster1: [n11, n12, n13]
+                cluster2: [n21, n22, n23]
 
             expected output
 
-            roles:
-                role'1: [node'11, node'12 ...]
-                role'2: [node'21, node'22 ...]
+            roles: (one possible distribution)
+                control: [n11]
+                compute: [n12, n13, n21, n22, n23]
             """
             roles_set = set()
             for roles in resources.values():
@@ -462,11 +462,12 @@ class G5K(Provider):
 
         # Extend roles with defined groups
         # Distribute nodes into groups
-        pools = mk_pools()
-        for group, resources in self.config['topology'].items():
-            grp_roles = mk_roles(pools, resources)
-            # flattening the resources in this case 
-            roles[group] = sum(grp_roles.values(), [])
+        if 'topology' in self.config:
+            pools = mk_pools()
+            for group, resources in self.config['topology'].items():
+                grp_roles = mk_roles(pools, resources)
+                # flattening the resources in this case 
+                roles[group] = sum(grp_roles.values(), [])
 
         logging.info("Roles: %s" % pf(roles))
         return roles

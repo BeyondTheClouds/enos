@@ -1,7 +1,7 @@
 ---
 - name: Adding flent repository
   apt_repository:
-    repo: deb http://download.opensuse.org/repositories/home:/tohojo:/flent/xUbuntu_14.04/ /
+    repo: deb http://download.opensuse.org/repositories/home:/tohojo:/flent/Debian_8.0/ /
     state: present
 
 - name: Installing flent

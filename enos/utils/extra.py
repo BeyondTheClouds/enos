@@ -225,7 +225,7 @@ def expand_groups(grp):
         * grp[1-3] -> [grp1, grp2, grp3]
         * grp1 -> [grp1]
     """
-    p = re.compile('(?P<name>\w+)\[(?P<start>\d+)-(?P<end>\d+)\]')
+    p = re.compile('(?P<name>.+)\[(?P<start>\d+)-(?P<end>\d+)\]')
     m = p.match(grp)
     if m is not None:
         s = int(m.group('start'))
