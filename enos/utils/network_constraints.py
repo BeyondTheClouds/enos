@@ -1,4 +1,5 @@
 from extra import expand_groups
+import copy
 
 def expand_description(desc):
     """
@@ -101,7 +102,7 @@ def build_ip_constraints(rsc, ips, constraints):
     Generate the constraints at the ip/device level.
     Those constraints are those used by ansible to enforce tc/netem rules.
     """
-    generated_constraints = []
+    local_ips = copy.deepcopy(ips)
     for constraint in constraints:
         gsrc = constraint['src']
         gdst = constraint['dst']
@@ -109,20 +110,20 @@ def build_ip_constraints(rsc, ips, constraints):
         grate = constraint['rate']
         for s in rsc[gsrc]:
             # one possible source
-            sdevices = map(lambda x: x['device'], ips[s.address]['devices'])
+            sdevices = map(lambda x: x['device'], local_ips[s.address]['devices'])
             for sdevice in sdevices:
                 # one possible device
                 for d in rsc[gdst]:
-                    # one possible destination
-                    dallips = ips[d.address]['all_ipv4_addresses']
+                    # one possible destination 
+                    dallips = local_ips[d.address]['all_ipv4_addresses']
                     # Let's keep docker bridge out of this
                     dallips = filter(lambda x: x != '172.17.0.1', dallips)
                     for dip in dallips:
-                        generated_constraints.append({
-                            'source': s.address,
-                            'target': dip,
-                            'device': sdevice,
-                            'delay': gdelay,
-                            'rate' : grate
-                        })
-    return generated_constraints
+                        local_ips[s.address].setdefault('tc', []).append({
+                                'source': s.address,
+                                'target': dip,
+                                'device': sdevice,
+                                'delay': gdelay,
+                                'rate' : grate
+                            })
+    return local_ips

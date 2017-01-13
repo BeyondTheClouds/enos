@@ -433,16 +433,21 @@ def tc(provider=None, env=None, **kwargs):
     if test:
         logging.info('Checking the constraints')
         utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
-        env['config'].update({'action': 'test'})
-        run_ansible([utils_playbook], env['inventory'], env['config'])
+        options = {'action': 'test','tc_output_dir': env['resultdir'] }
+        run_ansible([utils_playbook], env['inventory'], options)
         return
 
     # 1. getting  ips/devices information
     logging.info('Getting the ips of all nodes')
     utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
     ips_file = os.path.join(env['resultdir'], 'ips.txt')
-    env['config'].update({'action': 'ips', 'ips_file': ips_file})
-    run_ansible([utils_playbook], env['inventory'], env['config'])
+    options = {
+            'action': 'ips',
+            'ips_file': ips_file,
+            'network_interface': env['config']['network_interface'],
+            'neutron_external_interface': env['config']['neutron_external_interface'],
+    }
+    run_ansible([utils_playbook], env['inventory'], options)
     
     # 2.a building the group constraints
     logging.info('Building all the constraints')
@@ -454,25 +459,23 @@ def tc(provider=None, env=None, **kwargs):
     with open(ips_file) as f:
         ips = yaml.load(f)
         # will hold every single constraint 
-        ip_constraints = build_ip_constraints(env['rsc'], ips, constraints)
+        ips_with_constraints = build_ip_constraints(env['rsc'], ips, constraints)
         # dumping it for debugging purpose
-        generated_constraint_file = os.path.join(env['resultdir'], 'generated_constraints.yml')
-        with open(generated_constraint_file, 'w') as g:
-            yaml.dump(ip_constraints, g)
-    
+        ips_with_constraints_file = os.path.join(env['resultdir'], 'ips_with_constraints.yml')
+        with open(ips_with_constraints_file, 'w') as g:
+            yaml.dump(ips_with_constraints, g)
+
     # 3. Enforcing those constraints 
     logging.info('Enforcing the constraints')
     # enabling/disabling network constraints
     enable = network_constraints['enable'] if 'enable' in network_constraints else True
     utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
-    env['config'].update({
+    options = {
         'action': 'tc',
-        'tc': ip_constraints,
+        'ips_with_constraints': ips_with_constraints,
         'tc_enable': enable,
-        'tc_output_dir': env['resultdir']
-    })
-    run_ansible([utils_playbook], env['inventory'], env['config'])
-    
+    }
+    run_ansible([utils_playbook], env['inventory'], options)
 
 @enostask("usage: enos info")
 def info(env=None, **kwargs):
