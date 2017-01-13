@@ -10,9 +10,12 @@ class Provider:
         """Provides resources and provisions the environment.
 
         The `config` parameter contains the client request (eg, number
-        of compute per role among other things). This method returns a
-        list of the form [{Role: [Host]}], a pool of 5 ips, and a usable
-        provider external network.
+        of compute per role among other things). This method returns,
+        in this order, a list of the form [{Role: [Host]}], a dict
+        with `cidr`, `gateway` and `dns` to set the network, and a
+        pair that contains the name of network and external
+        interfaces.
+
         """
         pass
 

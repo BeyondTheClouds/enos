@@ -7,6 +7,8 @@ from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
 from ansible.executor.playbook_executor import PlaybookExecutor
 
+from netaddr import IPRange
+
 from subprocess import call
 import jinja2
 import os
@@ -243,3 +245,17 @@ def expand_topology(topology):
         for g in grps:
             expanded[g] = desc
     return expanded
+
+def pop_ip(env=None):
+    "Picks an ip from env['provider_net']."
+    # Construct the pool of ips
+    ips = list(IPRange(env['provider_net']['start'],
+                       env['provider_net']['end']))
+
+    # Get the next ip
+    ip = str(ips.pop())
+
+    # Remove this ip from the env
+    env['provider_net']['end'] = str(ips.pop())
+
+    return ip

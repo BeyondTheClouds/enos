@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from provider import Provider
-from ..utils.constants import ENOS_PATH, EXTERNAL_IFACE
 from ..utils.extra import build_resources, expand_groups, expand_topology
+from ..utils.constants import EXTERNAL_IFACE
 
 import yaml
 import os
@@ -16,14 +16,12 @@ from execo_g5k import api_utils as api
 from execo_g5k.api_utils import get_cluster_site
 from execo_g5k import OarSubmission
 
-from netaddr import IPNetwork, IPSet
-
-from itertools import groupby
+from itertools import groupby, islice
 import operator
+from netaddr import IPAddress, IPNetwork, IPSet
 
 import pprint
 
-NETWORK_FILE = os.path.join(ENOS_PATH, 'provider', 'g5k_networks.yaml')
 ROLE_DISTRIBUTION_MODE_STRICT = "strict"
 DEFAULT_CONFIG = {
     "name": "kolla-discovery",
@@ -57,17 +55,12 @@ class G5K(Provider):
         if 'topology' in self.config:
             # expand the groups first
             self.config['topology'] = expand_topology(self.config['topology'])
-            # Build the ressource claim to g5k 
+            # Build the ressource claim to g5k
             # We are here using a flat combination of the resource
             # resulting in (probably) deploying one single region
             self.config['resources'] = build_resources(self.config['topology'])
 
-
         self.force_deploy = force_deploy
-
-        # Load g5k networks
-        with open(NETWORK_FILE) as network_file:
-            self.networks = yaml.load(network_file)
 
         self._get_job()
 
@@ -76,68 +69,28 @@ class G5K(Provider):
             logging.error("Some of your nodes have been undeployed")
             sys.exit(31)
 
-        roles = self._build_roles()
-
-        # Get an IP for
-        # kolla (haproxy)
-        # docker registry
-        # influx db
-        # grafana
-        vip_addresses, provider_network = self._get_free_ip(5)
-        # Get the NIC devices of the reserved cluster
-        # XXX: this only works if all nodes are on the same cluster,
-        # or if nodes from different clusters have the same devices
-        interfaces = self._get_cluster_nics(self.config['resources'].keys()[0])
-
-
-        network_interface = str(interfaces[0])
-        external_interface = None
-
-        if len(interfaces) > 1 and not self.config['single_interface']:
-            external_interface = str(interfaces[1])
-            site, vlan = self._get_primary_vlan()
-            # NOTE(msimonin) deployed is composed of the list of hostnames
-            # unmodified with the vlan. This is required by set_nodes_vlan.
-            api.set_nodes_vlan(site, map(lambda d: EX.Host(d), deployed), external_interface, vlan)
-
-            self._exec_command_on_nodes(
-                self.deployed_nodes,
-                'ifconfig %s up && dhclient -nw %s' % (external_interface, external_interface),
-                'mounting secondary interface'
-             )
-        else:
-            # TODO(msimonin) fix the network in this case as well.
-            external_interface = 'veth0'
-            if self.config['single_interface']:
-                logging.warning("Forcing the use of a single network interface")
-            else:
-                logging.warning("%s has only one NIC. The same interface "
-                               "will be used for network_interface and "
-                               "neutron_external_interface."
-                               % self.config['resources'].keys()[0])
-
+        # Provision nodes so we can run Ansible on it
         self._exec_command_on_nodes(
             self.deployed_nodes,
-            'apt-get update && apt-get -y --force-yes install apt-transport-https',
-            'Installing apt-transport-https...')
+            'apt-get update && apt-get -y --force-yes install %s'
+            % ' '.join(['apt-transport-https',
+                        'python',
+                        'python-setuptools']),
+            'Installing apt-transport-https python...')
 
-        # Install python on the nodes
-        self._exec_command_on_nodes(
-            self.deployed_nodes,
-            'apt-get -y install python python-setuptools',
-            'Installing Python on all the nodes...')
-        # fix installation of pip on jessie   
+        # fix installation of pip on jessie
         self._exec_command_on_nodes(
             self.deployed_nodes,
             'easy_install pip && ln -s /usr/local/bin /usr/bin/pip || true',
             'Installing pip')
 
+        # Retrieve necessary information for enos
+        roles = self._build_roles()
+        network = self._get_network()
+        network_interface, external_interface = \
+            self._mount_cluster_nics(self.config['resources'].keys()[0])
 
-        return (roles,
-                map(str, vip_addresses),
-                [network_interface, external_interface],
-                provider_network
-                )
+        return (roles, network, (network_interface, external_interface))
 
     def before_preintsall(self, env):
         # Create a virtual interface for veth0 (if any)
@@ -275,18 +228,10 @@ class G5K(Provider):
         # Wait for the job to start
         EX5.wait_oargrid_job_start(self.gridjob)
 
-        # # XXX Still useful?
-        # attempts = 0
-        # self.nodes = None
-        # while self.nodes is None and attempts < MAX_ATTEMPTS:
-        #     self.nodes = sorted(EX5.get_oargrid_job_nodes(self.gridjob),
-        #                             key = lambda n: n.address)
-        #     attempts += 1
-
         self.nodes = sorted(EX5.get_oargrid_job_nodes(self.gridjob),
                             key=lambda n: n.address)
 
-        # # XXX check already done into `_deploy`.
+        # XXX check already done into `_deploy`.
         self._check_nodes(nodes=self.nodes,
                           resources=self.config['resources'],
                           mode=self.config['role_distribution'])
@@ -342,22 +287,24 @@ class G5K(Provider):
             # element of the pair to return the first address.
             vlan = (self.vlans[0][0], self.vlans[0][1][0])
             logging.info("Using vlan %s" % str(vlan))
+
         return vlan
 
     def _deploy(self):
         # we put the nodes in the first vlan we have
         vlan = self._get_primary_vlan()
         # Deploy all the nodes
-        logging.info("Deploying %s on %d nodes %s" % (self.config['env_name'],
+        logging.info("Deploying %s on %d nodes %s" % (
+            self.config['env_name'],
             len(self.nodes),
             '(forced)' if self.force_deploy else ''))
 
         deployed, undeployed = EX5.deploy(
-        EX5.Deployment(
-            self.nodes,
-            env_name=self.config['env_name'],
-            vlan=vlan[1]
-        ), check_deployed_command=not self.force_deploy)
+            EX5.Deployment(
+                self.nodes,
+                env_name=self.config['env_name'],
+                vlan=vlan[1]
+            ), check_deployed_command=not self.force_deploy)
 
         # Check the deployment
         if len(undeployed) > 0:
@@ -404,17 +351,17 @@ class G5K(Provider):
             nodes = pool[:n]
             del pool[:n]
             return nodes
-        
+
         def mk_roles(pools, resources):
             """
             Distribute the nodes of pools according to the resources claim
-            resources : 
-                cluster1: 
+            resources :
+                cluster1:
                     control: 1
                     compute: 2
                     ...
                 cluster2:
-                    compute: 3 
+                    compute: 3
 
             pools:
                 cluster1: [n11, n12, n13]
@@ -466,49 +413,102 @@ class G5K(Provider):
             pools = mk_pools()
             for group, resources in self.config['topology'].items():
                 grp_roles = mk_roles(pools, resources)
-                # flattening the resources in this case 
+                # flattening the resources in this case
                 roles[group] = sum(grp_roles.values(), [])
 
         logging.info("Roles: %s" % pf(roles))
         return roles
 
-    def _get_free_ip(self, count):
-        """
-        Gets free ips and a provider network information used to create a
-        flat network external network during the init phase.
-        Originally it was done by reserving a subnet
-        we now moves this implementation to a vlan based implementation
+    def _get_network(self):
+        """Gets the network representation.
 
         Prerequisite :
             - a vlan must be reserved
-            - g5k networks must be loaded before
+
         """
-        vlan = self._get_primary_vlan()
-        cidr = self.networks[vlan[0]]["vlans"][vlan[1]]
-        logging.info("cidr : %s" % (cidr))
-        range_ips = IPSet(IPNetwork(cidr)).iprange()
-        # the last ip is reserved x.x.x.255, the previous one also
-        # x.x.x..254 (gw), the x.x.x.253 seems to be pingable as well
-        # (seems undocumented in g5k wiki)
-        reserved = 3
-        start_index = -3-count-1024
-        end_index = -3-count-1
-        provider_network = {
-                'cidr': str(cidr),
-                'start': str(range_ips[start_index]),
-                'end': str(range_ips[end_index]),
-                'gateway': str(range_ips[-2]),
-                'dns': '131.254.203.235'
+        site, vlan_id = self._get_primary_vlan()
+
+        # Get g5k networks. According to the documentation, this
+        # network is a `/18`.
+        site_info = EX5.get_resource_attributes('/sites/%s' % site)
+        net = site_info['kavlans'][str(vlan_id)]
+        logging.info("cidr : %s" % net['network'])
+
+        # On the network, the first IP are reserved to g5k machines.
+        # For a routed vlan I don't know exactly how many ip are
+        # reserved. However, the specification is clear about global
+        # vlan: "A global VLAN is a /18 subnet (16382 IP addresses).
+        # It is split -- contiguously -- so that every site gets one
+        # /23 (510 ip) in the global VLAN address space". There are 12
+        # site. This means that we could take ip from 13th subnetwork.
+        # Lets consider the strategy is the same for routed vlan. See,
+        # https://www.grid5000.fr/mediawiki/index.php/Grid5000:Network#KaVLAN
+        #
+        # First, split network in /23 this leads to 32 subnetworks.
+        subnets = IPNetwork(net['network']).subnet(23)
+
+        # Then, (i) drops the 12 first subnetworks because they are
+        # dedicated to g5k machines, and (ii) drops the last one
+        # because some of ips are used for specific stuff such as
+        # gateway, kavlan server...
+        subnets = islice(subnets, 13, 31)
+
+        # Finally, compute the range of available ips
+        ips = IPSet(subnets).iprange()
+
+        return {
+            'cidr': str(net['network']),
+            'start': str(IPAddress(ips.first)),
+            'end': str(IPAddress(ips.last)),
+            'gateway': str(net['gateway']),
+            'dns': '131.254.203.235'
         }
-        return list(range_ips[end_index+1:-reserved]), provider_network
 
+    def _mount_cluster_nics(self, cluster):
+        """Get the NIC devices of the reserved cluster.
 
-    def _get_cluster_nics(self, cluster):
+        """
+        # XXX: this only works if all nodes are on the same cluster,
+        # or if nodes from different clusters have the same devices
         site = EX5.get_cluster_site(cluster)
         nics = EX5.get_resource_attributes(
-            '/sites/%s/clusters/%s/nodes'
-            % (site, cluster))['items'][0]['network_adapters']
-        return [nic['device'] for nic in nics if nic['mountable'] and nic['interface'] == 'Ethernet' ]
+            "/sites/%s/clusters/%s/nodes" % (site, cluster)
+            )['items'][0]['network_adapters']
+
+        interfaces = [nic['device'] for nic in nics
+                                    if nic['mountable']
+                                    and nic['interface'] == 'Ethernet']
+
+        network_interface = str(interfaces[0])
+        external_interface = None
+
+        if len(interfaces) > 1 and not self.config['single_interface']:
+            external_interface = str(interfaces[1])
+            _, vlan = self._get_primary_vlan()
+            # NOTE(msimonin) deployed is composed of the list of hostnames
+            # unmodified with the vlan. This is required by set_nodes_vlan.
+            api.set_nodes_vlan(site,
+                               map(lambda d: EX.Host(d), self.deployed_nodes),
+                               external_interface,
+                               vlan)
+
+            self._exec_command_on_nodes(
+                self.deployed_nodes,
+                "ifconfig %s up && dhclient -nw %s" % (
+                    external_interface, external_interface),
+                'mounting secondary interface')
+        else:
+            # TODO(msimonin) fix the network in this case as well.
+            external_interface = 'veth0'
+            if self.config['single_interface']:
+                logging.warning("Forcing the use of a one network interface")
+            else:
+                logging.warning("%s has only one NIC. The same interface "
+                                "will be used for network_interface and "
+                                "neutron_external_interface."
+                                % self.config['resources'].keys()[0])
+
+        return (network_interface, external_interface)
 
     def _exec_command_on_nodes(self, nodes, cmd, label, conn_params=None):
         """Execute a command on a node (id or hostname) or on a set of nodes"""

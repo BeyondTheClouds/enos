@@ -26,11 +26,10 @@ command.
 
 """
 from utils.constants import (SYMLINK_NAME, TEMPLATE_DIR, ANSIBLE_DIR,
-                             INTERNAL_IP, REGISTRY_IP, INFLUX_IP,
-                             GRAFANA_IP, NEUTRON_IP, NETWORK_IFACE,
-                             EXTERNAL_IFACE, VERSION)
+                             NETWORK_IFACE, EXTERNAL_IFACE, VERSION)
 from utils.extra import (run_ansible, generate_inventory,
-                         generate_kolla_files, to_abs_path)
+                         generate_kolla_files, to_abs_path,
+                         pop_ip)
 
 from utils.network_constraints import build_grp_constraints, build_ip_constraints
 from utils.enostask import enostask
@@ -83,12 +82,13 @@ def up(provider=None, env=None, **kwargs):
         sys.exit(1)
 
     # Calls the provider and initialise resources
-    rsc, ips, eths, provider_network = provider.init(env['config'], kwargs['--force-deploy'])
+    rsc, provider_net, eths = \
+        provider.init(env['config'], kwargs['--force-deploy'])
 
     env['rsc'] = rsc
-    env['ips'] = ips
+    env['provider_net'] = provider_net
     env['eths'] = eths
-    env['provider_network'] = provider_network
+
     # Generates a directory for results
     resultdir_name = 'enos_' + datetime.today().isoformat()
     resultdir = os.path.join(CALL_PATH, resultdir_name)
@@ -106,20 +106,14 @@ def up(provider=None, env=None, **kwargs):
     env['inventory'] = inventory
 
     # Set variables required by playbooks of the application
+    vip = pop_ip(env)
     env['config'].update({
         # Enos specific
-        'vip':          ips[INTERNAL_IP],
-        'registry_vip': ips[REGISTRY_IP],
-        'influx_vip':   ips[INFLUX_IP],
-        'grafana_vip':  ips[GRAFANA_IP],
-
-        # Kolla + common specific
-        'neutron_external_address': ips[NEUTRON_IP],
-        'network_interface':        eths[NETWORK_IFACE],
-
-        # Kolla specific
-        'kolla_internal_vip_address': ips[INTERNAL_IP],
-        'neutron_external_interface': eths[EXTERNAL_IFACE]
+        'vip':          vip,
+        'registry_vip': pop_ip(env),
+        'influx_vip':   pop_ip(env),
+        'grafana_vip':  pop_ip(env),
+        'network_interface': eths[NETWORK_IFACE]
     })
     passwords = os.path.join(TEMPLATE_DIR, "passwords.yml")
     with open(passwords) as f:
@@ -154,13 +148,12 @@ Options:
 """)
 def install_os(env=None, **kwargs):
     logging.debug('phase[os]: args=%s' % kwargs)
+
     # Generates kolla globals.yml, passwords.yml
     generated_kolla_vars = {
-        # Kolla + common specific
-        'neutron_external_address':   env['ips'][NEUTRON_IP],
+        'neutron_external_address':   pop_ip(env),
         'network_interface':          env['eths'][NETWORK_IFACE],
-        # Kolla specific
-        'kolla_internal_vip_address': env['ips'][INTERNAL_IP],
+        'kolla_internal_vip_address': env['config']['vip'],
         'neutron_external_interface': env['eths'][EXTERNAL_IFACE]
     }
     generate_kolla_files(env['config']["kolla"],
@@ -174,8 +167,8 @@ def install_os(env=None, **kwargs):
         call("rm -rf %s" % kolla_path, shell=True)
 
     logging.info("Cloning Kolla")
-    call("git clone --depth=1 %s --branch %s %s > /dev/null" % 
-            (env['kolla_repo'], env['kolla_branch'], kolla_path), 
+    call("git clone --depth=1 %s --branch %s %s > /dev/null" %
+            (env['kolla_repo'], env['kolla_branch'], kolla_path),
             shell=True)
 
     logging.warning(("Patching kolla, this should be ",
@@ -217,7 +210,7 @@ def init_os(env=None, **kwargs):
     logging.debug('phase[init]: args=%s' % kwargs)
     cmd = ['source %s' % os.path.join(SYMLINK_NAME, 'admin-openrc')]
     # add cirros image
-    images = [{'name': 'cirros.uec', 'url':'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'}] 
+    images = [{'name': 'cirros.uec', 'url':'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'}]
     for image in images:
         cmd.append("/usr/bin/wget -q -O /tmp/%s %s" % (image['name'], image['url']))
         cmd.append('openstack image create' \
@@ -245,14 +238,14 @@ def init_os(env=None, **kwargs):
                 ' --vcpus %s' \
                 ' --public' % (flavor[0], flavor[1], flavor[2], flavor[3]))
 
-    # security groups - allow everything 
+    # security groups - allow everything
     protos = ['icmp', 'tcp', 'udp']
     for proto in protos:
         cmd.append('openstack security group rule create default' \
                 ' --protocol %s' \
                 ' --dst-port 1:65535' \
                 ' --src-ip 0.0.0.0/0' % proto)
-    
+
     # quotas - set some unlimited for admin project
     quotas = ['cores', 'ram', 'instances']
     for quota in quotas:
@@ -268,6 +261,7 @@ def init_os(env=None, **kwargs):
             ' --provider-physical-network physnet1' \
             ' --provider-network-type flat' \
             ' --external')
+
     cmd.append('openstack subnet create public-subnet' \
             ' --network public' \
             ' --subnet-range %s' \
@@ -276,12 +270,12 @@ def init_os(env=None, **kwargs):
             ' --gateway %s' \
             ' --dns-nameserver %s' \
             ' --ip-version 4' % (
-                env["provider_network"]['cidr'],
-                env["provider_network"]['start'],
-                env["provider_network"]['end'],
-                env["provider_network"]['gateway'],
-                env["provider_network"]['dns'])
-            )
+                env['provider_net']['cidr'],
+                env['provider_net']['start'],
+                env['provider_net']['end'],
+                env['provider_net']['gateway'],
+                env['provider_net']['dns']))
+
     cmd.append('openstack network create private' \
             ' --provider-network-type vxlan')
 
@@ -293,9 +287,10 @@ def init_os(env=None, **kwargs):
             ' --ip-version 4' % (
                 env["provider_network"]['dns'])
             )
+
     # create a router between this two networks
     cmd.append('openstack router create router')
-    # NOTE(msimonin): not sure how to handle these 2 with openstack cli 
+    # NOTE(msimonin): not sure how to handle these 2 with openstack cli
     cmd.append('neutron router-gateway-set router public')
     cmd.append('neutron router-interface-add router private-subnet')
 
@@ -340,7 +335,7 @@ def bench(env=None, **kwargs):
         for bench_type, desc in workload.items():
             scenarios = desc.get("scenarios", [])
             for scenario in scenarios:
-                # merging args 
+                # merging args
                 top_args = desc.get("args", {})
                 args = scenario.get("args", {})
                 top_args.update(args)
@@ -360,7 +355,7 @@ def bench(env=None, **kwargs):
                         'args': a
                     }
                     run_ansible([playbook_path], inventory_path, env['config'])
-    
+
 @enostask("""
 usage: enos backup [--backup_dir=BACKUP_DIR ] [-vv|-s|--silent]
 
@@ -447,7 +442,7 @@ def tc(provider=None, env=None, **kwargs):
             'neutron_external_interface': env['config']['neutron_external_interface'],
     }
     run_ansible([utils_playbook], env['inventory'], options)
-    
+
     # 2.a building the group constraints
     logging.info('Building all the constraints')
     topology = env['config']['topology']
@@ -457,14 +452,14 @@ def tc(provider=None, env=None, **kwargs):
     ip_constraints = []
     with open(ips_file) as f:
         ips = yaml.load(f)
-        # will hold every single constraint 
+        # will hold every single constraint
         ips_with_constraints = build_ip_constraints(env['rsc'], ips, constraints)
         # dumping it for debugging purpose
         ips_with_constraints_file = os.path.join(env['resultdir'], 'ips_with_constraints.yml')
         with open(ips_with_constraints_file, 'w') as g:
             yaml.dump(ips_with_constraints, g)
 
-    # 3. Enforcing those constraints 
+    # 3. Enforcing those constraints
     logging.info('Enforcing the constraints')
     # enabling/disabling network constraints
     enable = network_constraints['enable'] if 'enable' in network_constraints else True
