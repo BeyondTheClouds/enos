@@ -6,6 +6,11 @@
 name: discovery-kolla
 walltime: "06:00:00"
 
+# Define a set of groups
+# The `resources` description will be overwritten by the
+# `topology` description.
+# The notation grp[2-4] wil be expanded to create 3
+# groups
 topology:
   grp1:
     paravance: 
@@ -15,6 +20,8 @@ topology:
     paravance: 
       compute: 1
 
+# Define a set of constraints between groups
+# Missing constraints will be generated using the defaults values.
 network_constraints:
   enable: true
   default_delay: 25ms
