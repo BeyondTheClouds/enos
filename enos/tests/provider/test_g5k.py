@@ -1,12 +1,11 @@
 import unittest
-from engine.g5k_engine import G5kEngine, check_nodes, ROLE_DISTRIBUTION_MODE_STRICT
+from enos.provider.g5k import *
 from execo.host import Host
 
 class TestBuildRoles(unittest.TestCase):
 
     def setUp(self):
-        self.engine = G5kEngine()
-        self.engine.config = {
+        config = {
             "resources": {
                 "a": {
                     "controller": 1,
@@ -17,15 +16,17 @@ class TestBuildRoles(unittest.TestCase):
                 }
             }
         }
+        self.provider = G5K()
+        self.provider.config = config
 
     def test_not_enough_nodes(self):
-        self.engine.deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4"])
+        self.provider.deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4"])
         with self.assertRaises(Exception):
-            roles = self.engine.build_roles()
-        
+            roles = self.provider._build_roles()
+
     def test_build_roles_same_number_of_nodes(self):
-        self.engine.deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4", "a-5", "a-6"])
-        roles = self.engine.build_roles()
+        self.provider.deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4", "a-5", "a-6"])
+        roles = self.provider._build_roles()
         self.assertEquals(1, len(roles["controller"]))
         self.assertEquals(1, len(roles["storage"]))
         self.assertEquals(2, len(roles["compute"]))
@@ -33,8 +34,8 @@ class TestBuildRoles(unittest.TestCase):
         self.assertEquals(1, len(roles["util"]))
 
     def test_build_roles_less_deployed_nodes(self):
-        self.engine.deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4", "a-5"])
-        roles = self.engine.build_roles()
+        self.provider.deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4", "a-5"])
+        roles = self.provider._build_roles()
         self.assertEquals(1, len(roles["controller"]))
         self.assertEquals(1, len(roles["storage"]))
         self.assertEquals(1, len(roles["compute"]))
@@ -42,7 +43,7 @@ class TestBuildRoles(unittest.TestCase):
         self.assertEquals(1, len(roles["util"]))
     
     def test_build_roles_with_multiple_clusters(self):
-        self.engine.config = {
+        self.provider.config = {
             "resources": {
                 "a": {
                     "controller": 1,
@@ -56,8 +57,8 @@ class TestBuildRoles(unittest.TestCase):
                  }
             }
         }
-        self.engine.deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4", "a-5", "a-6", "b-1", "b-2"])
-        roles = self.engine.build_roles()
+        self.provider.deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4", "a-5", "a-6", "b-1", "b-2"])
+        roles = self.provider._build_roles()
         self.assertEquals(1, len(roles["controller"]))
         self.assertEquals(1, len(roles["storage"]))
         self.assertEquals(4, len(roles["compute"]))
@@ -82,24 +83,21 @@ class TestCheckNodes(unittest.TestCase):
                     "compute": 2
                 }
             }
+        self.provider = G5K()
 
     def test_enough_nodes_strict(self):
         nodes = [1, 2, 3, 4, 5, 6, 7]
-        self.assertTrue(check_nodes(nodes, self.roles, ROLE_DISTRIBUTION_MODE_STRICT))
+        self.assertTrue(self.provider._check_nodes(nodes, self.roles, ROLE_DISTRIBUTION_MODE_STRICT))
 
     def test_enough_nodes_not_strict(self):
         nodes = [1, 2, 3, 4, 5, 6, 7]
-        self.assertTrue(check_nodes(nodes, self.roles, ""))
+        self.assertTrue(self.provider._check_nodes(nodes, self.roles, ""))
 
     def test_not_enough_nodes_strict(self):
         nodes = [1, 2, 3, 4, 5, 6]
         with self.assertRaises(Exception):
-            check_nodes(nodes, self.roles, ROLE_DISTRIBUTION_MODE_STRICT)
+            self.provider._check_nodes(nodes, self.roles, ROLE_DISTRIBUTION_MODE_STRICT)
 
     def test_not_enough_nodes_not_strict(self):
         nodes = [1, 2, 3, 4, 5]
-        self.assertTrue(check_nodes(nodes, self.roles, ""))
-            
-if __name__ == '__main__':
-    unittest.main()
-
+        self.assertTrue(self.provider._check_nodes(nodes, self.roles, ""))

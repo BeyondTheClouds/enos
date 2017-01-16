@@ -237,6 +237,12 @@ python -m enos.enos tc
   paravance that has `eth0` andl `eth1`, and parapluie that has devices `eth1`
   and `eth2`.
 
+## Running the tests
+
+```
+pip install -r test-requirements
+tox
+```
 
 ## Why Enos?
 https://en.wikipedia.org/wiki/Enos_(chimpanzee)
