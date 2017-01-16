@@ -12,6 +12,7 @@ import jinja2
 import os
 import yaml
 import logging
+import re
 
 # These roles are mandatory for the
 # the original inventory to be valid
@@ -196,3 +197,49 @@ def to_abs_path(path):
         return path
     else:
        return os.path.join(os.getcwd(), path) 
+
+def build_resources(topology):
+    """
+    Build the resource list
+    For now we are just aggregating all the resources
+    This could be part of a flat resource builder
+    """
+
+    def merge_add(cluster_roles, roles):
+        """ merge two dicts, sum the values"""
+        for role, nb in roles.items():
+            cluster_roles.setdefault(role, 0)
+            cluster_roles[role] = cluster_roles[role] + nb
+
+    resource = {}
+    for group, clusters in topology.items():
+        for cluster, roles in clusters.items():
+            resource.setdefault(cluster, {})
+            merge_add(resource[cluster], roles)
+    return resource
+
+def expand_groups(grp):
+    """
+    Expand group names.
+    e.g: 
+        * grp[1-3] -> [grp1, grp2, grp3]
+        * grp1 -> [grp1]
+    """
+    p = re.compile('(?P<name>.+)\[(?P<start>\d+)-(?P<end>\d+)\]')
+    m = p.match(grp)
+    if m is not None:
+        s = int(m.group('start'))
+        e = int(m.group('end'))
+        n = m.group('name')
+        return map(lambda x: n + str(x), range(s, e + 1))
+    else:
+        return [grp]
+
+
+def expand_topology(topology):
+    expanded = {}
+    for grp, desc in topology.items():
+        grps = expand_groups(grp)
+        for g in grps:
+            expanded[g] = desc
+    return expanded

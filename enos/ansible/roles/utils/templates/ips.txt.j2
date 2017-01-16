@@ -1,0 +1,11 @@
+---
+{% for host in groups['all'] %}
+{{host}}:
+  all_ipv4_addresses: 
+    {{hostvars[host]['ansible_all_ipv4_addresses'] | to_nice_yaml(2) | indent(width=4, indentfirst=false)}}
+  devices:
+    -
+      {{ hostvars[host]['ansible_' + network_interface] | to_nice_yaml(2) | indent(width=6, indentfirst=false)}}
+    - 
+      {{ hostvars[host]['ansible_' + neutron_external_interface] | to_nice_yaml(2) | indent(width=6, indentfirst=false)}}
+{% endfor %}

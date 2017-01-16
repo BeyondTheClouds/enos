@@ -3,9 +3,12 @@
 ## Synopsis
 
 This script deploys an OpenStack on Grid'5000 using
-[Kolla](https://wiki.openstack.org/wiki/Kolla) and allows easy
-customization of the system (change in the default topology,
-configuration parameters) and reproducible experiments.
+[Kolla](https://wiki.openstack.org/wiki/Kolla) and targets reproducible
+experiments and allows easy :
+
+* [customization of the system](#examples-of-customization)
+* [benchmarking](#launch-a-workload)
+* [visualization of various metrics](#post-mortem-analysis)
 
 ## Installation
 
@@ -215,6 +218,17 @@ code to enable custom configuration files to be used (and by extension
 custom kolla code). See the possible patch declaration in
 `ansible/group_vars/all.yml`. Patches should be added in the
 configuration file of the experiment.
+
+### Adding network constraints
+
+Network constraints (latency/bandwidth limitations) are enabled by the use of groups of nodes. Resources *must* be described using a `topology` description instead of a `resources` description. An example of such a definition is given in the file `reservation.yaml.topology.sample`.
+
+To enforce the constraints, you can invoke :
+```
+python -m enos.enos tc
+```
+
+> The machines must be available, thus the `up` phase must have been called before.
 
 ## Known limitations
 

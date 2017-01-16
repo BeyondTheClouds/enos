@@ -17,6 +17,7 @@ Commands:
   bench          Run rally on this OpenStack.
   backup         Backup the environment
   ssh-tunnel     Print configuration for port forwarding with horizon.
+  tc             Enforce network constraints
   info           Show information of the actual deployment.
   deploy         Shortcut for enos up, then enos os and enos config.
 
@@ -30,6 +31,8 @@ from utils.constants import (SYMLINK_NAME, TEMPLATE_DIR, ANSIBLE_DIR,
                              EXTERNAL_IFACE, VERSION)
 from utils.extra import (run_ansible, generate_inventory,
                          generate_kolla_files, to_abs_path)
+
+from utils.network_constraints import build_grp_constraints, build_ip_constraints
 from utils.enostask import enostask
 
 from datetime import datetime
@@ -86,7 +89,6 @@ def up(provider=None, env=None, **kwargs):
     env['ips'] = ips
     env['eths'] = eths
     env['provider_network'] = provider_network
-
     # Generates a directory for results
     resultdir_name = 'enos_' + datetime.today().isoformat()
     resultdir = os.path.join(CALL_PATH, resultdir_name)
@@ -409,6 +411,70 @@ def ssh_tunnel(env=None, **kwargs):
     logging.info(script)
     logging.info("___")
 
+@enostask("""
+usage: enos tc [--test] [-vv|-s|--silent]
+
+Enforce network constraints
+
+Options:
+  --test   Test the rules by generating various reports
+  -h --help                 Show this help message.
+""")
+def tc(provider=None, env=None, **kwargs):
+    """
+    Enforce network constraints
+    1) Retrieve the list of ips for all nodes (ansible)
+    2) Build all the constraints (python)
+        {source:src, target: ip_dest, device: if, rate:x,  delay:y}
+    3) Enforce those constraints (ansible)
+    """
+    test = kwargs['--test']
+    if test:
+        logging.info('Checking the constraints')
+        utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
+        options = {'action': 'test','tc_output_dir': env['resultdir'] }
+        run_ansible([utils_playbook], env['inventory'], options)
+        return
+
+    # 1. getting  ips/devices information
+    logging.info('Getting the ips of all nodes')
+    utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
+    ips_file = os.path.join(env['resultdir'], 'ips.txt')
+    options = {
+            'action': 'ips',
+            'ips_file': ips_file,
+            'network_interface': env['config']['network_interface'],
+            'neutron_external_interface': env['config']['neutron_external_interface'],
+    }
+    run_ansible([utils_playbook], env['inventory'], options)
+    
+    # 2.a building the group constraints
+    logging.info('Building all the constraints')
+    topology = env['config']['topology']
+    network_constraints = env['config']['network_constraints']
+    constraints = build_grp_constraints(topology, network_constraints)
+    # 2.b Building the ip/device level constaints
+    ip_constraints = []
+    with open(ips_file) as f:
+        ips = yaml.load(f)
+        # will hold every single constraint 
+        ips_with_constraints = build_ip_constraints(env['rsc'], ips, constraints)
+        # dumping it for debugging purpose
+        ips_with_constraints_file = os.path.join(env['resultdir'], 'ips_with_constraints.yml')
+        with open(ips_with_constraints_file, 'w') as g:
+            yaml.dump(ips_with_constraints, g)
+
+    # 3. Enforcing those constraints 
+    logging.info('Enforcing the constraints')
+    # enabling/disabling network constraints
+    enable = network_constraints['enable'] if 'enable' in network_constraints else True
+    utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
+    options = {
+        'action': 'tc',
+        'ips_with_constraints': ips_with_constraints,
+        'tc_enable': enable,
+    }
+    run_ansible([utils_playbook], env['inventory'], options)
 
 @enostask("usage: enos info")
 def info(env=None, **kwargs):
@@ -463,6 +529,8 @@ def main():
         backup(**docopt(backup.__doc__, argv=argv))
     elif args['<command>'] == 'ssh-tunnel':
         ssh_tunnel(**docopt(ssh_tunnel.__doc__, argv=argv))
+    elif args['<command>'] == 'tc':
+        tc(**docopt(tc.__doc__, argv=argv))
     elif args['<command>'] == 'info':
         info(**docopt(info.__doc__, argv=argv))
     else:

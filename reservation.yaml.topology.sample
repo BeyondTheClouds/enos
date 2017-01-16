@@ -1,0 +1,72 @@
+---
+# ############################################### #
+# Grid'5000 reservation parameters                #
+# ############################################### #
+
+name: discovery-kolla
+walltime: "06:00:00"
+
+# Define a set of groups
+# The `resources` description will be overwritten by the
+# `topology` description.
+# The notation grp[2-4] wil be expanded to create 3
+# groups
+topology:
+  grp1:
+    paravance: 
+      control: 1
+      network: 1
+  grp[2-4]:
+    paravance: 
+      compute: 1
+
+# Define a set of constraints between groups
+# Missing constraints will be generated using the defaults values.
+network_constraints:
+  enable: true
+  default_delay: 25ms
+  default_rate: 100mbit
+  constraints:
+    - src: grp1
+      dst: grp[2-4]
+      delay: 10ms
+      rate: 1gbit
+      symetric: true
+
+vlans:
+  # mandatory : you need to have exacly one vlan
+  rennes: "{type='kavlan'}/vlan=1"
+
+# Be less strict on node distribution especially
+# when nodes are missing in the reservation
+# or not deployed
+role_distribution: debug
+enable_monitoring: true
+
+# ############################################### #
+# Inventory to use                                #
+# ############################################### #
+
+# This will describe the topology of your services
+inventory: inventories/inventory.sample
+
+# ############################################### #
+# docker registry parameters
+# ############################################### #
+registry:
+  ceph: true 
+  ceph_keyring: /home/discovery/.ceph/ceph.client.discovery.keyring
+  ceph_id: discovery
+  ceph_rbd: discovery_kolla_registry/datas
+  ceph_rbd: msimonin_registry0/datas
+
+
+# ############################################### #
+# Kolla parameteres (globals.yml)                 # 
+# ############################################### #
+kolla:
+  kolla_base_distro: "centos"
+  kolla_install_type: "source"
+  openstack_release: "3.0.2"
+  docker_namespace: "beyondtheclouds"
+  enable_heat: "yes"
