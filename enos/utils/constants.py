@@ -7,13 +7,6 @@ SYMLINK_NAME = os.path.join(os.getcwd(), 'current')
 TEMPLATE_DIR = os.path.join(ENOS_PATH, 'templates')
 ANSIBLE_DIR = os.path.join(ENOS_PATH, 'ansible')
 
-# IP constants
-INTERNAL_IP = 0
-REGISTRY_IP = 1
-INFLUX_IP = 2
-GRAFANA_IP = 3
-NEUTRON_IP = 4
-
 # NIC constants
 NETWORK_IFACE = 0
 EXTERNAL_IFACE = 1
