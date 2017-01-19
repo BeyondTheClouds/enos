@@ -68,17 +68,17 @@ def generate_actual_grp_constraints(network_constraints):
                 actual.append(sym)
     return actual
 
-def merge_constraints(constraints, actual):
+def merge_constraints(constraints, overrides):
     """
     Merge the constraints avoiding duplicates
     Change constraints in place.
     """
-    for a in actual:
+    for o in overrides:
         i = 0
         while i < len(constraints):
             c  = constraints[i]
-            if same(a, c):
-                constraints[i].update(a)
+            if same(o, c):
+                constraints[i].update(o)
                 break
             i = i + 1
 
