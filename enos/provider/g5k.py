@@ -38,7 +38,7 @@ DEFAULT_CONN_PARAMS = {'user': 'root'}
 pf = pprint.PrettyPrinter(indent=4).pformat
 
 
-class G5K(Provider):
+class G5k(Provider):
     def init(self, config, force_deploy=False):
         """Provides resources and provisions the environment.
 
@@ -158,7 +158,7 @@ class G5K(Provider):
         pass
 
     def __str__(self):
-        return 'G5K'
+        return 'G5k'
 
     def _make_reservation(self):
         """Make a new reservation."""
@@ -331,7 +331,7 @@ class G5K(Provider):
         return deployed, undeployed
 
     def _build_roles(self):
-        """Returns a dict that maps each role to a list of G5K nodes::
+        """Returns a dict that maps each role to a list of G5k nodes::
 
           { 'controller': [paravance-1, paravance-5], 'compute':
         [econome-1] }
@@ -385,7 +385,7 @@ class G5K(Provider):
                 for k, v in r.items():
                     roles_goal[k] = roles_goal[k] + v
 
-            # Maps a role (eg, controller) with a list of G5K node
+            # Maps a role (eg, controller) with a list of G5k node
             for cluster, rs in resources.items():
                 # distribute node into roles
                 for r in rs.keys() * len(self.deployed_nodes):

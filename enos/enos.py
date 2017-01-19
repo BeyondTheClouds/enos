@@ -64,7 +64,7 @@ Options:
                        deployment [default: ./reservation.yaml].
   --force-deploy       Force deployment [default: False].
   -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
-  --provider=PROVIDER  The provider name [default: G5K].
+  --provider=PROVIDER  The provider name [default: G5k].
 
 """)
 def up(provider=None, env=None, **kwargs):
@@ -488,7 +488,7 @@ Options:
   -f CONFIG_PATH       Path to the configuration file describing the
                        deployment [default: ./reservation.yaml].
   --force-deploy       Force deployment [default: False].
-  --provider=PROVIDER  The provider name [default: G5K].
+  --provider=PROVIDER  The provider name [default: G5k].
 """)
 def deploy(**kwargs):
     up(**kwargs)
