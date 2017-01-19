@@ -48,3 +48,4 @@
   with_items:
     - { name: influx-cadvisor, database: cadvisor }
     - { name: influx-collectd, database: collectd }
+    - { name: influx-events, database: events }

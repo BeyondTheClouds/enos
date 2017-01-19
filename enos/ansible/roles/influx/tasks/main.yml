@@ -47,5 +47,17 @@
   retries: 10
   delay: 2
 
+- name: Flush the annotation database if exists
+  shell: "curl -s -XPOST http://{{ influx_vip }}:8086/query --data-urlencode 'q=DROP DATABASE IF EXISTS events'"
+  register: result
+  until: result.stdout == '{"results":[{}]}'
+  retries: 10
+  delay: 2
 
+- name: Create the annotation database
+  shell: "curl -s -XPOST http://{{ influx_vip }}:8086/query --data-urlencode 'q=CREATE DATABASE events'"
+  register: result
+  until: result.stdout == '{"results":[{}]}'
+  retries: 10
+  delay: 2
 
