@@ -50,20 +50,9 @@ class G5k(Provider):
         list of the form [{Role: [Host]}] and a pool of 5 ips.
 
         """
-        self.config = DEFAULT_CONFIG
-        self.config.update(config)
-        if 'topology' in self.config:
-            # expand the groups first
-            self.config['topology'] = expand_topology(self.config['topology'])
-            # Build the ressource claim to g5k
-            # We are here using a flat combination of the resource
-            # resulting in (probably) deploying one single region
-            self.config['resources'] = build_resources(self.config['topology'])
-
+        self._load_config(config)
         self.force_deploy = force_deploy
-
         self._get_job()
-
         deployed, undeployed = self._deploy()
         if len(undeployed) > 0:
             logging.error("Some of your nodes have been undeployed")
@@ -91,6 +80,13 @@ class G5k(Provider):
             self._mount_cluster_nics(self.config['resources'].keys()[0])
 
         return (roles, network, (network_interface, external_interface))
+
+    def destroy(self, env):
+        self._load_config(env['config'])
+        self.gridjob, _ = EX5.planning.get_job_by_name(self.config['name'])
+        if self.gridjob is not None:
+            EX5.oargriddel([self.gridjob])
+            logging.info("Killing the job %s" % self.gridjob)
 
     def before_preintsall(self, env):
         # Create a virtual interface for veth0 (if any)
@@ -198,6 +194,19 @@ class G5k(Provider):
         else:
             logging.error("No oar job was created.")
             sys.exit(26)
+
+
+    def _load_config(self, config):
+        self.config = DEFAULT_CONFIG
+        self.config.update(config)
+        if 'topology' in self.config:
+            # expand the groups first
+            self.config['topology'] = expand_topology(self.config['topology'])
+            # Build the ressource claim to g5k
+            # We are here using a flat combination of the resource
+            # resulting in (probably) deploying one single region
+            self.config['resources'] = build_resources(self.config['topology'])
+
 
     def _check_nodes(self,
                      nodes=[],
