@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from ..provider.g5k import G5K
 from constants import SYMLINK_NAME, KOLLA_REPO, KOLLA_REF
 from functools import wraps
 
@@ -51,10 +50,15 @@ def enostask(doc):
 
         @wraps(fn)
         def decorated(*args, **kwargs):
-            # TODO: Dynamically loads the provider
             if '--provider' in kwargs:
                 provider_name = kwargs['--provider']
-                kwargs['provider'] = G5K()
+                package_name = '.'.join([
+                    'enos.provider',
+                    provider_name.lower()])
+                class_name = provider_name.capitalize()
+                module = __import__(package_name, fromlist=[class_name])
+                klass = getattr(module, class_name)
+                kwargs['provider'] = klass()
 
             # Loads the environment & set the config
             env = load_env()

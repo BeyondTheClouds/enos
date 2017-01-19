@@ -16,7 +16,7 @@ class TestBuildRoles(unittest.TestCase):
                 }
             }
         }
-        self.provider = G5K()
+        self.provider = G5k()
         self.provider.config = config
 
     def test_not_enough_nodes(self):
@@ -83,7 +83,7 @@ class TestCheckNodes(unittest.TestCase):
                     "compute": 2
                 }
             }
-        self.provider = G5K()
+        self.provider = G5k()
 
     def test_enough_nodes_strict(self):
         nodes = [1, 2, 3, 4, 5, 6, 7]
