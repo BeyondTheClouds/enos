@@ -19,6 +19,7 @@ Commands:
   ssh-tunnel     Print configuration for port forwarding with horizon.
   tc             Enforce network constraints
   info           Show information of the actual deployment.
+  destroy        Destroy the resources used by the deployment
   deploy         Shortcut for enos up, then enos os and enos config.
 
 See 'enos <command> --help' for more information on a specific
@@ -471,9 +472,21 @@ def tc(provider=None, env=None, **kwargs):
     }
     run_ansible([utils_playbook], env['inventory'], options)
 
+
 @enostask("usage: enos info")
 def info(env=None, **kwargs):
     pprint.pprint(env)
+
+
+@enostask("""
+usage: enos destroy [--provider=PROVIDER]
+
+Options:
+  -h --help            Show this help message.
+  --provider=PROVIDER  The provider name [default: G5k].
+""")
+def destroy(provider=None, env=None, **kwargs):
+    provider.destroy(env)
 
 
 @enostask("""
@@ -528,6 +541,8 @@ def main():
         tc(**docopt(tc.__doc__, argv=argv))
     elif args['<command>'] == 'info':
         info(**docopt(info.__doc__, argv=argv))
+    elif args['<command>'] == 'destroy':
+        destroy(**docopt(destroy.__doc__, argv=argv))
     else:
         pass
 

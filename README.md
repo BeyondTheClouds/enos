@@ -57,6 +57,11 @@ python -m enos.enos -h
 > Using a virtualenv is encouraged
 -->
 
+You can see the full options list supported by `Enos` with the following : 
+
+```
+python -m enos.enos -h
+```
 
 ## Configuration
 

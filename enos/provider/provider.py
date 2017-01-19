@@ -19,6 +19,11 @@ class Provider:
         """
         pass
 
+    @abstractmethod
+    def destroy(self, env):
+        """Destroy the resources used for the deployment"""
+        pass
+
     def before_preintsall(self, env):
         """Returns ansible tasks executed before the preinstall phase.
 
