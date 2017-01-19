@@ -285,7 +285,7 @@ def init_os(env=None, **kwargs):
             ' --gateway 192.168.0.1' \
             ' --dns-nameserver %s' \
             ' --ip-version 4' % (
-                env["provider_network"]['dns'])
+                env["provider_net"]['dns'])
             )
 
     # create a router between this two networks
