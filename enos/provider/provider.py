@@ -6,7 +6,7 @@ class Provider:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def init(self, config, force=False):
+    def init(self, config, calldir, force=False):
         """Provides resources and provisions the environment.
 
         The `config` parameter contains the client request (eg, number
@@ -20,7 +20,7 @@ class Provider:
         pass
 
     @abstractmethod
-    def destroy(self, env):
+    def destroy(self, calldir, env):
         """Destroy the resources used for the deployment"""
         pass
 

@@ -29,7 +29,8 @@ setup(
         'python-keystoneclient==3.4.0',
         'python-neutronclient==5.1.0',
         'python-novaclient==5.0.0',
-        'python-openstackclient==2.6.0'
+        'python-openstackclient==2.6.0',
+        'python-vagrant==0.5.14'
     ],
     entry_points={'console_scripts': ['enos = enos.enos:main']},
     include_package_data=True
