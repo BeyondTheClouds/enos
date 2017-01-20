@@ -16,17 +16,15 @@ from influxdb import InfluxDBClient
 
 from ansible.plugins.callback import CallbackBase
 
-"""
-How this plugins works:
-1. Create an empty list at the beginning of playbooks
-2. Add an event to the list for each playbook/play/task
-3. Connect to influxdb at the end of playbooks and commit events
-"""
-
 class CallbackModule(CallbackBase):
     """
-    This callback module tells you how long your plays ran for.
+    This callback module fills an influxdb with Ansible events, :
+    1. Create an empty list at the beginning of playbooks;
+    2. Add an event to the list for each playbook/play/task;
+    3. Connect to influxdb at the end of playbooks if succeeded and commit
+    events.
     """
+
     CALLBACK_VERSION = 2.0
     CALLBACK_TYPE = 'notification'
     CALLBACK_NAME = 'influxdb_events'
@@ -130,11 +128,6 @@ class CallbackModule(CallbackBase):
                 the plugin %s is thus disabled" %
                     (self.playbook_name, _host, os.path.basename(__file__)) )
             return
-#        try:
-#            self.influxdb.create_database(_dbname)
-#        except:
-#            self._display.warning("The influxdb database was not created")
-#            pass
         self.influxdb.switch_database(_dbname)
         self.influxdb.switch_user(_user, _pass)
 
