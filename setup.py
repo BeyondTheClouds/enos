@@ -21,6 +21,7 @@ setup(
         'Jinja2==2.8',
         'execo==2.6.1',
         'ansible==2.1.2',
+        'influxdb==4.0.0',
         'docopt==0.6.2',
         'httplib2==0.9.2',
         'python-dateutil==2.2',
