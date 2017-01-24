@@ -169,7 +169,7 @@ def install_os(env=None, **kwargs):
 
     logging.info("Cloning Kolla")
     call("git clone --depth=1 %s --branch %s %s > /dev/null" %
-            (env['kolla_repo'], env['kolla_branch'], kolla_path),
+            (env['config']['kolla_repo'], env['config']['kolla_ref'], kolla_path),
             shell=True)
 
     logging.warning(("Patching kolla, this should be ",

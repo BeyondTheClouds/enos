@@ -11,9 +11,5 @@ ANSIBLE_DIR = os.path.join(ENOS_PATH, 'ansible')
 NETWORK_IFACE = 0
 EXTERNAL_IFACE = 1
 
-# KOLLA SPECIFIC
-KOLLA_REPO = 'https://git.openstack.org/openstack/kolla'
-KOLLA_REF = 'stable/newton'
-
 # ENOS Setup
 VERSION = '1.0.0'
