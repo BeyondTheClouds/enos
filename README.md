@@ -6,14 +6,27 @@ This script deploys an OpenStack on Grid'5000 using
 [Kolla](https://wiki.openstack.org/wiki/Kolla) and targets reproducible
 experiments and allows easy :
 
+* [deployment of the system](#providers)
 * [customization of the system](#examples-of-customization)
 * [benchmarking](#launch-a-workload)
 * [visualization of various metrics](#post-mortem-analysis)
 
+As mentionned before, Enos targets experiments with OpenStack. Enos isn't design
+to deploy OpenStack in production.
+
+## Providers
+
+Enos is shipped with different providers that lets you deploy OpenStack on
+various infrastructures. Core providers are :
+
+* Grid'5000 (G5k)
+* Virtualbox / Vagrant  (Vbox)
+
+Configuration may differs according to your choice.
+
 ## Installation
 
-To install Enos, first connect to the Grid'5000 frontend of your
-choice and run:
+To install Enos, clone the repository :
 <!--
 ```
 pip install git+git://github.com/BeyondTheClouds/enos@master#egg=enos
@@ -25,7 +38,9 @@ pip install git+git://github.com/BeyondTheClouds/enos@master#egg=enos
 $ git clone https://github.com/BeyondTheClouds/enos
 ```
 
-You should also choose to go with a virtualenv. On Grid'5000, do the
+You should also choose to go with a virtualenv.
+
+>  On Grid'5000, do the
 following if virtualenv is missing:
 ```
 $ pip install virtualenv --user # Install virtualenv
@@ -57,7 +72,7 @@ python -m enos.enos -h
 > Using a virtualenv is encouraged
 -->
 
-You can see the full options list supported by `Enos` with the following : 
+You can see the full options list supported by `Enos` with the following :
 
 ```
 python -m enos.enos -h
@@ -66,8 +81,7 @@ python -m enos.enos -h
 ## Configuration
 
 To deploy a full stack, you need to provide a configuration file in the YAML
-format. This file must include information about the Grid'5000 job and how the
-OpenStack services must be deployed. `reservation.yaml.sample` is given as an
+format. This file must include information about how OpenStack services must be deployed. `reservation.yaml.sample` is given as an
 example.
 
 ```
@@ -78,8 +92,15 @@ $ cp reservation.yaml.sample reservation.yaml
 $ <editor> reservation.yaml
 ```
 
+> * For G5k, nodes are grouped using the cluster names available on the
+testbeds.
+
+
+> * For Vbox, nodes are grouped by size (tiny, small, medium, large).
+
 ## Note on Registry backends
 
+For G5k only.
 The deployment makes use of a private docker registry configured as a
 mirror of the official docker registry. There are two modes
 * `ceph: false`. It will start a fresh registry that will cache the

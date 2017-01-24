@@ -57,11 +57,11 @@ class Vbox(Provider):
         }
 
         # Build a list of machines that will be used to generate the Vagrantfile
-        self.machines = []
+        machines = []
         for size, roles in self.config['resources'].items():
             for role, nb in roles.items():
                 for i in range(nb):
-                    self.machines.append({
+                    machines.append({
                         'role': role,
                         'name': "%s-%s" % (role, i),
                         'size': size,
@@ -75,7 +75,7 @@ class Vbox(Provider):
         env = Environment(loader=loader)
         template = env.get_template('Vagrantfile.j2')
 
-        vagrantfile = template.render(machines=self.machines)
+        vagrantfile = template.render(machines=machines)
         vagrantfile_path = os.path.join(calldir, "Vagrantfile")
         with open(vagrantfile_path, 'w') as f:
             f.write(vagrantfile)
@@ -89,7 +89,7 @@ class Vbox(Provider):
         # Distribute the machines according to the resource/topology specifications
         r = build_roles(
                     self.config,
-                    self.machines,
+                    machines,
                     lambda m: m['size'])
         roles = {}
         # Prepare the roles to be returned to the framework using Host objects
