@@ -4,7 +4,7 @@
 
 This script deploys an OpenStack on Grid'5000 using
 [Kolla](https://wiki.openstack.org/wiki/Kolla) and targets reproducible
-experiments and allows easy :
+experiments and allows easy:
 
 * [deployment of the system](#providers)
 * [customization of the system](#examples-of-customization)
@@ -17,7 +17,7 @@ to deploy OpenStack in production.
 ## Providers
 
 Enos is shipped with different providers that lets you deploy OpenStack on
-various infrastructures. Core providers are :
+various infrastructures. Core providers are:
 
 * [Grid'5000](grid5000.fr/mediawiki/index.php/Grid5000:Home) (G5k)
 * Virtualbox / [Vagrant](https://www.vagrantup.com/)  (Vbox)
@@ -26,7 +26,7 @@ Configuration may differ according to your choice.
 
 ## Installation
 
-To install Enos, clone the repository :
+To install Enos, clone the repository:
 <!--
 ```
 pip install git+git://github.com/BeyondTheClouds/enos@master#egg=enos
@@ -72,7 +72,7 @@ python -m enos.enos -h
 > Using a virtualenv is encouraged
 -->
 
-You can see the full options list supported by `Enos` with the following :
+You can see the full options list supported by `Enos` with the following:
 
 ```
 python -m enos.enos -h
@@ -148,7 +148,7 @@ the benchmarks.
 ## Launch a workload
 
 A workload is a set of scenarios grouped by type.
-A workload is launched with the following command :
+A workload is launched with the following command:
 
 ```
 (venv)$ python -m enos.enos bench --workload=workload
@@ -156,7 +156,7 @@ A workload is launched with the following command :
 
 enos will look into the `workload` directory for a file named
 `run.yml`. This file is the description of the workload to launch.
-One example is given below :
+One example is given below:
 
 ```
 rally:
@@ -174,7 +174,7 @@ rally:
       file: nova-boot-list-cc.yml
       args:
         sla_max_avg_duration: 30
-        times : 5
+        times: 5
 ```
 
 This will launch all the scenarios described under the scenarios keys with all
@@ -182,7 +182,7 @@ the possible parameters. The parameters are calculated using the cartesian
 product of the parameters given under the args keys. Locally defined args
 (scenario level) shadow globally defined args (top level). The same mechanism is
 applied to the `enabled` values.  The scenario must be parameterized
-accordingly. The key (rally here) defines the type of benchmark to launch : in
+accordingly. The key (rally here) defines the type of benchmark to launch: in
 the future we may support other type of scenarios (Shaker, PerfkitBenchmarker
 ...)
 
@@ -204,7 +204,23 @@ Please refer to the `result` directory to know how to get started with
 ### Changing Kolla / Ansible variables
 
 Custom Kolla / Ansible parameters can be put in the configuration file
-under the key `kolla`.
+under the key `kolla`. For instance, Kolla uses the
+`openstack_release` parameter to fix the OpenStack version to deploy.
+So, `Enos` tells Kolla to deploy the `3.0.2` version with:
+
+```yaml
+kolla:
+  openstack_release: "3.0.2"
+```
+
+> Note that the Kolla code varies from one version of OpenStack to
+  another. You should always target a version of Kolla code that
+  support the deployment of the expected OpenStack. To do so, you can
+  change the git repository/reference of Kolla code with:
+```yaml
+kolla_repo: "https://git.openstack.org/openstack/kolla"
+kolla_ref: "stable/newton"
+```
 
 ### Changing the topology
 
@@ -250,7 +266,7 @@ configuration file of the experiment.
 
 Network constraints (latency/bandwidth limitations) are enabled by the use of groups of nodes. Resources *must* be described using a `topology` description instead of a `resources` description. An example of such a definition is given in the file `reservation.yaml.topology.sample`.
 
-To enforce the constraints, you can invoke :
+To enforce the constraints, you can invoke:
 ```
 python -m enos.enos tc
 ```
