@@ -6,6 +6,7 @@ from collections import namedtuple
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
 from ansible.executor.playbook_executor import PlaybookExecutor
+from itertools import groupby
 
 from netaddr import IPRange
 
@@ -129,8 +130,7 @@ def generate_inventory(roles, base_inventory, dest):
 
 
 def to_ansible_group_string(roles):
-    """
-    Transform a role list (oar) to an ansible list of groups (inventory)
+    """Transform a role list (oar) to an ansible list of groups (inventory)
     Make sure the mandatory group are set as well
     e.g
     {
@@ -146,6 +146,18 @@ def to_ansible_group_string(roles):
     [role2]
     n4
     """
+
+    def generate_inventory_string(n, role):
+        i = [n.address, "ansible_ssh_user=root"]
+        if n.port is not None:
+            i.append("ansible_port=%s" % n.port)
+        if n.keyfile is not None:
+            i.append("ansible_ssh_private_key_file=%s" % n.keyfile)
+        # extra
+        i.append("ansible_ssh_common_args=\"-o StrictHostKeyChecking=no\"")
+        i.append("g5k_role=%s" % role)
+        return " ".join(i)
+
     inventory = []
     mandatory = [group for group in KOLLA_MANDATORY_GROUPS
                        if group not in roles.keys()]
@@ -154,10 +166,7 @@ def to_ansible_group_string(roles):
 
     for role, nodes in roles.items():
         inventory.append("[%s]" % (role))
-        inventory.extend(map(
-            lambda n: "%s ansible_ssh_user=root g5k_role=%s"
-            % (n.address, role),
-            nodes))
+        inventory.extend(map(lambda n: generate_inventory_string(n, role), nodes))
     inventory.append("\n")
     return "\n".join(inventory)
 
@@ -259,3 +268,89 @@ def pop_ip(env=None):
     env['provider_net']['end'] = str(ips.pop())
 
     return ip
+
+def build_roles(config, deployed_nodes, keyfnc):
+    """Returns a dict that maps each role to a list of G5k nodes::
+
+      { 'controller': [paravance-1, paravance-5], 'compute':
+    [econome-1] }
+
+    """
+    def mk_pools():
+        "Indexes a node by the keyfnc to construct pools of nodes."
+        pools = {}
+        for cluster, nodes in groupby(deployed_nodes, keyfnc):
+            pools.setdefault(cluster, []).extend(list(nodes))
+        return pools
+
+    def pick_nodes(pool, n):
+        "Picks n node in a pool of nodes."
+        nodes = pool[:n]
+        del pool[:n]
+        return nodes
+
+    def mk_roles(pools, resources):
+        """
+        Distribute the nodes of pools according to the resources claim
+        resources (e.g with cluster names) :
+            cluster1:
+                control: 1
+                compute: 2
+                ...
+            cluster2:
+                compute: 3
+
+        pools:
+            cluster1: [n11, n12, n13]
+            cluster2: [n21, n22, n23]
+
+        expected output
+
+        roles: (one possible distribution)
+            control: [n11]
+            compute: [n12, n13, n21, n22, n23]
+        """
+        roles_set = set()
+        for roles in resources.values():
+            roles_set.update(roles.keys())
+
+        roles = {k: [] for k in roles_set}
+        roles_goal = {k: 0 for k in roles_set}
+        # compute the aggregated number of nodes per roles
+        for r in resources.values():
+            for k, v in r.items():
+                roles_goal[k] = roles_goal[k] + v
+        # Maps a role (eg, controller) with a list of G5k node
+        for cluster, rs in resources.items():
+            # distribute node into roles
+            for r in rs.keys() * len(deployed_nodes):
+                if len(roles[r]) < roles_goal[r]:
+                    current = pick_nodes(pools[cluster], 1)
+                    if current == []:
+                        break
+                    else:
+                        roles.setdefault(r, []).extend(current)
+
+        at_least_one = all(len(n) >= 1 for n in roles.values())
+        if not at_least_one:
+            # Even if we aren't in strict mode we garantee that
+            # there will be at least on node per role
+            raise Exception("Role doesn't have at least one node each")
+        return roles
+
+    resources = config['resources']
+    pools = mk_pools()
+    roles = mk_roles(pools, resources)
+
+    # Extend roles with defined groups
+    # Distribute nodes into groups
+    if 'topology' in config:
+        pools = mk_pools()
+        for group, resources in config['topology'].items():
+            grp_roles = mk_roles(pools, resources)
+            # flattening the resources in this case
+            roles[group] = sum(grp_roles.values(), [])
+
+    logging.info("Roles: %s" % roles)
+    return roles
+

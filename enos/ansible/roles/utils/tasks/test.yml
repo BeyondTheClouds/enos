@@ -30,7 +30,7 @@
     flat: yes
 
 - name: Running flent (tcp_upload)
-  shell: "flent tcp_upload -l 5 -H {{ hostvars[item]['ansible_default_ipv4']['address']   }} -f stats -o /tmp/tcp_upload_{{ inventory_hostname }}_{{ item  }}.stats || true 2>/dev/null"
+  shell: "flent tcp_upload -l 5 -H {{ hostvars[item]['ansible_' + network_interface ]['ipv4']['address']   }} -f stats -o /tmp/tcp_upload_{{ inventory_hostname }}_{{ item  }}.stats || true 2>/dev/null"
   when: inventory_hostname == groups.all[0]
   with_items: "{{ groups.all }}"
 

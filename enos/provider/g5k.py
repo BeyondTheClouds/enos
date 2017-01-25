@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from provider import Provider
-from ..utils.extra import build_resources, expand_groups, expand_topology
+from ..utils.extra import build_resources, expand_topology, build_roles
 from ..utils.constants import EXTERNAL_IFACE
 
 import yaml
@@ -16,7 +16,7 @@ from execo_g5k import api_utils as api
 from execo_g5k.api_utils import get_cluster_site
 from execo_g5k import OarSubmission
 
-from itertools import groupby, islice
+from itertools import islice
 import operator
 from netaddr import IPAddress, IPNetwork, IPSet
 
@@ -39,16 +39,11 @@ pf = pprint.PrettyPrinter(indent=4).pformat
 
 
 class G5k(Provider):
-    def init(self, config, force_deploy=False):
-        """Provides resources and provisions the environment.
+    def init(self, config, calldir, force_deploy=False):
+        """python -m enos.enos up --provider=g5k
 
-        Resources offers an ssh connection with an access for root
-        user.
-
-        The `config` parameter contains the client request (eg, number
-        of compute per role among other things). This method returns a
-        list of the form [{Role: [Host]}] and a pool of 5 ips.
-
+        Read the resources in the configuration files.  Resource claims must be
+        grouped by clusters available on Grid'5000.
         """
         self._load_config(config)
         self.force_deploy = force_deploy
@@ -74,14 +69,17 @@ class G5k(Provider):
             'Installing pip')
 
         # Retrieve necessary information for enos
-        roles = self._build_roles()
+        roles = build_roles(
+                    self.config,
+                    self.deployed_nodes,
+                    lambda n: n.address.split('-')[0])
         network = self._get_network()
         network_interface, external_interface = \
             self._mount_cluster_nics(self.config['resources'].keys()[0])
 
         return (roles, network, (network_interface, external_interface))
 
-    def destroy(self, env):
+    def destroy(self, calldir, env):
         self._load_config(env['config'])
         self.gridjob, _ = EX5.planning.get_job_by_name(self.config['name'])
         if self.gridjob is not None:
@@ -339,94 +337,6 @@ class G5k(Provider):
 
         return deployed, undeployed
 
-    def _build_roles(self):
-        """Returns a dict that maps each role to a list of G5k nodes::
-
-          { 'controller': [paravance-1, paravance-5], 'compute':
-        [econome-1] }
-
-        """
-        def mk_pools():
-            "Indexes a node by its cluster to construct pools of nodes."
-            pools = {}
-            for cluster, nodes in groupby(
-                    self.deployed_nodes, lambda node: node.address.split('-')[0]):
-                pools.setdefault(cluster, []).extend(list(nodes))
-
-            return pools
-
-        def pick_nodes(pool, n):
-            "Picks n node in a pool of nodes."
-            nodes = pool[:n]
-            del pool[:n]
-            return nodes
-
-        def mk_roles(pools, resources):
-            """
-            Distribute the nodes of pools according to the resources claim
-            resources :
-                cluster1:
-                    control: 1
-                    compute: 2
-                    ...
-                cluster2:
-                    compute: 3
-
-            pools:
-                cluster1: [n11, n12, n13]
-                cluster2: [n21, n22, n23]
-
-            expected output
-
-            roles: (one possible distribution)
-                control: [n11]
-                compute: [n12, n13, n21, n22, n23]
-            """
-            roles_set = set()
-            for roles in resources.values():
-                roles_set.update(roles.keys())
-
-            roles = {k: [] for k in roles_set}
-            roles_goal = {k: 0 for k in roles_set}
-
-            # compute the aggregated number of nodes per roles
-            for r in resources.values():
-                for k, v in r.items():
-                    roles_goal[k] = roles_goal[k] + v
-
-            # Maps a role (eg, controller) with a list of G5k node
-            for cluster, rs in resources.items():
-                # distribute node into roles
-                for r in rs.keys() * len(self.deployed_nodes):
-                    if len(roles[r]) < roles_goal[r]:
-                        current = pick_nodes(pools[cluster], 1)
-                        if current == []:
-                            break
-                        else:
-                            roles.setdefault(r, []).extend(current)
-
-            at_least_one = all(len(n) >= 1 for n in roles.values())
-            if not at_least_one:
-                # Even if we aren't in strict mode we garantee that
-                # there will be at least on node per role
-                raise Exception("Role doesn't have at least one node each")
-            return roles
-
-        resources = self.config['resources']
-        pools = mk_pools()
-        roles = mk_roles(pools, resources)
-
-        # Extend roles with defined groups
-        # Distribute nodes into groups
-        if 'topology' in self.config:
-            pools = mk_pools()
-            for group, resources in self.config['topology'].items():
-                grp_roles = mk_roles(pools, resources)
-                # flattening the resources in this case
-                roles[group] = sum(grp_roles.values(), [])
-
-        logging.info("Roles: %s" % pf(roles))
-        return roles
 
     def _get_network(self):
         """Gets the network representation.

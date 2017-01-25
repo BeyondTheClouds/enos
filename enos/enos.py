@@ -84,7 +84,7 @@ def up(provider=None, env=None, **kwargs):
 
     # Calls the provider and initialise resources
     rsc, provider_net, eths = \
-        provider.init(env['config'], kwargs['--force-deploy'])
+        provider.init(env['config'], CALL_PATH, kwargs['--force-deploy'])
 
     env['rsc'] = rsc
     env['provider_net'] = provider_net
@@ -213,7 +213,7 @@ def init_os(env=None, **kwargs):
     # add cirros image
     images = [{'name': 'cirros.uec', 'url':'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'}]
     for image in images:
-        cmd.append("/usr/bin/wget -q -O /tmp/%s %s" % (image['name'], image['url']))
+        cmd.append("wget -q -O /tmp/%s %s" % (image['name'], image['url']))
         cmd.append('openstack image create' \
                 ' --disk-format=qcow2' \
                 ' --container-format=bare' \
@@ -428,7 +428,13 @@ def tc(provider=None, env=None, **kwargs):
     if test:
         logging.info('Checking the constraints')
         utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
-        options = {'action': 'test','tc_output_dir': env['resultdir'] }
+        options = {
+                'action': 'test',
+                'tc_output_dir': env['resultdir'],
+                # NOTE(msimonin): we retrieve eth name from the env instead
+                # of env['config'] in case os hasn't been called
+                'network_interface': env['eths'][NETWORK_IFACE]
+                }
         run_ansible([utils_playbook], env['inventory'], options)
         return
 
@@ -439,8 +445,10 @@ def tc(provider=None, env=None, **kwargs):
     options = {
             'action': 'ips',
             'ips_file': ips_file,
-            'network_interface': env['config']['network_interface'],
-            'neutron_external_interface': env['config']['neutron_external_interface'],
+            # NOTE(msimonin): we retrieve eth name from the env instead
+            # of env['config'] in case os hasn't been called
+            'network_interface': env['eths'][NETWORK_IFACE],
+            'neutron_external_interface': env['eths'][EXTERNAL_IFACE]
     }
     run_ansible([utils_playbook], env['inventory'], options)
 
@@ -486,7 +494,7 @@ Options:
   --provider=PROVIDER  The provider name [default: G5k].
 """)
 def destroy(provider=None, env=None, **kwargs):
-    provider.destroy(env)
+    provider.destroy(CALL_PATH, env)
 
 
 @enostask("""

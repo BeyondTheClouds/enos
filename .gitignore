@@ -6,6 +6,10 @@ current
 enos_*/
 reservation.yaml
 
+# vagrant provider
+Vagrantfile
+.vagrant
+
 # Vim backup files
 .*.swp
 
