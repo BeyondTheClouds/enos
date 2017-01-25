@@ -272,9 +272,28 @@ def pop_ip(env=None):
 def build_roles(config, deployed_nodes, keyfnc):
     """Returns a dict that maps each role to a list of G5k nodes::
 
-      { 'controller': [paravance-1, paravance-5], 'compute':
-    [econome-1] }
+    :param config: the configuration (usually read from the yaml configuration
+        file)
 
+    :param deployed_nodes: the deployed nodes to distribute accros roles.
+        Must contains all the information needed for keyfnc to group nodes.
+
+    :param keyfnc: lambda used to group nodes by cluster (g5k), size
+        (vagrant)...
+
+    example:
+    config:
+       resources:
+            paravance:
+                controller: 2
+            econome:
+                compute: 1
+
+    deployed_nodes = ['paravance-1', 'paravance-5', 'econome-1']
+
+    returns
+        { 'controller': ['paravance-1', 'paravance-5'],
+          'compute': ['econome-1'] }
     """
     def mk_pools():
         "Indexes a node by the keyfnc to construct pools of nodes."
@@ -284,73 +303,91 @@ def build_roles(config, deployed_nodes, keyfnc):
         return pools
 
     def pick_nodes(pool, n):
-        "Picks n node in a pool of nodes."
+        "Picks a maximum of n nodes in a pool of nodes."
         nodes = pool[:n]
         del pool[:n]
         return nodes
 
-    def mk_roles(pools, resources):
-        """
-        Distribute the nodes of pools according to the resources claim
-        resources (e.g with cluster names) :
-            cluster1:
-                control: 1
-                compute: 2
-                ...
-            cluster2:
-                compute: 3
-
-        pools:
-            cluster1: [n11, n12, n13]
-            cluster2: [n21, n22, n23]
-
-        expected output
-
-        roles: (one possible distribution)
-            control: [n11]
-            compute: [n12, n13, n21, n22, n23]
-        """
-        roles_set = set()
-        for roles in resources.values():
-            roles_set.update(roles.keys())
-
-        roles = {k: [] for k in roles_set}
-        roles_goal = {k: 0 for k in roles_set}
-        # compute the aggregated number of nodes per roles
-        for r in resources.values():
-            for k, v in r.items():
-                roles_goal[k] = roles_goal[k] + v
-        # Maps a role (eg, controller) with a list of G5k node
-        for cluster, rs in resources.items():
-            # distribute node into roles
-            for r in rs.keys() * len(deployed_nodes):
-                if len(roles[r]) < roles_goal[r]:
-                    current = pick_nodes(pools[cluster], 1)
-                    if current == []:
-                        break
-                    else:
-                        roles.setdefault(r, []).extend(current)
-
-        at_least_one = all(len(n) >= 1 for n in roles.values())
-        if not at_least_one:
-            # Even if we aren't in strict mode we garantee that
-            # there will be at least on node per role
-            raise Exception("Role doesn't have at least one node each")
-        return roles
+    cluster_idx = -3
+    role_idx = -2
+    nb_idx = -1
 
     resources = config['resources']
-    pools = mk_pools()
-    roles = mk_roles(pools, resources)
-
-    # Extend roles with defined groups
-    # Distribute nodes into groups
     if 'topology' in config:
-        pools = mk_pools()
-        for group, resources in config['topology'].items():
-            grp_roles = mk_roles(pools, resources)
-            # flattening the resources in this case
-            roles[group] = sum(grp_roles.values(), [])
+        resources = config['topology']
 
-    logging.info("Roles: %s" % roles)
+    rindexes = _build_indexes(resources)
+    # indexes = [['resources', 'paravance', 'controller', 2],
+    #            ['resource', 'econome', 'compute', 1]]
+    # Thus we need to pick 2 nodes belonging to paravance cluster
+    # and assign them to the controller role.
+    # then 1 node belonging to econome
+
+    pools = mk_pools()
+    roles = {}
+    # distribute the nodes "compute" role is assumed to be the less important
+    # to fill
+    # NOTE(msimonin): The above assumption is questionnable but
+    # corresponds to the case where compute nodes number >> other services
+    # number and some missing compute nodes isn't catastrophic
+    rindexes = sorted(rindexes,
+        key=lambda indexes: len(indexes) if indexes[-2] != "compute" else -1,
+        reverse=True)
+    for indexes in rindexes:
+        if indexes[nb_idx] <= 0:
+            continue
+        cluster = indexes[cluster_idx]
+        role = indexes[role_idx]
+        nb = indexes[nb_idx]
+        nodes = pick_nodes(pools[cluster], nb)
+        # putting those nodes in all super groups
+        for role in indexes[0:nb_idx]:
+            roles.setdefault(role, []).extend(nodes)
+        indexes[nb_idx] = indexes[nb_idx] - nb
+
+    at_least_one = all(len(n) >= 1 for n in roles.values())
+    if not at_least_one:
+        # NOTE(msimonin): Maybe make a warning only
+        raise Exception("Role doesn't have at least one node each")
+
+    logging.info(roles)
     return roles
 
+
+def _build_indexes(resources):
+    """Recursively build all the paths in a dict where final values
+    are int.
+
+    :param resources: the dict of resources to explore
+
+    example:
+
+    a:
+        1:
+            z:1
+            t:2
+        2:
+            u:3
+            v:4
+    b:
+        4:
+            x:5
+            y:6
+        5:
+            w:7
+
+    returns [a,1,z,1],[a,1,t,2],[a,2,u,3]...
+    """
+    # concatenate the current keys with the already built indexes
+    if type(resources) == int:
+        return [[resources]]
+    all_indexes = []
+    # NOTE(msimonin): we sort to ensure the order will remain the same
+    # on subsequent calls
+    for key, value in sorted(resources.items(), key=lambda x: x[0]):
+        rindexes = _build_indexes(value)
+        for indexes in rindexes:
+            s = [key]
+            s.extend(list(indexes))
+            all_indexes.append(s)
+    return all_indexes
