@@ -39,8 +39,13 @@ registry:
 
 
 # ############################################### #
-# Kolla parameteres (globals.yml)                 # 
+# Kolla parameteres                               # 
 # ############################################### #
+# Repository
+kolla_repo: "https://git.openstack.org/openstack/kolla"
+kolla_ref: "stable/newton"
+
+# globals.yml
 kolla:
   kolla_base_distro: "centos"
   kolla_install_type: "source"

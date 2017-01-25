@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from constants import SYMLINK_NAME, KOLLA_REPO, KOLLA_REF
+from constants import SYMLINK_NAME
 from functools import wraps
 
 import os
@@ -14,9 +14,7 @@ def load_env():
         'config_file': '',  # The initial config file
         'nodes':       {},  # Roles with nodes
         'phase':       '',  # Last phase that have been run
-        'user':        '',  # User id for this job
-        'kolla_repo':   KOLLA_REPO,
-        'kolla_branch': KOLLA_REF
+        'user':        ''   # User id for this job
     }
 
     # Loads the previously saved environment (if any)
