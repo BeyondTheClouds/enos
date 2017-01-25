@@ -19,10 +19,10 @@ to deploy OpenStack in production.
 Enos is shipped with different providers that lets you deploy OpenStack on
 various infrastructures. Core providers are :
 
-* Grid'5000 (G5k)
-* Virtualbox / Vagrant  (Vbox)
+* [Grid'5000](grid5000.fr/mediawiki/index.php/Grid5000:Home) (G5k)
+* Virtualbox / [Vagrant](https://www.vagrantup.com/)  (Vbox)
 
-Configuration may differs according to your choice.
+Configuration may differ according to your choice.
 
 ## Installation
 
@@ -92,15 +92,16 @@ $ cp reservation.yaml.sample reservation.yaml
 $ <editor> reservation.yaml
 ```
 
-> * For G5k, nodes are grouped using the cluster names available on the
-testbeds.
+> For G5k, nodes are grouped using the cluster names available on the
+testbed
 
 
-> * For Vbox, nodes are grouped by size (tiny, small, medium, large).
+> For Vbox, nodes are grouped by size (tiny, small, medium, large).
 
 ## Note on Registry backends
 
-For G5k only.
+**For G5k only.***
+
 The deployment makes use of a private docker registry configured as a
 mirror of the official docker registry. There are two modes
 * `ceph: false`. It will start a fresh registry that will cache the
