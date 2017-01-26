@@ -75,7 +75,9 @@ class G5k(Provider):
                     lambda n: n.address.split('-')[0])
         network = self._get_network()
         network_interface, external_interface = \
-            self._mount_cluster_nics(self.config['resources'].keys()[0])
+            self._mount_cluster_nics(
+                self.config['resources'].keys()[0],
+                deployed)
 
         return (roles, network, (network_interface, external_interface))
 
@@ -383,9 +385,10 @@ class G5k(Provider):
             'dns': '131.254.203.235'
         }
 
-    def _mount_cluster_nics(self, cluster):
+    def _mount_cluster_nics(self, cluster, nodes):
         """Get the NIC devices of the reserved cluster.
 
+        :param nodes: List of hostnames unmodified by the vlan
         """
         # XXX: this only works if all nodes are on the same cluster,
         # or if nodes from different clusters have the same devices
@@ -404,10 +407,8 @@ class G5k(Provider):
         if len(interfaces) > 1 and not self.config['single_interface']:
             external_interface = str(interfaces[1])
             _, vlan = self._get_primary_vlan()
-            # NOTE(msimonin) deployed is composed of the list of hostnames
-            # unmodified with the vlan. This is required by set_nodes_vlan.
             api.set_nodes_vlan(site,
-                               map(lambda d: EX.Host(d), self.deployed_nodes),
+                               map(lambda d: EX.Host(d), nodes),
                                external_interface,
                                vlan)
 
