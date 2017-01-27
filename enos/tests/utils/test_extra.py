@@ -18,6 +18,7 @@ class TestExpandGroups(unittest.TestCase):
         expanded = expand_groups(grps)
         self.assertEquals(3, len(expanded))
 
+
 class TestBuildRoles(unittest.TestCase):
 
     def setUp(self):
@@ -41,10 +42,10 @@ class TestBuildRoles(unittest.TestCase):
         """Vagrant provider"""
         return n["size"]
 
-    def test_not_enough_nodes(self):
-        deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4"])
-        with self.assertRaises(Exception):
-            roles = build_roles(self.config, deployed_nodes, self.byCluster)
+#    def test_not_enough_nodes(self):
+#        deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4"])
+#        with self.assertRaises(Exception):
+#            roles = build_roles(self.config, deployed_nodes, self.byCluster)
 
     def test_build_roles_same_number_of_nodes(self):
         deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4", "a-5", "a-6"])
@@ -55,7 +56,7 @@ class TestBuildRoles(unittest.TestCase):
         self.assertEquals(1, len(roles["network"]))
         self.assertEquals(1, len(roles["util"]))
 
-    def test_build_roles_less_deployed_nodes(self):
+    def test_build_roles_one_less_deployed_nodes(self):
         deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4", "a-5"])
         roles = build_roles(self.config, deployed_nodes, self.byCluster)
         self.assertEquals(1, len(roles["controller"]))
@@ -113,6 +114,48 @@ class TestBuildRoles(unittest.TestCase):
         self.assertEquals(4, len(roles["compute"]))
         self.assertEquals(1, len(roles["controller"]))
         self.assertEquals(1, len(roles["storage"]))
+
+    def test_build_roles_with_topology(self):
+        config = {
+            "topology": {
+                "grp1": {
+                    "a":{
+                        "control": 1,
+                        "network": 1,
+                        "util": 1
+                        }
+                    },
+                "grp2": {
+                    "a":{
+                        "compute": 1,
+                        }
+                    },
+                "grp3": {
+                    "a":{
+                        "compute": 1,
+                        }
+                    }
+                },
+               # resources is an aggregated view of the topology
+               "resources": {
+                   "a": {
+                       "control": 1,
+                       "network": 1,
+                       "util": 1,
+                       "compute": 2
+                    }
+               }
+            }
+        deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4", "a-5"])
+        roles = build_roles(config, deployed_nodes, self.byCluster)
+        # Check the sizes
+        self.assertEquals(2, len(roles["compute"]))
+        self.assertEquals(1, len(roles["network"]))
+        self.assertEquals(1, len(roles["control"]))
+        # Check the consistency betwwen groups
+        self.assertListEqual(sorted(roles["grp1"]), sorted(roles["control"] + roles["network"] + roles["util"]))
+        self.assertListEqual(sorted(roles["grp2"] + roles["grp3"]), sorted(roles["compute"]))
+
 
 if __name__ == '__main__':
     unittest.main()
