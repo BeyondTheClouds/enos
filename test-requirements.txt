@@ -1,1 +1,4 @@
 tox==2.5.0
+sphinx
+sphinx-autobuild
+sphinx_rtd_theme
