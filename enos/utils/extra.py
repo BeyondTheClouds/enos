@@ -279,7 +279,8 @@ def build_roles(config, deployed_nodes, keyfnc):
         Must contains all the information needed for keyfnc to group nodes.
 
     :param keyfnc: lambda used to group nodes by cluster (g5k), size
-        (vagrant)...
+        (vagrant)... take an element of deployed_nodes and returns a value to
+        group on
 
     example:
     config:
@@ -312,12 +313,10 @@ def build_roles(config, deployed_nodes, keyfnc):
     role_idx = -2
     nb_idx = -1
 
-    resources = config['resources']
-    if 'topology' in config:
-        resources = config['topology']
+    resources = config['topology'] if 'topology' in config else config['resources']
 
     rindexes = _build_indexes(resources)
-    # indexes = [['resources', 'paravance', 'controller', 2],
+    # rindexes = [['resources', 'paravance', 'controller', 2],
     #            ['resource', 'econome', 'compute', 1]]
     # Thus we need to pick 2 nodes belonging to paravance cluster
     # and assign them to the controller role.
@@ -331,11 +330,9 @@ def build_roles(config, deployed_nodes, keyfnc):
     # corresponds to the case where compute nodes number >> other services
     # number and some missing compute nodes isn't catastrophic
     rindexes = sorted(rindexes,
-        key=lambda indexes: len(indexes) if indexes[-2] != "compute" else -1,
+        key=lambda indexes: len(indexes) if indexes[role_idx] != "compute" else -1,
         reverse=True)
     for indexes in rindexes:
-        if indexes[nb_idx] <= 0:
-            continue
         cluster = indexes[cluster_idx]
         role = indexes[role_idx]
         nb = indexes[nb_idx]
@@ -344,11 +341,6 @@ def build_roles(config, deployed_nodes, keyfnc):
         for role in indexes[0:nb_idx]:
             roles.setdefault(role, []).extend(nodes)
         indexes[nb_idx] = indexes[nb_idx] - nb
-
-    at_least_one = all(len(n) >= 1 for n in roles.values())
-    if not at_least_one:
-        # NOTE(msimonin): Maybe make a warning only
-        raise Exception("Role doesn't have at least one node each")
 
     logging.info(roles)
     return roles
@@ -376,7 +368,7 @@ def _build_indexes(resources):
         5:
             w:7
 
-    returns [a,1,z,1],[a,1,t,2],[a,2,u,3]...
+    returns [[a,1,z,1],[a,1,t,2],[a,2,u,3]...]
     """
     # concatenate the current keys with the already built indexes
     if type(resources) == int:
