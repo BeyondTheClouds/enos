@@ -1,0 +1,80 @@
+Grid'5000
+=========
+
+Installation
+------------
+
+Connect to the frontend of your choice.
+To install Enos, clone the repository:
+
+.. code-block:: bash
+
+    $ git clone https://github.com/BeyondTheClouds/enos
+
+You should also choose to go with a virtualenv.
+
+If virtualenv is missing:
+
+.. code-block:: bash
+
+    $ pip install virtualenv --user # Install virtualenv
+    $ export PATH=~/.local/bin/:${PATH} # Put it into your path
+
+Then install the dependencies:
+
+.. code-block:: bash
+
+    $ cd enos
+    $ virtualenv venv
+    $ source venv/bin/activate
+    (venv)$ pip install -r requirements.txt
+
+
+Configuration
+-------------
+
+To get started you can copy the sample configuration file and edit the resulting
+file :
+
+.. code-block:: bash
+
+    $ cp reservation.yaml.sample reservation.yaml
+    $ <editor> reservation.yaml
+
+Using a persistent registry
+---------------------------
+
+The relevant configuration section looks like:
+
+.. code-block:: yaml
+
+    registry:
+      ceph: true|false
+      ceph_keyring: path to your keyring
+      ceph_id: your ceph id
+      ceph_rbd: rbd in the form "pool/rbd"
+
+The deployment makes use of a private docker registry configured as a
+mirror of the official docker registry. There are two modes :
+
+  * `ceph: false`. It will start a fresh registry that will cache the images
+    for the duration of the experiment.
+  * `ceph: true`. It will use an existing Ceph rados block device of the Rennes
+    cluster.
+
+The block device will be mounted and used as the registry storage.
+Setting this is useful as the cache will persist different
+experiments.
+
+[The G5k ceph tutorial ](https://www.grid5000.fr/mediawiki/index.php/Ceph) will
+guide you on how to create your rados block device.
+
+
+Deployment
+-----------
+
+To launch the deployment, run:
+
+.. code-block:: bash
+
+    python -m enos.enos deploy
