@@ -78,3 +78,14 @@ To launch the deployment, run:
 .. code-block:: bash
 
     python -m enos.enos deploy
+
+We suggest you to run the deployment from a dedicated node (especially for large
+deployment). For now the recommended way to do so is to reserve one node prior
+of your reservation. In the case of an interactive deployment :
+
+.. code-block:: bash
+
+    frontend) oarsub -I -l 'walltime=2:00:00'
+    node) <edit configuration>
+    node) python -m enos.enos deploy
+

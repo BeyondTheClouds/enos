@@ -209,7 +209,8 @@ Options:
 """)
 def init_os(env=None, **kwargs):
     logging.debug('phase[init]: args=%s' % kwargs)
-    cmd = ['source %s' % os.path.join(SYMLINK_NAME, 'admin-openrc')]
+    cmd = []
+    cmd.append('. %s' % os.path.join(SYMLINK_NAME, 'admin-openrc'))
     # add cirros image
     images = [{'name': 'cirros.uec', 'url':'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'}]
     for image in images:
@@ -297,7 +298,7 @@ def init_os(env=None, **kwargs):
 
     cmd = '\n'.join(cmd)
     print(cmd)
-    call(cmd, shell = True)
+    call(cmd, shell=True)
 
 
 @enostask("""
