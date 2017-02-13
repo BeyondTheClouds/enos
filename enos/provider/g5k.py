@@ -32,6 +32,7 @@ DEFAULT_CONFIG = {
 }
 MAX_ATTEMPTS = 5
 DEFAULT_CONN_PARAMS = {'user': 'root'}
+QUEUE_PRIORITIES = ['default', 'production', 'testing']
 
 pf = pprint.PrettyPrinter(indent=4).pformat
 
@@ -45,7 +46,7 @@ class G5k(Provider):
         """
         self._load_config(config)
         self.force_deploy = force_deploy
-        self._get_job()
+        self._get_jobs()
         deployed, undeployed = self._deploy()
         if len(undeployed) > 0:
             logging.error("Some of your nodes have been undeployed")
@@ -81,10 +82,11 @@ class G5k(Provider):
 
     def destroy(self, calldir, env):
         self._load_config(env['config'])
-        self.gridjob, _ = EX5.planning.get_job_by_name(self.config['name'])
-        if self.gridjob is not None:
-            EX5.oargriddel([self.gridjob])
-            logging.info("Killing the job %s" % self.gridjob)
+        self._get_job_ids()
+
+        if self.gridjobs is not None:
+            EX5.oargriddel(self.gridjobs)
+        logging.info("Killed jobs %s" % self.gridjobs)
 
     def before_preintsall(self, env):
         # Create a virtual interface for veth0 (if any)
@@ -163,35 +165,88 @@ class G5k(Provider):
         criteria = {}
         # Actual criteria are :
         # - Number of node per site
+        queues = self._get_queues()
+        for queue, clusters in queues.iteritems():
+            criteria[queue] = {}
+
+            for cluster, roles in self.config["resources"].items():
+                if not cluster in clusters:
+                    continue
+
+                site = get_cluster_site(cluster)
+                nb_nodes = reduce(operator.add, map(int, roles.values()))
+                criterion = "{cluster='%s'}/nodes=%s" % (cluster, nb_nodes)
+                criteria[queue].setdefault(site, []).append(criterion)
+
+        # Add a vlan to the first queue that contains a matching site
+        for site, vlan in self.config["vlans"].items():
+            for queue, qc in criteria.iteritems():
+                if site in qc.keys():
+                    criteria[queue][site].append(vlan)
+                    break
+
+        # Make one reservation per queue
+        self.gridjobs = []
+        for queue in queues:
+            # Compute the specification for the reservation
+            name = self._get_job_name(len(self.gridjobs))
+            jobs_specs = [(OarSubmission(resources='+'.join(c),
+                                         name=name,
+                                         queue=queue), s)
+                          for s, c in criteria[queue].items()]
+            logging.info("Criteria for the reservation: %s" % pf(jobs_specs))
+
+            # Make the reservation
+            gridjob, _ = EX5.oargridsub(
+                jobs_specs,
+                reservation_date=self.config['reservation'],
+                walltime=self.config['walltime'].encode('ascii', 'ignore'),
+                job_type='deploy',
+                queue=queue)
+
+            # TODO - move this upper to not have a side effect here
+            if gridjob is not None:
+                self.gridjobs.append(gridjob)
+                logging.info("Using new oargrid job %s" % gridjob)
+            else:
+                logging.error("No oar job was created.")
+                if len(self.gridjobs) > 0:
+                    EX5.oargriddel(self.gridjobs)
+                    logging.error("Deleting already submitted jobs: %s" % self.gridjobs)
+                sys.exit(26)
+
+
+    def _get_queues(self):
+        try:
+            return self._queues
+        except AttributeError:
+            pass
+
+        self._queues = {}
+
         for cluster, roles in self.config["resources"].items():
             site = get_cluster_site(cluster)
-            nb_nodes = reduce(operator.add, map(int, roles.values()))
-            criterion = "{cluster='%s'}/nodes=%s" % (cluster, nb_nodes)
-            criteria.setdefault(site, []).append(criterion)
 
-        for site, vlan in self.config["vlans"].items():
-            criteria.setdefault(site, []).append(vlan)
+            # Select the appropriate queue for the cluster
+            resources = EX5.get_resource_attributes('/sites/%s/clusters/%s' % (site, cluster))
+            queue = None
+            for q in QUEUE_PRIORITIES:
+                if q in resources['queues']:
+                    queue = q
+                    break
 
-        # Compute the specification for the reservation
-        jobs_specs = [(OarSubmission(resources='+'.join(c),
-                                     name=self.config["name"]), s)
-                      for s, c in criteria.items()]
-        logging.info("Criteria for the reservation: %s" % pf(jobs_specs))
+            # This allows to use the 'admin' queue in last resort
+            if queue is None:
+                queue = resources['queues'][0]
+                logging.warning("Using queue %s for cluster %s" % (queue, cluster))
 
-        # Make the reservation
-        gridjob, _ = EX5.oargridsub(
-            jobs_specs,
-            reservation_date=self.config['reservation'],
-            walltime=self.config['walltime'].encode('ascii', 'ignore'),
-            job_type='deploy')
+            self._queues.setdefault(queue, []).append(cluster)
 
-        # TODO - move this upper to not have a side effect here
-        if gridjob is not None:
-            self.gridjob = gridjob
-            logging.info("Using new oargrid job %s" % self.gridjob)
-        else:
-            logging.error("No oar job was created.")
-            sys.exit(26)
+        if len(self._queues) > 1:
+            logging.warning("Your request requires %d jobs in as many queues"
+                    % len(self._queues))
+        logging.info("Queues: " + str(self._queues))
+        return self._queues
 
     def _load_config(self, config):
         self.config = DEFAULT_CONFIG
@@ -214,56 +269,93 @@ class G5k(Provider):
             wanted_nodes += reduce(operator.add, map(int, roles.values()))
 
         if mode == ROLE_DISTRIBUTION_MODE_STRICT and wanted_nodes > len(nodes):
-            raise Exception("Not enough nodes to continue")
+            raise Exception("Not enough nodes to continue (%d missing)"
+                    % (wanted_nodes - len(nodes)))
 
         return True
 
-    def _get_job(self):
-        """Get the hosts from an existing job (if any) or from a new job.
-        This will perform a reservation if necessary."""
+
+    def _get_job_name(self, id):
+        return "%s-%d" % (self.config['name'], id)
+
+
+    def _get_job_ids(self):
+        """Get the ids of running jobs (if any).
+        This method looks for a certain number of oargrid jobs depending
+        on the number of queues required by the configuration.
+
+        If the exact number of jobs is found, this method assings an array
+        of job ids to `self.gridjobs` and returns it. If no job is found,
+        this method returns `None`. If the number of jobs found is more
+        than zero but less than the required number, this method quits
+        the program and prints the ids of the found jobs.
+        """
+        queues = self._get_queues()
+        jobs = []
+
+        for i in range(len(queues)):
+            name = self._get_job_name(i)
+            job, _ = EX5.planning.get_job_by_name(name)
+            if job is not None:
+                jobs.append(job)
+            else:
+                break
+
+        if len(jobs) == 0:
+            self.gridjobs = None
+        elif len(jobs) == len(queues):
+            self.gridjobs = jobs
+        else:
+            logging.error("There are some missing jobs. I found %s" % str(jobs))
+            sys.exit(21)
+
+        return self.gridjobs
+
+
+    def _get_jobs(self):
+        """Get the hosts from existing jobs (if any) or from new jobs.
+        This will perform reservations if necessary."""
 
         # Look if there is a running job or make a new reservation
-        self.gridjob, _ = EX5.planning.get_job_by_name(self.config['name'])
+        self._get_job_ids()
 
-        if self.gridjob is None:
+        if self.gridjobs is None:
             self._make_reservation()
         else:
-            logging.info("Using running oargrid job %s" % self.gridjob)
+            logging.info("Using running oargrid jobs %s" % self.gridjobs)
 
-        # Wait for the job to start
-        EX5.wait_oargrid_job_start(self.gridjob)
+        # Wait for the jobs to start
+        nodes = []
+        for job_id in self.gridjobs:
+            EX5.wait_oargrid_job_start(job_id)
+            nodes += EX5.get_oargrid_job_nodes(job_id)
 
-        self.nodes = sorted(EX5.get_oargrid_job_nodes(self.gridjob),
-                            key=lambda n: n.address)
+        self.nodes = sorted(nodes, key=lambda n: n.address)
+        logging.info(nodes)
 
         # XXX check already done into `_deploy`.
-        self._check_nodes(nodes=self.nodes,
+        self._check_nodes(nodes=nodes,
                           resources=self.config['resources'],
                           mode=self.config['role_distribution'])
 
-        # XXX(Ad_rien_) Start_date is never used, deadcode? - August
-        # 11th 2016
-        self.start_date = None
-        job_info = EX5.get_oargrid_job_info(self.gridjob)
-        if 'start_date' in job_info:
-            self.start_date = job_info['start_date']
-
         # filling some information about the jobs here
         self.user = None
-        job_info = EX5.get_oargrid_job_info(self.gridjob)
+        # FIXME is this correct?
+        job_info = EX5.get_oargrid_job_info(self.gridjobs[0])
         if 'user' in job_info:
             self.user = job_info['user']
 
         # vlans information
-        job_sites = EX5.get_oargrid_job_oar_jobs(self.gridjob)
+        job_sites = reduce(operator.add, map(EX5.get_oargrid_job_oar_jobs, self.gridjobs))
+
         self.jobs = []
         self.vlans = []
         for (job_id, site) in job_sites:
             self.jobs.append((site, job_id))
+
             vlan_id = EX5.get_oar_job_kavlan(job_id, site)
             if vlan_id is not None:
-                self.vlans.append((site,
-                                   EX5.get_oar_job_kavlan(job_id, site)))
+                 self.vlans.append((site, vlan_id))
 
     def _translate_to_vlan(self, nodes, vlan_id):
         """When using a vlan, we need to *manually* translate
