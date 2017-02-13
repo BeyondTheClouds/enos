@@ -1,6 +1,17 @@
-{% set wsrep_driver = '/usr/lib/galera/libgalera_smm.so' if kolla_base_distro == 'ubuntu' else '/usr/lib64/galera/libgalera_smm.so' %}
+{%- set wsrep_driver = '/usr/lib/galera/libgalera_smm.so' if kolla_base_distro == 'ubuntu' else '/usr/lib64/galera/libgalera_smm.so' %}
+
+{#- Disable Galera in the case of of Kubernetes as its not supported yet.  Otherwise, #}
+{#- mariadb will fail to start #}
+{%- set wsrep_driver = 'none' if orchestration_engine == 'KUBERNETES' else wsrep_driver %}
+
+[client]
+default-character-set=utf8
+
+[mysql]
+default-character-set=utf8
+
 [mysqld]
-bind-address={{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}
+bind-address={{ api_interface_address }}
 port={{ mariadb_port }}
 
 log-error=/var/log/kolla/mariadb/mariadb.log
@@ -9,21 +20,11 @@ binlog_format=ROW
 default-storage-engine=innodb
 innodb_autoinc_lock_mode=2
 
+collation-server = utf8_unicode_ci
+init-connect='SET NAMES utf8'
+character-set-server = utf8
+
 datadir=/var/lib/mysql/
-
-# wsrep_cluster_address=gcomm://{% if (groups['mariadb'] | length) > 1 %}{% for host in groups['mariadb'] %}{{ hostvars[host]['ansible_' + hostvars[host]['api_interface']]['ipv4']['address'] }}:{{ mariadb_wsrep_port }}{% if not loop.last %},{% endif %}{% endfor %}{% endif %}
-
-# wsrep_provider_options=gmcast.listen_addr=tcp://{{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}:{{ mariadb_wsrep_port }};ist.recv_addr={{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}:{{ mariadb_ist_port }}
-
-# wsrep_node_address={{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}:{{ mariadb_wsrep_port }}
-# wsrep_sst_receive_address={{ hostvars[inventory_hostname]['ansible_' + api_interface]['ipv4']['address'] }}:{{ mariadb_sst_port }}
-
-# wsrep_provider={{ wsrep_driver }}
-# wsrep_cluster_name="{{ database_cluster_name }}"
-# wsrep_node_name={{ ansible_hostname }}
-# wsrep_sst_method=xtrabackup-v2
-# wsrep_sst_auth={{ database_user }}:{{ database_password }}
-# wsrep_slave_threads=4
 
 max_connections=10000
 
