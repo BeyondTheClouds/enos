@@ -86,6 +86,7 @@ of your reservation. In the case of an interactive deployment :
 .. code-block:: bash
 
     frontend) oarsub -I -l 'walltime=2:00:00'
+    node) source venv/bin/activate
     node) <edit configuration>
     node) python -m enos.enos deploy
 
