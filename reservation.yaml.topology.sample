@@ -72,6 +72,5 @@ kolla_ref: "stable/newton"
 kolla:
   kolla_base_distro: "centos"
   kolla_install_type: "source"
-  openstack_release: "3.0.2"
   docker_namespace: "beyondtheclouds"
   enable_heat: "yes"
