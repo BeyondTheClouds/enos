@@ -110,7 +110,10 @@ def build_ip_constraints(rsc, ips, constraints):
         grate = constraint['rate']
         for s in rsc[gsrc]:
             # one possible source
-            sdevices = map(lambda x: x['device'], local_ips[s.address]['devices'])
+            # Get all the active devices for this source 
+            active_devices = filter(lambda x: x["active"], local_ips[s.address]['devices'])
+            # Get only the name of the active devices
+            sdevices = map(lambda x: x['device'], active_devices)
             for sdevice in sdevices:
                 # one possible device
                 for d in rsc[gdst]:
