@@ -106,6 +106,10 @@ glance
 [nova-api:children]
 nova
 
+# quick fix here waiting for a more up to date inventory
+[placement-api:children]
+nova
+
 [nova-conductor:children]
 nova
 
