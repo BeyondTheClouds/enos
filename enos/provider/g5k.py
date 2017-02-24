@@ -3,8 +3,6 @@ from provider import Provider
 from ..utils.extra import build_resources, expand_topology, build_roles
 from ..utils.constants import EXTERNAL_IFACE
 
-import yaml
-import os
 import logging
 import sys
 
@@ -195,7 +193,6 @@ class G5k(Provider):
             logging.error("No oar job was created.")
             sys.exit(26)
 
-
     def _load_config(self, config):
         self.config = DEFAULT_CONFIG
         self.config.update(config)
@@ -206,7 +203,6 @@ class G5k(Provider):
             # We are here using a flat combination of the resource
             # resulting in (probably) deploying one single region
             self.config['resources'] = build_resources(self.config['topology'])
-
 
     def _check_nodes(self,
                      nodes=[],
@@ -338,7 +334,6 @@ class G5k(Provider):
                 mode=self.config['role_distribution'])
 
         return deployed, undeployed
-
 
     def _get_network(self):
         """Gets the network representation.

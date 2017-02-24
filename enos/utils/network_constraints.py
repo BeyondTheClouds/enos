@@ -1,6 +1,7 @@
 from extra import expand_groups
 import copy
 
+
 def expand_description(desc):
     """
     Expand the description given the group names/patterns
@@ -27,6 +28,7 @@ def same(g1, g2):
     """
     return g1['src'] == g2['src'] and g1['dst'] == g2['dst']
 
+
 def generate_default_grp_constraints(topology, network_constraints):
     """
     Generate default symetric grp constraints.
@@ -38,12 +40,13 @@ def generate_default_grp_constraints(topology, network_constraints):
     # flatten
     grps = [x for expanded_group in grps for x in expanded_group]
     # building the default group constraints
-    return [{ 
+    return [{
         'src': grp1,
         'dst': grp2,
         'delay': default_delay,
-        'rate' : default_rate
+        'rate': default_rate
       } for grp1 in grps for grp2 in grps if grp1 != grp2]
+
 
 def generate_actual_grp_constraints(network_constraints):
     """
@@ -51,9 +54,6 @@ def generate_actual_grp_constraints(network_constraints):
     """
     if 'constraints' not in network_constraints:
         return []
-
-    default_delay = network_constraints.get('default_delay')
-    default_rate = network_constraints.get('default_rate')
 
     constraints = network_constraints['constraints']
     actual = []
@@ -68,6 +68,7 @@ def generate_actual_grp_constraints(network_constraints):
                 actual.append(sym)
     return actual
 
+
 def merge_constraints(constraints, overrides):
     """
     Merge the constraints avoiding duplicates
@@ -76,7 +77,7 @@ def merge_constraints(constraints, overrides):
     for o in overrides:
         i = 0
         while i < len(constraints):
-            c  = constraints[i]
+            c = constraints[i]
             if same(o, c):
                 constraints[i].update(o)
                 break
@@ -85,17 +86,19 @@ def merge_constraints(constraints, overrides):
 
 def build_grp_constraints(topology, network_constraints):
     """
-    Generate constraints at the group level, 
+    Generate constraints at the group level,
     It expands the group names and deal with symetric constraints.
     """
     # generate defaults constraints
-    constraints = generate_default_grp_constraints(topology, network_constraints)
-    # Updating the constraints if necessary 
+    constraints = generate_default_grp_constraints(topology,
+                                                   network_constraints)
+    # Updating the constraints if necessary
     if 'constraints' in network_constraints:
         actual = generate_actual_grp_constraints(network_constraints)
         merge_constraints(constraints, actual)
 
     return constraints
+
 
 def build_ip_constraints(rsc, ips, constraints):
     """
@@ -110,14 +113,15 @@ def build_ip_constraints(rsc, ips, constraints):
         grate = constraint['rate']
         for s in rsc[gsrc]:
             # one possible source
-            # Get all the active devices for this source 
-            active_devices = filter(lambda x: x["active"], local_ips[s.address]['devices'])
+            # Get all the active devices for this source
+            active_devices = filter(lambda x: x["active"],
+                                    local_ips[s.address]['devices'])
             # Get only the name of the active devices
             sdevices = map(lambda x: x['device'], active_devices)
             for sdevice in sdevices:
                 # one possible device
                 for d in rsc[gdst]:
-                    # one possible destination 
+                    # one possible destination
                     dallips = local_ips[d.address]['all_ipv4_addresses']
                     # Let's keep docker bridge out of this
                     dallips = filter(lambda x: x != '172.17.0.1', dallips)
@@ -127,6 +131,6 @@ def build_ip_constraints(rsc, ips, constraints):
                                 'target': dip,
                                 'device': sdevice,
                                 'delay': gdelay,
-                                'rate' : grate
+                                'rate': grate
                             })
     return local_ips

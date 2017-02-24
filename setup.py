@@ -7,6 +7,7 @@ from enos.utils.constants import VERSION
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
 setup(
     name='enos',
     author='discovery',
