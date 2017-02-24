@@ -3,7 +3,7 @@
 # Grid'5000 reservation parameters                #
 # ############################################### #
 
-name: discovery-kolla
+name: OpenStack/Discovery-Enos2
 walltime: "06:00:00"
 
 # Define a set of groups
@@ -13,11 +13,11 @@ walltime: "06:00:00"
 # groups
 topology:
   grp1:
-    paravance: 
+    paravance:
       control: 1
       network: 1
   grp[2-4]:
-    paravance: 
+    paravance:
       compute: 1
 
 # Define a set of constraints between groups
@@ -54,7 +54,7 @@ inventory: inventories/inventory.sample
 # docker registry parameters
 # ############################################### #
 registry:
-  ceph: true 
+  ceph: true
   ceph_keyring: /home/discovery/.ceph/ceph.client.discovery.keyring
   ceph_id: discovery
   ceph_rbd: discovery_kolla_registry/datas
@@ -62,11 +62,11 @@ registry:
 
 
 # ############################################### #
-# Kolla parameteres                               # 
+# Kolla parameteres                               #
 # ############################################### #
 # Repository
-kolla_repo: "https://git.openstack.org/openstack/kolla"
-kolla_ref: "stable/newton"
+kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
+kolla_ref: "stable/ocata"
 
 # globals.yml
 kolla:

@@ -3,15 +3,15 @@
 # Grid'5000 reservation parameters                #
 # ############################################### #
 
-name: discovery-kolla
+name: OpenStack/Discovery-Enos2
 walltime: "2:00:00"
 
 resources:
-  paravance: 
+  paravance:
     control: 1
     compute: 1
     network: 1
-    
+
 vlans:
   # mandatory : you need to have exacly one vlan
   rennes: "{type='kavlan'}/vlan=1"
@@ -32,18 +32,18 @@ inventory: inventories/inventory.sample
 # docker registry parameters
 # ############################################### #
 registry:
-  ceph: true 
+  ceph: true
   ceph_keyring: /home/discovery/.ceph/ceph.client.discovery.keyring
   ceph_id: discovery
   ceph_rbd: discovery_kolla_registry/datas
 
 
 # ############################################### #
-# Kolla parameteres                               # 
+# Kolla parameteres                               #
 # ############################################### #
 # Repository
-kolla_repo: "https://git.openstack.org/openstack/kolla"
-kolla_ref: "stable/newton"
+kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
+kolla_ref: "stable/ocata"
 
 # globals.yml
 kolla:

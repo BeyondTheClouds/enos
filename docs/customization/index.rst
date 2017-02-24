@@ -8,12 +8,12 @@ Changing Kolla / Ansible variables
 Custom Kolla / Ansible parameters can be put in the configuration file
 under the key ``kolla``. For instance, Kolla uses the
 ``openstack_release`` parameter to fix the OpenStack version to deploy.
-So, Enos tells Kolla to deploy the ``3.0.2`` version with:
+So, Enos tells Kolla to deploy the ``4.0.0`` version with:
 
 .. code-block:: yaml
 
     kolla:
-      openstack_release: "3.0.2"
+      openstack_release: "4.0.0"
 
 Note that the Kolla code varies from one version of OpenStack to
 another. You should always target a version of Kolla code that
@@ -22,8 +22,8 @@ change the git repository/reference of Kolla code with:
 
 .. code-block:: yaml
 
-    kolla_repo: "https://git.openstack.org/openstack/kolla"
-    kolla_ref: "stable/newton"
+    kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
+    kolla_ref: "stable/ocata"
 
 Changing the topology
 ---------------------
@@ -66,4 +66,3 @@ code to enable custom configuration files to be used (and by extension
 custom kolla code). See the possible patch declaration in
 ``ansible/group_vars/all.yml``. Patches should be added in the
 configuration file of the experiment.
-
