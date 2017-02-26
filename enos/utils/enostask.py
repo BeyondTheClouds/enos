@@ -3,24 +3,23 @@ from constants import SYMLINK_NAME
 from functools import wraps
 
 import os
-import sys
 import yaml
 import logging
 
 
-def make_env(env_path=None):
-    """Loads the `env_path` environment if not `None` or makes a new one.
+def make_env(resultdir=None):
+    """Loads the env from `resultdir` if not `None` or makes a new one.
 
-    An enos environment handles all specific variables of an
+    An Enos environment handles all specific variables of an
     experiment. This function either generates a new environment or
-    loads a previous one. If the value of `env_path` is `None`, then
+    loads a previous one. If the value of `resultdir` is `None`, then
     this function makes a new environment and return it. If the value
-    is a file path of a yaml file that represents the enos
-    environment, then this function loads and returns it.
+    is a directory path that contains an Enos environment, then this function
+    loads and returns it.
 
-    In case of a file_path, this function also reread the
+    In case of a directory path, this function also rereads the
     configuration file (the reservation.yaml) and reloads it. This
-    lets the user update is configuration between each phase.
+    lets the user update his configuration between each phase.
 
     """
     env = {
@@ -32,14 +31,12 @@ def make_env(env_path=None):
         'user':        ''   # User id for this job
     }
 
-    if env_path:
+    if resultdir:
+        env_path = os.path.join(resultdir, 'env')
         if os.path.isfile(env_path):
             with open(env_path, 'r') as f:
                 env.update(yaml.load(f))
                 logging.debug("Loaded environment %s", env_path)
-        else:
-            logging.error("Wrong environment file %s", env_path)
-            sys.exit(1)
 
         # Resets the configuration of the environment
         if os.path.isfile(env['config_file']):
@@ -57,6 +54,7 @@ def save_env(env):
     if os.path.isdir(env['resultdir']):
         with open(env_path, 'w') as f:
             yaml.dump(env, f)
+
 
 def enostask(doc):
     """Decorator for a Enos Task.
@@ -83,11 +81,14 @@ def enostask(doc):
 
             # Constructs the environment
             kwargs['env'] = make_env(kwargs['--env'])
+            # If no directory is provided, set the default one
+            if '--env' not in kwargs:
+                kwargs['env']['resultdir'] = SYMLINK_NAME
 
-            # Proceeds with the function executio
+            # Proceeds with the function execution
             fn(*args, **kwargs)
 
             # Save the environment
-            save_env(env)
+            save_env(kwargs['env'])
         return decorated
     return decorator
