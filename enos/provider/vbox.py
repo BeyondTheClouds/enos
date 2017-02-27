@@ -3,7 +3,6 @@ from jinja2 import Environment, FileSystemLoader
 from ipaddress import IPv4Network
 from ..utils.constants import TEMPLATE_DIR
 from ..utils.extra import build_resources, expand_topology, build_roles
-from itertools import groupby
 # NOTE(msimonin): we should get rid of this
 from execo import Host
 
@@ -56,7 +55,8 @@ class Vbox(Provider):
             'ip3': list(IPv4Network(u'192.168.144.0/25')),
         }
 
-        # Build a list of machines that will be used to generate the Vagrantfile
+        # Build a list of machines that will be used to generate the
+        # Vagrantfile
         machines = []
         for size, roles in self.config['resources'].items():
             for role, nb in roles.items():
@@ -80,13 +80,16 @@ class Vbox(Provider):
         with open(vagrantfile_path, 'w') as f:
             f.write(vagrantfile)
 
-        v = vagrant.Vagrant(root=calldir, quiet_stdout=False, quiet_stderr=False)
+        v = vagrant.Vagrant(root=calldir,
+                            quiet_stdout=False,
+                            quiet_stderr=False)
         if force_deploy:
             v.destroy()
         v.up()
         v.provision()
 
-        # Distribute the machines according to the resource/topology specifications
+        # Distribute the machines according to the resource/topology
+        # specifications
         r = build_roles(
                     self.config,
                     machines,
@@ -99,7 +102,9 @@ class Vbox(Provider):
             roles.setdefault(role, [])
             for machine in machines:
                 keyfile = v.keyfile(vm_name=machine['name'])
-                roles[role].append(Host(machine['name'], user='root', keyfile=keyfile))
+                roles[role].append(Host(machine['name'],
+                                        user='root',
+                                        keyfile=keyfile))
         logging.info("-------")
         logging.info(roles)
         network = {
@@ -114,5 +119,7 @@ class Vbox(Provider):
         return (roles, network, (network_interface, external_interface))
 
     def destroy(self, calldir, env):
-        v = vagrant.Vagrant(root=calldir, quiet_stdout=False, quiet_stderr=True)
+        v = vagrant.Vagrant(root=calldir,
+                            quiet_stdout=False,
+                            quiet_stderr=True)
         v.destroy()

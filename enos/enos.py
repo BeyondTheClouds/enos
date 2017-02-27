@@ -32,7 +32,8 @@ from utils.extra import (run_ansible, generate_inventory,
                          generate_kolla_files, to_abs_path,
                          pop_ip)
 
-from utils.network_constraints import build_grp_constraints, build_ip_constraints
+from utils.network_constraints import (build_grp_constraints,
+                                       build_ip_constraints)
 from utils.enostask import enostask
 
 from datetime import datetime
@@ -40,14 +41,12 @@ import logging
 
 from docopt import docopt
 import pprint
-from operator import itemgetter, attrgetter
 
 import os
 import sys
 from subprocess import call
 
 import yaml
-import json
 import itertools
 
 CALL_PATH = os.getcwd()
@@ -169,8 +168,10 @@ def install_os(env=None, **kwargs):
 
     logging.info("Cloning Kolla")
     call("git clone %s --branch %s --single-branch --quiet %s" %
-            (env['config']['kolla_repo'], env['config']['kolla_ref'], kolla_path),
-	    shell=True)
+            (env['config']['kolla_repo'],
+             env['config']['kolla_ref'],
+             kolla_path),
+         shell=True)
 
     logging.warning(("Patching kolla, this should be ",
                      "deprecated with the new version of Kolla"))
@@ -212,16 +213,17 @@ def init_os(env=None, **kwargs):
     cmd = []
     cmd.append('. %s' % os.path.join(SYMLINK_NAME, 'admin-openrc'))
     # add cirros image
-    images = [{'name': 'cirros.uec', 'url':'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'}]
+    images = [{'name': 'cirros.uec',
+               'url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'}]
     for image in images:
         cmd.append("wget -q -O /tmp/%s %s" % (image['name'], image['url']))
-        cmd.append('openstack image create' \
-                ' --disk-format=qcow2' \
-                ' --container-format=bare' \
-                ' --property architecture=x86_64' \
-                ' --public' \
-                ' --file /tmp/%s' \
-                ' %s' % (image['name'], image['name']))
+        cmd.append("openstack image create"
+                   " --disk-format=qcow2"
+                   " --container-format=bare"
+                   " --property architecture=x86_64"
+                   " --public"
+                   " --file /tmp/%s"
+                   " %s" % (image['name'], image['name']))
 
     # flavors
     flavors = [
@@ -233,20 +235,20 @@ def init_os(env=None, **kwargs):
             ('m1.xlarge', 16384, 160, 8)
     ]
     for flavor in flavors:
-        cmd.append('openstack flavor create %s' \
-                ' --id auto' \
-                ' --ram %s' \
-                ' --disk %s' \
-                ' --vcpus %s' \
-                ' --public' % (flavor[0], flavor[1], flavor[2], flavor[3]))
+        cmd.append("openstack flavor create %s"
+                   " --id auto"
+                   " --ram %s"
+                   " --disk %s"
+                   " --vcpus %s"
+                   " --public" % (flavor[0], flavor[1], flavor[2], flavor[3]))
 
     # security groups - allow everything
     protos = ['icmp', 'tcp', 'udp']
     for proto in protos:
-        cmd.append('openstack security group rule create default' \
-                ' --protocol %s' \
-                ' --dst-port 1:65535' \
-                ' --src-ip 0.0.0.0/0' % proto)
+        cmd.append("openstack security group rule create default"
+                   " --protocol %s"
+                   " --dst-port 1:65535"
+                   " --src-ip 0.0.0.0/0" % proto)
 
     # quotas - set some unlimited for admin project
     quotas = ['cores', 'ram', 'instances']
@@ -257,38 +259,36 @@ def init_os(env=None, **kwargs):
     for quota in quotas:
         cmd.append('openstack quota set --%s -1 admin' % quota)
 
-    # default network (one public / one provite)
-    cmd.append('openstack network create public' \
-            ' --share' \
-            ' --provider-physical-network physnet1' \
-            ' --provider-network-type flat' \
-            ' --external')
+    # default network (one public/one private)
+    cmd.append("openstack network create public"
+               " --share"
+               " --provider-physical-network physnet1"
+               " --provider-network-type flat"
+               " --external")
 
-    cmd.append('openstack subnet create public-subnet' \
-            ' --network public' \
-            ' --subnet-range %s' \
-            ' --no-dhcp'
-            ' --allocation-pool start=%s,end=%s' \
-            ' --gateway %s' \
-            ' --dns-nameserver %s' \
-            ' --ip-version 4' % (
-                env['provider_net']['cidr'],
-                env['provider_net']['start'],
-                env['provider_net']['end'],
-                env['provider_net']['gateway'],
-                env['provider_net']['dns']))
+    cmd.append("openstack subnet create public-subnet"
+               " --network public"
+               " --subnet-range %s"
+               " --no-dhcp"
+               " --allocation-pool start=%s,end=%s"
+               " --gateway %s"
+               " --dns-nameserver %s"
+               " --ip-version 4" % (
+                   env['provider_net']['cidr'],
+                   env['provider_net']['start'],
+                   env['provider_net']['end'],
+                   env['provider_net']['gateway'],
+                   env['provider_net']['dns']))
 
-    cmd.append('openstack network create private' \
-            ' --provider-network-type vxlan')
+    cmd.append("openstack network create private"
+               " --provider-network-type vxlan")
 
-    cmd.append('openstack subnet create private-subnet' \
-            ' --network private' \
-            ' --subnet-range 192.168.0.0/18' \
-            ' --gateway 192.168.0.1' \
-            ' --dns-nameserver %s' \
-            ' --ip-version 4' % (
-                env["provider_net"]['dns'])
-            )
+    cmd.append("openstack subnet create private-subnet"
+               " --network private"
+               " --subnet-range 192.168.0.0/18"
+               " --gateway 192.168.0.1"
+               " --dns-nameserver %s"
+               " --ip-version 4" % (env["provider_net"]['dns']))
 
     # create a router between this two networks
     cmd.append('openstack router create router')
@@ -297,7 +297,8 @@ def init_os(env=None, **kwargs):
     cmd.append('neutron router-interface-add router private-subnet')
 
     cmd = '\n'.join(cmd)
-    print(cmd)
+
+    logging.info(cmd)
     call(cmd, shell=True)
 
 
@@ -321,9 +322,9 @@ def bench(env=None, **kwargs):
         f = []
         for k, v in d.items():
             if isinstance(v, list):
-              f.extend([[[k, vv] for vv in v]])
+                f.extend([[[k, vv] for vv in v]])
             else:
-              f.append([[k,v]])
+                f.append([[k, v]])
         logging.debug(f)
         product = []
         for e in itertools.product(*f):
@@ -349,14 +350,18 @@ def bench(env=None, **kwargs):
                 for a in cartesian(top_args):
                     playbook_path = os.path.join(ANSIBLE_DIR, 'run-bench.yml')
                     inventory_path = os.path.join(SYMLINK_NAME, 'multinode')
-                    # NOTE(msimonin) all the scenarios must reside on the workload directory
+                    # NOTE(msimonin) all the scenarios must reside on
+                    # the workload directory
                     env['config']['bench'] = {
                         'type': bench_type,
-                        'location': os.path.abspath(os.path.join(workload_dir, scenario["file"])),
+                        'location': os.path.abspath(
+                                      os.path.join(workload_dir,
+                                                   scenario["file"])),
                         'file': scenario["file"],
                         'args': a
                     }
                     run_ansible([playbook_path], inventory_path, env['config'])
+
 
 @enostask("""
 usage: enos backup [--backup_dir=BACKUP_DIR ] [-vv|-s|--silent]
@@ -367,7 +372,7 @@ Options:
   --backup_dir=BACKUP_DIR   Backup directory.
   -h --help                 Show this help message.
 """)
-def backup(env = None, **kwargs):
+def backup(env=None, **kwargs):
     backup_dir = kwargs['--backup_dir']
     if backup_dir is None:
         backup_dir = SYMLINK_NAME
@@ -407,6 +412,7 @@ def ssh_tunnel(env=None, **kwargs):
 
     logging.info(script)
     logging.info("___")
+
 
 @enostask("""
 usage: enos tc [--test] [-vv|-s|--silent]
@@ -459,20 +465,22 @@ def tc(provider=None, env=None, **kwargs):
     network_constraints = env['config']['network_constraints']
     constraints = build_grp_constraints(topology, network_constraints)
     # 2.b Building the ip/device level constaints
-    ip_constraints = []
     with open(ips_file) as f:
         ips = yaml.load(f)
         # will hold every single constraint
-        ips_with_constraints = build_ip_constraints(env['rsc'], ips, constraints)
+        ips_with_constraints = build_ip_constraints(env['rsc'],
+                                                    ips,
+                                                    constraints)
         # dumping it for debugging purpose
-        ips_with_constraints_file = os.path.join(env['resultdir'], 'ips_with_constraints.yml')
+        ips_with_constraints_file = os.path.join(env['resultdir'],
+                                                 'ips_with_constraints.yml')
         with open(ips_with_constraints_file, 'w') as g:
             yaml.dump(ips_with_constraints, g)
 
     # 3. Enforcing those constraints
     logging.info('Enforcing the constraints')
     # enabling/disabling network constraints
-    enable = network_constraints['enable'] if 'enable' in network_constraints else True
+    enable = network_constraints.setdefault('enable', True)
     utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
     options = {
         'action': 'tc',
@@ -554,6 +562,7 @@ def main():
         destroy(**docopt(destroy.__doc__, argv=argv))
     else:
         pass
+
 
 if __name__ == '__main__':
     main()

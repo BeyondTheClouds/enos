@@ -166,7 +166,8 @@ def to_ansible_group_string(roles):
 
     for role, nodes in roles.items():
         inventory.append("[%s]" % (role))
-        inventory.extend(map(lambda n: generate_inventory_string(n, role), nodes))
+        inventory.extend(map(lambda n: generate_inventory_string(n, role),
+                             nodes))
     inventory.append("\n")
     return "\n".join(inventory)
 
@@ -198,6 +199,7 @@ def generate_kolla_files(config_vars, kolla_vars, directory):
                     admin_openrc_path)
     logging.info("admin-openrc generated in %s" % (admin_openrc_path))
 
+
 def to_abs_path(path):
     """
     if set, path is considered relative to the current working directory
@@ -207,7 +209,8 @@ def to_abs_path(path):
     if os.path.isabs(path):
         return path
     else:
-       return os.path.join(os.getcwd(), path) 
+        return os.path.join(os.getcwd(), path)
+
 
 def build_resources(topology):
     """
@@ -229,10 +232,11 @@ def build_resources(topology):
             merge_add(resource[cluster], roles)
     return resource
 
+
 def expand_groups(grp):
     """
     Expand group names.
-    e.g: 
+    e.g:
         * grp[1-3] -> [grp1, grp2, grp3]
         * grp1 -> [grp1]
     """
@@ -255,6 +259,7 @@ def expand_topology(topology):
             expanded[g] = desc
     return expanded
 
+
 def pop_ip(env=None):
     "Picks an ip from env['provider_net']."
     # Construct the pool of ips
@@ -268,6 +273,7 @@ def pop_ip(env=None):
     env['provider_net']['end'] = str(ips.pop())
 
     return ip
+
 
 def build_roles(config, deployed_nodes, keyfnc):
     """Returns a dict that maps each role to a list of G5k nodes::
@@ -313,8 +319,7 @@ def build_roles(config, deployed_nodes, keyfnc):
     role_idx = -2
     nb_idx = -1
 
-    resources = config['topology'] if 'topology' in config else config['resources']
-
+    resources = config.setdefault('topology', config['resources'])
     rindexes = _build_indexes(resources)
     # rindexes = [['resources', 'paravance', 'controller', 2],
     #            ['resource', 'econome', 'compute', 1]]
@@ -330,7 +335,8 @@ def build_roles(config, deployed_nodes, keyfnc):
     # corresponds to the case where compute nodes number >> other services
     # number and some missing compute nodes isn't catastrophic
     rindexes = sorted(rindexes,
-        key=lambda indexes: len(indexes) if indexes[role_idx] != "compute" else -1,
+        key=lambda indexes: len(indexes)
+                      if indexes[role_idx] != "compute" else -1,
         reverse=True)
     for indexes in rindexes:
         cluster = indexes[cluster_idx]

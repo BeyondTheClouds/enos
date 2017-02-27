@@ -18,3 +18,10 @@ Running the tests
     pip install -r test-requirements
     tox
 
+Running syntax checker
+----------------------
+
+.. code-block:: bash
+
+    pip install -r test-requirements
+    flake8
