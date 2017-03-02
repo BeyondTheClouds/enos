@@ -411,7 +411,7 @@ def bench(env=None, **kwargs):
 
 
 @enostask("""
-usage: enos backup [--backup_dir=BACKUP_DIR  [-e ENV|--env=ENV]
+usage: enos backup [--backup_dir=BACKUP_DIR] [-e ENV|--env=ENV]
                    [-v|-vv|-s|--silent]
 
 Backup the environment
