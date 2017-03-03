@@ -64,3 +64,21 @@ Notes
 -----
 
 * To disable the network constraints you can specify :code:`enable: false` under the :code:`network_constraints` key and launch again :code:`python -m enos.enos tc`.
+* To exclude a group from any tc rule, you can add an optionnal :code:`except` key to the :code:`network_constraints` : 
+
+.. code-block:: yaml
+
+    network_constraints:
+      enable: true
+      default_delay: 25ms
+      default_rate: 100mbit
+      constraints:
+        - src: grp[1-3]
+          dst: grp[4-6]
+          delay: 10ms
+          rate: 1gbit
+          symetric: true
+      except:
+        - grp1
+
+
