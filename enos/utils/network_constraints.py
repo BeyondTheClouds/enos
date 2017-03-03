@@ -35,17 +35,19 @@ def generate_default_grp_constraints(topology, network_constraints):
     """
     default_delay = network_constraints.get('default_delay')
     default_rate = network_constraints.get('default_rate')
+    except_groups = network_constraints.get('except', [])
     # expand each groups
     grps = map(lambda g: expand_groups(g), topology.keys())
     # flatten
     grps = [x for expanded_group in grps for x in expanded_group]
     # building the default group constraints
     return [{
-        'src': grp1,
-        'dst': grp2,
-        'delay': default_delay,
-        'rate': default_rate
-      } for grp1 in grps for grp2 in grps if grp1 != grp2]
+            'src': grp1,
+            'dst': grp2,
+            'delay': default_delay,
+            'rate': default_rate
+        } for grp1 in grps for grp2 in grps
+        if grp1 != grp2 and grp1 not in except_groups and grp2 not in except_groups]
 
 
 def generate_actual_grp_constraints(network_constraints):

@@ -24,14 +24,14 @@ class TestExpandDescription(unittest.TestCase):
             'rate': 0,
             'symetric': True
         }
-        # checking cardinality : the cartesian product 
+        # checking cardinality : the cartesian product
         descs = expand_description(desc)
         self.assertEquals(3, len(descs))
 
         # checking that expansion has been generated
         srcs = map(lambda d: d.pop('src'), descs)
         self.assertEquals(set(srcs), {'grp1', 'grp2', 'grp3'})
-    
+
         # checking that the remaining is untouched
         desc.pop('src')
         for d in descs:
@@ -46,14 +46,14 @@ class TestExpandDescription(unittest.TestCase):
             'rate': 0,
             'symetric': True
         }
-        # checking cardinality : the cartesian product 
+        # checking cardinality : the cartesian product
         descs = expand_description(desc)
         self.assertEquals(3, len(descs))
 
         # checking that expansion has been generated
         dsts = map(lambda d: d.pop('dst'), descs)
         self.assertEquals(set(dsts), {'grp1', 'grp2', 'grp3'})
-    
+
         # checking that the remaining is untouched
         desc.pop('dst')
         for d in descs:
@@ -68,7 +68,7 @@ class TestExpandDescription(unittest.TestCase):
             'rate': 0,
             'symetric': True
         }
-        # checking cardinality : the cartesian product 
+        # checking cardinality : the cartesian product
         descs = expand_description(desc)
         self.assertEquals(9, len(descs))
 
@@ -78,7 +78,7 @@ class TestExpandDescription(unittest.TestCase):
         # checking that expansion has been generated
         srcs = map(lambda d: d.pop('src'), descs)
         self.assertEquals(set(srcs), {'grp1', 'grp2', 'grp3'})
-    
+
         # checking that the remaining is untouched
         desc.pop('dst')
         desc.pop('src')
@@ -97,7 +97,7 @@ class TestGenerateDefaultGrpConstraitns(unittest.TestCase):
             'default_delay': '10ms'
         }
         descs = generate_default_grp_constraints(topology, network_constraints)
-        
+
         # Cartesian product is applied
         self.assertEquals(2, len(descs))
 
@@ -120,7 +120,7 @@ class TestGenerateDefaultGrpConstraitns(unittest.TestCase):
             'default_delay': '10ms'
         }
         descs = generate_default_grp_constraints(topology, network_constraints)
-        
+
         # Cartesian product is applied
         self.assertEquals(6*5, len(descs))
 
@@ -129,8 +129,28 @@ class TestGenerateDefaultGrpConstraitns(unittest.TestCase):
             self.assertEquals('10mbit', d['rate'])
             self.assertEquals('10ms', d['delay'])
 
+    def test_except_one_group(self):
+        topology = {
+                'grp[1-3]': {},
+                'grp[4-6]': {}
+         }
+        network_constraints = {
+            'default_rate': '10mbit',
+            'default_delay': '10ms',
+            'except': ['grp1']
+        }
+        descs = generate_default_grp_constraints(topology, network_constraints)
+
+        # Cartesian product is applied but grp1 isn't taken
+        self.assertEquals(5*4, len(descs))
+
+        for d in descs:
+            self.assertTrue('grp1' != d['src'])
+            self.assertTrue('grp1' != d['dst'])
+
+
 class TestGenerateActualGrpConstraints(unittest.TestCase):
-        
+
     def test_no_expansion_no_symetric(self):
         constraints = [{
             'src': 'grp1',
@@ -170,12 +190,11 @@ class TestGenerateActualGrpConstraints(unittest.TestCase):
         for d in descs:
             self.assertEquals('20mbit', d['rate'])
             self.assertEquals('20ms', d['delay'])
-        
+
         # descs are symetrics
         self.assertEquals(descs[0]['src'], descs[1]['dst'])
         self.assertEquals(descs[0]['dst'], descs[1]['src'])
 
-    
     def test_expansion_symetric(self):
         constraints = [{
             'src': 'grp[1-3]',
@@ -220,7 +239,7 @@ class TestGenerateActualGrpConstraints(unittest.TestCase):
             self.assertEquals('20ms', d['delay'])
 
 class TestMergeConstraints(unittest.TestCase):
-    
+
     def test_merge_constraints(self):
         constraint = {
             'src': 'grp1',
@@ -259,9 +278,9 @@ class TestMergeConstraints(unittest.TestCase):
         self.assertDictEqual(override, constraints[0])
 
 class TestBuildIpConstraints(unittest.TestCase):
-    
+
     def test_build_ip_constraints(self):
-        # role distribution 
+        # role distribution
         rsc = {
             'grp1': [Host('node1')],
             'grp2': [Host('node2')]
@@ -270,14 +289,14 @@ class TestBuildIpConstraints(unittest.TestCase):
         ips = {
             'node1': {
                 'all_ipv4_addresses': ['ip11', 'ip12'],
-                'devices': [{'device': 'eth0',},{'device': 'eth1'}]
+                'devices': [{'device': 'eth0', 'active': True},{'device': 'eth1', 'active': True}]
              },
             'node2': {
                 'all_ipv4_addresses': ['ip21', 'ip21'],
-                'devices': [{'device': 'eth0'},{'device': 'eth1'}]
+                'devices': [{'device': 'eth0', 'active': True},{'device': 'eth1', 'active': True}]
              }
         }
-        # the constraints    
+        # the constraints
         constraint = {
             'src': 'grp1',
             'dst': 'grp2',
@@ -290,9 +309,9 @@ class TestBuildIpConstraints(unittest.TestCase):
         # tc rules are applied on the source only
         self.assertTrue('tc' in ips_with_tc['node1'])
         tcs = ips_with_tc['node1']['tc']
-        # one rule per dest ip and source device 
+        # one rule per dest ip and source device
         self.assertEquals(2*2, len(tcs))
-        
+
 
 if __name__ == '__main__':
     unittest.main()
