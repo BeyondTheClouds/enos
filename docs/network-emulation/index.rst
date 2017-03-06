@@ -9,7 +9,7 @@ limitations.
 
 Network constraints (latency/bandwidth limitations) are enabled by the use of
 groups of nodes. Resources *must* be described using a :code:`topology` description
-instead of a :code:`resources` description. The following example will define 2 groups named :code:`grp1` and :code:`grp2` respectively :
+instead of a :code:`resources` description. The following example will define 4 groups named :code:`grp1`, :code:`grp2`, :code:`grp3` and :code:`grp4`  respectively :
 
 .. code-block:: yaml
 
@@ -48,6 +48,13 @@ To enforce the constraints, you can invoke:
 
 Note that The machines must be available, thus the `up` phase must have been called before.
 
+As a result 
+
+* the network delay between every machines of :code:`grp1` and the machines of the other groups will be 20ms (2x10ms : symetric)
+* the bandwidth between every machines of :code:`grp1` and the machines of the other groups will be 1 Gbit/s
+* the network delay between every machines of :code:`grp2` and :code:`grp3` (resp. :code:`grp2` and :code:`grp4`) (resp. :code:`grp3` and :code:`grp4`) will be 50ms
+* the bandwidth between every machines of :code:`grp2` and :code:`grp3` (resp. :code:`grp2` and :code:`grp4`) (resp. :code:`grp3` and :code:`grp4`) will be 100Mbit/s.
+
 Checking the constraints
 ------------------------
 
@@ -57,7 +64,7 @@ Invoking
 
     python -m enos.enos tc --test
 
-will generate various reports to validate the constraints. They are based on :code:`fping` and :code:`flent` latency and bandwidth measurement respectively. The reports will be located in the result directory.
+will generate various reports to validate the constraints. They are based on :code:`fping` and :code:`flent` latency and bandwidth measurements respectively. The reports will be located in the result directory.
 
 
 Notes
