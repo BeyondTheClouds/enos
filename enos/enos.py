@@ -470,14 +470,17 @@ def ssh_tunnel(env=None, **kwargs):
 
 
 @enostask("""
-usage: enos tc [--test] [-vv|-s|--silent]
+usage: enos tc [-e ENV|--env=ENV] [-vv|-s|--silent] [--test] 
 
 Enforce network constraints
 
 Options:
-  --test   Test the rules by generating various reports
-  -h --help                 Show this help message.
-""")
+  -e ENV    --env=ENV   Path to the environment directory. You should
+                        use this option when you want to link a specific
+                        experiment [default: %s].
+            --test      Test the rules by generating various reports
+  -h        --help      Show this help message.
+""" % SYMLINK_NAME)
 def tc(provider=None, env=None, **kwargs):
     """
     Enforce network constraints
