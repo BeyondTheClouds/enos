@@ -475,11 +475,11 @@ usage: enos tc [-e ENV|--env=ENV] [-vv|-s|--silent] [--test]
 Enforce network constraints
 
 Options:
-  -e ENV    --env=ENV   Path to the environment directory. You should
-                        use this option when you want to link a specific
-                        experiment [default: %s].
-            --test      Test the rules by generating various reports
-  -h        --help      Show this help message.
+  -e ENV --env=ENV     Path to the environment directory. You should
+                       use this option when you want to link a specific
+                       experiment [default: %s].
+  -h --help            Show this help message.
+  --test               Test the rules by generating various reports.
 """ % SYMLINK_NAME)
 def tc(provider=None, env=None, **kwargs):
     """
