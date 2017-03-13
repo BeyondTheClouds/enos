@@ -343,7 +343,7 @@ def init_os(env=None, **kwargs):
 
 
 @enostask("""
-usage: enos bench [--workload=WORKLOAD] [-e ENV|--env=ENV] [-v|-vv|-s|--silent]
+usage: enos bench [-e ENV|--env=ENV] [-v|-vv|-s|--silent] (--workload=WORKLOAD)
 
 Run rally on this OpenStack.
 
