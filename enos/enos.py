@@ -2,7 +2,7 @@
 """Enos: Monitor and test your OpenStack.
 
 usage: enos <command> [<args> ...] [-e ENV|--env=ENV]
-            [-h|--help] [-v|--version] [-vv|-s|--silent]
+            [-h|--help] [-v|--version] [-s|--silent|--vv]
 
 General options:
   -e ENV --env=ENV  Path to the environment directory. You should
@@ -11,9 +11,9 @@ General options:
                     discard the loading of the environment (it
                     makes sense for `up`).
   -h --help         Show this help message.
+  -s --silent       Quiet mode.
   -v --version      Show version number.
   -vv               Verbose mode.
-  -s --silent       Quiet mode.
 
 Commands:
   up             Get resources and install the docker registry.
@@ -60,7 +60,7 @@ CALL_PATH = os.getcwd()
 @enostask("""
 usage: enos up  [-e ENV|--env=ENV][-f CONFIG_PATH] [--force-deploy]
                 [--provider=PROVIDER] [-t TAGS|--tags=TAGS]
-                [-v|-vv|-s|--silent]
+                [-s|--silent|-vv]
 
 Get resources and install the docker registry.
 
@@ -73,10 +73,9 @@ Options:
   -h --help            Show this help message.
   --force-deploy       Force deployment [default: False].
   --provider=PROVIDER  The provider name [default: G5k].
-  -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
-  -v --version         Show version number.
-  -vv                  Verbose mode.
   -s --silent          Quiet mode.
+  -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
+  -vv                  Verbose mode.
 
 """)
 def up(provider=None, env=None, **kwargs):
@@ -164,7 +163,7 @@ def up(provider=None, env=None, **kwargs):
 
 @enostask("""
 usage: enos os [-e ENV|--env=ENV] [--reconfigure] [-t TAGS|--tags=TAGS]
-               [-v|-vv|-s|--silent]
+               [-s|--silent|-vv]
 
 Run kolla and install OpenStack.
 
@@ -173,11 +172,10 @@ Options:
                        use this option when you want to link a specific
                        experiment [default: %s].
   -h --help            Show this help message.
-  -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
   --reconfigure        Reconfigure the services after a deployment.
-  -v --version         Show version number.
-  -vv                  Verbose mode.
   -s --silent          Quiet mode.
+  -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
+  -vv                  Verbose mode.
 """ % SYMLINK_NAME)
 def install_os(env=None, **kwargs):
     logging.debug('phase[os]: args=%s' % kwargs)
@@ -230,7 +228,7 @@ def install_os(env=None, **kwargs):
 
 
 @enostask("""
-usage: enos init [-e ENV|--env=ENV] [-v|-vv|-s|--silent]
+usage: enos init [-e ENV|--env=ENV] [-s|--silent|-vv]
 
 Initialise OpenStack with the bare necessities:
 - Install a 'member' role
@@ -243,9 +241,8 @@ Options:
                        use this option when you want to link a specific
                        experiment [default: %s].
   -h --help            Show this help message.
-  -v --version         Show version number.
-  -vv                  Verbose mode.
   -s --silent          Quiet mode.
+  -vv                  Verbose mode.
 """ % SYMLINK_NAME)
 def init_os(env=None, **kwargs):
     logging.debug('phase[init]: args=%s' % kwargs)
@@ -343,7 +340,7 @@ def init_os(env=None, **kwargs):
 
 
 @enostask("""
-usage: enos bench [-e ENV|--env=ENV] [-v|-vv|-s|--silent] (--workload=WORKLOAD)
+usage: enos bench [-e ENV|--env=ENV] [-s|--silent|-vv] (--workload=WORKLOAD)
 
 Run rally on this OpenStack.
 
@@ -352,13 +349,12 @@ Options:
                        use this option when you want to link a specific
                        experiment [default: %s].
   -h --help            Show this help message.
-  -v --version         Show version number.
-  -vv                  Verbose mode.
   -s --silent          Quiet mode.
+  -vv                  Verbose mode.
   --workload=WORKLOAD  Path to the workload directory.
                        This directory must contain a run.yml file
                        that contains the description of the different
-                       scenarios to launch
+                       scenarios to launch.
 """ % SYMLINK_NAME)
 def bench(env=None, **kwargs):
     def cartesian(d):
@@ -412,7 +408,7 @@ def bench(env=None, **kwargs):
 
 @enostask("""
 usage: enos backup [--backup_dir=BACKUP_DIR] [-e ENV|--env=ENV]
-                   [-v|-vv|-s|--silent]
+                   [-s|--silent|-vv]
 
 Backup the environment
 
@@ -422,9 +418,8 @@ Options:
                        use this option when you want to link a specific
                        experiment [default: %s].
   -h --help            Show this help message.
-  -v --version         Show version number.
-  -vv                  Verbose mode.
   -s --silent          Quiet mode.
+  -vv                  Verbose mode.
 """ % SYMLINK_NAME)
 def backup(env=None, **kwargs):
 
@@ -470,7 +465,7 @@ def ssh_tunnel(env=None, **kwargs):
 
 
 @enostask("""
-usage: enos tc [-e ENV|--env=ENV] [-vv|-s|--silent] [--test] 
+usage: enos tc [-e ENV|--env=ENV] [--test] [-s|--silent|-vv]
 
 Enforce network constraints
 
@@ -479,7 +474,9 @@ Options:
                        use this option when you want to link a specific
                        experiment [default: %s].
   -h --help            Show this help message.
+  -s --silent          Quiet mode.
   --test               Test the rules by generating various reports.
+  -vv                  Verbose mode.
 """ % SYMLINK_NAME)
 def tc(provider=None, env=None, **kwargs):
     """
@@ -555,31 +552,34 @@ usage: enos info [-e ENV|--env=ENV]
 Show information of the `ENV` deployment.
 
 Options:
-  -e ENV --env=ENV  Path to the environment directory. You should
-                    use this option when you want to link a specific
-                    experiment [default: %s].
+  -e ENV --env=ENV     Path to the environment directory. You should
+                       use this option when you want to link a specific
+                       experiment [default: %s].
 """ % SYMLINK_NAME)
 def info(env=None, **kwargs):
     pprint.pprint(env)
 
 
 @enostask("""
-usage: enos destroy [-e ENV|--env=ENV] [--provider=PROVIDER]
+usage: enos destroy [-e ENV|--env=ENV] [--provider=PROVIDER] [-s|--silent|-vv]
 
 Options:
-  -e ENV --env=ENV  Path to the environment directory. You should
-                    use this option when you want to link a specific
-                    experiment [default: %s].
+  -e ENV --env=ENV     Path to the environment directory. You should
+                       use this option when you want to link a specific
+                       experiment [default: %s].
   -h --help            Show this help message.
   --provider=PROVIDER  The provider name [default: G5k].
+  -s --silent          Quiet mode.
+  -vv                  Verbose mode.
 """)
 def destroy(provider=None, env=None, **kwargs):
     provider.destroy(CALL_PATH, env)
 
 
 @enostask("""
-usage: enos deploy [-f CONFIG_PATH] [--force-deploy]
-                   [--provider=PROVIDER] [-e ENV|--env=ENV]
+usage: enos deploy [-e ENV|--env=ENV] [-f CONFIG_PATH] [--force-deploy]
+                   [--provider=PROVIDER] [-s|--silent|-vv]
+
 
 Shortcut for enos up, then enos os, and finally enos config.
 
@@ -591,6 +591,8 @@ Options:
                        deployment [default: ./reservation.yaml].
   --force-deploy       Force deployment [default: False].
   --provider=PROVIDER  The provider name [default: G5k].
+  -s --silent          Quiet mode.
+  -vv                  Verbose mode.
 """)
 def deploy(**kwargs):
     # --reconfigure and --tags can not be provided in 'deploy'
