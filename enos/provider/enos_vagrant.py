@@ -29,6 +29,10 @@ SIZES = {
     'large': {
         'cpu': 4,
         'mem': 4096
+    },
+    'extra-large': {
+        'cpu': 6,
+        'mem': 6144
     }
 }
 
@@ -89,9 +93,10 @@ class Enos_vagrant(Provider):
                             quiet_stderr=False)
         if force_deploy:
             v.destroy()
-        v.up()
+        # NOTE(matrohon) : force no parallel provisionning since it fails with
+        # libvrit/hostmanager plugins for vagrant
+        v._call_vagrant_command(['up', '--no-parallel'])
         v.provision()
-
         # Distribute the machines according to the resource/topology
         # specifications
         r = build_roles(
