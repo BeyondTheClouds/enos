@@ -185,11 +185,17 @@ def install_os(env=None, **kwargs):
         'neutron_external_address':   pop_ip(env),
         'network_interface':          env['eths'][NETWORK_IFACE],
         'kolla_internal_vip_address': env['config']['vip'],
-        'neutron_external_interface': env['eths'][EXTERNAL_IFACE]
+        'neutron_external_interface': env['eths'][EXTERNAL_IFACE],
+        'influx_vip':                 env['config']['influx_vip'],
+        'kolla_ref':                  env['config']['kolla_ref']
     }
+    if 'enable_monitoring' in env['config']:
+        generated_kolla_vars['enable_monitoring'] = \
+                env['config']['enable_monitoring']
     generate_kolla_files(env['config']["kolla"],
                          generated_kolla_vars,
                          env['resultdir'])
+
 
     # Clone or pull Kolla
     kolla_path = os.path.join(env['resultdir'], 'kolla')
