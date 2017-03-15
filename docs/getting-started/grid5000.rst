@@ -1,3 +1,5 @@
+.. _grid5000:
+
 Grid'5000
 =========
 
@@ -89,4 +91,3 @@ of your reservation. In the case of an interactive deployment :
     node) source venv/bin/activate
     node) <edit configuration>
     node) python -m enos.enos deploy
-

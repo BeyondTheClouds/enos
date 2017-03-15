@@ -157,6 +157,35 @@ class TestBuildRoles(unittest.TestCase):
         self.assertListEqual(sorted(roles["grp2"] + roles["grp3"]), sorted(roles["compute"]))
 
 
+class TestMakeProvider(unittest.TestCase):
+
+    # TODO: test raises error
+    def __provider_env(self, provider_name):
+        "Returns env with a provider key"
+        return {"config": {"provider": provider_name}}
+
+    def __provider_env_ext(self, provider_name):
+        "Returns env with an extended provider key that may include options"
+        return {"config": {"provider": {"type": provider_name}}}
+
+    def test_make_g5k(self):
+        "Tests the creation of G5k provider"
+        from enos.provider.g5k import G5k
+        self.assertIsInstance(make_provider(self.__provider_env('g5k')), G5k)
+        self.assertIsInstance(make_provider(self.__provider_env_ext('g5k')), G5k)
+
+    def test_make_vbox(self):
+        "Tests the creation of Vbox provider"
+        from enos.provider.vbox import Vbox
+        self.assertIsInstance(make_provider(self.__provider_env('vbox')), Vbox)
+        self.assertIsInstance(make_provider(self.__provider_env_ext('vbox')), Vbox)
+
+    def test_make_unexist(self):
+        "Tests the raise of error for unknown/unloaded provider"
+        with self.assertRaises(ImportError):
+            make_provider(self.__provider_env('unexist'))
+
+
+
 if __name__ == '__main__':
     unittest.main()
-

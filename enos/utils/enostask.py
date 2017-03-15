@@ -59,7 +59,6 @@ def save_env(env):
 def enostask(doc):
     """Decorator for a Enos Task.
 
-
     This decorator lets you define a new enos task and helps you
     manage the environment.
 
@@ -69,16 +68,6 @@ def enostask(doc):
 
         @wraps(fn)
         def decorated(*args, **kwargs):
-            if '--provider' in kwargs:
-                provider_name = kwargs['--provider']
-                package_name = '.'.join([
-                    'enos.provider',
-                    provider_name.lower()])
-                class_name = provider_name.capitalize()
-                module = __import__(package_name, fromlist=[class_name])
-                klass = getattr(module, class_name)
-                kwargs['provider'] = klass()
-
             # Constructs the environment
             kwargs['env'] = make_env(kwargs['--env'])
             # If no directory is provided, set the default one

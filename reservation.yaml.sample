@@ -1,9 +1,13 @@
 ---
 # ############################################### #
-# Grid'5000 reservation parameters                #
+# Enos Configuration File                         #
 # ############################################### #
 
 name: OpenStack/Discovery-Enos2
+
+# Resources Provider. Values are: g5k, vbox
+provider: "g5k"
+
 walltime: "2:00:00"
 
 resources:
@@ -36,7 +40,6 @@ registry:
   ceph_keyring: /home/discovery/.ceph/ceph.client.discovery.keyring
   ceph_id: discovery
   ceph_rbd: discovery_kolla_registry/datas
-
 
 # ############################################### #
 # Kolla parameteres                               #

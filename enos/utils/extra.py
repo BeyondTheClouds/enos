@@ -389,3 +389,26 @@ def _build_indexes(resources):
             s.extend(list(indexes))
             all_indexes.append(s)
     return all_indexes
+
+
+def make_provider(env):
+    """Instantiates the provider.
+
+    Seeks into the configuration for the `provider` value. The value
+    SHOULD be, either a *string*, or a *dictionary with a `type` key*
+    that gives the provider name. Then used this value to instantiate
+    and return the provider.
+
+    """
+    provider_name = env['config']['provider']['type']\
+                    if 'type' in env['config']['provider']\
+                    else env['config']['provider']
+
+    package_name = '.'.join(['enos.provider', provider_name.lower()])
+    class_name = provider_name.capitalize()
+    module = __import__(package_name, fromlist=[class_name])
+    klass = getattr(module, class_name)
+
+    logging.info("Loaded provider %s", module)
+
+    return klass()
