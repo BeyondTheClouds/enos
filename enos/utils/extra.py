@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
-from ansible.executor.playbook_executor import PlaybookExecutor
+from constants import TEMPLATE_DIR
+
 from ansible.inventory import Inventory
+from collections import namedtuple
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
-from collections import namedtuple
-from constants import TEMPLATE_DIR
+from ansible.executor.playbook_executor import PlaybookExecutor
 from itertools import groupby
-from netaddr import IPRange
-from subprocess import call
 
+from netaddr import IPRange
+
+from subprocess import call
 import jinja2
-import logging
 import os
-import re
 import yaml
+import logging
+import re
 
 # These roles are mandatory for the
 # the original inventory to be valid
@@ -42,7 +44,9 @@ def run_ansible(playbooks, inventory_path, extra_vars={}, tags=None):
         variable_manager.extra_vars = extra_vars
 
     passwords = {}
-
+    # NOTE(msimonin): The ansible api is "low level" in the
+    # sense that we are redefining here all the default values
+    # that are usually enforce by ansible called from the cli
     Options = namedtuple('Options', ['listtags', 'listtasks',
                                      'listhosts', 'syntax',
                                      'connection', 'module_path',
@@ -53,17 +57,17 @@ def run_ansible(playbooks, inventory_path, extra_vars={}, tags=None):
                                      'scp_extra_args', 'become',
                                      'become_method', 'become_user',
                                      'remote_user', 'verbosity',
-                                     'check', 'tags'])
+                                     'check', 'tags', 'pipelining'])
 
     options = Options(listtags=False, listtasks=False,
                       listhosts=False, syntax=False, connection='ssh',
                       module_path=None, forks=100,
                       private_key_file=None, ssh_common_args=None,
                       ssh_extra_args=None, sftp_extra_args=None,
-                      scp_extra_args=None, become=False,
-                      become_method=None, become_user=None,
-                      remote_user=None, verbosity=None, check=False,
-                      tags=tags)
+                      scp_extra_args=None, become=None,
+                      become_method='sudo', become_user='root',
+                      remote_user=None, verbosity=2, check=False,
+                      tags=tags, pipelining=True)
 
     for path in playbooks:
         logging.info("Running playbook %s with vars:\n%s" % (path, extra_vars))
@@ -112,7 +116,8 @@ def render_template(template_name, vars, output_path):
 
 
 def generate_inventory(roles, base_inventory, dest):
-    """Generate the inventory.
+    """
+    Generate the inventory.
     It will generate a group for each role in roles and
     concatenate them with the base_inventory file.
     The generated inventory is written in dest
@@ -135,20 +140,30 @@ def generate_inventory_string(n, role):
     if n.keyfile is not None:
         i.append("ansible_ssh_private_key_file=%s" % n.keyfile)
     common_args = ["-o StrictHostKeyChecking=no"]
+    forward_agent = n.extra.get('forward_agent', False)
+    if forward_agent:
+        common_args.append("-o ForwardAgent=yes")
+
     gateway = n.extra.get('gateway', None)
     if gateway is not None:
         proxy_cmd = ["ssh -W %h:%p"]
         proxy_cmd.append("-o StrictHostKeyChecking=no")
         gateway_user = n.extra.get('gateway_user', n.user)
-        if gateway_user:
+        if gateway_user is not None:
             proxy_cmd.append("-l %s" % gateway_user)
+
         proxy_cmd.append(gateway)
         proxy_cmd = " ".join(proxy_cmd)
         common_args.append("-o ProxyCommand=\"%s\"" % proxy_cmd)
+
     common_args = " ".join(common_args)
     i.append("ansible_ssh_common_args='%s'" % common_args)
     i.append("g5k_role=%s" % role)
 
+    # Add custom variables
+    for k, v in n.extra.items():
+        if k not in ["gateway", "gateway_user", "forward_agent"]:
+            i.append("%s=%s" % (k, v))
     return " ".join(i)
 
 
@@ -212,7 +227,8 @@ def generate_kolla_files(config_vars, kolla_vars, directory):
 
 
 def to_abs_path(path):
-    """if set, path is considered relative to the current working directory
+    """
+    if set, path is considered relative to the current working directory
     if not just fail
     Note: this does not check the existence
     """
@@ -223,13 +239,14 @@ def to_abs_path(path):
 
 
 def build_resources(topology):
-    """Build the resource list
+    """
+    Build the resource list
     For now we are just aggregating all the resources
     This could be part of a flat resource builder
     """
 
     def merge_add(cluster_roles, roles):
-        """Merge two dicts, sum the values"""
+        """ merge two dicts, sum the values"""
         for role, nb in roles.items():
             cluster_roles.setdefault(role, 0)
             cluster_roles[role] = cluster_roles[role] + nb
@@ -243,7 +260,8 @@ def build_resources(topology):
 
 
 def expand_groups(grp):
-    """Expand group names.
+    """
+    Expand group names.
     e.g:
         * grp[1-3] -> [grp1, grp2, grp3]
         * grp1 -> [grp1]
@@ -271,6 +289,12 @@ def expand_topology(topology):
 def pop_ip(env=None):
     "Picks an ip from env['provider_net']."
     # Construct the pool of ips
+    extra_ips = env['provider_net'].get('extra_ips', [])
+    if len(extra_ips) > 0:
+        ip = extra_ips.pop()
+        env['provider_net']['extra_ips'] = extra_ips
+        return ip
+
     ips = list(IPRange(env['provider_net']['start'],
                        env['provider_net']['end']))
 
@@ -411,7 +435,7 @@ def make_provider(env):
     provider_name = env['config']['provider']['type']\
                     if 'type' in env['config']['provider']\
                     else env['config']['provider']
-    if provider_name == "vagrant":
+    if provider_name == "vagrant" :
         provider_name = "enos_vagrant"
     package_name = '.'.join(['enos.provider', provider_name.lower()])
     class_name = provider_name.capitalize()
