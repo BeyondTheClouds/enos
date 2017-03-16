@@ -28,7 +28,8 @@ setup(
         'python-dateutil==2.2',
         'python-neutronclient==6.1.0',
         'python-openstackclient>=3.0.0,<=4.0.0',
-        'python-vagrant==0.5.14'
+        'python-vagrant==0.5.14',
+#        'python-blazarclient==0.2.0'
     ],
     entry_points={'console_scripts': ['enos = enos.enos:main']},
     include_package_data=True

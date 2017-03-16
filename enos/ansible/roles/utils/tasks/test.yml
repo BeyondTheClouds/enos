@@ -1,22 +1,21 @@
 ---
-- name: Adding flent repository
-  apt_repository:
-    repo: deb http://download.opensuse.org/repositories/home:/tohojo:/flent/Debian_8.0/ /
-    state: present
+- include: "setup_flent_{{ ansible_distribution }}.yml"
 
-- name: Installing flent
+- name: Installing flent/netperf
   apt:
-    name: flent
+    name: "{{ item }}"
     allow_unauthenticated: yes
-    update_cache: true
+  with_items:
+    - flent
+    - netperf
 
 - name: Installing fping
-  apt: 
+  apt:
    name: fping
    update_cache: true
 
 - name: Uploading the host list
-  template: 
+  template:
     src: hosts.txt.j2
     dest: /tmp/hosts
 
@@ -29,8 +28,17 @@
     dest: "/{{ tc_output_dir }}/{{ inventory_hostname }}.out"
     flat: yes
 
+- debug: msg="flent tcp_upload -l 5 -H {{ hostvars[item]['ansible_' + network_interface ]['ipv4']['address']   }} -f stats -o /tmp/tcp_upload_{{ inventory_hostname }}_{{ item  }}.stats || true 2>/dev/null"
+  when: inventory_hostname == groups.all[0]
+  with_items: "{{ groups.all }}"
+
+
 - name: Running flent (tcp_upload)
   shell: "flent tcp_upload -l 5 -H {{ hostvars[item]['ansible_' + network_interface ]['ipv4']['address']   }} -f stats -o /tmp/tcp_upload_{{ inventory_hostname }}_{{ item  }}.stats || true 2>/dev/null"
+  when: inventory_hostname == groups.all[0]
+  with_items: "{{ groups.all }}"
+
+- debug: msg="/tmp/tcp_upload_{{ inventory_hostname }}_{{ item  }}.stats"
   when: inventory_hostname == groups.all[0]
   with_items: "{{ groups.all }}"
 

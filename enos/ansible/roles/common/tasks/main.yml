@@ -1,4 +1,18 @@
 ---
+- name: Installing dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - apt-transport-https
+    - python-setuptools
+    - ca-certificates
+
+- easy_install:
+    name: pip
+    state: latest
+
 - name: Adding Docker apt key
   apt_key: keyserver=hkp://p80.pool.sks-keyservers.net:80 id=58118E89F3A912897C070ADBF76221572C52609D
 
@@ -17,7 +31,7 @@
     dest: /etc/systemd/system/docker.service
 
 # NOTE(msimonin): ansible 2.2 introduces a systemctl module
-# But we need to wait until 
+# But we need to wait until
 # https://github.com/BeyondTheClouds/enos/issues/41
 - name: Restart docker daemon
   command: systemctl daemon-reload
@@ -28,10 +42,10 @@
 - name: Mount /run
   command: mount --make-shared /run
 
-# NOTE(msimonin): 
-# freezing the version is due to 
+# NOTE(msimonin):
+# freezing the version is due to
 # see https://github.com/ansible/ansible/issues/17495
 - name: Install docker-py
-  pip: 
+  pip:
     name: docker-py
     version: 1.7.0
