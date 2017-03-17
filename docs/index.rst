@@ -6,6 +6,11 @@
 Welcome to Enos's documentation!
 ================================
 
+.. hint ::
+
+   The source code is available at
+   https://github.com/BeyondTheClouds/enos
+
 Enos deploys OpenStack and targets reproducible experiments. It allows easy:
 
 * deployment of the system

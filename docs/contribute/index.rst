@@ -1,14 +1,17 @@
 Contribute
 ==========
 
-All contributions are welcome :
+All contributions are welcome on `BeyondTheClouds/enos`_:
 
 * Feedbacks, bugs
 * New use cases
 * Bugs fixes
 * :doc:`new-provider`
 
-Please use the GitHub issue tracker.
+Please use the `GitHub issue tracker`_.
+
+.. _BeyondTheClouds/enos: https://github.com/BeyondTheClouds/enos
+.. _GitHub issue tracker: https://github.com/BeyondTheClouds/enos/issues
 
 Running the tests
 -----------------
