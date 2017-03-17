@@ -1,10 +1,14 @@
 ---
 # ############################################### #
-# Grid'5000 reservation parameters                #
+# Enos Configuration File                         #
 # ############################################### #
 
 name: OpenStack/Discovery-Enos2
-walltime: "06:00:00"
+
+# Resources Provider. Values are: g5k, vbox
+provider: g5k
+
+walltime: "2:00:00"
 
 # Define a set of groups
 # The `resources` description will be overwritten by the

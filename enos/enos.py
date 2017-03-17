@@ -34,8 +34,8 @@ command.
 from utils.constants import (SYMLINK_NAME, TEMPLATE_DIR, ANSIBLE_DIR,
                              NETWORK_IFACE, EXTERNAL_IFACE, VERSION)
 from utils.extra import (run_ansible, generate_inventory,
-                         generate_kolla_files, to_abs_path,
-                         pop_ip)
+                         generate_kolla_files, to_abs_path, pop_ip,
+                         make_provider)
 
 from utils.network_constraints import (build_grp_constraints,
                                        build_ip_constraints)
@@ -59,8 +59,7 @@ CALL_PATH = os.getcwd()
 
 @enostask("""
 usage: enos up  [-e ENV|--env=ENV][-f CONFIG_PATH] [--force-deploy]
-                [--provider=PROVIDER] [-t TAGS|--tags=TAGS]
-                [-s|--silent|-vv]
+                [-t TAGS|--tags=TAGS] [-s|--silent|-vv]
 
 Get resources and install the docker registry.
 
@@ -72,13 +71,12 @@ Options:
                        deployment [default: ./reservation.yaml].
   -h --help            Show this help message.
   --force-deploy       Force deployment [default: False].
-  --provider=PROVIDER  The provider name [default: G5k].
   -s --silent          Quiet mode.
   -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
   -vv                  Verbose mode.
 
 """)
-def up(provider=None, env=None, **kwargs):
+def up(env=None, **kwargs):
     logging.debug('phase[up]: args=%s' % kwargs)
 
     # Generates a directory for results
@@ -123,6 +121,7 @@ def up(provider=None, env=None, **kwargs):
         sys.exit(1)
 
     # Calls the provider and initialise resources
+    provider = make_provider(env)
     rsc, provider_net, eths = \
         provider.init(env['config'], CALL_PATH, kwargs['--force-deploy'])
 
@@ -478,7 +477,7 @@ Options:
   --test               Test the rules by generating various reports.
   -vv                  Verbose mode.
 """ % SYMLINK_NAME)
-def tc(provider=None, env=None, **kwargs):
+def tc(env=None, **kwargs):
     """
     Enforce network constraints
     1) Retrieve the list of ips for all nodes (ansible)
@@ -561,25 +560,24 @@ def info(env=None, **kwargs):
 
 
 @enostask("""
-usage: enos destroy [-e ENV|--env=ENV] [--provider=PROVIDER] [-s|--silent|-vv]
+usage: enos destroy [-e ENV|--env=ENV] [-s|--silent|-vv]
 
 Options:
   -e ENV --env=ENV     Path to the environment directory. You should
                        use this option when you want to link a specific
                        experiment [default: %s].
   -h --help            Show this help message.
-  --provider=PROVIDER  The provider name [default: G5k].
   -s --silent          Quiet mode.
   -vv                  Verbose mode.
 """)
-def destroy(provider=None, env=None, **kwargs):
+def destroy(env=None, **kwargs):
+    provider = make_provider(env)
     provider.destroy(CALL_PATH, env)
 
 
 @enostask("""
 usage: enos deploy [-e ENV|--env=ENV] [-f CONFIG_PATH] [--force-deploy]
-                   [--provider=PROVIDER] [-s|--silent|-vv]
-
+                   [-s|--silent|-vv]
 
 Shortcut for enos up, then enos os, and finally enos config.
 
@@ -590,7 +588,6 @@ Options:
   -f CONFIG_PATH       Path to the configuration file describing the
                        deployment [default: ./reservation.yaml].
   --force-deploy       Force deployment [default: False].
-  --provider=PROVIDER  The provider name [default: G5k].
   -s --silent          Quiet mode.
   -vv                  Verbose mode.
 """)

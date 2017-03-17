@@ -1,3 +1,5 @@
+.. _vbox:
+
 Virtualbox
 ==========
 
@@ -50,6 +52,7 @@ example the following is a valid resources description :
 
 
 .. code-block:: bash
+    provider: "vbox"
 
     resources:
       medium:
@@ -64,8 +67,8 @@ The list of the sizes may be found `here
 Deployment
 -----------
 
-To launch the deployment, run: 
+To launch the deployment, run:
 
 .. code-block:: bash
 
-    python -m enos.enos deploy --provider=vbox
+    python -m enos.enos deploy

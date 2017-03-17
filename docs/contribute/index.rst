@@ -5,8 +5,8 @@ All contributions are welcome :
 
 * Feedbacks, bugs
 * New use cases
-* New providers
 * Bugs fixes
+* :doc:`new-provider`
 
 Please use the GitHub issue tracker.
 
