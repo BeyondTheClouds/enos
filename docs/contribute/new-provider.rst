@@ -23,11 +23,12 @@ reservations file. So a provider can access the resource description
 with:
 
 .. code-block:: python
+
    rsc = config['resources']
 
    # Use rsc to book resources ...
 
-At the end of the ``init`` the provider should return a list of hosts
+At the end of the ``init``, the provider should return a list of hosts
 that Enos can SSH on, together with a pool of available IP for
 OpenStack Network.
 
@@ -54,6 +55,7 @@ in the ``reservation.yaml``. For instance, based on the following
 reservation file,
 
 .. code-block:: yaml
+
    provider: "my-provider"
 
 Enos seeks for a file called ``my-provider.py`` into ``enos/provider``
@@ -63,6 +65,7 @@ information is to put it under the provider key. In this case, the
 provider name should be accessible throughout the ``type`` key:
 
 .. code-block:: yaml
+
    provider:
      type: "my-provider"
      extra-var: ...
