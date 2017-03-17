@@ -52,6 +52,7 @@ example the following is a valid resources description :
 
 
 .. code-block:: bash
+
     provider: "vbox"
 
     resources:
