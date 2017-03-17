@@ -61,13 +61,18 @@ class Vbox(Provider):
         for size, roles in self.config['resources'].items():
             for role, nb in roles.items():
                 for i in range(nb):
+                    ip1 = str(net_pools['ip1'].pop())
+                    _, _, _, name = ip1.split('.')
                     machines.append({
                         'role': role,
-                        'name': "%s-%s" % (role, i),
+                        # NOTE(matrohon): don't base the name of the VM on its
+                        # role, build_roles will then set the final role of
+                        # each VM
+                        'name': name,
                         'size': size,
                         'cpu': SIZES[size]['cpu'],
                         'mem': SIZES[size]['mem'],
-                        'ip1': str(net_pools['ip1'].pop()),
+                        'ip1': ip1,
                         'ip2': str(net_pools['ip2'].pop()),
                         'ip3': str(net_pools['ip3'].pop()),
                         })
