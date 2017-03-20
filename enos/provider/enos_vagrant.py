@@ -7,8 +7,8 @@ from ..utils.extra import build_resources, expand_topology, build_roles
 from execo import Host
 
 import logging
-import vagrant
 import os
+import vagrant
 
 SIZES = {
     'tiny': {
@@ -34,9 +34,9 @@ SIZES = {
 }
 
 
-class Vbox(Provider):
+class Enos_vagrant(Provider):
     def init(self, config, calldir, force_deploy=False):
-        """python -m enos.enos up --provider=vbox
+        """python -m enos.enos up
         Read the resources in the configuration files.  Resource claims must be
         grouped by sizes according to the predefined SIZES map.
         """

@@ -403,9 +403,11 @@ def make_provider(env):
     provider_name = env['config']['provider']['type']\
                     if 'type' in env['config']['provider']\
                     else env['config']['provider']
-
+    if provider_name == "vagrant" :
+        provider_name = "enos_vagrant"
     package_name = '.'.join(['enos.provider', provider_name.lower()])
     class_name = provider_name.capitalize()
+
     module = __import__(package_name, fromlist=[class_name])
     klass = getattr(module, class_name)
 

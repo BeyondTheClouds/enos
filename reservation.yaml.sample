@@ -5,7 +5,7 @@
 
 name: OpenStack/Discovery-Enos2
 
-# Resources Provider. Values are: g5k, vbox
+# Resources Provider. Values are: g5k, vagrant
 provider: "g5k"
 
 walltime: "2:00:00"
