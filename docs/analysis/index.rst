@@ -23,20 +23,16 @@ TODO
 Annotations
 -----------
 
-Enos embeds an Ansible plugin to add annotations in Grafana's graphs.
+Enos embeds an Ansible plugin to add annotations in Grafana.
 These annotations are marked points which provide rich information about events
-when hovered over. To enable this option, the plugin must be loaded and the
-monitoring stack must be deployed (i.e. ``enable_monitoring: true`` should be
-set in the configuration file).
+when hovered over.
+Enos uses the ``ansible.cfg`` file that loads the plugin. The plugin can be
+disabled by editing the line ``callback_whitelist = influxdb_events`` in the
+``ansible.cfg``. Note also that the plugin is automaticaly disabled when
+the monitoring tools are not deployed (i.e. when `enable_monitoring = false`
+is set in the configuration file).
 
-To enable the plugin, the ``ANSIBLE_CONFIG`` environment variable should be set
-to an ``ansible.cfg`` which loads the plugin. To that end, Enos can be called
-this way: ``ANSIBLE_CONFIG="./enos/ansible.cfg" python -m enos.enos deploy``,
-or you can export the variable for more convenience (more information about
-``ansible.cfg`` can be found `here
-<http://docs.ansible.com/ansible/intro_configuration.html>`_).
-
-Then, a compatible dashboard must be used in Grafana to display
-annotations. An example of such dashboard is available `here
+Once the deployment is finished, a compatible dashboard must be used in Grafana
+to display annotations. An example of such dashboard is available `here
 <https://github.com/BeyondTheClouds/kolla-g5k-results/blob/master/files/grafana/dashboard_annotations.json>`_.
 
