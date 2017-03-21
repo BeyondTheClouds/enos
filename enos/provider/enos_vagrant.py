@@ -40,7 +40,7 @@ SIZES = {
 class Enos_vagrant(Provider):
     def init(self, config, calldir, force_deploy=False):
         """python -m enos.enos up
-        Read the resources in the configuration files.  Resource claims must be
+        Read the resources in the configuration files. Resource claims must be
         grouped by sizes according to the predefined SIZES map.
         """
         self.config = config
@@ -88,14 +88,20 @@ class Enos_vagrant(Provider):
         with open(vagrantfile_path, 'w') as f:
             f.write(vagrantfile)
 
+        # Build env for Vagrant with a copy of env variables (needed by
+        # subprocess opened by vagrant
+        v_env = dict(os.environ)
+        if 'option' in config['provider'] and \
+            config['provider']['option'] in ['vbox','libvirt']:
+            v_env['VAGRANT_DEFAULT_PROVIDER'] = config['provider']['option']
+
         v = vagrant.Vagrant(root=calldir,
                             quiet_stdout=False,
-                            quiet_stderr=False)
+                            quiet_stderr=False,
+                            env=v_env)
         if force_deploy:
             v.destroy()
-        # NOTE(matrohon) : force no parallel provisionning since it fails with
-        # libvrit/hostmanager plugins for vagrant
-        v._call_vagrant_command(['up', '--no-parallel'])
+        v.up()
         v.provision()
         # Distribute the machines according to the resource/topology
         # specifications
