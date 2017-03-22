@@ -1,10 +1,10 @@
 .. _new-provider:
 
-New provider
-============
+Write a new provider
+====================
 
-The actual implementation gives two providers: :doc:`grid5000` and
-:doc:`vbox`. If you want to support another testbed, then implementing
+The actual implementation gives two providers: :ref:`grid5000` and
+:ref:`vbox`. If you want to support another testbed, then implementing
 a new one is easy as 500 lines of Python code.
 
 The new provider should follow the `provider.py`_ interface which
