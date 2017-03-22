@@ -569,7 +569,7 @@ Options:
   -h --help            Show this help message.
   -s --silent          Quiet mode.
   -vv                  Verbose mode.
-""")
+""" % SYMLINK_NAME)
 def destroy(env=None, **kwargs):
     provider = make_provider(env)
     provider.destroy(CALL_PATH, env)
