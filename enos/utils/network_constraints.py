@@ -117,19 +117,19 @@ def build_ip_constraints(rsc, ips, constraints):
             # one possible source
             # Get all the active devices for this source
             active_devices = filter(lambda x: x["active"],
-                                    local_ips[s.address]['devices'])
+                                    local_ips[s.alias]['devices'])
             # Get only the name of the active devices
             sdevices = map(lambda x: x['device'], active_devices)
             for sdevice in sdevices:
                 # one possible device
                 for d in rsc[gdst]:
                     # one possible destination
-                    dallips = local_ips[d.address]['all_ipv4_addresses']
+                    dallips = local_ips[d.alias]['all_ipv4_addresses']
                     # Let's keep docker bridge out of this
                     dallips = filter(lambda x: x != '172.17.0.1', dallips)
                     for dip in dallips:
-                        local_ips[s.address].setdefault('tc', []).append({
-                                'source': s.address,
+                        local_ips[s.alias].setdefault('tc', []).append({
+                                'source': s.alias,
                                 'target': dip,
                                 'device': sdevice,
                                 'delay': gdelay,

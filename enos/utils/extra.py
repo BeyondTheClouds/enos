@@ -128,6 +128,31 @@ def generate_inventory(roles, base_inventory, dest):
 
     logging.info("Inventory file written to " + dest)
 
+def generate_inventory_string(n, role):
+    i = [n.alias, "ansible_host=%s" % n.address]
+    if n.user is not None:
+        i.append("ansible_ssh_user=%s" % n.user)
+    if n.port is not None:
+        i.append("ansible_port=%s" % n.port)
+    if n.keyfile is not None:
+        i.append("ansible_ssh_private_key_file=%s" % n.keyfile)
+    common_args = ["-o StrictHostKeyChecking=no"]
+    gateway = n.extra.get('gateway', None)
+    if gateway is not None:
+        proxy_cmd = ["ssh -W %h:%p"]
+        proxy_cmd.append("-o StrictHostKeyChecking=no")
+        gateway_user = n.extra.get('gateway_user', n.user)
+        if gateway_user:
+            proxy_cmd.append("-l %s" % gateway_user)
+        proxy_cmd.append(gateway)
+        proxy_cmd = " ".join(proxy_cmd)
+        common_args.append("-o ProxyCommand=\"%s\"" % proxy_cmd)
+    common_args = " ".join(common_args)
+    i.append("ansible_ssh_common_args='%s'" % common_args)
+    i.append("g5k_role=%s" % role)
+
+    return " ".join(i)
+
 
 def to_ansible_group_string(roles):
     """Transform a role list (oar) to an ansible list of groups (inventory)
@@ -146,18 +171,6 @@ def to_ansible_group_string(roles):
     [role2]
     n4
     """
-
-    def generate_inventory_string(n, role):
-        i = [n.address, "ansible_ssh_user=root"]
-        if n.port is not None:
-            i.append("ansible_port=%s" % n.port)
-        if n.keyfile is not None:
-            i.append("ansible_ssh_private_key_file=%s" % n.keyfile)
-        # extra
-        i.append("ansible_ssh_common_args=\"-o StrictHostKeyChecking=no\"")
-        i.append("g5k_role=%s" % role)
-        return " ".join(i)
-
     inventory = []
     mandatory = [group for group in KOLLA_MANDATORY_GROUPS
                        if group not in roles.keys()]

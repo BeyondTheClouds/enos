@@ -1,6 +1,6 @@
 import unittest
 from enos.utils.network_constraints import *
-from execo.host import Host
+from enos.provider.host import Host
 
 class TestExpandDescription(unittest.TestCase):
 
