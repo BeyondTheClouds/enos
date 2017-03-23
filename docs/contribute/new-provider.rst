@@ -4,8 +4,8 @@ Write a new provider
 ====================
 
 The actual implementation gives two providers: :ref:`grid5000` and
-:ref:`vbox`. If you want to support another testbed, then implementing
-a new one is easy as 500 lines of Python code.
+:ref:`vagrant-provider`. If you want to support another testbed, 
+then implementing a new one is easy as 500 lines of Python code.
 
 The new provider should follow the `provider.py`_ interface which
 consists in four methods: ``init``, ``destroy``, ``before_preintsall``

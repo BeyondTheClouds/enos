@@ -4,7 +4,7 @@ Analysis
 Real-time
 ---------
 
-Setting ``enable_monitoring: true`` in the configuration file will deploy a monitoring stack composed of :
+Setting ``enable_monitoring: true`` in the configuration file will deploy a monitoring stack composed of:
 
 * Cadvisor and Collectd agents
 * InfluxDB for metrics collection
