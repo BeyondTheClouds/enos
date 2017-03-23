@@ -6,4 +6,4 @@ Getting Started tutorials
    :maxdepth: 2
 
    grid5000
-   vbox
+   vagrant

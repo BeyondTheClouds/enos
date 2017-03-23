@@ -9,7 +9,7 @@ limitations.
 
 Network constraints (latency/bandwidth limitations) are enabled by the use of
 groups of nodes. Resources *must* be described using a :code:`topology` description
-instead of a :code:`resources` description. The following example will define 4 groups named :code:`grp1`, :code:`grp2`, :code:`grp3` and :code:`grp4`  respectively :
+instead of a :code:`resources` description. The following example will define 4 groups named :code:`grp1`, :code:`grp2`, :code:`grp3` and :code:`grp4`  respectively:
 
 .. code-block:: yaml
 
@@ -50,7 +50,7 @@ Note that The machines must be available, thus the `up` phase must have been cal
 
 As a result 
 
-* the network delay between every machines of :code:`grp1` and the machines of the other groups will be 20ms (2x10ms : symetric)
+* the network delay between every machines of :code:`grp1` and the machines of the other groups will be 20ms (2x10ms: symetric)
 * the bandwidth between every machines of :code:`grp1` and the machines of the other groups will be 1 Gbit/s
 * the network delay between every machines of :code:`grp2` and :code:`grp3` (resp. :code:`grp2` and :code:`grp4`) (resp. :code:`grp3` and :code:`grp4`) will be 50ms
 * the bandwidth between every machines of :code:`grp2` and :code:`grp3` (resp. :code:`grp2` and :code:`grp4`) (resp. :code:`grp3` and :code:`grp4`) will be 100Mbit/s.
@@ -71,7 +71,7 @@ Notes
 -----
 
 * To disable the network constraints you can specify :code:`enable: false` under the :code:`network_constraints` key and launch again :code:`python -m enos.enos tc`.
-* To exclude a group from any tc rule, you can add an optionnal :code:`except` key to the :code:`network_constraints` : 
+* To exclude a group from any tc rule, you can add an optionnal :code:`except` key to the :code:`network_constraints`: 
 
 .. code-block:: yaml
 

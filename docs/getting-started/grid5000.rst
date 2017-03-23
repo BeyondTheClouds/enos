@@ -36,7 +36,7 @@ Configuration
 -------------
 
 To get started you can copy the sample configuration file and edit the resulting
-file :
+file:
 
 .. code-block:: bash
 
@@ -57,7 +57,7 @@ The relevant configuration section looks like:
       ceph_rbd: rbd in the form "pool/rbd"
 
 The deployment makes use of a private docker registry configured as a
-mirror of the official docker registry. There are two modes :
+mirror of the official docker registry. There are two modes:
 
   * `ceph: false`. It will start a fresh registry that will cache the images
     for the duration of the experiment.
@@ -83,7 +83,7 @@ To launch the deployment, run:
 
 We suggest you to run the deployment from a dedicated node (especially for large
 deployment). For now the recommended way to do so is to reserve one node prior
-of your reservation. In the case of an interactive deployment :
+of your reservation. In the case of an interactive deployment:
 
 .. code-block:: bash
 

@@ -1,7 +1,7 @@
-.. _vbox:
+.. _vagrant-provider:
 
-Virtualbox
-==========
+Vagrant
+=======
 
 Installation
 ------------
@@ -39,7 +39,7 @@ Configuration
 -------------
 
 To get started you can copy the sample configuration file and edit the resulting
-file :
+file:
 
 .. code-block:: bash
 
@@ -47,12 +47,12 @@ file :
     $ <editor> reservation.yaml
 
 The provider relies on virtual machine sizes instead of cluster names. For
-example the following is a valid resources description :
+example the following is a valid resources description:
 
 
 .. code-block:: bash
 
-    provider: "vbox"
+    provider: "vagrant"
 
     resources:
       medium:
@@ -62,7 +62,7 @@ example the following is a valid resources description :
         compute:1
 
 The list of the sizes may be found `here
-<https://github.com/BeyondTheClouds/enos/blob/master/enos/provider/vbox.py#L14>`_:
+<https://github.com/BeyondTheClouds/enos/blob/master/enos/provider/enos_vagrant.py#L12>`_.
 
 Deployment
 -----------
