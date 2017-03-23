@@ -1,10 +1,9 @@
-from provider import Provider
-from jinja2 import Environment, FileSystemLoader
+from .host import Host
 from ipaddress import IPv4Network
+from jinja2 import Environment, FileSystemLoader
+from provider import Provider
 from ..utils.constants import TEMPLATE_DIR
 from ..utils.extra import build_resources, expand_topology, build_roles
-# NOTE(msimonin): we should get rid of this
-from execo import Host
 
 import logging
 import os
@@ -68,7 +67,7 @@ class Enos_vagrant(Provider):
                         # NOTE(matrohon): don't base the name of the VM on its
                         # role, build_roles will then set the final role of
                         # each VM
-                        'name': name,
+                        'name': "enos-%s" % name,
                         'size': size,
                         'cpu': SIZES[size]['cpu'],
                         'mem': SIZES[size]['mem'],
@@ -100,17 +99,19 @@ class Enos_vagrant(Provider):
                     machines,
                     lambda m: m['size'])
         roles = {}
-        # Prepare the roles to be returned to the framework using Host objects
-        # NOTE(msimonin): this could be avoided if we use an custom/augmented
-        # Host object in the first place instead of the Execo.Host one.
+
         for role, machines in r.items():
             roles.setdefault(role, [])
             for machine in machines:
                 keyfile = v.keyfile(vm_name=machine['name'])
-                roles[role].append(Host(machine['name'],
+                port = v.port(vm_name=machine['name'])
+                address = v.hostname(vm_name=machine['name'])
+                user = v.user(vm_name=machine['name'])
+                roles[role].append(Host(address,
+                                        alias=machine['name'],
                                         user='root',
+                                        port=port,
                                         keyfile=keyfile))
-        logging.info("-------")
         logging.info(roles)
         network = {
                 'cidr': '192.168.142.0/24',

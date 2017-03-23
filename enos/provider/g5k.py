@@ -1,24 +1,21 @@
 # -*- coding: utf-8 -*-
+from execo_g5k import api_utils as api
+from execo_g5k.api_utils import get_cluster_site
+from execo_g5k import OarSubmission
+from .host import Host
+from itertools import islice
+from netaddr import IPAddress, IPNetwork, IPSet
 from provider import Provider
 from ..utils.extra import build_resources, expand_topology, build_roles
 from ..utils.constants import EXTERNAL_IFACE
 
-import logging
-import sys
-
-# from string import Template
-# from execo import configuration
 import execo as EX
 import execo_g5k as EX5
-from execo_g5k import api_utils as api
-from execo_g5k.api_utils import get_cluster_site
-from execo_g5k import OarSubmission
-
-from itertools import islice
+import logging
 import operator
-from netaddr import IPAddress, IPNetwork, IPSet
-
 import pprint
+import sys
+
 
 ROLE_DISTRIBUTION_MODE_STRICT = "strict"
 DEFAULT_CONFIG = {
@@ -69,7 +66,7 @@ class G5k(Provider):
         # Retrieve necessary information for enos
         roles = build_roles(
                     self.config,
-                    self.deployed_nodes,
+                    map(lambda n: Host(n.address, user="root"), self.deployed_nodes),
                     lambda n: n.address.split('-')[0])
         network = self._get_network()
         network_interface, external_interface = \
@@ -115,7 +112,7 @@ class G5k(Provider):
         #
         # - name: Turning br0 up
         #   shell: ifconfig br0 up
-        nodes = sum(env['rsc'].values(), [])
+        nodes = map(lambda n: EX.Host(n.address), sum(env['rsc'].values(), []))
         if env['eths'][EXTERNAL_IFACE] == 'veth0':
             self._exec_command_on_nodes(
                     nodes,
@@ -138,15 +135,15 @@ class G5k(Provider):
         # compute node, but this is not necessarily. Nova could be
         # installed on whatever the user choose. For this reason it
         # will be a better strategy to parse the inventory file.
-        if 'compute' in env['rsc']:
-            self._exec_command_on_nodes(
-                env['rsc']['compute'],
-                'mkdir -p /tmp/nova ; mkdir -p /var/lib/nova',
-                'Creating nova directory in /tmp')
-            self._exec_command_on_nodes(
-                env['rsc']['compute'],
-                '(mount | grep /tmp/nova) || mount --bind /tmp/nova /var/lib/nova',
-                'Bind mount')
+        computes = map(lambda n: EX.Host(n.address), env['rsc'].get('compute', []))
+        self._exec_command_on_nodes(
+            computes,
+            'mkdir -p /tmp/nova ; mkdir -p /var/lib/nova',
+            'Creating nova directory in /tmp')
+        self._exec_command_on_nodes(
+            computes,
+            '(mount | grep /tmp/nova) || mount --bind /tmp/nova /var/lib/nova',
+            'Bind mount')
 
     def after_preintsall(self, env):
         pass

@@ -1,21 +1,19 @@
 # -*- coding: utf-8 -*-
-from constants import TEMPLATE_DIR
-
+from ansible.executor.playbook_executor import PlaybookExecutor
 from ansible.inventory import Inventory
-from collections import namedtuple
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
-from ansible.executor.playbook_executor import PlaybookExecutor
+from collections import namedtuple
+from constants import TEMPLATE_DIR
 from itertools import groupby
-
 from netaddr import IPRange
-
 from subprocess import call
+
 import jinja2
-import os
-import yaml
 import logging
+import os
 import re
+import yaml
 
 # These roles are mandatory for the
 # the original inventory to be valid
@@ -114,8 +112,7 @@ def render_template(template_name, vars, output_path):
 
 
 def generate_inventory(roles, base_inventory, dest):
-    """
-    Generate the inventory.
+    """Generate the inventory.
     It will generate a group for each role in roles and
     concatenate them with the base_inventory file.
     The generated inventory is written in dest
@@ -127,6 +124,32 @@ def generate_inventory(roles, base_inventory, dest):
                 f.write(line)
 
     logging.info("Inventory file written to " + dest)
+
+
+def generate_inventory_string(n, role):
+    i = [n.alias, "ansible_host=%s" % n.address]
+    if n.user is not None:
+        i.append("ansible_ssh_user=%s" % n.user)
+    if n.port is not None:
+        i.append("ansible_port=%s" % n.port)
+    if n.keyfile is not None:
+        i.append("ansible_ssh_private_key_file=%s" % n.keyfile)
+    common_args = ["-o StrictHostKeyChecking=no"]
+    gateway = n.extra.get('gateway', None)
+    if gateway is not None:
+        proxy_cmd = ["ssh -W %h:%p"]
+        proxy_cmd.append("-o StrictHostKeyChecking=no")
+        gateway_user = n.extra.get('gateway_user', n.user)
+        if gateway_user:
+            proxy_cmd.append("-l %s" % gateway_user)
+        proxy_cmd.append(gateway)
+        proxy_cmd = " ".join(proxy_cmd)
+        common_args.append("-o ProxyCommand=\"%s\"" % proxy_cmd)
+    common_args = " ".join(common_args)
+    i.append("ansible_ssh_common_args='%s'" % common_args)
+    i.append("g5k_role=%s" % role)
+
+    return " ".join(i)
 
 
 def to_ansible_group_string(roles):
@@ -146,18 +169,6 @@ def to_ansible_group_string(roles):
     [role2]
     n4
     """
-
-    def generate_inventory_string(n, role):
-        i = [n.address, "ansible_ssh_user=root"]
-        if n.port is not None:
-            i.append("ansible_port=%s" % n.port)
-        if n.keyfile is not None:
-            i.append("ansible_ssh_private_key_file=%s" % n.keyfile)
-        # extra
-        i.append("ansible_ssh_common_args=\"-o StrictHostKeyChecking=no\"")
-        i.append("g5k_role=%s" % role)
-        return " ".join(i)
-
     inventory = []
     mandatory = [group for group in KOLLA_MANDATORY_GROUPS
                        if group not in roles.keys()]
@@ -201,8 +212,7 @@ def generate_kolla_files(config_vars, kolla_vars, directory):
 
 
 def to_abs_path(path):
-    """
-    if set, path is considered relative to the current working directory
+    """if set, path is considered relative to the current working directory
     if not just fail
     Note: this does not check the existence
     """
@@ -213,14 +223,13 @@ def to_abs_path(path):
 
 
 def build_resources(topology):
-    """
-    Build the resource list
+    """Build the resource list
     For now we are just aggregating all the resources
     This could be part of a flat resource builder
     """
 
     def merge_add(cluster_roles, roles):
-        """ merge two dicts, sum the values"""
+        """Merge two dicts, sum the values"""
         for role, nb in roles.items():
             cluster_roles.setdefault(role, 0)
             cluster_roles[role] = cluster_roles[role] + nb
@@ -234,8 +243,7 @@ def build_resources(topology):
 
 
 def expand_groups(grp):
-    """
-    Expand group names.
+    """Expand group names.
     e.g:
         * grp[1-3] -> [grp1, grp2, grp3]
         * grp1 -> [grp1]
@@ -403,7 +411,7 @@ def make_provider(env):
     provider_name = env['config']['provider']['type']\
                     if 'type' in env['config']['provider']\
                     else env['config']['provider']
-    if provider_name == "vagrant" :
+    if provider_name == "vagrant":
         provider_name = "enos_vagrant"
     package_name = '.'.join(['enos.provider', provider_name.lower()])
     class_name = provider_name.capitalize()

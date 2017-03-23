@@ -1,10 +1,9 @@
-from extra import expand_groups
 import copy
+from extra import expand_groups
 
 
 def expand_description(desc):
-    """
-    Expand the description given the group names/patterns
+    """Expand the description given the group names/patterns
     e.g:
     {src: grp[1-3], dst: grp[4-6] ...} will generate 9 descriptions
     """
@@ -22,16 +21,14 @@ def expand_description(desc):
 
 
 def same(g1, g2):
-    """
-    Two network constraints are equals if they have the same
+    """Two network constraints are equals if they have the same
     sources and destinations
     """
     return g1['src'] == g2['src'] and g1['dst'] == g2['dst']
 
 
 def generate_default_grp_constraints(topology, network_constraints):
-    """
-    Generate default symetric grp constraints.
+    """Generate default symetric grp constraints.
     """
     default_delay = network_constraints.get('default_delay')
     default_rate = network_constraints.get('default_rate')
@@ -47,12 +44,12 @@ def generate_default_grp_constraints(topology, network_constraints):
             'delay': default_delay,
             'rate': default_rate
         } for grp1 in grps for grp2 in grps
-        if grp1 != grp2 and grp1 not in except_groups and grp2 not in except_groups]
+        if grp1 != grp2 and grp1 not in except_groups
+                                 and grp2 not in except_groups]
 
 
 def generate_actual_grp_constraints(network_constraints):
-    """
-    Generate the user specified constraints
+    """Generate the user specified constraints
     """
     if 'constraints' not in network_constraints:
         return []
@@ -72,8 +69,7 @@ def generate_actual_grp_constraints(network_constraints):
 
 
 def merge_constraints(constraints, overrides):
-    """
-    Merge the constraints avoiding duplicates
+    """Merge the constraints avoiding duplicates
     Change constraints in place.
     """
     for o in overrides:
@@ -87,8 +83,7 @@ def merge_constraints(constraints, overrides):
 
 
 def build_grp_constraints(topology, network_constraints):
-    """
-    Generate constraints at the group level,
+    """Generate constraints at the group level,
     It expands the group names and deal with symetric constraints.
     """
     # generate defaults constraints
@@ -103,8 +98,7 @@ def build_grp_constraints(topology, network_constraints):
 
 
 def build_ip_constraints(rsc, ips, constraints):
-    """
-    Generate the constraints at the ip/device level.
+    """Generate the constraints at the ip/device level.
     Those constraints are those used by ansible to enforce tc/netem rules.
     """
     local_ips = copy.deepcopy(ips)
@@ -117,19 +111,19 @@ def build_ip_constraints(rsc, ips, constraints):
             # one possible source
             # Get all the active devices for this source
             active_devices = filter(lambda x: x["active"],
-                                    local_ips[s.address]['devices'])
+                                    local_ips[s.alias]['devices'])
             # Get only the name of the active devices
             sdevices = map(lambda x: x['device'], active_devices)
             for sdevice in sdevices:
                 # one possible device
                 for d in rsc[gdst]:
                     # one possible destination
-                    dallips = local_ips[d.address]['all_ipv4_addresses']
+                    dallips = local_ips[d.alias]['all_ipv4_addresses']
                     # Let's keep docker bridge out of this
                     dallips = filter(lambda x: x != '172.17.0.1', dallips)
                     for dip in dallips:
-                        local_ips[s.address].setdefault('tc', []).append({
-                                'source': s.address,
+                        local_ips[s.alias].setdefault('tc', []).append({
+                                'source': s.alias,
                                 'target': dip,
                                 'device': sdevice,
                                 'delay': gdelay,

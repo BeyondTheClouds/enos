@@ -11,10 +11,6 @@ easy_install pip && ln -s /usr/local/bin /usr/bin/pip || true
 SCRIPT
 
 Vagrant.configure(2) do |config|
-  config.hostmanager.enabled = true
-  config.hostmanager.manage_host = true
-  config.hostmanager.manage_guest = true
-  config.hostmanager.ignore_private_ip = false
   config.vm.box = "debian/contrib-jessie64"
   config.vm.provision "shell", inline: $script
 

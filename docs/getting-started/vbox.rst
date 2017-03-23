@@ -12,7 +12,6 @@ Vagrant setup
 To get started with the vagrant provider, you need to install
 
 * `Vagrant <https://www.vagrantup.com/>`_
-* `Vagrant hostmanager <https://github.com/devopsgroup-io/vagrant-hostmanager>`_ plugin
 
 Code setup
 ^^^^^^^^^^
