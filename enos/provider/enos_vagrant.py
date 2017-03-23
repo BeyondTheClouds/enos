@@ -101,7 +101,9 @@ class Enos_vagrant(Provider):
                             env=v_env)
         if force_deploy:
             v.destroy()
-        v.up()
+        # NOTE(matrohon) : force no parallel provisionning since it fails with
+        # libvrit/hostmanager plugins for vagrant
+        v._call_vagrant_command(['up', '--no-parallel'])
         v.provision()
         # Distribute the machines according to the resource/topology
         # specifications
