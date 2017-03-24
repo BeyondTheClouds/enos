@@ -441,7 +441,18 @@ def backup(env=None, **kwargs):
     run_ansible([playbook_path], inventory_path, env['config'])
 
 
-@enostask("""usage: enos ssh-tunnel""")
+@enostask("""
+usage: enos ssh-tunnel [-e ENV|--env=ENV] [-s|--silent|-vv]
+
+Options:
+  -e ENV --env=ENV     Path to the environment directory. You should
+                       use this option when you want to link a specific
+                       experiment [default: %s].
+  -h --help            Show this help message.
+  -s --silent          Quiet mode.
+  -vv                  Verbose mode.
+""" % SYMLINK_NAME)
+@check_env
 def ssh_tunnel(env=None, **kwargs):
     user = env['user']
     internal_vip_address = env['config']['vip']
