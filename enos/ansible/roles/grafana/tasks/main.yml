@@ -7,15 +7,15 @@
   command: "ip addr add {{ grafana_vip }} dev {{ network_interface }}"
   when: result.stdout.find("{{ grafana_vip }}") == -1
 
-- name: Start the graphana container
+- name: Start the grafana container
   docker:
     detach: True
     image: "grafana/grafana:3.1.0"
     name: "grafana"
-    ports: 
+    ports:
       - "3000:3000"
     state: started
-    env: 
+    env:
       INFLUXDB_HOST: "{{ influx_vip }}"
       INFLUXDB_PORT: 8086
       INFLUXDB_NAME: cadvisor
@@ -23,7 +23,7 @@
       INFLUXDB_PASS: root
 
 - name: Waiting for the grafana service to become available
-  wait_for: 
+  wait_for:
     host: "{{ grafana_vip }}"
     port: 3000
     state: started
@@ -39,7 +39,7 @@
     body_format: json
     HEADER_Content-Type: application/json
     method: POST
-    # we workaround this issue : 
+    # we workaround this issue :
     # https://github.com/ansible/ansible-modules-core/issues/265
     # by adding an empty space at the beginning of the json ...
     body: " { \"name\": \"{{ item.name }}\", \"type\": \"influxdb\", \"url\": \"http://{{ influx_vip }}:8086\", \"access\": \"proxy\", \"database\": \"{{ item.database }}\", \"user\": \"root\", \"password\": \"root\", \"isDefault\": true }"
