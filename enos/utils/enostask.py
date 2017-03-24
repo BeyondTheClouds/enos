@@ -57,9 +57,9 @@ def save_env(env):
 
 
 def enostask(doc):
-    """Decorator for a Enos Task.
+    """Decorator for an Enos Task.
 
-    This decorator lets you define a new enos task and helps you
+    This decorator lets you define a new Enos task and helps you
     manage the environment.
 
     """
@@ -81,3 +81,23 @@ def enostask(doc):
             save_env(kwargs['env'])
         return decorated
     return decorator
+
+
+def check_env(fn):
+    """Decorator for an Enos Task.
+
+    This decorator checks if an environment file exists.
+
+    """
+    def decorator(*args, **kwargs):
+        # If no directory is provided, set the default one
+        resultdir = kwargs.get('--env', SYMLINK_NAME)
+        # Check if the env file exists
+        env_path = os.path.join(resultdir, 'env')
+        if not os.path.isfile(env_path):
+            raise Exception("The file %s does not exist." % env_path)
+
+        # Proceeds with the function execution
+        return fn(*args, **kwargs)
+    return decorator
+
