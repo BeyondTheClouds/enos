@@ -52,7 +52,7 @@ example the following is a valid resources description:
 
 .. code-block:: bash
 
-    provider: "vagrant"
+    provider: vagrant
 
     resources:
       medium:
@@ -64,6 +64,9 @@ example the following is a valid resources description:
 The list of the sizes may be found `here
 <https://github.com/BeyondTheClouds/enos/blob/master/enos/provider/enos_vagrant.py#L12>`_.
 
+By default virtualbox will be used. See below to learn how to change the default
+virtualbox backend.
+
 Deployment
 -----------
 
@@ -72,3 +75,15 @@ To launch the deployment, run:
 .. code-block:: bash
 
     python -m enos.enos deploy
+
+Use libvirt as the backend for Vagrant
+--------------------------------------
+
+Declaring your provider option as the following will spin up virtual machines using libvirt.
+Note that `vagrant libvirt <https://github.com/vagrant-libvirt/vagrant-libvirt>`_ must be installed on your system.
+
+.. code-block:: bash
+
+    provider:
+      type: vagrant
+      option: libvirt
