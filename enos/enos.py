@@ -39,7 +39,7 @@ from utils.extra import (run_ansible, generate_inventory,
 
 from utils.network_constraints import (build_grp_constraints,
                                        build_ip_constraints)
-from utils.enostask import enostask
+from utils.enostask import (enostask, check_env)
 
 from datetime import datetime
 import logging
@@ -176,6 +176,7 @@ Options:
   -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
   -vv                  Verbose mode.
 """ % SYMLINK_NAME)
+@check_env
 def install_os(env=None, **kwargs):
     logging.debug('phase[os]: args=%s' % kwargs)
 
@@ -243,6 +244,7 @@ Options:
   -s --silent          Quiet mode.
   -vv                  Verbose mode.
 """ % SYMLINK_NAME)
+@check_env
 def init_os(env=None, **kwargs):
     logging.debug('phase[init]: args=%s' % kwargs)
 
@@ -355,6 +357,7 @@ Options:
                        that contains the description of the different
                        scenarios to launch.
 """ % SYMLINK_NAME)
+@check_env
 def bench(env=None, **kwargs):
     def cartesian(d):
         """returns the cartesian product of the args."""
@@ -420,6 +423,7 @@ Options:
   -s --silent          Quiet mode.
   -vv                  Verbose mode.
 """ % SYMLINK_NAME)
+@check_env
 def backup(env=None, **kwargs):
 
     backup_dir = kwargs['--backup_dir'] \
@@ -437,7 +441,18 @@ def backup(env=None, **kwargs):
     run_ansible([playbook_path], inventory_path, env['config'])
 
 
-@enostask("""usage: enos ssh-tunnel""")
+@enostask("""
+usage: enos ssh-tunnel [-e ENV|--env=ENV] [-s|--silent|-vv]
+
+Options:
+  -e ENV --env=ENV     Path to the environment directory. You should
+                       use this option when you want to link a specific
+                       experiment [default: %s].
+  -h --help            Show this help message.
+  -s --silent          Quiet mode.
+  -vv                  Verbose mode.
+""" % SYMLINK_NAME)
+@check_env
 def ssh_tunnel(env=None, **kwargs):
     user = env['user']
     internal_vip_address = env['config']['vip']
@@ -477,6 +492,7 @@ Options:
   --test               Test the rules by generating various reports.
   -vv                  Verbose mode.
 """ % SYMLINK_NAME)
+@check_env
 def tc(env=None, **kwargs):
     """
     Enforce network constraints
@@ -570,6 +586,7 @@ Options:
   -s --silent          Quiet mode.
   -vv                  Verbose mode.
 """ % SYMLINK_NAME)
+@check_env
 def destroy(env=None, **kwargs):
     provider = make_provider(env)
     provider.destroy(CALL_PATH, env)
