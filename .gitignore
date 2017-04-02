@@ -10,6 +10,10 @@ reservation.yaml
 Vagrantfile
 .vagrant
 
+# terrraform provider
+terraform-openstack.tf
+*.tfstate
+
 # Vim backup files
 .*.swp
 

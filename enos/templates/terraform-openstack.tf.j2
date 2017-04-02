@@ -1,0 +1,114 @@
+resource "openstack_compute_secgroup_v2" "enos-secgroup" {
+  name        = "enos-secgroup"
+  description = "Enos security group"
+
+  rule {
+    from_port   = 1
+    to_port     = 65535
+    ip_protocol = "tcp"
+    cidr        = "0.0.0.0/0"
+  }
+
+  rule {
+    from_port   = 1
+    to_port     = 65535
+    ip_protocol = "udp"
+    cidr        = "0.0.0.0/0"
+  }
+
+	rule {
+		from_port = -1
+		to_port = -1
+		ip_protocol = "icmp"
+		cidr = "0.0.0.0/0"
+	}
+}
+
+resource "openstack_networking_network_v2" "enos-network" {
+  name           = "enos-network"
+  admin_state_up = "true"
+}
+
+resource "openstack_networking_subnet_v2" "enos-subnet" {
+  name             = "enos-subnet"
+  network_id       = "${openstack_networking_network_v2.enos-network.id}"
+  cidr             = "{{ provider_config.subnet_cidr }}"
+  dns_nameservers  = {{ provider_config.subnet_dns_nameservers | replace("'", "\"") }}
+}
+
+resource "openstack_networking_router_v2" "enos-router" {
+  name             = "enos-router"
+  external_gateway = "dbf29083-ff90-406e-b69a-b1d93b8f0a2d"
+}
+
+resource "openstack_networking_router_interface_v2" "router_interface_1" {
+  router_id = "${openstack_networking_router_v2.enos-router.id}"
+  subnet_id = "${openstack_networking_subnet_v2.enos-subnet.id}"
+}
+
+{% for size, desc in machines.iteritems() %}
+resource "openstack_networking_port_v2" "port_{{ desc.resource_name }}" {
+  network_id     = "${openstack_networking_network_v2.enos-network.id}"
+  admin_state_up = "true"
+
+  fixed_ip {
+    subnet_id = "${openstack_networking_subnet_v2.enos-subnet.id}"
+  }
+
+  # NOTE(msimonin): some nodes will be contacted using their vip
+  # by default, neutron will block this traffic at the port level
+  allowed_address_pairs {
+    ip_address = "{{ provider_config.subnet_cidr }}"
+  }
+
+  # NOTE(msimonin): when using port, security groups need to be specified
+  # in the port description not the servers.
+  security_group_ids = ["${openstack_compute_secgroup_v2.enos-secgroup.id}"]
+
+  count          = {{ desc.count }}
+}
+
+resource "openstack_compute_instance_v2" "{{ desc.resource_name }}" {
+  name            = "{{ desc.name }}-${count.index}"
+  image_name      = "CC-Ubuntu16.04"
+  flavor_name     = "{{ size }}"
+  key_pair        = "{{ desc.key_pair }}"
+  user_data       = "${file("{{ desc.user_data }}")}"
+
+  network  {
+    port = "${element(openstack_networking_port_v2.port_{{ desc.resource_name }}.*.id, count.index)}"
+  }
+
+  count = {{ desc.count }}
+}
+
+{% if provider_config.gateway and loop.first %}
+resource "openstack_networking_floatingip_v2" "fip" {
+  pool = "ext-net"
+}
+
+resource "openstack_compute_floatingip_associate_v2" "fip" {
+  floating_ip = "${openstack_networking_floatingip_v2.fip.address}"
+  instance_id = "${openstack_compute_instance_v2.{{ desc.resource_name }}.0.id}"
+}
+
+output "gateway" {
+  value = "${openstack_networking_floatingip_v2.fip.address}"
+}
+{% endif %}
+{% endfor %}
+
+{% for size, desc in machines.iteritems() %}
+output "ips-{{ desc.resource_name }}" {
+  value = "${zipmap(
+    openstack_compute_instance_v2.{{ desc.resource_name }}.*.name,
+    openstack_networking_port_v2.port_{{ desc.resource_name }}.*.all_fixed_ips.0)}"
+}
+{% endfor %}
+
+output "subnet" {
+  value = {
+    "cidr" = "${openstack_networking_subnet_v2.enos-subnet.cidr}",
+    "gateway_ip" ="${openstack_networking_subnet_v2.enos-subnet.gateway_ip}"
+  }
+}
