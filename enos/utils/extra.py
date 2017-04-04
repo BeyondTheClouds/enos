@@ -185,9 +185,9 @@ def to_ansible_group_string(roles):
 
 def generate_kolla_files(config_vars, kolla_vars, directory):
     # get the static parameters from the config file
-    kolla_globals = config_vars
+    kolla_globals = kolla_vars
     # add the generated parameters
-    kolla_globals.update(kolla_vars)
+    kolla_globals.update(config_vars)
     # write to file in the result dir
     globals_path = os.path.join(directory, 'globals.yml')
     with open(globals_path, 'w') as f:

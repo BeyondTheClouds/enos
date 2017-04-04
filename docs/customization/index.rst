@@ -5,10 +5,13 @@ Customizations
 Changing Kolla / Ansible variables
 -----------------------------------
 
-Custom Kolla / Ansible parameters can be put in the configuration file
-under the key ``kolla``. For instance, Kolla uses the
-``openstack_release`` parameter to fix the OpenStack version to deploy.
-So, Enos tells Kolla to deploy the ``4.0.0`` version with:
+Custom Kolla / Ansible parameters can be put in the configuration file under
+the key ``kolla``. The complete list of Kolla variables can be found `here
+<https://github.com/openstack/kolla-ansible/blob/master/ansible/group_vars/all.yml>`_.
+
+For instance, Kolla uses the ``openstack_release`` parameter to fix the
+OpenStack version to deploy.  So, Enos tells Kolla to deploy the ``4.0.0``
+version with:
 
 .. code-block:: yaml
 
@@ -24,6 +27,21 @@ change the git repository/reference of Kolla code with:
 
     kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
     kolla_ref: "stable/ocata"
+
+Note on the network interfaces:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Providers do their best to configure the network decently. This probably doesn't
+cover all the possible use cases. But, if you know what interfaces are configured by
+the provider you can specify a more precise allocation under he ``kolla`` key.
+For instance :
+
+.. code-block:: yaml
+
+    kolla:
+      network_interface: eth1
+      neutron_external_interface: eth2
+      tunnel_interface: eth3
 
 Changing the topology
 ---------------------
@@ -69,10 +87,10 @@ configuration file of the experiment.
 
 
 Ansible configuration
---------------------
+----------------------
 
 By default, Enos loads its own ``ansible.cfg``. To use another Ansible
 configuration file, the ``ANSIBLE_CONFIG`` environment variable can be used.
-Further information can be found `here 
+Further information can be found : `see here 
 <http://docs.ansible.com/ansible/intro_configuration.html>`_.
 
