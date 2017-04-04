@@ -66,3 +66,13 @@ code to enable custom configuration files to be used (and by extension
 custom kolla code). See the possible patch declaration in
 ``ansible/group_vars/all.yml``. Patches should be added in the
 configuration file of the experiment.
+
+
+Ansible configuration
+--------------------
+
+By default, Enos loads its own ``ansible.cfg``. To use another Ansible
+configuration file, the ``ANSIBLE_CONFIG`` environment variable can be used.
+Further information can be found `here 
+<http://docs.ansible.com/ansible/intro_configuration.html>`_.
+
