@@ -4,6 +4,7 @@ from jinja2 import Environment, FileSystemLoader
 from provider import Provider
 from ..utils.constants import TEMPLATE_DIR
 from ..utils.extra import build_resources, expand_topology, build_roles
+from ..utils.provider import load_config
 
 import logging
 import os
@@ -36,6 +37,13 @@ SIZES = {
     }
 }
 
+DEFAULT_PROVIDER_CONFIG = {
+    'backend': 'virtualbox',
+    'box': 'debian/jessie64',
+    'user': 'root',
+    'interfaces': ('eth1', 'eth2')
+}
+
 
 class Enos_vagrant(Provider):
     def init(self, config, calldir, force_deploy=False):
@@ -43,14 +51,9 @@ class Enos_vagrant(Provider):
         Read the resources in the configuration files. Resource claims must be
         grouped by sizes according to the predefined SIZES map.
         """
-        self.config = config
-        if 'topology' in self.config:
-            # expand the groups first
-            self.config['topology'] = expand_topology(self.config['topology'])
-            # Build the ressource claim to g5k
-            # We are here using a flat combination of the resource
-            # resulting in (probably) deploying one single region
-            self.config['resources'] = build_resources(self.config['topology'])
+        conf = load_config(config,
+                default_provider_config=DEFAULT_PROVIDER_CONFIG)
+        provider_conf = conf['provider']
 
         net_pools = {
             'ip1': list(IPv4Network(u'192.168.142.0/25')),
@@ -61,7 +64,7 @@ class Enos_vagrant(Provider):
         # Build a list of machines that will be used to generate the
         # Vagrantfile
         machines = []
-        for size, roles in self.config['resources'].items():
+        for size, roles in conf['resources'].items():
             for role, nb in roles.items():
                 for i in range(nb):
                     ip1 = str(net_pools['ip1'].pop())
@@ -83,7 +86,7 @@ class Enos_vagrant(Provider):
         env = Environment(loader=loader)
         template = env.get_template('Vagrantfile.j2')
 
-        vagrantfile = template.render(machines=machines)
+        vagrantfile = template.render(machines=machines, provider_conf=provider_conf)
         vagrantfile_path = os.path.join(calldir, "Vagrantfile")
         with open(vagrantfile_path, 'w') as f:
             f.write(vagrantfile)
@@ -91,9 +94,7 @@ class Enos_vagrant(Provider):
         # Build env for Vagrant with a copy of env variables (needed by
         # subprocess opened by vagrant
         v_env = dict(os.environ)
-        if 'option' in config['provider'] and \
-            config['provider']['option'] in ['vbox','libvirt']:
-            v_env['VAGRANT_DEFAULT_PROVIDER'] = config['provider']['option']
+        v_env['VAGRANT_DEFAULT_PROVIDER'] = provider_conf['backend']
 
         v = vagrant.Vagrant(root=calldir,
                             quiet_stdout=False,
@@ -106,7 +107,7 @@ class Enos_vagrant(Provider):
         # Distribute the machines according to the resource/topology
         # specifications
         r = build_roles(
-                    self.config,
+                    conf,
                     machines,
                     lambda m: m['size'])
         roles = {}
@@ -117,10 +118,9 @@ class Enos_vagrant(Provider):
                 keyfile = v.keyfile(vm_name=machine['name'])
                 port = v.port(vm_name=machine['name'])
                 address = v.hostname(vm_name=machine['name'])
-                user = v.user(vm_name=machine['name'])
                 roles[role].append(Host(address,
                                         alias=machine['name'],
-                                        user='root',
+                                        user=provider_conf['user'],
                                         port=port,
                                         keyfile=keyfile))
         logging.info(roles)
@@ -131,8 +131,8 @@ class Enos_vagrant(Provider):
                 'dns': '8.8.8.8',
                 'gateway': '192.168.142.1'
         }
-        network_interface = 'eth1'
-        external_interface = 'eth2'
+        network_interface = provider_conf['interfaces'][0]
+        external_interface = provider_conf['interfaces'][1]
         return (roles, network, (network_interface, external_interface))
 
     def destroy(self, calldir, env):
