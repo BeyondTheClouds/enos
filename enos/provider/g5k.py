@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from execo_g5k import api_utils as api
-from execo_g5k.api_utils import get_cluster_site
 from execo_g5k import OarSubmission
 from .host import Host
 from itertools import islice
 from netaddr import IPAddress, IPNetwork, IPSet
 from provider import Provider
-from ..utils.extra import build_resources, expand_topology, build_roles
 from ..utils.constants import EXTERNAL_IFACE
+from ..utils.extra import build_resources, expand_topology, build_roles
+from ..utils.provider import load_config
 
 import execo as EX
 import execo_g5k as EX5
@@ -18,15 +18,17 @@ import sys
 
 
 ROLE_DISTRIBUTION_MODE_STRICT = "strict"
-DEFAULT_CONFIG = {
-    "name": "kolla-discovery",
-    "walltime": "02:00:00",
-    "env_name": 'jessie-x64-min',
-    "reservation": None,
-    "vlans": {},
-    "role_distribution": ROLE_DISTRIBUTION_MODE_STRICT,
-    "single_interface": False
+DEFAULT_PROVIDER_CONFIG = {
+    'name': 'kolla-discovery',
+    'walltime': '02:00:00',
+    'env_name': 'jessie-x64-min',
+    'reservation': None,
+    'vlans': {'rennes': "{type='kavlan'}/vlan=1"},
+    'role_distribution': ROLE_DISTRIBUTION_MODE_STRICT,
+    'single_interface': False,
+    'user': 'root'
 }
+
 MAX_ATTEMPTS = 5
 DEFAULT_CONN_PARAMS = {'user': 'root'}
 
@@ -40,48 +42,38 @@ class G5k(Provider):
         Read the resources in the configuration files.  Resource claims must be
         grouped by clusters available on Grid'5000.
         """
-        self._load_config(config)
-        self.force_deploy = force_deploy
-        self._get_job()
-        deployed, undeployed = self._deploy()
-        if len(undeployed) > 0:
-            logging.error("Some of your nodes have been undeployed")
-            sys.exit(31)
+        conf = load_config(config,
+                default_provider_config=DEFAULT_PROVIDER_CONFIG)
 
-        # Provision nodes so we can run Ansible on it
-        self._exec_command_on_nodes(
-            self.deployed_nodes,
-            'apt-get update && apt-get -y --force-yes install %s'
-            % ' '.join(['apt-transport-https',
-                        'python',
-                        'python-setuptools']),
-            'Installing apt-transport-https python...')
+        jobs, vlans, nodes = self._get_jobs_and_vlans(conf)
+        deployed, deployed_nodes_vlan = self._deploy(conf,
+                nodes,
+                vlans,
+                force_deploy=force_deploy)
 
-        # fix installation of pip on jessie
-        self._exec_command_on_nodes(
-            self.deployed_nodes,
-            'easy_install pip && ln -s /usr/local/bin /usr/bin/pip || true',
-            'Installing pip')
-
-        # Retrieve necessary information for enos
         roles = build_roles(
-                    self.config,
-                    map(lambda n: Host(n.address, user="root"), self.deployed_nodes),
-                    lambda n: n.address.split('-')[0])
-        network = self._get_network()
+                conf,
+                map(lambda n: Host(n.address, user="root"), deployed_nodes_vlan),
+                lambda n: n.address.split('-')[0])
+
+        network = self._get_network(vlans)
         network_interface, external_interface = \
             self._mount_cluster_nics(
-                self.config['resources'].keys()[0],
+                conf,
+                conf['resources'].keys()[0],
                 deployed)
+
+        self._provision(deployed_nodes_vlan)
 
         return (roles, network, (network_interface, external_interface))
 
     def destroy(self, calldir, env):
-        self._load_config(env['config'])
-        self.gridjob, _ = EX5.planning.get_job_by_name(self.config['name'])
-        if self.gridjob is not None:
-            EX5.oargriddel([self.gridjob])
-            logging.info("Killing the job %s" % self.gridjob)
+        conf = load_config(env['config'])
+        provider_conf = conf['provider']
+        gridjob, _ = EX5.planning.get_job_by_name(provider_conf['name'])
+        if gridjob is not None:
+            EX5.oargriddel([gridjob])
+            logging.info("Killing the job %s" % gridjob)
 
     def before_preintsall(self, env):
         # Create a virtual interface for veth0 (if any)
@@ -151,55 +143,44 @@ class G5k(Provider):
     def __str__(self):
         return 'G5k'
 
-    def _make_reservation(self):
-        """Make a new reservation."""
-
-        # Extract the list of criteria (ie, `oarsub -l
-        # *criteria*`) in order to compute a specification for the
-        # reservation.
+    def _create_reservation(self, conf):
+        """Create the OAR Job specs."""
+        provider_conf = conf['provider']
         criteria = {}
-        # Actual criteria are :
-        # - Number of node per site
-        for cluster, roles in self.config["resources"].items():
-            site = get_cluster_site(cluster)
+        # NOTE(msimonin): Traverse all cluster demands in alphebetical order
+        # test_create_reservation_different_site needs to know the traversal order
+        for cluster, roles in sorted(conf["resources"].items(), key=lambda x: x[0]):
+            site = api.get_cluster_site(cluster)
             nb_nodes = reduce(operator.add, map(int, roles.values()))
             criterion = "{cluster='%s'}/nodes=%s" % (cluster, nb_nodes)
             criteria.setdefault(site, []).append(criterion)
 
-        for site, vlan in self.config["vlans"].items():
+        for site, vlan in provider_conf["vlans"].items():
             criteria.setdefault(site, []).append(vlan)
 
         # Compute the specification for the reservation
         jobs_specs = [(OarSubmission(resources='+'.join(c),
-                                     name=self.config["name"]), s)
+                                     name=provider_conf["name"]), s)
                       for s, c in criteria.items()]
         logging.info("Criteria for the reservation: %s" % pf(jobs_specs))
+        return jobs_specs
 
+    def _make_reservation(self, conf):
+        """Make a new reservation."""
+        provider_conf = conf['provider']
+        jobs_specs = self._create_reservation(conf)
         # Make the reservation
         gridjob, _ = EX5.oargridsub(
             jobs_specs,
-            reservation_date=self.config['reservation'],
-            walltime=self.config['walltime'].encode('ascii', 'ignore'),
+            reservation_date=provider_conf['reservation'],
+            walltime=provider_conf['walltime'].encode('ascii', 'ignore'),
             job_type='deploy')
 
-        # TODO - move this upper to not have a side effect here
-        if gridjob is not None:
-            self.gridjob = gridjob
-            logging.info("Using new oargrid job %s" % self.gridjob)
-        else:
-            logging.error("No oar job was created.")
-            sys.exit(26)
+        if gridjob is None:
+            raise Exception('No oar job was created')
+        logging.info("Using new oargrid job %s" % gridjob)
 
-    def _load_config(self, config):
-        self.config = DEFAULT_CONFIG
-        self.config.update(config)
-        if 'topology' in self.config:
-            # expand the groups first
-            self.config['topology'] = expand_topology(self.config['topology'])
-            # Build the ressource claim to g5k
-            # We are here using a flat combination of the resource
-            # resulting in (probably) deploying one single region
-            self.config['resources'] = build_resources(self.config['topology'])
+        return gridjob
 
     def _check_nodes(self,
                      nodes=[],
@@ -215,52 +196,42 @@ class G5k(Provider):
 
         return True
 
-    def _get_job(self):
+    def _get_jobs_and_vlans(self, conf):
         """Get the hosts from an existing job (if any) or from a new job.
         This will perform a reservation if necessary."""
 
+        provider_conf = conf['provider']
         # Look if there is a running job or make a new reservation
-        self.gridjob, _ = EX5.planning.get_job_by_name(self.config['name'])
+        gridjob, _ = EX5.planning.get_job_by_name(provider_conf['name'])
 
-        if self.gridjob is None:
-            self._make_reservation()
+        if gridjob is None:
+            gridjob = self._make_reservation(conf)
         else:
-            logging.info("Using running oargrid job %s" % self.gridjob)
+            logging.info("Using running oargrid job %s" % gridjob)
 
         # Wait for the job to start
-        EX5.wait_oargrid_job_start(self.gridjob)
+        EX5.wait_oargrid_job_start(gridjob)
 
-        self.nodes = sorted(EX5.get_oargrid_job_nodes(self.gridjob),
+        nodes = sorted(EX5.get_oargrid_job_nodes(gridjob),
                             key=lambda n: n.address)
 
-        # XXX check already done into `_deploy`.
-        self._check_nodes(nodes=self.nodes,
-                          resources=self.config['resources'],
-                          mode=self.config['role_distribution'])
-
-        # XXX(Ad_rien_) Start_date is never used, deadcode? - August
-        # 11th 2016
-        self.start_date = None
-        job_info = EX5.get_oargrid_job_info(self.gridjob)
-        if 'start_date' in job_info:
-            self.start_date = job_info['start_date']
-
-        # filling some information about the jobs here
-        self.user = None
-        job_info = EX5.get_oargrid_job_info(self.gridjob)
-        if 'user' in job_info:
-            self.user = job_info['user']
+        # Checking the number of nodes given
+        # the disribution policy
+        self._check_nodes(nodes=nodes,
+                          resources=conf['resources'],
+                          mode=provider_conf['role_distribution'])
 
         # vlans information
-        job_sites = EX5.get_oargrid_job_oar_jobs(self.gridjob)
-        self.jobs = []
-        self.vlans = []
+        job_sites = EX5.get_oargrid_job_oar_jobs(gridjob)
+        jobs = []
+        vlans = []
         for (job_id, site) in job_sites:
-            self.jobs.append((site, job_id))
+            jobs.append((site, job_id))
             vlan_id = EX5.get_oar_job_kavlan(job_id, site)
             if vlan_id is not None:
-                self.vlans.append((site,
+                vlans.append((site,
                                    EX5.get_oar_job_kavlan(job_id, site)))
+        return (jobs, vlans, nodes)
 
     def _translate_to_vlan(self, nodes, vlan_id):
         """When using a vlan, we need to *manually* translate
@@ -277,36 +248,37 @@ class G5k(Provider):
 
         return map(translate, nodes)
 
-    def _get_primary_vlan(self):
+    def _get_primary_vlan(self, vlans):
         """
         Returns the primary vlan
         It's the vlan where node are put in when deploying
         """
         vlan = None
-        if len(self.vlans) > 0:
+        if len(vlans) > 0:
             # Each vlan is a pair of a name and a list of address.
             # Following picks the first vlan and changes the second
             # element of the pair to return the first address.
-            vlan = (self.vlans[0][0], self.vlans[0][1][0])
+            vlan = (vlans[0][0], vlans[0][1][0])
             logging.info("Using vlan %s" % str(vlan))
 
         return vlan
 
-    def _deploy(self):
+    def _deploy(self, conf, nodes, vlans, force_deploy=False):
+        provider_conf = conf['provider']
         # we put the nodes in the first vlan we have
-        vlan = self._get_primary_vlan()
+        vlan = self._get_primary_vlan(vlans)
         # Deploy all the nodes
         logging.info("Deploying %s on %d nodes %s" % (
-            self.config['env_name'],
-            len(self.nodes),
-            '(forced)' if self.force_deploy else ''))
+            provider_conf['env_name'],
+            len(nodes),
+            '(forced)' if force_deploy else ''))
 
         deployed, undeployed = EX5.deploy(
             EX5.Deployment(
-                self.nodes,
-                env_name=self.config['env_name'],
+                nodes,
+                env_name=provider_conf['env_name'],
                 vlan=vlan[1]
-            ), check_deployed_command=not self.force_deploy)
+            ), check_deployed_command=not force_deploy)
 
         # Check the deployment
         if len(undeployed) > 0:
@@ -315,31 +287,29 @@ class G5k(Provider):
             for n in undeployed:
                 logging.error(n)
 
-        # Updating nodes names with vlans
-        self.nodes = sorted(
-            self._translate_to_vlan(self.nodes, vlan[1]),
-            key=lambda n: n.address)
-        logging.info(self.nodes)
-        self.deployed_nodes = sorted(
+        deployed_nodes_vlan = sorted(
             self._translate_to_vlan(map(lambda n: EX.Host(n), deployed),
                                     vlan[1]),
             key=lambda n: n.address)
-        logging.info(self.deployed_nodes)
+
+        logging.info(deployed_nodes_vlan)
+        # Checking the deployed nodes according to the
+        # resource distribution policy
         self._check_nodes(
-                nodes=self.deployed_nodes,
-                resources=self.config['resources'],
-                mode=self.config['role_distribution'])
+                nodes=deployed_nodes_vlan,
+                resources=conf['resources'],
+                mode=conf['provider']['role_distribution'])
 
-        return deployed, undeployed
+        return deployed, deployed_nodes_vlan
 
-    def _get_network(self):
+    def _get_network(self, vlans):
         """Gets the network representation.
 
         Prerequisite :
             - a vlan must be reserved
 
         """
-        site, vlan_id = self._get_primary_vlan()
+        site, vlan_id = self._get_primary_vlan(vlans)
 
         # Get g5k networks. According to the documentation, this
         # network is a `/18`.
@@ -377,11 +347,12 @@ class G5k(Provider):
             'dns': '131.254.203.235'
         }
 
-    def _mount_cluster_nics(self, cluster, nodes):
+    def _mount_cluster_nics(self, conf, cluster, nodes):
         """Get the NIC devices of the reserved cluster.
 
         :param nodes: List of hostnames unmodified by the vlan
         """
+        provider_conf = conf['provider']
         # XXX: this only works if all nodes are on the same cluster,
         # or if nodes from different clusters have the same devices
         site = EX5.get_cluster_site(cluster)
@@ -396,7 +367,7 @@ class G5k(Provider):
         network_interface = str(interfaces[0])
         external_interface = None
 
-        if len(interfaces) > 1 and not self.config['single_interface']:
+        if len(interfaces) > 1 and not provider_conf['single_interface']:
             external_interface = str(interfaces[1])
             _, vlan = self._get_primary_vlan()
             api.set_nodes_vlan(site,
@@ -405,20 +376,20 @@ class G5k(Provider):
                                vlan)
 
             self._exec_command_on_nodes(
-                self.deployed_nodes,
+                nodes,
                 "ifconfig %s up && dhclient -nw %s" % (
                     external_interface, external_interface),
                 'mounting secondary interface')
         else:
             # TODO(msimonin) fix the network in this case as well.
             external_interface = 'veth0'
-            if self.config['single_interface']:
+            if provider_conf['single_interface']:
                 logging.warning("Forcing the use of a one network interface")
             else:
                 logging.warning("%s has only one NIC. The same interface "
                                 "will be used for network_interface and "
                                 "neutron_external_interface."
-                                % self.config['resources'].keys()[0])
+                                % conf['resources'].keys()[0])
 
         return (network_interface, external_interface)
 
@@ -435,4 +406,20 @@ class G5k(Provider):
         remote.run()
 
         if not remote.finished_ok:
-            sys.exit(31)
+            raise Exception('An error occcured during remote execution')
+
+    def _provision(self, deployed_nodes_vlan):
+        # Provision nodes so we can run Ansible on it
+        self._exec_command_on_nodes(
+            deployed_nodes_vlan,
+            'apt-get update && apt-get -y --force-yes install %s'
+            % ' '.join(['apt-transport-https',
+                        'python',
+                        'python-setuptools']),
+            'Installing apt-transport-https python...')
+
+        # fix installation of pip on jessie
+        self._exec_command_on_nodes(
+            deployed_nodes_vlan,
+            'easy_install pip && ln -s /usr/local/bin /usr/bin/pip || true',
+            'Installing pip')
