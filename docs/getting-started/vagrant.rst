@@ -86,4 +86,18 @@ Note that `vagrant libvirt <https://github.com/vagrant-libvirt/vagrant-libvirt>`
 
     provider:
       type: vagrant
-      option: libvirt
+      backend: libvirt
+
+Default provider configuration
+-------------------------------
+
+The provider comes with the following default options :
+
+.. code-block:: javascript
+
+    DEFAULT_PROVIDER_CONFIG = {
+        'backend': 'virtualbox',
+        'box': 'debian/jessie64',
+        'user': 'root',
+        'interfaces': ('eth1', 'eth2')
+    }
