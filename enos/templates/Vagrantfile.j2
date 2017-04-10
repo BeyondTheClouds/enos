@@ -11,7 +11,7 @@ easy_install pip && ln -s /usr/local/bin/pip /usr/bin/pip || true
 SCRIPT
 
 Vagrant.configure(2) do |config|
-  config.vm.box = "debian/jessie64"
+  config.vm.box = "{{ provider_conf.box }}"
   config.vm.provision "shell", inline: $script
 
   {% for machine in machines %}
