@@ -1,5 +1,7 @@
 # Enos
 
+[![Build Status](https://travis-ci.org/BeyondTheClouds/enos.svg?branch=master)](https://travis-ci.org/BeyondTheClouds/enos)
+
 Enos deploys OpenStack and targets reproducible experiments. It allows easy:
 
 * deployment of the system
