@@ -3,27 +3,25 @@
 # Enos Configuration File                         #
 # ############################################### #
 
-name: OpenStack/Discovery-Enos2
+# Provider specific config
+provider:
+  type: g5k
+  name: 'Enos'
+  walltime: '02:00:00'
+  # mandatory : you need to have exacly one vlan
+  vlans:
+     rennes: "{type='kavlan'}/vlan=1"
+  # Be less strict on node distribution especially
+  # when nodes are missing in the reservation
+  # or not deployed
+  role_distribution: debug
 
-# Resources Provider. Values are: g5k, vagrant
-provider: "g5k"
-
-walltime: "2:00:00"
-
+# Resources description
 resources:
   paravance:
     control: 1
     compute: 1
     network: 1
-
-vlans:
-  # mandatory : you need to have exacly one vlan
-  rennes: "{type='kavlan'}/vlan=1"
-
-# Be less strict on node distribution especially
-# when nodes are missing in the reservation
-# or not deployed
-role_distribution: debug
 
 # ############################################### #
 # Inventory to use                                #

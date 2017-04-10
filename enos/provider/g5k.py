@@ -19,7 +19,7 @@ import sys
 
 ROLE_DISTRIBUTION_MODE_STRICT = "strict"
 DEFAULT_PROVIDER_CONFIG = {
-    'name': 'kolla-discovery',
+    'name': 'Enos',
     'walltime': '02:00:00',
     'env_name': 'jessie-x64-min',
     'reservation': None,
