@@ -98,15 +98,17 @@ Default provider configuration
 
 The provider comes with the following default options :
 
-.. code-block:: javascript
+.. code-block:: yaml
 
-    DEFAULT_PROVIDER_CONFIG = {
-        'name': 'Enos',
-        'walltime': '02:00:00',
-        'env_name': 'jessie-x64-min',
-        'reservation': None,
-        'vlans': {'rennes': "{type='kavlan'}/vlan=1"},
-        'role_distribution': ROLE_DISTRIBUTION_MODE_STRICT,
-        'single_interface': False,
-        'user': 'root'
-    }
+      provider:
+        type: g5k
+        name: Enos
+        walltime: 02:00:00
+        env_name: jessie-x64-min
+        reservation: None
+        vlans: '{rennes: "{type=kavlan}/vlan=1"}'
+        role_distribution: strict
+        single_interface: false
+        user: root
+
+They can be overriden in the configuration file.
