@@ -93,11 +93,12 @@ Default provider configuration
 
 The provider comes with the following default options :
 
-.. code-block:: javascript
+.. code-block:: yaml
 
-    DEFAULT_PROVIDER_CONFIG = {
-        'backend': 'virtualbox',
-        'box': 'debian/jessie64',
-        'user': 'root',
-        'interfaces': ('eth1', 'eth2')
-    }
+    provider:
+      type: vagrant
+      backend: virtualbox
+      box: debian/jessie64
+      user: root
+
+They can be overriden in the configuration file.
