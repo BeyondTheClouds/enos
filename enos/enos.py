@@ -34,7 +34,7 @@ command.
 from utils.constants import (SYMLINK_NAME, TEMPLATE_DIR, ANSIBLE_DIR,
                              NETWORK_IFACE, EXTERNAL_IFACE, VERSION)
 from utils.extra import (run_ansible, generate_inventory,
-                         generate_kolla_files, to_abs_path, pop_ip,
+                         bootstrap_kolla, to_abs_path, pop_ip,
                          make_provider)
 
 from utils.network_constraints import (build_grp_constraints,
@@ -140,17 +140,15 @@ def up(env=None, **kwargs):
     # Set variables required by playbooks of the application
     vip = pop_ip(env)
     env['config'].update({
-        # Enos specific
-        'vip':          vip,
-        'registry_vip': pop_ip(env),
-        'influx_vip':   pop_ip(env),
-        'grafana_vip':  pop_ip(env),
+        'vip':               vip,
+        'registry_vip':      pop_ip(env),
+        'influx_vip':        pop_ip(env),
+        'grafana_vip':       pop_ip(env),
         'network_interface': eths[NETWORK_IFACE],
-        'resultdir':    env['resultdir']
+        'resultdir':         env['resultdir'],
+        'rabbitmq_password': "demo",
+        'database_password': "demo"
     })
-    passwords = os.path.join(TEMPLATE_DIR, "passwords.yml")
-    with open(passwords) as f:
-        env['config'].update(yaml.load(f))
 
     # Executes hooks and runs playbook that initializes resources (eg,
     # installs the registry, install monitoring tools, ...)
@@ -180,42 +178,38 @@ Options:
 def install_os(env=None, **kwargs):
     logging.debug('phase[os]: args=%s' % kwargs)
 
-    # Generates kolla globals.yml, passwords.yml
-    generated_kolla_vars = {
-        'neutron_external_address':   pop_ip(env),
-        'network_interface':          env['eths'][NETWORK_IFACE],
-        'kolla_internal_vip_address': env['config']['vip'],
-        'neutron_external_interface': env['eths'][EXTERNAL_IFACE],
-        'influx_vip':                 env['config']['influx_vip'],
-        'kolla_ref':                  env['config']['kolla_ref']
-    }
-    if 'enable_monitoring' in env['config']:
-        generated_kolla_vars['enable_monitoring'] = \
-                env['config']['enable_monitoring']
-    generate_kolla_files(env['config']["kolla"],
-                         generated_kolla_vars,
-                         env['resultdir'])
-
-
     # Clone or pull Kolla
     kolla_path = os.path.join(env['resultdir'], 'kolla')
     if os.path.isdir(kolla_path):
         logging.info("Remove previous Kolla installation")
         call("rm -rf %s" % kolla_path, shell=True)
 
-    logging.info("Cloning Kolla")
+    logging.info("Cloning Kolla repository...")
     call("git clone %s --branch %s --single-branch --quiet %s" %
             (env['config']['kolla_repo'],
              env['config']['kolla_ref'],
              kolla_path),
          shell=True)
 
-    logging.warning(("Patching kolla, this should be ",
-                     "deprecated with the new version of Kolla"))
+    # Construct values required by kolla-ansible playbooks
+    required_kolla_values = {
+        'neutron_external_address':   pop_ip(env),
+        'network_interface':          env['eths'][NETWORK_IFACE],
+        'kolla_internal_vip_address': env['config']['vip'],
+        'neutron_external_interface': env['eths'][EXTERNAL_IFACE],
+        'influx_vip':                 env['config']['influx_vip'],
+        'kolla_ref':                  env['config']['kolla_ref'],
+        'resultdir':                  env['resultdir']
+    }
+    if 'enable_monitoring' in env['config']:
+        required_kolla_values['enable_monitoring'] = \
+                env['config']['enable_monitoring']
 
-    playbook = os.path.join(ANSIBLE_DIR, "patches.yml")
-    run_ansible([playbook], env['inventory'], env['config'])
+    # Bootstrap kolla running by patching kolla sources (if any) and
+    # generating admin-openrc, globals.yml, passwords.yml
+    bootstrap_kolla(env, required_kolla_values)
 
+    # Construct kolla-ansible command...
     kolla_cmd = [os.path.join(kolla_path, "tools", "kolla-ansible")]
 
     if kwargs['--reconfigure']:
@@ -230,6 +224,7 @@ def install_os(env=None, **kwargs):
     if kwargs['--tags']:
         kolla_cmd.extend(['--tags', kwargs['--tags']])
 
+    logging.info("Calling Kolla...")
     call(kolla_cmd)
 
 

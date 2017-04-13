@@ -7,7 +7,7 @@ enable_monitoring: true
 
 # enable tc constraints when invoking tc phase
 tc_enable: true
-# output dir to store test validation of tc rules enforcement 
+# output dir to store test validation of tc rules enforcement
 tc_output_dir: /tmp
 
 # default openstack env
@@ -20,11 +20,10 @@ os_env:
   OS_TENANT_NAME: admin
   OS_USERNAME: admin
   OS_PASSWORD: demo
-  OS_AUTH_URL: "http://{{ vip }}:5000/v3"
+  OS_AUTH_URL: "{{ keystone_admin_url }}"
   OS_IDENTITY_API_VERSION: 3
-  OS_REGION_NAME: "RegionOne"
+  OS_REGION_NAME: "{{ openstack_region_name }}"
 
-# list of 
 # list of available patchs
 # to enable one patch copy past its description
 # to your local config file and enable it
@@ -49,4 +48,3 @@ patches:
     src: mariadb_bootstrap.yml
     dst: kolla/ansible/roles/mariadb/tasks/bootstrap.yml
     enabled: "no"
-
