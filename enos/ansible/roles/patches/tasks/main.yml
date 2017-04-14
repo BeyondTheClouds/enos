@@ -1,7 +1,0 @@
----
-- name: Patching kolla
-  local_action: copy src={{ item.src }} dest={{ resultdir }}/{{ item.dst }}
-  with_items: patches
-  when: "{{ item.enabled | bool }}"
-  run_once: true
-

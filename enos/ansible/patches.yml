@@ -1,8 +1,0 @@
----
-- name: Patches the files
-  hosts: all
-  roles:
-    - { role: patches,
-        tags: ['patches'] }
-
-

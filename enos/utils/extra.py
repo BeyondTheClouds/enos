@@ -4,10 +4,9 @@ from ansible.inventory import Inventory
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
 from collections import namedtuple
-from constants import TEMPLATE_DIR
+from constants import TEMPLATE_DIR, ANSIBLE_DIR
 from itertools import groupby
 from netaddr import IPRange
-from subprocess import call
 
 import jinja2
 import logging
@@ -183,32 +182,62 @@ def to_ansible_group_string(roles):
     return "\n".join(inventory)
 
 
-def generate_kolla_files(config_vars, kolla_vars, directory):
-    # get the static parameters from the config file
-    kolla_globals = kolla_vars
-    # add the generated parameters
-    kolla_globals.update(config_vars)
-    # write to file in the result dir
-    globals_path = os.path.join(directory, 'globals.yml')
+def mk_kolla_values(src_path, user_values, required_values):
+    """Builds a dictionary with all kolla values.
+
+    :param src_path: Path to kolla-ansible sources.
+
+    :param user_values: User specic kolla values as defined into
+        the reservation file.
+
+    :param required_values: Values required by kolla-ansible.
+
+    return values related to kolla-ansible
+    """
+    kolla_values = {}
+
+    # Get kolla-ansible `all.yml` values
+    with open(os.path.join(
+            src_path, 'ansible', 'group_vars', 'all.yml'), 'r') as f:
+        kolla_values.update(yaml.load(f))
+
+    # Override with required values
+    kolla_values.update(required_values)
+
+    # Override with user specific values
+    kolla_values.update(user_values)
+
+    return kolla_values
+
+
+def bootstrap_kolla(env, kolla_required_values):
+    """Setups all necessities for calling kolla-ansible.
+
+    - Patches kolla-ansible sources (if any).
+    - Builds globals.yml into result dir.
+    - Builds password.yml into result dir.
+    - Builds admin-openrc into result dir.
+    """
+    kolla_values = mk_kolla_values(
+        os.path.join(env['resultdir'], 'kolla'),
+        env['config']['kolla'],
+        kolla_required_values)
+
+    # Write the globals.yml file in the result dir.
+    #
+    # FIXME: Find a neat way to put this into the next bootsrap_kolla
+    # playbook. Then, remove this util function and call directly the
+    # playbook from `enos os`.
+    globals_path = os.path.join(env['resultdir'], 'globals.yml')
+    globals_values = kolla_required_values.copy()
+    globals_values.update(env['config']['kolla'])
     with open(globals_path, 'w') as f:
-        yaml.dump(kolla_globals, f, default_flow_style=False)
+        yaml.dump(globals_values, f, default_flow_style=False)
 
-    logging.info("Wrote " + globals_path)
-
-    # copy the passwords file
-    passwords_path = os.path.join(directory, "passwords.yml")
-    call("cp %s/passwords.yml %s" % (TEMPLATE_DIR, passwords_path), shell=True)
-    logging.info("Password file is copied to  %s" % (passwords_path))
-
-    # admin openrc
-    admin_openrc_path = os.path.join(directory, 'admin-openrc')
-    admin_openrc_vars = {
-        'keystone_address': kolla_vars['kolla_internal_vip_address']
-    }
-    render_template('admin-openrc.jinja2',
-                    admin_openrc_vars,
-                    admin_openrc_path)
-    logging.info("admin-openrc generated in %s" % (admin_openrc_path))
+    # Patche kolla-ansible sources + Write admin-openrc and
+    # password.yml in the result dir
+    playbook = os.path.join(ANSIBLE_DIR, "bootstrap_kolla.yml")
+    run_ansible([playbook], env['inventory'], kolla_values)
 
 
 def to_abs_path(path):

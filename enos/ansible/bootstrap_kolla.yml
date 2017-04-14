@@ -1,0 +1,6 @@
+---
+- name: Bootstrap kolla-ansible running
+  hosts: 127.0.0.1
+  roles:
+    - { role: bootstrap_kolla,
+        tags: ['bootstrap_kolla'] }
