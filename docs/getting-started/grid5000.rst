@@ -43,34 +43,6 @@ file:
     $ cp reservation.yaml.sample reservation.yaml
     $ <editor> reservation.yaml
 
-Using a persistent registry
----------------------------
-
-The relevant configuration section looks like:
-
-.. code-block:: yaml
-
-    registry:
-      ceph: true|false
-      ceph_keyring: path to your keyring
-      ceph_id: your ceph id
-      ceph_rbd: rbd in the form "pool/rbd"
-
-The deployment makes use of a private docker registry configured as a
-mirror of the official docker registry. There are two modes:
-
-  * `ceph: false`. It will start a fresh registry that will cache the images
-    for the duration of the experiment.
-  * `ceph: true`. It will use an existing Ceph rados block device of the Rennes
-    cluster.
-
-The block device will be mounted and used as the registry storage.
-Setting this is useful as the cache will persist different
-experiments.
-
-[The G5k ceph tutorial ](https://www.grid5000.fr/mediawiki/index.php/Ceph) will
-guide you on how to create your rados block device.
-
 
 Deployment
 -----------
