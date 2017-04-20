@@ -91,6 +91,45 @@ Ansible configuration
 
 By default, Enos loads its own ``ansible.cfg``. To use another Ansible
 configuration file, the ``ANSIBLE_CONFIG`` environment variable can be used.
-Further information can be found : `see here 
+Further information can be found : `see here
 <http://docs.ansible.com/ansible/intro_configuration.html>`_.
 
+
+Using a persistent registry with Ceph
+-------------------------------------
+
+Enos deploys a fresh registry that acts as a private docker registry
+mirroring the official one and cache containers close to your
+deployment resources.
+
+To get a persistent registry you can use a persistent Ceph Rados Block
+Device for the registry backend. Image will be cached during the first
+deployment and reused for the subsequent deployments.
+
+The relevant configuration section looks like this in your
+``reservation.yaml``:
+
+.. code-block:: yaml
+
+    registry:
+      ceph: true|false
+      ceph_keyring: path to your keyring
+      ceph_id: your ceph id
+      ceph_rbd: rbd in the form "pool/rbd"
+      ceph_mon_host: list of ceph monitor addresses
+
+
+* ``ceph: false`` starts a fresh registry that caches the images for
+  the duration of the experiment.
+* ``ceph: true`` uses a registry whose backend is the existing
+  ``ceph_rbd`` Ceph Rados Block Device at destination
+  ``ceph_mon_host`` with the pool ``ceph_id`` and key
+  ``ceph_keyring``.
+
+
+.. note ::
+
+   The ``reservation.yaml.sample`` file provides an example of Ceph
+   configuration that relies on the G5k Ceph of Rennes. `The G5k Ceph
+   tutorial <https://www.grid5000.fr/mediawiki/index.php/Ceph>`_ will
+   guide you to create your own Rados Block Device.

@@ -6,7 +6,7 @@
     - ceph-common
       
 - name: Copy Ceph configuration
-  copy: src=ceph.conf dest=/etc/ceph/ceph.conf
+  template: src=ceph.conf.j2 dest=/etc/ceph/ceph.conf
 
 - name: Copy Ceph Keyring
   copy: src={{ registry.ceph_keyring }} dest=/etc/ceph/
