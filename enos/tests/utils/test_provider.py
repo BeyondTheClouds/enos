@@ -2,6 +2,35 @@ import unittest
 from enos.utils.provider import *
 import copy
 
+class TestLoadConfig(unittest.TestCase):
+    def test_load_config_with_topology(self):
+        config = {
+                'topology':{
+                    'grp1': {
+                        'a':{
+                            'control': 1,
+                            }
+                        },
+                    'grp[2-6]': {
+                        'a':{
+                            'compute': 10,
+                            }
+                        }
+                    },
+                'provider': 'test_provider'
+                }
+        expected_resources = {
+                'resources': {
+                    "a": {
+                        "control": 1,
+                        "compute": 50
+                        }
+                    }
+                }
+        conf = load_config(config, default_config={}, default_provider_config={})
+        self.assertDictEqual(expected_resources['resources'], conf['resources'])
+
+
 class TestLoadProviderConfig(unittest.TestCase):
     def test_load_provider_config_nest_type(self):
         provider_config = 'myprovider'
