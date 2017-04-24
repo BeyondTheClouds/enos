@@ -13,7 +13,7 @@ def load_config(config, default_config={}, default_provider_config={}):
         conf['topology'] = expand_topology(config['topology'])
         # We are here using a flat combination of the resource
         # resulting in (probably) deploying one single region
-        conf['resources'] = build_resources(config['topology'])
+        conf['resources'] = build_resources(conf['topology'])
 
     conf['provider'] = load_provider_config(
                         conf['provider'],

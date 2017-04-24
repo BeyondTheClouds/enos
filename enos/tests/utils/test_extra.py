@@ -19,6 +19,37 @@ class TestExpandGroups(unittest.TestCase):
         self.assertEquals(3, len(expanded))
 
 
+class TestBuildResources(unittest.TestCase):
+
+    def test_build_resources(self):
+        topology = {
+                "grp1": {
+                    "a":{
+                        "control": 1,
+                        }
+                    },
+                "grp2": {
+                    "a":{
+                        "compute": 10,
+                        }
+                    },
+                "grp3": {
+                    "a":{
+                        "compute": 10,
+                        }
+                    }
+                }
+
+        resources_expected = {
+                "a": {
+                    "control": 1,
+                    "compute": 20
+                    }
+                }
+        resources_actual = build_resources(topology)
+        self.assertDictEqual(resources_expected, resources_actual)
+
+
 class TestBuildRoles(unittest.TestCase):
 
     def setUp(self):

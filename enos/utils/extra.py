@@ -255,6 +255,8 @@ def build_resources(topology):
     """Build the resource list
     For now we are just aggregating all the resources
     This could be part of a flat resource builder
+
+    NOTE: topology must be expanded before calling build_resources
     """
 
     def merge_add(cluster_roles, roles):
