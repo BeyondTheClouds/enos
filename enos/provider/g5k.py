@@ -61,7 +61,8 @@ class G5k(Provider):
             self._mount_cluster_nics(
                 conf,
                 conf['resources'].keys()[0],
-                deployed)
+                deployed,
+                vlans)
 
         self._provision(deployed_nodes_vlan)
 
@@ -347,7 +348,7 @@ class G5k(Provider):
             'dns': '131.254.203.235'
         }
 
-    def _mount_cluster_nics(self, conf, cluster, nodes):
+    def _mount_cluster_nics(self, conf, cluster, nodes, vlans):
         """Get the NIC devices of the reserved cluster.
 
         :param nodes: List of hostnames unmodified by the vlan
@@ -369,7 +370,7 @@ class G5k(Provider):
 
         if len(interfaces) > 1 and not provider_conf['single_interface']:
             external_interface = str(interfaces[1])
-            _, vlan = self._get_primary_vlan()
+            _, vlan = self._get_primary_vlan(vlans)
             api.set_nodes_vlan(site,
                                map(lambda d: EX.Host(d), nodes),
                                external_interface,
