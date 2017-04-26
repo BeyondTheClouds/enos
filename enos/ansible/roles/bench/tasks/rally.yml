@@ -18,11 +18,14 @@
 - name: Create a directory for the virutalenv
   file: path=/tmp/rally-venv state=directory
 
-- name: Install Rally into the venv
+- name: Install python mongo client for OSProfiler and Rally into the venv
   pip:
-     name: "{{ rally_pip }}"
+     name: "{{ item }}"
      state: present
      virtualenv: /tmp/rally-venv
+  with_items:
+    - pymongo # apt: python-pymongo is too old for OSProfiler
+    - "{{ rally_pip }}"
 
 - name: Create Rally result directory
   file: path=/root/rally_home state=directory
@@ -55,10 +58,10 @@
   copy: src="{{ bench.location }}" dest=/root/rally_home/
 
 - name: debug
-  debug: msg="rally task start /root/rally_home/{{ bench.location | basename}} --task-args '{{ bench.args }}'"
+  debug: msg="rally task start /root/rally_home/{{ bench.location | basename}} --task-args '{{ bench.args }}' {{ '--os-profile SECRET_KEY' if bench.osprofiler }}"
 
 - name: Run Rally benchmark
-  command: /tmp/rally-venv/bin/rally task start {{ bench.location | basename }} --task-args '{{ bench.args }}'
+  command: /tmp/rally-venv/bin/rally task start {{ bench.location | basename }} --task-args '{{ bench.args }}' {{ '--os-profile SECRET_KEY' if bench.osprofiler }}
   args:
     chdir: /root/rally_home
   register: rally_output
@@ -84,3 +87,26 @@
   args:
     chdir: /root/rally_home
   when: list.stdout != ""
+
+- name: Get OSProfiler Trace Id
+  shell: echo "{{ rally_output.stdout }}" | grep 'osprofiler trace show --html' | sed 's/osprofiler trace show --html //g'
+  register: trace_id
+  when: "{{ bench.osprofiler | bool }}"
+
+- name: Output of OSProfiler Trace ID
+  debug: msg="OSProfiler Trace ID {{ trace_id.stdout_lines[0] }}"
+  when: "{{ bench.osprofiler | bool }}"
+
+- name: Generating OSProfiler trace (json)
+  command: /tmp/rally-venv/bin/osprofiler trace show --json --out trace-{{ bench.location | basename }}.json {{ trace_id.stdout_lines[0] }}
+  args:
+    chdir: /root/rally_home
+  environment: "{{ os_env }}"
+  when: "{{ bench.osprofiler | bool }}"
+
+- name: Generating OSprofiler trace (html)
+  command: /tmp/rally-venv/bin/osprofiler trace show --html --out trace-{{ bench.location | basename }}.html {{ trace_id.stdout_lines[0] }}
+  args:
+    chdir: /root/rally_home
+  environment: "{{ os_env }}"
+  when: "{{ bench.osprofiler | bool }}"
