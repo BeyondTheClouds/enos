@@ -31,11 +31,11 @@ See 'enos <command> --help' for more information on a specific
 command.
 
 """
-from utils.constants import (SYMLINK_NAME, TEMPLATE_DIR, ANSIBLE_DIR,
-                             NETWORK_IFACE, EXTERNAL_IFACE, VERSION)
+from utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, NETWORK_IFACE,
+                             EXTERNAL_IFACE, VERSION)
 from utils.extra import (run_ansible, generate_inventory,
                          bootstrap_kolla, to_abs_path, pop_ip,
-                         make_provider)
+                         make_provider, mk_enos_values)
 
 from utils.network_constraints import (build_grp_constraints,
                                        build_ip_constraints)
@@ -147,7 +147,8 @@ def up(env=None, **kwargs):
         'network_interface': eths[NETWORK_IFACE],
         'resultdir':         env['resultdir'],
         'rabbitmq_password': "demo",
-        'database_password': "demo"
+        'database_password': "demo",
+        'external_vip':      pop_ip(env)
     })
 
     # Executes hooks and runs playbook that initializes resources (eg,
@@ -191,23 +192,9 @@ def install_os(env=None, **kwargs):
              kolla_path),
          shell=True)
 
-    # Construct values required by kolla-ansible playbooks
-    required_kolla_values = {
-        'neutron_external_address':   pop_ip(env),
-        'network_interface':          env['eths'][NETWORK_IFACE],
-        'kolla_internal_vip_address': env['config']['vip'],
-        'neutron_external_interface': env['eths'][EXTERNAL_IFACE],
-        'influx_vip':                 env['config']['influx_vip'],
-        'kolla_ref':                  env['config']['kolla_ref'],
-        'resultdir':                  env['resultdir']
-    }
-    if 'enable_monitoring' in env['config']:
-        required_kolla_values['enable_monitoring'] = \
-                env['config']['enable_monitoring']
-
     # Bootstrap kolla running by patching kolla sources (if any) and
     # generating admin-openrc, globals.yml, passwords.yml
-    bootstrap_kolla(env, required_kolla_values)
+    bootstrap_kolla(env)
 
     # Construct kolla-ansible command...
     kolla_cmd = [os.path.join(kolla_path, "tools", "kolla-ansible")]
