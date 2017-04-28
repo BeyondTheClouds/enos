@@ -32,6 +32,7 @@ def generate_default_grp_constraints(topology, network_constraints):
     """
     default_delay = network_constraints.get('default_delay')
     default_rate = network_constraints.get('default_rate')
+    default_loss = network_constraints.get('default_loss')
     except_groups = network_constraints.get('except', [])
     # expand each groups
     grps = map(lambda g: expand_groups(g), topology.keys())
@@ -42,7 +43,8 @@ def generate_default_grp_constraints(topology, network_constraints):
             'src': grp1,
             'dst': grp2,
             'delay': default_delay,
-            'rate': default_rate
+            'rate': default_rate,
+            'loss': default_loss
         } for grp1 in grps for grp2 in grps
         if grp1 != grp2 and grp1 not in except_groups
                                  and grp2 not in except_groups]
@@ -107,6 +109,7 @@ def build_ip_constraints(rsc, ips, constraints):
         gdst = constraint['dst']
         gdelay = constraint['delay']
         grate = constraint['rate']
+        gloss = constraint['loss']
         for s in rsc[gsrc]:
             # one possible source
             # Get all the active devices for this source
@@ -127,6 +130,7 @@ def build_ip_constraints(rsc, ips, constraints):
                                 'target': dip,
                                 'device': sdevice,
                                 'delay': gdelay,
-                                'rate': grate
+                                'rate': grate,
+                                'loss': gloss
                             })
     return local_ips

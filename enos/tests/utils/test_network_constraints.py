@@ -301,7 +301,8 @@ class TestBuildIpConstraints(unittest.TestCase):
             'src': 'grp1',
             'dst': 'grp2',
             'rate': '10mbit',
-            'delay': '10ms'
+            'delay': '10ms',
+            'loss': '0.1%'
         }
         constraints = [constraint]
 
