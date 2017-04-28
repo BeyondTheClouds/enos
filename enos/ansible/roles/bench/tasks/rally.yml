@@ -82,11 +82,11 @@
     chdir: /root/rally_home
   when: list.stdout != ""
 
-# - name: Generating Rally reports (json)
-#   command: /tmp/rally-venv/bin/rally task results --uuid {{ list.stdout | replace('\n', ' ') }} > rally-{{ bench.location | basename }}.json
-#   args:
-#     chdir: /root/rally_home
-#   when: list.stdout != ""
+- name: Generating Rally reports (json)
+  shell: /tmp/rally-venv/bin/rally task results --uuid {{ list.stdout | replace('\n', ' ') }} > rally-{{ bench.location | basename }}.json
+  args:
+    chdir: /root/rally_home
+  when: list.stdout != ""
 
 - name: Get OSProfiler Trace Id
   slurp: src=/tmp/osprofiler
