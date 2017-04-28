@@ -21,7 +21,7 @@
 - name: Install python mongo client for OSProfiler and Rally into the venv
   pip:
      name: "{{ item }}"
-     state: present
+     state: latest
      virtualenv: /tmp/rally-venv
   with_items:
     - pymongo # apt: python-pymongo is too old for OSProfiler
@@ -58,10 +58,10 @@
   copy: src="{{ bench.location }}" dest=/root/rally_home/
 
 - name: debug
-  debug: msg="rally task start /root/rally_home/{{ bench.location | basename}} --task-args '{{ bench.args }}' {{ '--os-profile SECRET_KEY' if bench.osprofiler }}"
+  debug: msg="rally task start /root/rally_home/{{ bench.location | basename}} --task-args '{{ bench.args }}'"
 
 - name: Run Rally benchmark
-  command: /tmp/rally-venv/bin/rally task start {{ bench.location | basename }} --task-args '{{ bench.args }}' {{ '--os-profile SECRET_KEY' if bench.osprofiler }}
+  command: /tmp/rally-venv/bin/rally task start {{ bench.location | basename }} --task-args '{{ bench.args }}'
   args:
     chdir: /root/rally_home
   register: rally_output
@@ -82,30 +82,33 @@
     chdir: /root/rally_home
   when: list.stdout != ""
 
-- name: Generating Rally reports (json)
-  command: /tmp/rally-venv/bin/rally task report --tasks {{ list.stdout | replace('\n', ' ') }} --out rally-{{ bench.location | basename }}.json
-  args:
-    chdir: /root/rally_home
-  when: list.stdout != ""
+# - name: Generating Rally reports (json)
+#   command: /tmp/rally-venv/bin/rally task results --uuid {{ list.stdout | replace('\n', ' ') }} > rally-{{ bench.location | basename }}.json
+#   args:
+#     chdir: /root/rally_home
+#   when: list.stdout != ""
 
 - name: Get OSProfiler Trace Id
-  shell: echo "{{ rally_output.stdout }}" | grep 'osprofiler trace show --html' | sed 's/osprofiler trace show --html //g'
+  slurp: src=/tmp/osprofiler
   register: trace_id
-  when: "{{ bench.osprofiler | bool }}"
+
+  # shell: echo "{{ rally_output.stdout }}" | grep 'osprofiler trace show --html' | sed 's/osprofiler trace show --html //g'
+  # register: trace_id
+  # when: "{{ bench.osprofiler | bool }}"
 
 - name: Output of OSProfiler Trace ID
-  debug: msg="OSProfiler Trace ID {{ trace_id.stdout_lines[0] }}"
+  debug: msg="OSProfiler Trace ID {{ trace_id['content'] | b64decode }}"
   when: "{{ bench.osprofiler | bool }}"
 
 - name: Generating OSProfiler trace (json)
-  command: /tmp/rally-venv/bin/osprofiler trace show --json --out trace-{{ bench.location | basename }}.json {{ trace_id.stdout_lines[0] }}
+  command: /tmp/rally-venv/bin/osprofiler trace show --json --out trace-{{ bench.location | basename }}.json {{ trace_id['content'] | b64decode }}
   args:
     chdir: /root/rally_home
   environment: "{{ os_env }}"
   when: "{{ bench.osprofiler | bool }}"
 
 - name: Generating OSprofiler trace (html)
-  command: /tmp/rally-venv/bin/osprofiler trace show --html --out trace-{{ bench.location | basename }}.html {{ trace_id.stdout_lines[0] }}
+  command: /tmp/rally-venv/bin/osprofiler trace show --html --out trace-{{ bench.location | basename }}.html {{ trace_id['content'] | b64decode }}
   args:
     chdir: /root/rally_home
   environment: "{{ os_env }}"
