@@ -21,17 +21,26 @@
   with_indexed_items: "{{ ips_with_constraints[inventory_hostname].tc }}"
   when:
     - tc_enable
-    - item[1].source == ansible_nodename 
+    - item[1].source == ansible_nodename
 
 
-- name: Adding delay
+# NOTE(msimonin): we use two different tasks here because the documentation isn't clear about applying a loss of 0
+# see https://wiki.linuxfoundation.org/networking/netem
+- name: Adding delay (without loss)
   command: "tc qdisc add dev {{ item.1.device }} parent 1:{{ item.0 + 1 }} handle {{ item.0 + 10 }}: netem delay {{ item.1.delay }}"
   with_indexed_items: "{{ ips_with_constraints[inventory_hostname].tc }}"
-
   when:
     - tc_enable
     - item[1].source == ansible_nodename
+    - item[1].loss == 0 or item[1].loss == '0%'
 
+- name: Adding delay (with loss)
+  command: "tc qdisc add dev {{ item.1.device }} parent 1:{{ item.0 + 1 }} handle {{ item.0 + 10 }}: netem delay {{ item.1.delay }} loss {{ item.1.loss }}"
+  with_indexed_items: "{{ ips_with_constraints[inventory_hostname].tc }}"
+  when:
+    - tc_enable
+    - item[1].source == ansible_nodename
+    - item[1].loss != 0 and item[1].loss != '0%'
 
 - name: Adding filter
   command: "tc filter add dev {{ item.1.device }} parent 1: protocol ip  u32 match ip dst {{ item.1.target }} flowid 1:{{ item.0 + 1 }}"
