@@ -4,7 +4,8 @@ from ansible.inventory import Inventory
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
 from collections import namedtuple
-from constants import TEMPLATE_DIR, ANSIBLE_DIR
+from constants import (TEMPLATE_DIR, ANSIBLE_DIR, NETWORK_IFACE,
+                       EXTERNAL_IFACE)
 from itertools import groupby
 from netaddr import IPRange
 
@@ -182,15 +183,35 @@ def to_ansible_group_string(roles):
     return "\n".join(inventory)
 
 
-def mk_kolla_values(src_path, user_values, required_values):
+def get_kolla_required_values(env):
+    """Returns a dictionary with all values required by kolla-ansible
+based on the Enos environment.
+
+    """
+    values = {
+        'network_interface':          env['eths'][NETWORK_IFACE],
+        'kolla_internal_vip_address': env['config']['vip'],
+        'neutron_external_interface': env['eths'][EXTERNAL_IFACE],
+        'neutron_external_address':   env['config']['external_vip'],
+        'influx_vip':                 env['config']['influx_vip'],
+        'kolla_ref':                  env['config']['kolla_ref'],
+        'resultdir':                  env['resultdir']
+    }
+    if 'enable_monitoring' in env['config']:
+        values['enable_monitoring'] = env['config']['enable_monitoring']
+
+    return values
+
+
+def mk_kolla_values(src_path, required_values, user_values):
     """Builds a dictionary with all kolla values.
 
     :param src_path: Path to kolla-ansible sources.
 
+    :param required_values: Values required by kolla-ansible.
+
     :param user_values: User specic kolla values as defined into
         the reservation file.
-
-    :param required_values: Values required by kolla-ansible.
 
     return values related to kolla-ansible
     """
@@ -210,7 +231,26 @@ def mk_kolla_values(src_path, user_values, required_values):
     return kolla_values
 
 
-def bootstrap_kolla(env, kolla_required_values):
+def mk_enos_values(env):
+    "Builds a dictionary with all enos values based on the environment."
+    enos_values = {}
+
+    # Get all kolla values
+    enos_values.update(mk_kolla_values(
+        os.path.join(env['resultdir'], 'kolla'),
+        get_kolla_required_values(env),
+        env['config']['kolla']))
+
+    # Update with user specific values (except already got kolla)
+    enos_values.update(
+        {k: v for k, v in env['config'].items() if k != "kolla"})
+
+    return enos_values
+
+
+# TODO(rcherrueau): Remove this helper function and move code into
+# enos.install_os when the following FIXME will be addressed.
+def bootstrap_kolla(env):
     """Setups all necessities for calling kolla-ansible.
 
     - Patches kolla-ansible sources (if any).
@@ -218,26 +258,22 @@ def bootstrap_kolla(env, kolla_required_values):
     - Builds password.yml into result dir.
     - Builds admin-openrc into result dir.
     """
-    kolla_values = mk_kolla_values(
-        os.path.join(env['resultdir'], 'kolla'),
-        env['config']['kolla'],
-        kolla_required_values)
-
     # Write the globals.yml file in the result dir.
     #
     # FIXME: Find a neat way to put this into the next bootsrap_kolla
     # playbook. Then, remove this util function and call directly the
     # playbook from `enos os`.
     globals_path = os.path.join(env['resultdir'], 'globals.yml')
-    globals_values = kolla_required_values.copy()
+    globals_values = get_kolla_required_values(env)
     globals_values.update(env['config']['kolla'])
     with open(globals_path, 'w') as f:
         yaml.dump(globals_values, f, default_flow_style=False)
 
-    # Patche kolla-ansible sources + Write admin-openrc and
+    # Patch kolla-ansible sources + Write admin-openrc and
     # password.yml in the result dir
+    enos_values = mk_enos_values(env)
     playbook = os.path.join(ANSIBLE_DIR, "bootstrap_kolla.yml")
-    run_ansible([playbook], env['inventory'], kolla_values)
+    run_ansible([playbook], env['inventory'], enos_values)
 
 
 def to_abs_path(path):
