@@ -28,6 +28,12 @@ change the git repository/reference of Kolla code with:
     kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
     kolla_ref: "stable/ocata"
 
+You can also your own local clone of kolla-ansible with:
+
+.. code-block:: yaml
+
+    kolla_repo: "file:///path/to/local/kolla-ansible"
+
 Note on the network interfaces:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -133,3 +139,21 @@ The relevant configuration section looks like this in your
    configuration that relies on the G5k Ceph of Rennes. `The G5k Ceph
    tutorial <https://www.grid5000.fr/mediawiki/index.php/Ceph>`_ will
    guide you to create your own Rados Block Device.
+
+
+Using a local registry
+----------------------
+
+By default, Enos deploys a cache registry in the control node.
+You can tell enos to use a locally deployed insecure registry,
+that is accessible on port 4000, with :
+
+.. code-block:: yaml
+
+    registry:
+      ip: my_ip
+
+.. note ::
+
+  If using a local registry, you can remove the disco/registry entry
+  from the inventory, to avoid deploying the cache registry.
