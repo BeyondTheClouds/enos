@@ -24,6 +24,11 @@ os_env:
   OS_IDENTITY_API_VERSION: 3
   OS_REGION_NAME: "{{ openstack_region_name }}"
 
+# Pip rule to download rally. This could be any pip valid syntax such
+# as a custom rally e.g.:
+# git+https://github.com/rcherrueau/rally#egg=rally
+rally_pip : "rally"
+
 # list of available patchs
 # to enable one patch copy past its description
 # to your local config file and enable it

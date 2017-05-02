@@ -1,73 +1,115 @@
 ---
 # Install and launch a rally benchmark
-- name: Install rally result directory
-  file: path=/root/rally_home state=directory owner=65500
+- name: Install rally dependencies
+  apt: name="{{ item }}" state=present
+  with_items:
+    # sqlite
+    - libpq-dev
+    - libxml2-dev
+    - libxslt1-dev
+    # rally
+    - build-essential
+    - libssl-dev
+    - libffi-dev
+    - python-virtualenv
+    - python-netifaces
+    - python-dev
 
-- name: Test whether the rally database has been initialized or not
-  stat: path=/root/rally_home/.rally.sqlite
-  register: sqlite
+- name: Create a directory for the virutalenv
+  file: path=/tmp/rally-venv state=directory
+
+- name: Install python mongo client for OSProfiler and Rally into the venv
+  pip:
+     name: "{{ item }}"
+     state: latest
+     virtualenv: /tmp/rally-venv
+  with_items:
+    - pymongo # apt: python-pymongo is too old for OSProfiler
+    - "{{ rally_pip }}"
+
+- name: Create Rally result directory
+  file: path=/root/rally_home state=directory
+
+- name: Create Rally configuration directory
+  file: path=/etc/rally state=directory
+
+- name: Copy Rally configuration that set database to sqlite
+  copy:
+    src: rally.conf
+    dest: /etc/rally/rally.conf
 
 - name: Initialize database
-  when: not sqlite.stat.exists
-  docker_container:
-    name: "{{ 'database' | to_uuid }}"
-    image: rallyforge/rally
-    state: started
-    volumes:
-    - /root/rally_home:/home/rally
-    command: rally-manage db create
+  command: /tmp/rally-venv/bin/rally-manage db recreate
+  args:
+    chdir: /root/rally_home
 
-# NOTE(msimonin): without the pause
-# the file seems not to be synced in the next task.
-# Relaunching the play a second time is also a possible wokaround.
+# NOTE: without the pause the file seems not to be synced in the next
+# task. Relaunching the play a second time is also a possible
+# wokaround.
 - pause: seconds=1
 
-- name: Test whether the rally deployment has been created or not
-  command: docker run -v /root/rally_home:/home/rally rallyforge/rally rally deployment list
-  register: deployment
-
 - name: Deploy discovery context
-  when: "'discovery' not in deployment.stdout"
-  docker_container:
-    name: "{{ 'deployment' | to_uuid }}"
-    image: rallyforge/rally
-    state: started
-    volumes:
-      - /root/rally_home:/home/rally
-    env: "{{ os_env }}"
-    command: rally deployment create --fromenv --name=discovery
+  command: /tmp/rally-venv/bin/rally deployment create --fromenv --name=discovery
+  args:
+    chdir: /root/rally_home
+  environment: "{{ os_env }}"
 
 - name: Copy rally scenarios
-  copy: src={{ bench.location }} dest=/root/rally_home/ owner=655500
+  copy: src="{{ bench.location }}" dest=/root/rally_home/
 
 - name: debug
-  debug: msg="rally task start {{ bench.location | basename }} --task-args '{{ bench.args }}'"
+  debug: msg="rally task start /root/rally_home/{{ bench.location | basename}} --task-args '{{ bench.args }}'"
 
-# NOTE(msimonin): ansible 2.2.0 breaks the return value.
-# see https://github.com/BeyondTheClouds/enos/issues/41
-- name: Run rally benchmark
-  docker_container:
-    name: "{{ bench.location | to_uuid }}"
-    image: rallyforge/rally
-    state: started
-    volumes:
-      - /root/rally_home:/home/rally
-    command: rally task start {{ bench.location | basename }} --task-args '{{ bench.args }}'
-  register: docker_output
+- name: Run Rally benchmark
+  command: /tmp/rally-venv/bin/rally task start {{ bench.location | basename }} --task-args '{{ bench.args }}'
+  args:
+    chdir: /root/rally_home
+  register: rally_output
 
-- name: Wait for the end of the test, this may take a while...
-  command: "docker ps -q --filter id={{ docker_output.ansible_facts.ansible_docker_container.Id }}"
-  register: finished
-  until: finished.stdout == ""
-  delay: 20
-  retries: 10000
+- name: Output of Rally execution
+  debug: msg="{{ rally_output }}"
 
-- name: List available rally reports
-  command: docker run -v /root/rally_home:/home/rally rallyforge/rally  rally task list --uuids-only
+- name: List available Rally reports
+  command: /tmp/rally-venv/bin/rally task list --uuids-only
+  args:
+    chdir: /root/rally_home
   register: list
 
 # Download rally results only if there are some reports to get back
-
-- name: Generating rally reports
-  command: docker run -v /root/rally_home:/home/rally rallyforge/rally  rally task report --tasks {{ list.stdout | replace('\n', ' ') }} --out report.html
+- name: Generating Rally reports (html)
+  command: /tmp/rally-venv/bin/rally task report --tasks {{ list.stdout | replace('\n', ' ') }} --out rally-{{ bench.location | basename }}.html
+  args:
+    chdir: /root/rally_home
   when: list.stdout != ""
+
+- name: Generating Rally reports (json)
+  shell: /tmp/rally-venv/bin/rally task results --uuid {{ list.stdout | replace('\n', ' ') }} > rally-{{ bench.location | basename }}.json
+  args:
+    chdir: /root/rally_home
+  when: list.stdout != ""
+
+- name: Get OSProfiler Trace Id
+  slurp: src=/tmp/osprofiler
+  register: trace_id
+
+  # shell: echo "{{ rally_output.stdout }}" | grep 'osprofiler trace show --html' | sed 's/osprofiler trace show --html //g'
+  # register: trace_id
+  # when: "{{ bench.osprofiler | bool }}"
+
+- name: Output of OSProfiler Trace ID
+  debug: msg="OSProfiler Trace ID {{ trace_id['content'] | b64decode }}"
+  when: "{{ bench.osprofiler | bool }}"
+
+- name: Generating OSProfiler trace (json)
+  command: /tmp/rally-venv/bin/osprofiler trace show --json --out trace-{{ bench.location | basename }}.json {{ trace_id['content'] | b64decode }}
+  args:
+    chdir: /root/rally_home
+  environment: "{{ os_env }}"
+  when: "{{ bench.osprofiler | bool }}"
+
+- name: Generating OSprofiler trace (html)
+  command: /tmp/rally-venv/bin/osprofiler trace show --html --out trace-{{ bench.location | basename }}.html {{ trace_id['content'] | b64decode }}
+  args:
+    chdir: /root/rally_home
+  environment: "{{ os_env }}"
+  when: "{{ bench.osprofiler | bool }}"

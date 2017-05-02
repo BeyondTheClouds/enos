@@ -25,6 +25,8 @@ setup(
         'influxdb==4.0.0',
         'docopt==0.6.2',
         'httplib2==0.9.2',
+        'osprofiler==1.8.0',
+        'pymongo==3.4.0',
         'python-dateutil==2.2',
         'python-neutronclient==6.1.0',
         'python-openstackclient>=3.0.0,<=4.0.0',

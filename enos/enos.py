@@ -35,7 +35,7 @@ from utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, NETWORK_IFACE,
                              EXTERNAL_IFACE, VERSION)
 from utils.extra import (run_ansible, generate_inventory,
                          bootstrap_kolla, to_abs_path, pop_ip,
-                         make_provider)
+                         make_provider, mk_enos_values)
 
 from utils.network_constraints import (build_grp_constraints,
                                        build_ip_constraints)
@@ -362,12 +362,17 @@ def bench(env=None, **kwargs):
         return product
 
     logging.debug('phase[bench]: args=%s' % kwargs)
+
     workload_dir = kwargs["--workload"]
+
+    playbook_values = mk_enos_values(env)
     with open(os.path.join(workload_dir, "run.yml")) as workload_f:
         workload = yaml.load(workload_f)
         for bench_type, desc in workload.items():
             scenarios = desc.get("scenarios", [])
             for scenario in scenarios:
+                logging.debug('scenario %s' % scenario)
+
                 # merging args
                 top_args = desc.get("args", {})
                 args = scenario.get("args", {})
@@ -375,6 +380,7 @@ def bench(env=None, **kwargs):
                 # merging enabled, skipping if not enabled
                 top_enabled = desc.get("enabled", True)
                 enabled = scenario.get("enabled", True)
+                osprofiler = scenario.get("osprofiler", False)
                 if not (top_enabled and enabled):
                     continue
                 for a in cartesian(top_args):
@@ -384,15 +390,18 @@ def bench(env=None, **kwargs):
                             'multinode')
                     # NOTE(msimonin) all the scenarios must reside on
                     # the workload directory
-                    env['config']['bench'] = {
+                    playbook_values.update(bench={
                         'type': bench_type,
                         'location': os.path.abspath(
                                       os.path.join(workload_dir,
                                                    scenario["file"])),
                         'file': scenario["file"],
+                        'osprofiler': osprofiler,
                         'args': a
-                    }
-                    run_ansible([playbook_path], inventory_path, env['config'])
+                    })
+                    run_ansible([playbook_path],
+                                inventory_path,
+                                playbook_values)
 
 
 @enostask("""
