@@ -39,16 +39,17 @@ A typical experiment using Enos is the sequence of several phases:
 
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :maxdepth: 2
+    :caption: Contents:
 
-   getting-started/index
-   cli/index
-   workload/index
-   customization/index
-   network-emulation/index
-   analysis/index
-   contribute/index
+    installation
+    provider/index
+    cli/index
+    workload/index
+    customization/index
+    network-emulation/index
+    analysis/index
+    contribute/index
 
 Why Enos ?
 -----------
