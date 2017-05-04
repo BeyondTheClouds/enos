@@ -62,6 +62,7 @@ class G5k(Provider):
                 conf,
                 conf['resources'].keys()[0],
                 deployed,
+                deployed_nodes_vlan,
                 vlans)
 
         self._provision(deployed_nodes_vlan)
@@ -348,7 +349,7 @@ class G5k(Provider):
             'dns': '131.254.203.235'
         }
 
-    def _mount_cluster_nics(self, conf, cluster, nodes, vlans):
+    def _mount_cluster_nics(self, conf, cluster, nodes, kavlan_nodes, vlans):
         """Get the NIC devices of the reserved cluster.
 
         :param nodes: List of hostnames unmodified by the vlan
@@ -377,7 +378,7 @@ class G5k(Provider):
                                vlan)
 
             self._exec_command_on_nodes(
-                nodes,
+                kavlan_nodes,
                 "ifconfig %s up && dhclient -nw %s" % (
                     external_interface, external_interface),
                 'mounting secondary interface')
@@ -396,7 +397,7 @@ class G5k(Provider):
 
     def _exec_command_on_nodes(self, nodes, cmd, label, conn_params=None):
         """Execute a command on a node (id or hostname) or on a set of nodes"""
-        if not isinstance(nodes, list):
+        if isinstance(nodes, basestring):
             nodes = [nodes]
 
         if conn_params is None:
