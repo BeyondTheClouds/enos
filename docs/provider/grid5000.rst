@@ -3,55 +3,33 @@
 Grid'5000
 =========
 
+
 Installation
-------------
+-------------
 
 Connect to the frontend of your choice.
-To install Enos, clone the repository:
-
-.. code-block:: bash
-
-    $ git clone https://github.com/BeyondTheClouds/enos
-
-You should also choose to go with a virtualenv.
-
-If virtualenv is missing:
-
-.. code-block:: bash
-
-    $ pip install virtualenv --user # Install virtualenv
-    $ export PATH=~/.local/bin/:${PATH} # Put it into your path
-
-Then install the dependencies:
-
-.. code-block:: bash
-
-    $ cd enos
-    $ virtualenv venv
-    $ source venv/bin/activate
-    (venv)$ pip install -r requirements.txt
-
+Then, refer to the :ref:`installation` section to install Enos.
 
 Configuration
 -------------
 
-To get started you can copy the sample configuration file and edit the resulting
-file:
+The provider relies on cluster names to group the wanted resources. For example
+the following is a valid resources description :
 
-.. code-block:: bash
+.. code-block:: yaml
 
-    $ cp reservation.yaml.sample reservation.yaml
-    $ <editor> reservation.yaml
+    provider: g5k
+
+    resources:
+      paravance:
+        control: 1
+        network: 1
+      parsilo:
+        compute: 10
 
 
 Deployment
 -----------
-
-To launch the deployment, run:
-
-.. code-block:: bash
-
-    python -m enos.enos deploy
 
 We suggest you to run the deployment from a dedicated node (especially for large
 deployment). For now the recommended way to do so is to reserve one node prior
