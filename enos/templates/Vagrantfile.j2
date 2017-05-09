@@ -5,9 +5,6 @@
 
 $script = <<SCRIPT
 cp -r /home/vagrant/.ssh /root/.
-apt-get update
-apt-get install -y apt-transport-https python-setuptools ca-certificates
-easy_install pip && ln -s /usr/local/bin/pip /usr/bin/pip || true
 SCRIPT
 
 Vagrant.configure(2) do |config|

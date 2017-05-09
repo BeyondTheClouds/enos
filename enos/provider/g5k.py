@@ -415,13 +415,4 @@ class G5k(Provider):
         self._exec_command_on_nodes(
             deployed_nodes_vlan,
             'apt-get update && apt-get -y --force-yes install %s'
-            % ' '.join(['apt-transport-https',
-                        'python',
-                        'python-setuptools']),
-            'Installing apt-transport-https python...')
-
-        # fix installation of pip on jessie
-        self._exec_command_on_nodes(
-            deployed_nodes_vlan,
-            'easy_install pip && ln -s /usr/local/bin /usr/bin/pip || true',
-            'Installing pip')
+            % ' '.join(['python']), 'Installing python...')
