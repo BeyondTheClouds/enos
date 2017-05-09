@@ -45,7 +45,7 @@ A typical experiment using Enos is the sequence of several phases:
     installation
     provider/index
     cli/index
-    workload/index
+    benchmarks/index
     customization/index
     network-emulation/index
     analysis/index

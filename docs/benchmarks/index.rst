@@ -1,8 +1,9 @@
-Workload Injection
-==================
+Benchmarks
+==========
 
-A workload is a set of scenarios grouped by type.
-A workload is launched with the following command:
+Benchmarks are run by Enos by the mean of a workload description. A workload is
+a set of scenarios grouped by type.  A workload is launched with the following
+command:
 
 .. code-block:: bash
 
@@ -28,8 +29,8 @@ One example is given below:
           enabled: true # default is true
           file: nova-boot-list-cc.yml
           args:
-          sla_max_avg_duration: 30
-          times: 50
+            sla_max_avg_duration: 30
+            times: 50
 
 This will launch all the scenarios described under the scenarios keys with all
 the possible parameters. The parameters are calculated using the cartesian
@@ -42,12 +43,37 @@ the future we may support other type of scenarios.
 After running the workload, a backup of the environment can be done through
 :code:`python -m enos.enos backup`.
 
-Notes
-"""""
 
-* The Rally scenario files must reside in the workload directory and will be
-  uploaded during the process. Additionnaly they must be properly templatized.
+Rally
+-----
 
-* The Shaker scenario must correspond to the alias name of a predefined shaker
-  scenario
+Enos supports natively Rally scenarios. Please refer to the Rally documentation
+for any further information on this benchmarking tool.
 
+Supported keys :
+
+* :code:`name`: the name of the scenario. Can be any string.
+* :code:`file`: must be the path to the scenario file. The path is relative to the
+  :code:`workload` directory
+* :code:`enabled`: Whether to run this scenario
+* :code:`args`: Any parameters that can be understood by the rally scenario
+
+
+Shaker
+------
+
+Enos supports natively Shaker scenarios. Please refer to the Shaker documentation
+for any further information on this benchmarking tool.
+
+Supported keys :
+
+* :code:`name`: the name of the scenario. Can be any string.
+* :code:`file`: must be the alias of the scenario. Enos don't support custom scenario
+  yet.
+* :code:`enabled`: Whether to run this scenario
+
+
+Osprofiler
+----------
+
+Supporting OSProfiler in Rally benchmarks is planned for Q3 2017.
