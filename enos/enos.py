@@ -35,8 +35,7 @@ from utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, NETWORK_IFACE,
                              EXTERNAL_IFACE, VERSION)
 from utils.extra import (run_ansible, generate_inventory,
                          bootstrap_kolla, to_abs_path, pop_ip,
-                         make_provider, mk_enos_values)
-
+                         make_provider, mk_enos_values, wait_ssh)
 from utils.network_constraints import (build_grp_constraints,
                                        build_ip_constraints)
 from utils.enostask import (enostask, check_env)
@@ -50,6 +49,7 @@ import pprint
 import os
 import sys
 from subprocess import call
+import time
 
 import yaml
 import itertools
@@ -137,6 +137,8 @@ def up(env=None, **kwargs):
 
     env['inventory'] = inventory
 
+    wait_ssh(env)
+
     # Set variables required by playbooks of the application
     env['config'].update({
         'vip':               pop_ip(env),
@@ -154,7 +156,7 @@ def up(env=None, **kwargs):
     # installs the registry, install monitoring tools, ...)
     provider.before_preintsall(env)
     up_playbook = os.path.join(ANSIBLE_DIR, 'up.yml')
-    run_ansible([up_playbook], inventory, env['config'], kwargs['--tags'])
+    run_ansible([up_playbook], inventory, extra_vars=env['config'], tags=kwargs['--tags'])
     provider.after_preintsall(env)
 
 
@@ -393,7 +395,8 @@ def bench(env=None, **kwargs):
                         'file': scenario["file"],
                         'args': a
                     })
-                    run_ansible([playbook_path], inventory_path, playbook_values)
+                    run_ansible([playbook_path], inventory_path,
+                            extra_vars=playbook_values)
 
 
 @enostask("""
@@ -426,7 +429,8 @@ def backup(env=None, **kwargs):
     env['config']['backup_dir'] = backup_dir
     playbook_path = os.path.join(ANSIBLE_DIR, 'backup.yml')
     inventory_path = os.path.join(env['resultdir'], 'multinode')
-    run_ansible([playbook_path], inventory_path, env['config'])
+    run_ansible([playbook_path], inventory_path,
+            extra_vars=env['config'])
 
 
 @enostask("""
@@ -500,7 +504,8 @@ def tc(env=None, **kwargs):
                 # of env['config'] in case os hasn't been called
                 'network_interface': env['eths'][NETWORK_IFACE]
                 }
-        run_ansible([utils_playbook], env['inventory'], options)
+        run_ansible([utils_playbook], env['inventory'],
+                extra_vars=options)
         return
 
     # 1. getting  ips/devices information
@@ -515,7 +520,7 @@ def tc(env=None, **kwargs):
             'network_interface': env['eths'][NETWORK_IFACE],
             'neutron_external_interface': env['eths'][EXTERNAL_IFACE]
     }
-    run_ansible([utils_playbook], env['inventory'], options)
+    run_ansible([utils_playbook], env['inventory'], extra_vars=options)
 
     # 2.a building the group constraints
     logging.info('Building all the constraints')
@@ -545,7 +550,7 @@ def tc(env=None, **kwargs):
         'ips_with_constraints': ips_with_constraints,
         'tc_enable': enable,
     }
-    run_ansible([utils_playbook], env['inventory'], options)
+    run_ansible([utils_playbook], env['inventory'], extra_vars=options)
 
 
 @enostask("""
