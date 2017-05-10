@@ -38,21 +38,33 @@
     command: rally deployment create --fromenv --name=discovery
 
 - name: Copy rally scenarios
-  copy: src={{ bench.location }} dest=/root/rally_home/ owner=655500
+  copy: src={{ bench.scenario_location }} dest=/root/rally_home/ owner=655500
+
+- name: Create plugin directory
+  file:
+    path: /root/rally_home/.rally/plugins
+    state: directory
+    mode: 0755
+  when: bench.plugin_location is defined
+
+- name: Copy rally plugins
+  copy: src={{ bench.plugin_location }} dest=/root/rally_home/.rally/plugins owner=655500
+  when: bench.plugin_location is defined
+
 
 - name: debug
-  debug: msg="rally task start {{ bench.location | basename }} --task-args '{{ bench.args }}'"
+  debug: msg="rally task start {{ bench.scenario_location | basename }} --task-args '{{ bench.args }}'"
 
 # NOTE(msimonin): ansible 2.2.0 breaks the return value.
 # see https://github.com/BeyondTheClouds/enos/issues/41
 - name: Run rally benchmark
   docker_container:
-    name: "{{ bench.location | to_uuid }}"
+    name: "{{ bench.scenario_location | to_uuid }}"
     image: rallyforge/rally
     state: started
     volumes:
       - /root/rally_home:/home/rally
-    command: rally task start {{ bench.location | basename }} --task-args '{{ bench.args }}'
+    command: rally task start {{ bench.scenario_location | basename }} --task-args '{{ bench.args }}'
   register: docker_output
 
 - name: Wait for the end of the test, this may take a while...

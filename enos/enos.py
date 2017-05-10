@@ -385,19 +385,24 @@ def bench(env=None, **kwargs):
                             'run-bench.yml')
                     inventory_path = os.path.join(env['resultdir'],
                             'multinode')
-                    # NOTE(msimonin) all the scenarios must reside on
-                    # the workload directory
-                    playbook_values.update(bench={
+                    # NOTE(msimonin) all the scenarios and plugins must reside on the workload directory
+                    bench={
                         'type': bench_type,
-                        'location': os.path.abspath(
+                        'scenario_location': os.path.abspath(
                                       os.path.join(workload_dir,
                                                    scenario["file"])),
                         'file': scenario["file"],
                         'args': a
-                    })
-                    run_ansible([playbook_path], inventory_path,
-                            extra_vars=playbook_values)
+                    }
 
+                    if "plugin" in scenario:
+                        plugin = os.path.abspath(os.path.join(workload_dir, scenario["plugin"]))
+                        if os.path.isdir(plugin):
+                            plugin = plugin + "/"
+                        bench['plugin_location'] = plugin
+                    playbook_values.update(bench=bench)
+
+                    run_ansible([playbook_path], inventory_path, extra_vars=playbook_values)
 
 @enostask("""
 usage: enos backup [--backup_dir=BACKUP_DIR] [-e ENV|--env=ENV]

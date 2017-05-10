@@ -57,7 +57,7 @@ Supported keys :
   :code:`workload` directory
 * :code:`enabled`: Whether to run this scenario
 * :code:`args`: Any parameters that can be understood by the rally scenario
-
+* :code:`plugin`: must be the path to the plugin. The path is relative to the workload directory
 
 Shaker
 ------
