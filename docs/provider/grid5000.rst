@@ -42,6 +42,19 @@ of your reservation. In the case of an interactive deployment:
     node) <edit configuration>
     node) python -m enos.enos deploy
 
+Enos will need to access the G5K api from this node. In order to do so you need
+to instruct execo to use the external endpoint of the API :
+
+.. code-block:: bash
+
+    cat ~/.execo.conf.py:
+
+    g5k_configuration = {
+        'api_username': '<your login>',
+        'api_uri': "https://api-ext.grid5000.fr/3.0/",
+    }
+
+You will be asked for your password at start.
 
 Default provider configuration
 -------------------------------
