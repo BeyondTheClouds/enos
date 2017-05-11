@@ -173,7 +173,8 @@ def generate_inventory_string(n, role):
         i.append("ansible_port=%s" % n.port)
     if n.keyfile is not None:
         i.append("ansible_ssh_private_key_file=%s" % n.keyfile)
-    common_args = ["-o StrictHostKeyChecking=no"]
+    # Disabling hostkey ckecking
+    common_args = ["-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"]
     forward_agent = n.extra.get('forward_agent', False)
     if forward_agent:
         common_args.append("-o ForwardAgent=yes")
@@ -181,7 +182,8 @@ def generate_inventory_string(n, role):
     gateway = n.extra.get('gateway', None)
     if gateway is not None:
         proxy_cmd = ["ssh -W %h:%p"]
-        proxy_cmd.append("-o StrictHostKeyChecking=no")
+        # Disabling also hostkey checking for the gateway
+        proxy_cmd.append("-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null")
         gateway_user = n.extra.get('gateway_user', n.user)
         if gateway_user is not None:
             proxy_cmd.append("-l %s" % gateway_user)
