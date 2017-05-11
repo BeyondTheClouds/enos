@@ -11,5 +11,11 @@ ANSIBLE_DIR = os.path.join(ENOS_PATH, 'ansible')
 NETWORK_IFACE = 0
 EXTERNAL_IFACE = 1
 
+# Number of time we'll be retrying an ssh connection
+# to the machines after the provider init call.
+SSH_RETRIES = 100
+# Interval to wait in seconds between two retries
+SSH_RETRY_INTERVAL = 30
+
 # ENOS Setup
 VERSION = '2.0.0'

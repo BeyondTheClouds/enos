@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+from .errors import (EnosFailedHostsError, EnosUnreachableHostsError)
 from ansible.executor.playbook_executor import PlaybookExecutor
 from ansible.inventory import Inventory
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
 from collections import namedtuple
 from constants import (TEMPLATE_DIR, ANSIBLE_DIR, NETWORK_IFACE,
-                       EXTERNAL_IFACE)
+                       EXTERNAL_IFACE, SSH_RETRIES, SSH_RETRY_INTERVAL)
 from itertools import groupby
 from netaddr import IPRange
 
@@ -13,6 +14,7 @@ import jinja2
 import logging
 import os
 import re
+import time
 import yaml
 
 # These roles are mandatory for the
@@ -28,7 +30,7 @@ KOLLA_MANDATORY_GROUPS = [
 ]
 
 
-def run_ansible(playbooks, inventory_path, extra_vars={}, tags=None):
+def run_ansible(playbooks, inventory_path, extra_vars={}, tags=None, on_error_continue=False):
     variable_manager = VariableManager()
     loader = DataLoader()
 
@@ -99,8 +101,42 @@ def run_ansible(playbooks, inventory_path, extra_vars={}, tags=None):
 
         if len(failed_hosts) > 0:
             logging.error("Failed hosts: %s" % failed_hosts)
+            if not on_error_continue:
+                raise EnosFailedHostsError(failed_hosts)
         if len(unreachable_hosts) > 0:
             logging.error("Unreachable hosts: %s" % unreachable_hosts)
+            if not on_error_continue:
+                raise EnosUnreachableHostsError(unreachable_hosts)
+
+
+def wait_ssh(env):
+    """Wait for the resources to be ssh-reachable
+
+    Let ansible initiate a communication and retries if needed.
+    """
+    utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
+    options = {
+            'action': 'ping',
+            'tc_output_dir': env['resultdir'],
+            }
+    retries = SSH_RETRIES
+    while retries > 0:
+        try:
+            run_ansible([utils_playbook], env['inventory'],
+                    extra_vars=options,
+                    on_error_continue=False)
+            break
+        except EnosUnreachableHostsError as e:
+            logging.info("Hosts unreachable : %s " % e.hosts)
+            logging.info("Retrying...")
+            retries = retries - 1
+        time.sleep(SSH_RETRY_INTERVAL)
+    if retries == 0:
+        raise Exception('Maximum retries reached')
+        run_ansible([utils_playbook], env['inventory'],
+            extra_vars=options)
+
+
 
 
 def render_template(template_name, vars, output_path):
@@ -137,7 +173,8 @@ def generate_inventory_string(n, role):
         i.append("ansible_port=%s" % n.port)
     if n.keyfile is not None:
         i.append("ansible_ssh_private_key_file=%s" % n.keyfile)
-    common_args = ["-o StrictHostKeyChecking=no"]
+    # Disabling hostkey ckecking
+    common_args = ["-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"]
     forward_agent = n.extra.get('forward_agent', False)
     if forward_agent:
         common_args.append("-o ForwardAgent=yes")
@@ -145,7 +182,8 @@ def generate_inventory_string(n, role):
     gateway = n.extra.get('gateway', None)
     if gateway is not None:
         proxy_cmd = ["ssh -W %h:%p"]
-        proxy_cmd.append("-o StrictHostKeyChecking=no")
+        # Disabling also hostkey checking for the gateway
+        proxy_cmd.append("-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null")
         gateway_user = n.extra.get('gateway_user', n.user)
         if gateway_user is not None:
             proxy_cmd.append("-l %s" % gateway_user)
@@ -286,7 +324,7 @@ def bootstrap_kolla(env):
     # password.yml in the result dir
     enos_values = mk_enos_values(env)
     playbook = os.path.join(ANSIBLE_DIR, "bootstrap_kolla.yml")
-    run_ansible([playbook], env['inventory'], enos_values)
+    run_ansible([playbook], env['inventory'], extra_vars=enos_values)
 
 
 def to_abs_path(path):

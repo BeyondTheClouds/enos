@@ -1,8 +1,4 @@
 ---
-- name: Collector
-  hosts: all
-  tasks: []
-
 - name: Utils
   hosts: all
   roles:
