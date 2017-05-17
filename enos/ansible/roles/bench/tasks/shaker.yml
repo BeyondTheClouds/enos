@@ -6,7 +6,7 @@
 
 - name: Running shaker benchmark
   docker_container:
-    name: "{{ bench.location | to_uuid }}"
+    name: "{{ bench.scenario_location | to_uuid }}"
     image: beyondtheclouds/shaker
     state: started
     command: "--scenario {{ bench.file }} --server-endpoint {{ ansible_default_ipv4.address }}:11234 --flavor-name m1.medium"
