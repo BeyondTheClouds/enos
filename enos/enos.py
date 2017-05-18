@@ -140,9 +140,11 @@ def up(env=None, **kwargs):
     wait_ssh(env)
 
     # Set variables required by playbooks of the application
+    registry_vip = env['config']['registry']['ip'] if 'ip' in env['config']['registry'] else pop_ip(env)
+
     env['config'].update({
         'vip':               pop_ip(env),
-        'registry_vip':      pop_ip(env),
+        'registry_vip':      registry_vip,
         'influx_vip':        pop_ip(env),
         'grafana_vip':       pop_ip(env),
         'network_interface': eths[NETWORK_IFACE],
