@@ -1,5 +1,6 @@
-tox==2.5.0
-sphinx
-sphinx-autobuild
-sphinx_rtd_theme
-flake8
+sphinx==1.5.2
+sphinx-autobuild==0.6.0
+sphinx-rtd-theme==0.1.9
+flake8==3.3.0
+discover==0.4.0
+mock==2.0.0

@@ -8,30 +8,34 @@ For any questions, feature requests, issues please use the `GitHub issue tracker
 .. _BeyondTheClouds/enos: https://github.com/BeyondTheClouds/enos
 .. _GitHub issue tracker: https://github.com/BeyondTheClouds/enos/issues
 
+Get tox
+-------
+
+.. code-block:: bash
+
+    $) pip install tox
+
 Running the tests
 -----------------
 
 .. code-block:: bash
 
-    pip install -r test-requirements.txt
-    tox
+    $) tox
 
 Running syntax checker
 ----------------------
 
 .. code-block:: bash
 
-    pip install -r test-requirements.txt
-    flake8
+    $) tox -e pep8
 
 Generate the documentation
 --------------------------
 
 .. code-block:: bash
 
-    pip install -r test-requirements.txt
-    cd docs
-    make html
+    $) tox -e docs
+
 
 Other Topics
 ------------
