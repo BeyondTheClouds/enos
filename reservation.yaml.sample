@@ -1,9 +1,7 @@
 ---
 # ############################################### #
-# Enos Configuration File                         #
+# Grid'5000 reservation parameters                #
 # ############################################### #
-
-# Provider specific config
 provider:
   type: g5k
   name: 'Enos'
@@ -23,34 +21,81 @@ resources:
     compute: 1
     network: 1
 
+
+# ############################################### #
+# Chameleon reservation parameters                #
+# ############################################### #
+provider:
+  type: chameleonkvm
+  key_name: 'enos-key'
+  walltime: '2:00:00'
+resources:
+  m1.large:
+    control: 1
+    network: 1
+  m1.medium:
+    compute: 1
+
+provider:
+  type: chameleonbaremetal
+  key_name: 'enos-key'
+  walltime: '2:00:00'
+resources:
+  compute:
+    control: 1
+    network: 1
+    compute: 1
+
+# ############################################### #
+# Vagrant reservation parameters                  #
+# ############################################### #
+provider:
+  type: vagrant
+  box: debian/contrib-jessie64
+resources:
+  large:
+    controller: 1
+  medium:
+    network: 1
+  tiny:
+    compute: 1
+
+
+
 # ############################################### #
 # Inventory to use                                #
 # ############################################### #
 
 # This will describe the topology of your services
+#inventory: /Users/msimonin/sed/discovery/openstack/enos-scenarios/myosprofiler/inventory
 inventory: inventories/inventory.sample
 
 # ############################################### #
 # docker registry parameters
 # ############################################### #
 registry:
-  ceph: true
+  ceph: False
   ceph_keyring: /home/discovery/.ceph/ceph.client.discovery.keyring
   ceph_id: discovery
   ceph_rbd: discovery_kolla_registry/datas
-  ceph_mon_host: 
+  ceph_mon_host:
     - ceph0.rennes.grid5000.fr
     - ceph1.rennes.grid5000.fr
     - ceph2.rennes.grid5000.fr
 
 # ############################################### #
-# Kolla parameteres                               #
+# Monitoring stack parameters                     #
+# ############################################### #
+enable_monitoring: no
+
+# ############################################### #
+# Kolla parameters                                #
 # ############################################### #
 # Repository
 kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
 kolla_ref: "stable/ocata"
 
-# globals.yml
+# Vars : globals.yml
 kolla:
   kolla_base_distro: "centos"
   kolla_install_type: "source"
