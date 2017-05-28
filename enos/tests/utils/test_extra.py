@@ -262,6 +262,29 @@ class TestGetTotalWantedMachines(unittest.TestCase):
         }
         self.assertEquals(8, get_total_wanted_machines(config["resources"]))
 
+class TestResourcesIterator(unittest.TestCase):
+    def test_resources_iterator(self):
+        config = {
+            "resources": {
+                "a": {
+                    "controller": 1,
+                    "network" : 1,
+                    "storage" : 3,
+                },
+                "b": {
+                    "compute": 2
+                 }
+            }
+        }
+        actual = []
+        for l1, l2, l3 in gen_resources(config["resources"]):
+            actual.append((l1, l2, l3))
+        expected = [("a", "controller", 1),
+                    ("a", "network", 1),
+                    ("a", "storage", 3),
+                    ("b", "compute", 2)]
+        self.assertItemsEqual(expected, actual)
+
 
 if __name__ == '__main__':
     unittest.main()

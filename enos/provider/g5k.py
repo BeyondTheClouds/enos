@@ -6,7 +6,7 @@ from itertools import islice
 from netaddr import IPAddress, IPNetwork, IPSet
 from provider import Provider
 from ..utils.constants import EXTERNAL_IFACE
-from ..utils.extra import build_roles
+from ..utils.extra import build_roles, get_total_wanted_machines
 from ..utils.provider import load_config
 
 import execo as EX
@@ -202,9 +202,7 @@ class G5k(Provider):
                      resources={},
                      mode=ROLE_DISTRIBUTION_MODE_STRICT):
         "Do we have enough nodes according to the resources mode."
-        wanted_nodes = 0
-        for cluster, roles in resources.items():
-            wanted_nodes += reduce(operator.add, map(int, roles.values()))
+        wanted_nodes = get_total_wanted_machines(resources)
 
         if mode == ROLE_DISTRIBUTION_MODE_STRICT and wanted_nodes > len(nodes):
             raise Exception("Not enough nodes to continue")

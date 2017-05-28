@@ -1,5 +1,7 @@
 # NOTE(msimonin): we should get rid of this
-from ..utils.extra import build_roles, get_total_wanted_machines
+from ..utils.extra import (build_roles,
+                           get_total_wanted_machines,
+                           gen_resources)
 from ..utils.provider import load_config
 from .host import Host
 from glanceclient import client as glance
@@ -259,28 +261,27 @@ def check_servers(session, resources, extra_prefix="",
 
     # starting the servers
     total = 0
-    for size, roles in resources.items():
-        for role, number in roles.items():
-            logging.info("[nova]: Starting %s servers" % number)
-            logging.info("[nova]: for role %s" % role)
-            logging.info("[nova]: with extra hints %s" % scheduler_hints)
-            for n in range(number):
-                if type(flavors) == str:
-                    flavor = flavors
-                else:
-                    flavor_to_id, id_to_flavor = flavors
-                    flavor = flavor_to_id[size]
-                with open(os.path.join(CURRENT_DIR, 'openstack.sh'), 'r') as u:
-                    servers.append(nclient.servers.create(
-                        name='-'.join([PREFIX, extra_prefix, str(total)]),
-                        image=image_id,
-                        flavor=flavor,
-                        nics=[{'net-id': network['id']}],
-                        key_name=key_name,
-                        security_groups=[SECGROUP_NAME],
-                        scheduler_hints=scheduler_hints,
-                        userdata=u))
-                total = total + 1
+    for size, role, number in gen_resources(resources):
+        logging.info("[nova]: Starting %s servers" % number)
+        logging.info("[nova]: for role %s" % role)
+        logging.info("[nova]: with extra hints %s" % scheduler_hints)
+        for n in range(number):
+            if type(flavors) == str:
+                flavor = flavors
+            else:
+                flavor_to_id, id_to_flavor = flavors
+                flavor = flavor_to_id[size]
+            with open(os.path.join(CURRENT_DIR, 'openstack.sh'), 'r') as u:
+                servers.append(nclient.servers.create(
+                    name='-'.join([PREFIX, extra_prefix, str(total)]),
+                    image=image_id,
+                    flavor=flavor,
+                    nics=[{'net-id': network['id']}],
+                    key_name=key_name,
+                    security_groups=[SECGROUP_NAME],
+                    scheduler_hints=scheduler_hints,
+                    userdata=u))
+            total = total + 1
     return servers
 
 

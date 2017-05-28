@@ -3,7 +3,7 @@ from ipaddress import IPv4Network
 from jinja2 import Environment, FileSystemLoader
 from provider import Provider
 from ..utils.constants import TEMPLATE_DIR
-from ..utils.extra import build_roles
+from ..utils.extra import build_roles, gen_resources
 from ..utils.provider import load_config
 
 import logging
@@ -64,24 +64,23 @@ class Enos_vagrant(Provider):
         # Build a list of machines that will be used to generate the
         # Vagrantfile
         machines = []
-        for size, roles in conf['resources'].items():
-            for role, nb in roles.items():
-                for i in range(nb):
-                    ip1 = str(net_pools['ip1'].pop())
-                    _, _, _, name = ip1.split('.')
-                    machines.append({
-                        'role': role,
-                        # NOTE(matrohon): don't base the name of the VM on its
-                        # role, build_roles will then set the final role of
-                        # each VM
-                        'name': "enos-%s" % name,
-                        'size': size,
-                        'cpu': SIZES[size]['cpu'],
-                        'mem': SIZES[size]['mem'],
-                        'ip1': ip1,
-                        'ip2': str(net_pools['ip2'].pop()),
-                        'ip3': str(net_pools['ip3'].pop()),
-                        })
+        for size, role, nb in gen_resources(conf['resources']):
+            for i in range(nb):
+                ip1 = str(net_pools['ip1'].pop())
+                _, _, _, name = ip1.split('.')
+                machines.append({
+                    'role': role,
+                    # NOTE(matrohon): don't base the name of the VM on its
+                    # role, build_roles will then set the final role of
+                    # each VM
+                    'name': "enos-%s" % name,
+                    'size': size,
+                    'cpu': SIZES[size]['cpu'],
+                    'mem': SIZES[size]['mem'],
+                    'ip1': ip1,
+                    'ip2': str(net_pools['ip2'].pop()),
+                    'ip3': str(net_pools['ip3'].pop()),
+                    })
         loader = FileSystemLoader(searchpath=TEMPLATE_DIR)
         env = Environment(loader=loader)
         template = env.get_template('Vagrantfile.j2')
