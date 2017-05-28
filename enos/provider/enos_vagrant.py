@@ -3,7 +3,7 @@ from ipaddress import IPv4Network
 from jinja2 import Environment, FileSystemLoader
 from provider import Provider
 from ..utils.constants import TEMPLATE_DIR
-from ..utils.extra import build_resources, expand_topology, build_roles
+from ..utils.extra import build_roles
 from ..utils.provider import load_config
 
 import logging
@@ -86,7 +86,8 @@ class Enos_vagrant(Provider):
         env = Environment(loader=loader)
         template = env.get_template('Vagrantfile.j2')
 
-        vagrantfile = template.render(machines=machines, provider_conf=provider_conf)
+        vagrantfile = template.render(machines=machines,
+                provider_conf=provider_conf)
         vagrantfile_path = os.path.join(calldir, "Vagrantfile")
         with open(vagrantfile_path, 'w') as f:
             f.write(vagrantfile)

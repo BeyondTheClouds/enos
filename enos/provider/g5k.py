@@ -6,7 +6,7 @@ from itertools import islice
 from netaddr import IPAddress, IPNetwork, IPSet
 from provider import Provider
 from ..utils.constants import EXTERNAL_IFACE
-from ..utils.extra import build_resources, expand_topology, build_roles
+from ..utils.extra import build_roles
 from ..utils.provider import load_config
 
 import execo as EX
@@ -14,7 +14,6 @@ import execo_g5k as EX5
 import logging
 import operator
 import pprint
-import sys
 
 
 ROLE_DISTRIBUTION_MODE_STRICT = "strict"
@@ -51,9 +50,13 @@ class G5k(Provider):
                 vlans,
                 force_deploy=force_deploy)
 
+        host_nodes = map(
+                lambda n: Host(n.address, user="root"),
+                deployed_nodes_vlan)
+
         roles = build_roles(
                 conf,
-                map(lambda n: Host(n.address, user="root"), deployed_nodes_vlan),
+                host_nodes,
                 lambda n: n.address.split('-')[0])
 
         network = self._get_network(vlans)
@@ -114,13 +117,19 @@ class G5k(Provider):
                     'Creating a veth')
 
         # Bind volumes of docker
+        cmd = []
+        cmd.append('mkdir -p /tmp/docker/volumes')
+        cmd.append('mkdir -p /var/lib/docker/volumes')
         self._exec_command_on_nodes(
                 nodes,
-                'mkdir -p /tmp/docker/volumes ; mkdir -p /var/lib/docker/volumes',
+                ';'.join(cmd),
                 'Creating docker volumes directory in /tmp')
+        cmd = []
+        cmd.append('(mount | grep /tmp/docker/volumes)')
+        cmd.append('mount --bind /tmp/docker/volumes /var/lib/docker/volumes')
         self._exec_command_on_nodes(
                 nodes,
-                '(mount | grep /tmp/docker/volumes) || mount --bind /tmp/docker/volumes /var/lib/docker/volumes',
+                '||'.join(cmd),
                 'Bind mount')
 
         # Bind nova local storage if there is any nova compute
@@ -129,7 +138,9 @@ class G5k(Provider):
         # compute node, but this is not necessarily. Nova could be
         # installed on whatever the user choose. For this reason it
         # will be a better strategy to parse the inventory file.
-        computes = map(lambda n: EX.Host(n.address), env['rsc'].get('compute', []))
+        computes = map(
+                lambda n: EX.Host(n.address),
+                env['rsc'].get('compute', []))
         self._exec_command_on_nodes(
             computes,
             'mkdir -p /tmp/nova ; mkdir -p /var/lib/nova',
@@ -150,8 +161,10 @@ class G5k(Provider):
         provider_conf = conf['provider']
         criteria = {}
         # NOTE(msimonin): Traverse all cluster demands in alphebetical order
-        # test_create_reservation_different_site needs to know the traversal order
-        for cluster, roles in sorted(conf["resources"].items(), key=lambda x: x[0]):
+        # test_create_reservation_different_site needs to know the order
+        for cluster, roles in sorted(
+                conf["resources"].items(),
+                key=lambda x: x[0]):
             site = api.get_cluster_site(cluster)
             nb_nodes = reduce(operator.add, map(int, roles.values()))
             criterion = "{cluster='%s'}/nodes=%s" % (cluster, nb_nodes)
@@ -363,8 +376,8 @@ class G5k(Provider):
             )['items'][0]['network_adapters']
 
         interfaces = [nic['device'] for nic in nics
-                                    if nic['mountable']
-                                    and nic['interface'] == 'Ethernet']
+                                    if nic['mountable'] and
+                                    nic['interface'] == 'Ethernet']
 
         network_interface = str(interfaces[0])
         external_interface = None

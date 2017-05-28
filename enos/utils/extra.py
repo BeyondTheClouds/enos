@@ -12,6 +12,7 @@ from netaddr import IPRange
 
 import jinja2
 import logging
+import operator
 import os
 import re
 import time
@@ -30,7 +31,8 @@ KOLLA_MANDATORY_GROUPS = [
 ]
 
 
-def run_ansible(playbooks, inventory_path, extra_vars={}, tags=None, on_error_continue=False):
+def run_ansible(playbooks, inventory_path, extra_vars={},
+        tags=None, on_error_continue=False):
     variable_manager = VariableManager()
     loader = DataLoader()
 
@@ -42,6 +44,9 @@ def run_ansible(playbooks, inventory_path, extra_vars={}, tags=None, on_error_co
 
     if extra_vars:
         variable_manager.extra_vars = extra_vars
+
+    if tags is None:
+        tags = []
 
     passwords = {}
     # NOTE(msimonin): The ansible api is "low level" in the
@@ -137,8 +142,6 @@ def wait_ssh(env):
             extra_vars=options)
 
 
-
-
 def render_template(template_name, vars, output_path):
     loader = jinja2.FileSystemLoader(searchpath=TEMPLATE_DIR)
     env = jinja2.Environment(loader=loader)
@@ -174,7 +177,9 @@ def generate_inventory_string(n, role):
     if n.keyfile is not None:
         i.append("ansible_ssh_private_key_file=%s" % n.keyfile)
     # Disabling hostkey ckecking
-    common_args = ["-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"]
+    common_args = []
+    common_args.append("-o StrictHostKeyChecking=no")
+    common_args.append("-o UserKnownHostsFile=/dev/null")
     forward_agent = n.extra.get('forward_agent', False)
     if forward_agent:
         common_args.append("-o ForwardAgent=yes")
@@ -183,7 +188,8 @@ def generate_inventory_string(n, role):
     if gateway is not None:
         proxy_cmd = ["ssh -W %h:%p"]
         # Disabling also hostkey checking for the gateway
-        proxy_cmd.append("-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null")
+        proxy_cmd.append("-o StrictHostKeyChecking=no")
+        proxy_cmd.append("-o UserKnownHostsFile=/dev/null")
         gateway_user = n.extra.get('gateway_user', n.user)
         if gateway_user is not None:
             proxy_cmd.append("-l %s" % gateway_user)
@@ -554,3 +560,20 @@ def make_provider(env):
     logging.info("Loaded provider %s", module)
 
     return klass()
+
+
+def get_total_wanted_machines(resources):
+    """Get the total number of machines
+    wanted given ther resource description."""
+    return sum(
+            reduce(
+                operator.add,
+                map(lambda r: r.values(), resources.values()),
+                []))
+
+
+def gen_resources(resources):
+    """Generator for the resources in the config file."""
+    for l1, roles in resources.items():
+        for l2, l3 in roles.items():
+            yield l1, l2, l3

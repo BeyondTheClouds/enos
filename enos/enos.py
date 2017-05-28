@@ -49,7 +49,6 @@ import pprint
 import os
 import sys
 from subprocess import call
-import time
 
 import yaml
 import itertools
@@ -140,7 +139,10 @@ def up(env=None, **kwargs):
     wait_ssh(env)
 
     # Set variables required by playbooks of the application
-    registry_vip = env['config']['registry']['ip'] if 'ip' in env['config']['registry'] else pop_ip(env)
+    if 'ip' in env['config']['registry']:
+        registry_vip = env['config']['registry']['ip']
+    else:
+        registry_vip = pop_ip(env)
 
     env['config'].update({
         'vip':               pop_ip(env),
@@ -158,7 +160,10 @@ def up(env=None, **kwargs):
     # installs the registry, install monitoring tools, ...)
     provider.before_preintsall(env)
     up_playbook = os.path.join(ANSIBLE_DIR, 'up.yml')
-    run_ansible([up_playbook], inventory, extra_vars=env['config'], tags=kwargs['--tags'])
+    run_ansible([up_playbook],
+                inventory,
+                extra_vars=env['config'],
+                tags=kwargs['--tags'])
     provider.after_preintsall(env)
 
 
@@ -242,8 +247,9 @@ def init_os(env=None, **kwargs):
     cmd = []
     cmd.append('. %s' % os.path.join(env['resultdir'], 'admin-openrc'))
     # add cirros image
+    url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'
     images = [{'name': 'cirros.uec',
-               'url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'}]
+               'url': url}]
     for image in images:
         cmd.append("wget -q -O /tmp/%s %s" % (image['name'], image['url']))
         cmd.append("openstack image create"
@@ -387,8 +393,9 @@ def bench(env=None, **kwargs):
                             'run-bench.yml')
                     inventory_path = os.path.join(env['resultdir'],
                             'multinode')
-                    # NOTE(msimonin) all the scenarios and plugins must reside on the workload directory
-                    bench={
+                    # NOTE(msimonin) all the scenarios and plugins
+                    # must reside on the workload directory
+                    bench = {
                         'type': bench_type,
                         'scenario_location': os.path.abspath(
                                       os.path.join(workload_dir,
@@ -398,13 +405,17 @@ def bench(env=None, **kwargs):
                     }
 
                     if "plugin" in scenario:
-                        plugin = os.path.abspath(os.path.join(workload_dir, scenario["plugin"]))
+                        plugin = os.path.abspath(
+                                os.path.join(workload_dir, scenario["plugin"]))
                         if os.path.isdir(plugin):
                             plugin = plugin + "/"
                         bench['plugin_location'] = plugin
                     playbook_values.update(bench=bench)
 
-                    run_ansible([playbook_path], inventory_path, extra_vars=playbook_values)
+                    run_ansible([playbook_path],
+                                inventory_path,
+                                extra_vars=playbook_values)
+
 
 @enostask("""
 usage: enos backup [--backup_dir=BACKUP_DIR] [-e ENV|--env=ENV]

@@ -244,5 +244,24 @@ class TestGenerateInventoryString(unittest.TestCase):
         self.assertEqual("1.2.3.4 ansible_host=1.2.3.4 ansible_ssh_user=foo ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -W %h:%p -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l foo 4.3.2.1\"' g5k_role=test", generate_inventory_string(h, role))
 
 
+class TestGetTotalWantedMachines(unittest.TestCase):
+    def test_get_total_wanted_machines(self):
+        config = {
+            "resources": {
+                "a": {
+                    "controller": 1,
+                    "compute" : 2,
+                    "network" : 1,
+                    "storage" : 1,
+                    "util"    : 1
+                },
+                "b": {
+                    "compute": 2
+                 }
+            }
+        }
+        self.assertEquals(8, get_total_wanted_machines(config["resources"]))
+
+
 if __name__ == '__main__':
     unittest.main()
