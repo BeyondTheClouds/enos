@@ -105,26 +105,20 @@ def check_network(session, configure_network, network, subnet,
     secgroups = nclient.list_security_groups()['security_groups']
     secgroup_name = SECGROUP_NAME
     if secgroup_name not in map(itemgetter('name'), secgroups):
-        secgroup = {
-                'name': secgroup_name,
-                'description': 'Enos Security Group'
-                }
+        secgroup = {'name': secgroup_name,
+                    'description': 'Enos Security Group'}
         res = nclient.create_security_group({'security_group': secgroup})
         secgroup = res['security_group']
         logging.info("[neutron]: %s security group created" % secgroup_name)
         # create the rules
-        tcp = {
-                'protocol': 'tcp',
+        tcp = {'protocol': 'tcp',
+               'direction': 'ingress',
+               'port_range_min': '1',
+               'port_range_max': '65535',
+               'security_group_id': secgroup['id']}
+        icmp = {'protocol': 'icmp',
                 'direction': 'ingress',
-                'port_range_min': '1',
-                'port_range_max': '65535',
-                'security_group_id': secgroup['id'],
-                }
-        icmp = {
-                'protocol': 'icmp',
-                'direction': 'ingress',
-                'security_group_id': secgroup['id'],
-                }
+                'security_group_id': secgroup['id']}
         nclient.create_security_group_rule({'security_group_rule': tcp})
         logging.info("[neutron]: %s rule (all tcp) created" % secgroup_name)
         nclient.create_security_group_rule({'security_group_rule': icmp})
@@ -246,7 +240,7 @@ def check_servers(session, resources, extra_prefix="",
     """
     nclient = nova.Client(NOVA_VERSION, session=session)
     servers = nclient.servers.list(
-            search_opts={'name': '-'.join([PREFIX, extra_prefix])})
+        search_opts={'name': '-'.join([PREFIX, extra_prefix])})
     wanted = get_total_wanted_machines(resources)
     if force_deploy:
         for server in servers:
@@ -291,8 +285,8 @@ def check_gateway(env, with_gateway, servers):
         nclient = nova.Client(NOVA_VERSION, session=env['session'])
         gateway = nclient.servers.get(gateway.id)
         gw_floating_ips = filter(
-                lambda n: n['OS-EXT-IPS:type'] == 'floating',
-                gateway.addresses[env['network']['name']])
+            lambda n: n['OS-EXT-IPS:type'] == 'floating',
+            gateway.addresses[env['network']['name']])
         if len(gw_floating_ips) == 0:
             fip = get_free_floating_ip(env)
             gateway.add_floating_ip(fip['floating_ip_address'])
@@ -318,8 +312,8 @@ def allow_address_pairs(session, network, subnet):
     nclient = neutron.Client('2', session=session)
     ports = nclient.list_ports()
     ports_to_update = filter(
-            lambda p: p['network_id'] == network['id'],
-            ports['ports'])
+        lambda p: p['network_id'] == network['id'],
+        ports['ports'])
     logging.info('[nova]: Allowing address pairs for ports %s' %
             map(lambda p: p['fixed_ips'], ports_to_update))
     for port in ports_to_update:
@@ -358,10 +352,9 @@ def check_environment(conf):
 def finalize(conf, env, servers, gateway, groupby, extra_ips=[]):
     # Distribute the machines according to the resource/topology
     # specifications
-    r = build_roles(
-                conf,
-                servers,
-                groupby)
+    r = build_roles(conf,
+                    servers,
+                    groupby)
     roles = {}
     extra = {}
     network_name = conf['provider']['network']['name']
@@ -438,11 +431,11 @@ class Openstack(Provider):
         # NOTE(msimonin): polling is missing for now
         # we aren't sure that machines are ssh-reachable
         return finalize(
-                conf,
-                env,
-                deployed,
-                gateway,
-                lambda s: env['id_to_flavor'][s.flavor['id']])
+            conf,
+            env,
+            deployed,
+            gateway,
+            lambda s: env['id_to_flavor'][s.flavor['id']])
 
     def load_openstack_config(self, config):
         """Augment config with openstack default provider config."""

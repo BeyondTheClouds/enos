@@ -120,10 +120,8 @@ def wait_ssh(env):
     Let ansible initiate a communication and retries if needed.
     """
     utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
-    options = {
-            'action': 'ping',
-            'tc_output_dir': env['resultdir'],
-            }
+    options = {'action': 'ping',
+               'tc_output_dir': env['resultdir']}
     retries = SSH_RETRIES
     while retries > 0:
         try:
@@ -565,11 +563,9 @@ def make_provider(env):
 def get_total_wanted_machines(resources):
     """Get the total number of machines
     wanted given ther resource description."""
-    return sum(
-            reduce(
-                operator.add,
-                map(lambda r: r.values(), resources.values()),
-                []))
+    return sum(reduce(operator.add,
+                      map(lambda r: r.values(), resources.values()),
+                      []))
 
 
 def gen_resources(resources):

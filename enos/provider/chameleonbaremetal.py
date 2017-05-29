@@ -106,10 +106,9 @@ def create_reservation(bclient, config):
     resources = config['resources']
     start_datetime = datetime.datetime.utcnow()
     w = config['provider']['walltime'].split(':')
-    delta = datetime.timedelta(
-            hours=int(w[0]),
-            minutes=int(w[1]),
-            seconds=int(w[2]))
+    delta = datetime.timedelta(hours=int(w[0]),
+                               minutes=int(w[1]),
+                               seconds=int(w[2]))
     # Make sure we're not reserving in the past by adding 1 minute
     # This should be rare
     start_datetime = start_datetime + datetime.timedelta(minutes=1)
@@ -170,11 +169,9 @@ def check_extra_ports(session, network, total):
     logging.info("[neutron]: Reusing %s ports" % len(ports_with_name))
     # create missing ports
     for i in range(0, total - len(ports_with_name)):
-        port = {
-                'admin_state_up': True,
+        port = {'admin_state_up': True,
                 'name': PORT_NAME,
-                'network_id': network['id'],
-                }
+                'network_id': network['id']}
         # Checking port with PORT_NAME
         nclient.create_port({'port': port})
     ports = nclient.list_ports()['ports']
@@ -200,37 +197,36 @@ class Chameleonbaremetal(cc.Chameleonkvm):
         roles = conf['resources'].keys()
         machines = []
         for role in roles:
-            reservation = filter(
-                                 lambda r: role in r['resource_properties'],
+            reservation = filter(lambda r: role in r['resource_properties'],
                                  reservations)[0]
             servers = openstack.check_servers(
-                    env['session'],
-                    {role: conf['resources'][role]},
-                    extra_prefix=role,
-                    force_deploy=force_deploy,
-                    key_name=conf['provider'].get('key_name'),
-                    image_id=env['image_id'],
-                    flavors="baremetal",
-                    network=env['network'],
-                    ext_net=env['ext_net'],
-                    scheduler_hints={'reservation': reservation['id']})
+                env['session'],
+                {role: conf['resources'][role]},
+                extra_prefix=role,
+                force_deploy=force_deploy,
+                key_name=conf['provider'].get('key_name'),
+                image_id=env['image_id'],
+                flavors="baremetal",
+                network=env['network'],
+                ext_net=env['ext_net'],
+                scheduler_hints={'reservation': reservation['id']})
             machines.extend(servers)
 
         deployed, undeployed = openstack.wait_for_servers(
-                env['session'],
-                machines)
+            env['session'],
+            machines)
 
         gateway = openstack.check_gateway(
-                env,
-                conf['provider'].get('gateway', False),
-                deployed)
+            env,
+            conf['provider'].get('gateway', False),
+            deployed)
 
         return openstack.finalize(
-                conf,
-                env,
-                deployed,
-                gateway,
-                lambda s: s.name.split('-')[1], extra_ips=extra_ips)
+            conf,
+            env,
+            deployed,
+            gateway,
+            lambda s: s.name.split('-')[1], extra_ips=extra_ips)
 
     def destroy(self, calldir, env):
         # destroy the associated lease should be enough

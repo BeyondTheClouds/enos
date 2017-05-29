@@ -106,10 +106,9 @@ class Enos_vagrant(Provider):
         v.provision()
         # Distribute the machines according to the resource/topology
         # specifications
-        r = build_roles(
-                    conf,
-                    machines,
-                    lambda m: m['size'])
+        r = build_roles(conf,
+                        machines,
+                        lambda m: m['size'])
         roles = {}
 
         for role, machines in r.items():
@@ -124,13 +123,11 @@ class Enos_vagrant(Provider):
                                         port=port,
                                         keyfile=keyfile))
         logging.info(roles)
-        network = {
-                'cidr': '192.168.142.0/24',
-                'start': str(net_pools['ip1'][3]),
-                'end': str(net_pools['ip1'][-1]),
-                'dns': '8.8.8.8',
-                'gateway': '192.168.142.1'
-        }
+        network = {'cidr': '192.168.142.0/24',
+                   'start': str(net_pools['ip1'][3]),
+                   'end': str(net_pools['ip1'][-1]),
+                   'dns': '8.8.8.8',
+                   'gateway': '192.168.142.1'}
         network_interface = provider_conf['interfaces'][0]
         external_interface = provider_conf['interfaces'][1]
         return (roles, network, (network_interface, external_interface))

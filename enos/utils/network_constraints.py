@@ -126,11 +126,11 @@ def build_ip_constraints(rsc, ips, constraints):
                     dallips = filter(lambda x: x != '172.17.0.1', dallips)
                     for dip in dallips:
                         local_ips[s.alias].setdefault('tc', []).append({
-                                'source': s.alias,
-                                'target': dip,
-                                'device': sdevice,
-                                'delay': gdelay,
-                                'rate': grate,
-                                'loss': gloss
-                            })
+                            'source': s.alias,
+                            'target': dip,
+                            'device': sdevice,
+                            'delay': gdelay,
+                            'rate': grate,
+                            'loss': gloss
+                        })
     return local_ips

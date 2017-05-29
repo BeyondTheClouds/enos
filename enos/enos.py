@@ -260,15 +260,13 @@ def init_os(env=None, **kwargs):
                    " --file /tmp/%s"
                    " %s" % (image['name'], image['name']))
 
-    # flavors
-    flavors = [
-            # name, ram, disk, vcpus
-            ('m1.tiny', 512, 1, 1),
-            ('m1.small', 2048, 20, 1),
-            ('m1.medium', 4096, 40, 2),
-            ('m1.large', 8192, 80, 4),
-            ('m1.xlarge', 16384, 160, 8)
-    ]
+    # flavors name, ram, disk, vcpus
+
+    flavors = [('m1.tiny', 512, 1, 1),
+               ('m1.small', 2048, 20, 1),
+               ('m1.medium', 4096, 40, 2),
+               ('m1.large', 8192, 80, 4),
+               ('m1.xlarge', 16384, 160, 8)]
     for flavor in flavors:
         cmd.append("openstack flavor create %s"
                    " --id auto"
@@ -395,18 +393,20 @@ def bench(env=None, **kwargs):
                             'multinode')
                     # NOTE(msimonin) all the scenarios and plugins
                     # must reside on the workload directory
+                    scenario_location = os.path.join(
+                        workload_dir,
+                        scenario["file"])
+                    scenario_location = os.path.abspath(scenario_location)
                     bench = {
                         'type': bench_type,
-                        'scenario_location': os.path.abspath(
-                                      os.path.join(workload_dir,
-                                                   scenario["file"])),
+                        'scenario_location': scenario_location,
                         'file': scenario["file"],
                         'args': a
                     }
 
                     if "plugin" in scenario:
                         plugin = os.path.abspath(
-                                os.path.join(workload_dir, scenario["plugin"]))
+                            os.path.join(workload_dir, scenario["plugin"]))
                         if os.path.isdir(plugin):
                             plugin = plugin + "/"
                         bench['plugin_location'] = plugin
@@ -436,8 +436,8 @@ Options:
 def backup(env=None, **kwargs):
 
     backup_dir = kwargs['--backup_dir'] \
-            or kwargs['--env'] \
-            or SYMLINK_NAME
+        or kwargs['--env'] \
+        or SYMLINK_NAME
 
     backup_dir = to_abs_path(backup_dir)
     # create if necessary
@@ -515,13 +515,11 @@ def tc(env=None, **kwargs):
     if test:
         logging.info('Checking the constraints')
         utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
-        options = {
-                'action': 'test',
-                'tc_output_dir': env['resultdir'],
-                # NOTE(msimonin): we retrieve eth name from the env instead
-                # of env['config'] in case os hasn't been called
-                'network_interface': env['eths'][NETWORK_IFACE]
-                }
+        # NOTE(msimonin): we retrieve eth name from the env instead
+        # of env['config'] in case os hasn't been called
+        options = {'action': 'test',
+                   'tc_output_dir': env['resultdir'],
+                   'network_interface': env['eths'][NETWORK_IFACE]}
         run_ansible([utils_playbook], env['inventory'],
                 extra_vars=options)
         return
@@ -530,14 +528,12 @@ def tc(env=None, **kwargs):
     logging.info('Getting the ips of all nodes')
     utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
     ips_file = os.path.join(env['resultdir'], 'ips.txt')
-    options = {
-            'action': 'ips',
-            'ips_file': ips_file,
-            # NOTE(msimonin): we retrieve eth name from the env instead
-            # of env['config'] in case os hasn't been called
-            'network_interface': env['eths'][NETWORK_IFACE],
-            'neutron_external_interface': env['eths'][EXTERNAL_IFACE]
-    }
+    # NOTE(msimonin): we retrieve eth name from the env instead
+    # of env['config'] in case os hasn't been called
+    options = {'action': 'ips',
+               'ips_file': ips_file,
+               'network_interface': env['eths'][NETWORK_IFACE],
+               'neutron_external_interface': env['eths'][EXTERNAL_IFACE]}
     run_ansible([utils_playbook], env['inventory'], extra_vars=options)
 
     # 2.a building the group constraints

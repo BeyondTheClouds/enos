@@ -46,27 +46,24 @@ class G5k(Provider):
 
         jobs, vlans, nodes = self._get_jobs_and_vlans(conf)
         deployed, deployed_nodes_vlan = self._deploy(conf,
-                nodes,
-                vlans,
-                force_deploy=force_deploy)
+                                                     nodes,
+                                                     vlans,
+                                                     force_deploy=force_deploy)
 
-        host_nodes = map(
-                lambda n: Host(n.address, user="root"),
-                deployed_nodes_vlan)
+        host_nodes = map(lambda n: Host(n.address, user="root"),
+                         deployed_nodes_vlan)
 
-        roles = build_roles(
-                conf,
-                host_nodes,
-                lambda n: n.address.split('-')[0])
+        roles = build_roles(conf,
+                            host_nodes,
+                            lambda n: n.address.split('-')[0])
 
         network = self._get_network(vlans)
         network_interface, external_interface = \
-            self._mount_cluster_nics(
-                conf,
-                conf['resources'].keys()[0],
-                deployed,
-                deployed_nodes_vlan,
-                vlans)
+            self._mount_cluster_nics(conf,
+                                     conf['resources'].keys()[0],
+                                     deployed,
+                                     deployed_nodes_vlan,
+                                     vlans)
 
         self._provision(deployed_nodes_vlan)
 
@@ -112,25 +109,25 @@ class G5k(Provider):
         nodes = map(lambda n: EX.Host(n.address), sum(env['rsc'].values(), []))
         if env['eths'][EXTERNAL_IFACE] == 'veth0':
             self._exec_command_on_nodes(
-                    nodes,
-                    'ip link show veth0 || ip link add type veth peer',
-                    'Creating a veth')
+                nodes,
+                'ip link show veth0 || ip link add type veth peer',
+                'Creating a veth')
 
         # Bind volumes of docker
         cmd = []
         cmd.append('mkdir -p /tmp/docker/volumes')
         cmd.append('mkdir -p /var/lib/docker/volumes')
         self._exec_command_on_nodes(
-                nodes,
-                ';'.join(cmd),
-                'Creating docker volumes directory in /tmp')
+            nodes,
+            ';'.join(cmd),
+            'Creating docker volumes directory in /tmp')
         cmd = []
         cmd.append('(mount | grep /tmp/docker/volumes)')
         cmd.append('mount --bind /tmp/docker/volumes /var/lib/docker/volumes')
         self._exec_command_on_nodes(
-                nodes,
-                '||'.join(cmd),
-                'Bind mount')
+            nodes,
+            '||'.join(cmd),
+            'Bind mount')
 
         # Bind nova local storage if there is any nova compute
         #
@@ -138,9 +135,8 @@ class G5k(Provider):
         # compute node, but this is not necessarily. Nova could be
         # installed on whatever the user choose. For this reason it
         # will be a better strategy to parse the inventory file.
-        computes = map(
-                lambda n: EX.Host(n.address),
-                env['rsc'].get('compute', []))
+        computes = map(lambda n: EX.Host(n.address),
+                       env['rsc'].get('compute', []))
         self._exec_command_on_nodes(
             computes,
             'mkdir -p /tmp/nova ; mkdir -p /var/lib/nova',
@@ -308,10 +304,9 @@ class G5k(Provider):
         logging.info(deployed_nodes_vlan)
         # Checking the deployed nodes according to the
         # resource distribution policy
-        self._check_nodes(
-                nodes=deployed_nodes_vlan,
-                resources=conf['resources'],
-                mode=conf['provider']['role_distribution'])
+        self._check_nodes(nodes=deployed_nodes_vlan,
+                          resources=conf['resources'],
+                          mode=conf['provider']['role_distribution'])
 
         return deployed, deployed_nodes_vlan
 
