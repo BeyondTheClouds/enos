@@ -46,8 +46,8 @@ def generate_default_grp_constraints(topology, network_constraints):
             'rate': default_rate,
             'loss': default_loss
         } for grp1 in grps for grp2 in grps
-        if grp1 != grp2 and grp1 not in except_groups
-                                 and grp2 not in except_groups]
+        if grp1 != grp2 and grp1 not in except_groups and
+            grp2 not in except_groups]
 
 
 def generate_actual_grp_constraints(network_constraints):
@@ -126,11 +126,11 @@ def build_ip_constraints(rsc, ips, constraints):
                     dallips = filter(lambda x: x != '172.17.0.1', dallips)
                     for dip in dallips:
                         local_ips[s.alias].setdefault('tc', []).append({
-                                'source': s.alias,
-                                'target': dip,
-                                'device': sdevice,
-                                'delay': gdelay,
-                                'rate': grate,
-                                'loss': gloss
-                            })
+                            'source': s.alias,
+                            'target': dip,
+                            'device': sdevice,
+                            'delay': gdelay,
+                            'rate': grate,
+                            'loss': gloss
+                        })
     return local_ips

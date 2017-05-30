@@ -1,5 +1,3 @@
-import copy
-import logging
 import openstack
 from ..utils.provider import load_config
 
@@ -10,6 +8,7 @@ PROVIDER_CONFIG = {
     'dns_nameservers': ['129.114.97.1', '129.114.97.2', '129.116.84.203'],
     'network_interface': 'ens3'
 }
+
 
 class Chameleonkvm(openstack.Openstack):
     def init(self, config, calldir, force_deploy=False):

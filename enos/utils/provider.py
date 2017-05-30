@@ -16,8 +16,8 @@ def load_config(config, default_config={}, default_provider_config={}):
         conf['resources'] = build_resources(conf['topology'])
 
     conf['provider'] = load_provider_config(
-                        conf['provider'],
-                        default_provider_config=default_provider_config)
+        conf['provider'],
+        default_provider_config=default_provider_config)
     return conf
 
 

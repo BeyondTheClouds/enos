@@ -3,7 +3,7 @@ from ipaddress import IPv4Network
 from jinja2 import Environment, FileSystemLoader
 from provider import Provider
 from ..utils.constants import TEMPLATE_DIR
-from ..utils.extra import build_resources, expand_topology, build_roles
+from ..utils.extra import build_roles, gen_resources
 from ..utils.provider import load_config
 
 import logging
@@ -64,29 +64,29 @@ class Enos_vagrant(Provider):
         # Build a list of machines that will be used to generate the
         # Vagrantfile
         machines = []
-        for size, roles in conf['resources'].items():
-            for role, nb in roles.items():
-                for i in range(nb):
-                    ip1 = str(net_pools['ip1'].pop())
-                    _, _, _, name = ip1.split('.')
-                    machines.append({
-                        'role': role,
-                        # NOTE(matrohon): don't base the name of the VM on its
-                        # role, build_roles will then set the final role of
-                        # each VM
-                        'name': "enos-%s" % name,
-                        'size': size,
-                        'cpu': SIZES[size]['cpu'],
-                        'mem': SIZES[size]['mem'],
-                        'ip1': ip1,
-                        'ip2': str(net_pools['ip2'].pop()),
-                        'ip3': str(net_pools['ip3'].pop()),
-                        })
+        for size, role, nb in gen_resources(conf['resources']):
+            for i in range(nb):
+                ip1 = str(net_pools['ip1'].pop())
+                _, _, _, name = ip1.split('.')
+                machines.append({
+                    'role': role,
+                    # NOTE(matrohon): don't base the name of the VM on its
+                    # role, build_roles will then set the final role of
+                    # each VM
+                    'name': "enos-%s" % name,
+                    'size': size,
+                    'cpu': SIZES[size]['cpu'],
+                    'mem': SIZES[size]['mem'],
+                    'ip1': ip1,
+                    'ip2': str(net_pools['ip2'].pop()),
+                    'ip3': str(net_pools['ip3'].pop()),
+                    })
         loader = FileSystemLoader(searchpath=TEMPLATE_DIR)
         env = Environment(loader=loader)
         template = env.get_template('Vagrantfile.j2')
 
-        vagrantfile = template.render(machines=machines, provider_conf=provider_conf)
+        vagrantfile = template.render(machines=machines,
+                provider_conf=provider_conf)
         vagrantfile_path = os.path.join(calldir, "Vagrantfile")
         with open(vagrantfile_path, 'w') as f:
             f.write(vagrantfile)
@@ -106,10 +106,9 @@ class Enos_vagrant(Provider):
         v.provision()
         # Distribute the machines according to the resource/topology
         # specifications
-        r = build_roles(
-                    conf,
-                    machines,
-                    lambda m: m['size'])
+        r = build_roles(conf,
+                        machines,
+                        lambda m: m['size'])
         roles = {}
 
         for role, machines in r.items():
@@ -124,13 +123,11 @@ class Enos_vagrant(Provider):
                                         port=port,
                                         keyfile=keyfile))
         logging.info(roles)
-        network = {
-                'cidr': '192.168.142.0/24',
-                'start': str(net_pools['ip1'][3]),
-                'end': str(net_pools['ip1'][-1]),
-                'dns': '8.8.8.8',
-                'gateway': '192.168.142.1'
-        }
+        network = {'cidr': '192.168.142.0/24',
+                   'start': str(net_pools['ip1'][3]),
+                   'end': str(net_pools['ip1'][-1]),
+                   'dns': '8.8.8.8',
+                   'gateway': '192.168.142.1'}
         network_interface = provider_conf['interfaces'][0]
         external_interface = provider_conf['interfaces'][1]
         return (roles, network, (network_interface, external_interface))

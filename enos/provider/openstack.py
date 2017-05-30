@@ -1,5 +1,7 @@
 # NOTE(msimonin): we should get rid of this
-from ..utils.extra import build_roles
+from ..utils.extra import (build_roles,
+                           get_total_wanted_machines,
+                           gen_resources)
 from ..utils.provider import load_config
 from .host import Host
 from glanceclient import client as glance
@@ -12,7 +14,6 @@ from provider import Provider
 
 import ipaddress
 import logging
-import operator
 import os
 import re
 import time
@@ -104,26 +105,20 @@ def check_network(session, configure_network, network, subnet,
     secgroups = nclient.list_security_groups()['security_groups']
     secgroup_name = SECGROUP_NAME
     if secgroup_name not in map(itemgetter('name'), secgroups):
-        secgroup = {
-                'name': secgroup_name,
-                'description': 'Enos Security Group'
-                }
+        secgroup = {'name': secgroup_name,
+                    'description': 'Enos Security Group'}
         res = nclient.create_security_group({'security_group': secgroup})
         secgroup = res['security_group']
         logging.info("[neutron]: %s security group created" % secgroup_name)
         # create the rules
-        tcp = {
-                'protocol': 'tcp',
+        tcp = {'protocol': 'tcp',
+               'direction': 'ingress',
+               'port_range_min': '1',
+               'port_range_max': '65535',
+               'security_group_id': secgroup['id']}
+        icmp = {'protocol': 'icmp',
                 'direction': 'ingress',
-                'port_range_min': '1',
-                'port_range_max': '65535',
-                'security_group_id': secgroup['id'],
-                }
-        icmp = {
-                'protocol': 'icmp',
-                'direction': 'ingress',
-                'security_group_id': secgroup['id'],
-                }
+                'security_group_id': secgroup['id']}
         nclient.create_security_group_rule({'security_group_rule': tcp})
         logging.info("[neutron]: %s rule (all tcp) created" % secgroup_name)
         nclient.create_security_group_rule({'security_group_rule': icmp})
@@ -150,7 +145,8 @@ def check_network(session, configure_network, network, subnet,
 
     subnets = nclient.list_subnets()['subnets']
     subnet_name = subnet['name']
-    if subnet_name not in map(itemgetter('name'), subnets) and configure_network:
+    if (subnet_name not in map(itemgetter('name'), subnets) and
+            configure_network):
         subnet = {'name': subnet['name'],
         'network_id': network['id'],
         # NOTE(msimonin): using the dns of chameleon
@@ -175,7 +171,8 @@ def check_network(session, configure_network, network, subnet,
     routers = nclient.list_routers()
     router_name = ROUTER_NAME
     logging.debug(routers)
-    if router_name not in map(itemgetter('name'), routers['routers']) and configure_network:
+    if (router_name not in map(itemgetter('name'), routers['routers']) and
+            configure_network):
         router = {
             'name': router_name,
             'external_gateway_info': {
@@ -224,7 +221,9 @@ def wait_for_servers(session, servers):
                 deployed.append(server)
             if c.status == 'ERROR':
                 undeployed.append(server)
-        logging.info("[nova]: %s deployed servers, %s undeployed servers" % (len(deployed), len(undeployed)))
+        logging.info("[nova]: Polling the Deployment")
+        logging.info("[nova]: %s deployed servers" % len(deployed))
+        logging.info("[nova]: %s undeployed servers" % len(undeployed))
         if len(deployed) + len(undeployed) >= len(servers):
             break
         time.sleep(3)
@@ -241,41 +240,42 @@ def check_servers(session, resources, extra_prefix="",
     """
     nclient = nova.Client(NOVA_VERSION, session=session)
     servers = nclient.servers.list(
-            search_opts={'name': '-'.join([PREFIX, extra_prefix])})
-    # servers = filter(lambda s: is_in_current_deployment(s, extra_prefix=extra_prefix), servers)
-    wanted_number = sum(reduce(operator.add, map(lambda r: r.values(), resources.values()), []))
+        search_opts={'name': '-'.join([PREFIX, extra_prefix])})
+    wanted = get_total_wanted_machines(resources)
     if force_deploy:
         for server in servers:
             server.delete()
         servers = []
-    if len(servers) == wanted_number:
-        logging.info("[nova]: Reusing existing servers : %s", servers)
-    elif len(servers) > 0 and len(servers) < wanted_number:
-        logging.error("[nova]: found %s / wanted %s servers" % (len(servers), wanted_number))
-        raise Exception('Not enough servers to reuse')
-    else:
-        total = 0
-        for size, roles in resources.items():
-            for role, number in roles.items():
-                logging.info("[nova]: Starting %s servers for role %s" % (number, role))
-                for n in range(number):
-                    if type(flavors) == str:
-                        flavor = flavors
-                    else:
-                        flavor_to_id, id_to_flavor = flavors
-                        flavor = flavor_to_id[size]
-                    with open(os.path.join(CURRENT_DIR, 'openstack.sh'), 'r') as userdata:
-                        servers.append(nclient.servers.create(
-                            name='-'.join([PREFIX, extra_prefix, str(total)]),
-                            image=image_id,
-                            flavor=flavor,
-                            nics=[{'net-id': network['id']}],
-                            key_name=key_name,
-                            security_groups=[SECGROUP_NAME],
-                            scheduler_hints=scheduler_hints,
-                            userdata=userdata))
-                    total = total + 1
 
+    if len(servers) == wanted:
+        logging.info("[nova]: Reusing existing servers : %s", servers)
+        return servers
+    elif len(servers) > 0 and len(servers) < wanted:
+        raise Exception("Only %s/%s servers found" % (servers, wanted))
+
+    # starting the servers
+    total = 0
+    for size, role, number in gen_resources(resources):
+        logging.info("[nova]: Starting %s servers" % number)
+        logging.info("[nova]: for role %s" % role)
+        logging.info("[nova]: with extra hints %s" % scheduler_hints)
+        for n in range(number):
+            if type(flavors) == str:
+                flavor = flavors
+            else:
+                flavor_to_id, id_to_flavor = flavors
+                flavor = flavor_to_id[size]
+            with open(os.path.join(CURRENT_DIR, 'openstack.sh'), 'r') as u:
+                servers.append(nclient.servers.create(
+                    name='-'.join([PREFIX, extra_prefix, str(total)]),
+                    image=image_id,
+                    flavor=flavor,
+                    nics=[{'net-id': network['id']}],
+                    key_name=key_name,
+                    security_groups=[SECGROUP_NAME],
+                    scheduler_hints=scheduler_hints,
+                    userdata=u))
+            total = total + 1
     return servers
 
 
@@ -284,9 +284,10 @@ def check_gateway(env, with_gateway, servers):
     if with_gateway:
         nclient = nova.Client(NOVA_VERSION, session=env['session'])
         gateway = nclient.servers.get(gateway.id)
-        gateway_floating_ips = filter(lambda n: n['OS-EXT-IPS:type'] == 'floating',
-                gateway.addresses[env['network']['name']])
-        if len(gateway_floating_ips) == 0:
+        gw_floating_ips = filter(
+            lambda n: n['OS-EXT-IPS:type'] == 'floating',
+            gateway.addresses[env['network']['name']])
+        if len(gw_floating_ips) == 0:
             fip = get_free_floating_ip(env)
             gateway.add_floating_ip(fip['floating_ip_address'])
             gateway = nclient.servers.get(gateway.id)
@@ -310,7 +311,9 @@ def allow_address_pairs(session, network, subnet):
     """
     nclient = neutron.Client('2', session=session)
     ports = nclient.list_ports()
-    ports_to_update = filter(lambda p: p['network_id'] == network['id'], ports['ports'])
+    ports_to_update = filter(
+        lambda p: p['network_id'] == network['id'],
+        ports['ports'])
     logging.info('[nova]: Allowing address pairs for ports %s' %
             map(lambda p: p['fixed_ips'], ports_to_update))
     for port in ports_to_update:
@@ -349,18 +352,21 @@ def check_environment(conf):
 def finalize(conf, env, servers, gateway, groupby, extra_ips=[]):
     # Distribute the machines according to the resource/topology
     # specifications
-    r = build_roles(
-                conf,
-                servers,
-                groupby)
+    r = build_roles(conf,
+                    servers,
+                    groupby)
     roles = {}
     extra = {}
     network_name = conf['provider']['network']['name']
     if conf['provider']['gateway']:
-        gateway_floating_ip = filter(lambda n: n['OS-EXT-IPS:type'] == 'floating', gateway.addresses[network_name])[0]['addr']
+        gw_floating_ip = filter(
+            lambda n: n['OS-EXT-IPS:type'] == 'floating',
+            gateway.addresses[network_name])[0]['addr']
+        user = conf['provider'].get('user')
+        gw_user = conf['provider'].get('gateway_user', user)
         extra.update({
-            'gateway': gateway_floating_ip,
-            'gateway_user': conf['provider'].get('gateway_user', conf['provider'].get('user')),
+            'gateway': gw_floating_ip,
+            'gateway_user': gw_user,
             'forward_agent': True
             })
     extra.update({'ansible_become': 'yes'})
@@ -425,11 +431,11 @@ class Openstack(Provider):
         # NOTE(msimonin): polling is missing for now
         # we aren't sure that machines are ssh-reachable
         return finalize(
-                conf,
-                env,
-                deployed,
-                gateway,
-                lambda s: env['id_to_flavor'][s.flavor['id']])
+            conf,
+            env,
+            deployed,
+            gateway,
+            lambda s: env['id_to_flavor'][s.flavor['id']])
 
     def load_openstack_config(self, config):
         """Augment config with openstack default provider config."""
@@ -444,7 +450,7 @@ class Openstack(Provider):
         mandatory_keys = ['key_name', 'image_name', 'user']
         for key in mandatory_keys:
             if provider_config.get(key, None) is None:
-                raise Exception("%s must be specified in provider config" % key)
+                raise Exception("%s must be in provider config" % key)
 
     def destroy(self, calldir, env):
         session = get_session()

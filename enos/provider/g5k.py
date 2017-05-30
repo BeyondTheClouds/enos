@@ -6,7 +6,7 @@ from itertools import islice
 from netaddr import IPAddress, IPNetwork, IPSet
 from provider import Provider
 from ..utils.constants import EXTERNAL_IFACE
-from ..utils.extra import build_resources, expand_topology, build_roles
+from ..utils.extra import build_roles, get_total_wanted_machines
 from ..utils.provider import load_config
 
 import execo as EX
@@ -14,7 +14,6 @@ import execo_g5k as EX5
 import logging
 import operator
 import pprint
-import sys
 
 
 ROLE_DISTRIBUTION_MODE_STRICT = "strict"
@@ -47,23 +46,24 @@ class G5k(Provider):
 
         jobs, vlans, nodes = self._get_jobs_and_vlans(conf)
         deployed, deployed_nodes_vlan = self._deploy(conf,
-                nodes,
-                vlans,
-                force_deploy=force_deploy)
+                                                     nodes,
+                                                     vlans,
+                                                     force_deploy=force_deploy)
 
-        roles = build_roles(
-                conf,
-                map(lambda n: Host(n.address, user="root"), deployed_nodes_vlan),
-                lambda n: n.address.split('-')[0])
+        host_nodes = map(lambda n: Host(n.address, user="root"),
+                         deployed_nodes_vlan)
+
+        roles = build_roles(conf,
+                            host_nodes,
+                            lambda n: n.address.split('-')[0])
 
         network = self._get_network(vlans)
         network_interface, external_interface = \
-            self._mount_cluster_nics(
-                conf,
-                conf['resources'].keys()[0],
-                deployed,
-                deployed_nodes_vlan,
-                vlans)
+            self._mount_cluster_nics(conf,
+                                     conf['resources'].keys()[0],
+                                     deployed,
+                                     deployed_nodes_vlan,
+                                     vlans)
 
         self._provision(deployed_nodes_vlan)
 
@@ -109,19 +109,25 @@ class G5k(Provider):
         nodes = map(lambda n: EX.Host(n.address), sum(env['rsc'].values(), []))
         if env['eths'][EXTERNAL_IFACE] == 'veth0':
             self._exec_command_on_nodes(
-                    nodes,
-                    'ip link show veth0 || ip link add type veth peer',
-                    'Creating a veth')
+                nodes,
+                'ip link show veth0 || ip link add type veth peer',
+                'Creating a veth')
 
         # Bind volumes of docker
+        cmd = []
+        cmd.append('mkdir -p /tmp/docker/volumes')
+        cmd.append('mkdir -p /var/lib/docker/volumes')
         self._exec_command_on_nodes(
-                nodes,
-                'mkdir -p /tmp/docker/volumes ; mkdir -p /var/lib/docker/volumes',
-                'Creating docker volumes directory in /tmp')
+            nodes,
+            ';'.join(cmd),
+            'Creating docker volumes directory in /tmp')
+        cmd = []
+        cmd.append('(mount | grep /tmp/docker/volumes)')
+        cmd.append('mount --bind /tmp/docker/volumes /var/lib/docker/volumes')
         self._exec_command_on_nodes(
-                nodes,
-                '(mount | grep /tmp/docker/volumes) || mount --bind /tmp/docker/volumes /var/lib/docker/volumes',
-                'Bind mount')
+            nodes,
+            '||'.join(cmd),
+            'Bind mount')
 
         # Bind nova local storage if there is any nova compute
         #
@@ -129,7 +135,8 @@ class G5k(Provider):
         # compute node, but this is not necessarily. Nova could be
         # installed on whatever the user choose. For this reason it
         # will be a better strategy to parse the inventory file.
-        computes = map(lambda n: EX.Host(n.address), env['rsc'].get('compute', []))
+        computes = map(lambda n: EX.Host(n.address),
+                       env['rsc'].get('compute', []))
         self._exec_command_on_nodes(
             computes,
             'mkdir -p /tmp/nova ; mkdir -p /var/lib/nova',
@@ -150,8 +157,10 @@ class G5k(Provider):
         provider_conf = conf['provider']
         criteria = {}
         # NOTE(msimonin): Traverse all cluster demands in alphebetical order
-        # test_create_reservation_different_site needs to know the traversal order
-        for cluster, roles in sorted(conf["resources"].items(), key=lambda x: x[0]):
+        # test_create_reservation_different_site needs to know the order
+        for cluster, roles in sorted(
+                conf["resources"].items(),
+                key=lambda x: x[0]):
             site = api.get_cluster_site(cluster)
             nb_nodes = reduce(operator.add, map(int, roles.values()))
             criterion = "{cluster='%s'}/nodes=%s" % (cluster, nb_nodes)
@@ -189,9 +198,7 @@ class G5k(Provider):
                      resources={},
                      mode=ROLE_DISTRIBUTION_MODE_STRICT):
         "Do we have enough nodes according to the resources mode."
-        wanted_nodes = 0
-        for cluster, roles in resources.items():
-            wanted_nodes += reduce(operator.add, map(int, roles.values()))
+        wanted_nodes = get_total_wanted_machines(resources)
 
         if mode == ROLE_DISTRIBUTION_MODE_STRICT and wanted_nodes > len(nodes):
             raise Exception("Not enough nodes to continue")
@@ -297,10 +304,9 @@ class G5k(Provider):
         logging.info(deployed_nodes_vlan)
         # Checking the deployed nodes according to the
         # resource distribution policy
-        self._check_nodes(
-                nodes=deployed_nodes_vlan,
-                resources=conf['resources'],
-                mode=conf['provider']['role_distribution'])
+        self._check_nodes(nodes=deployed_nodes_vlan,
+                          resources=conf['resources'],
+                          mode=conf['provider']['role_distribution'])
 
         return deployed, deployed_nodes_vlan
 
@@ -363,8 +369,8 @@ class G5k(Provider):
             )['items'][0]['network_adapters']
 
         interfaces = [nic['device'] for nic in nics
-                                    if nic['mountable']
-                                    and nic['interface'] == 'Ethernet']
+                                    if nic['mountable'] and
+                                    nic['interface'] == 'Ethernet']
 
         network_interface = str(interfaces[0])
         external_interface = None

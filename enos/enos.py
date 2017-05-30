@@ -49,7 +49,6 @@ import pprint
 import os
 import sys
 from subprocess import call
-import time
 
 import yaml
 import itertools
@@ -140,7 +139,10 @@ def up(env=None, **kwargs):
     wait_ssh(env)
 
     # Set variables required by playbooks of the application
-    registry_vip = env['config']['registry']['ip'] if 'ip' in env['config']['registry'] else pop_ip(env)
+    if 'ip' in env['config']['registry']:
+        registry_vip = env['config']['registry']['ip']
+    else:
+        registry_vip = pop_ip(env)
 
     env['config'].update({
         'vip':               pop_ip(env),
@@ -158,7 +160,10 @@ def up(env=None, **kwargs):
     # installs the registry, install monitoring tools, ...)
     provider.before_preintsall(env)
     up_playbook = os.path.join(ANSIBLE_DIR, 'up.yml')
-    run_ansible([up_playbook], inventory, extra_vars=env['config'], tags=kwargs['--tags'])
+    run_ansible([up_playbook],
+                inventory,
+                extra_vars=env['config'],
+                tags=kwargs['--tags'])
     provider.after_preintsall(env)
 
 
@@ -242,8 +247,9 @@ def init_os(env=None, **kwargs):
     cmd = []
     cmd.append('. %s' % os.path.join(env['resultdir'], 'admin-openrc'))
     # add cirros image
+    url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'
     images = [{'name': 'cirros.uec',
-               'url': 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'}]
+               'url': url}]
     for image in images:
         cmd.append("wget -q -O /tmp/%s %s" % (image['name'], image['url']))
         cmd.append("openstack image create"
@@ -254,15 +260,13 @@ def init_os(env=None, **kwargs):
                    " --file /tmp/%s"
                    " %s" % (image['name'], image['name']))
 
-    # flavors
-    flavors = [
-            # name, ram, disk, vcpus
-            ('m1.tiny', 512, 1, 1),
-            ('m1.small', 2048, 20, 1),
-            ('m1.medium', 4096, 40, 2),
-            ('m1.large', 8192, 80, 4),
-            ('m1.xlarge', 16384, 160, 8)
-    ]
+    # flavors name, ram, disk, vcpus
+
+    flavors = [('m1.tiny', 512, 1, 1),
+               ('m1.small', 2048, 20, 1),
+               ('m1.medium', 4096, 40, 2),
+               ('m1.large', 8192, 80, 4),
+               ('m1.xlarge', 16384, 160, 8)]
     for flavor in flavors:
         cmd.append("openstack flavor create %s"
                    " --id auto"
@@ -387,24 +391,31 @@ def bench(env=None, **kwargs):
                             'run-bench.yml')
                     inventory_path = os.path.join(env['resultdir'],
                             'multinode')
-                    # NOTE(msimonin) all the scenarios and plugins must reside on the workload directory
-                    bench={
+                    # NOTE(msimonin) all the scenarios and plugins
+                    # must reside on the workload directory
+                    scenario_location = os.path.join(
+                        workload_dir,
+                        scenario["file"])
+                    scenario_location = os.path.abspath(scenario_location)
+                    bench = {
                         'type': bench_type,
-                        'scenario_location': os.path.abspath(
-                                      os.path.join(workload_dir,
-                                                   scenario["file"])),
+                        'scenario_location': scenario_location,
                         'file': scenario["file"],
                         'args': a
                     }
 
                     if "plugin" in scenario:
-                        plugin = os.path.abspath(os.path.join(workload_dir, scenario["plugin"]))
+                        plugin = os.path.abspath(
+                            os.path.join(workload_dir, scenario["plugin"]))
                         if os.path.isdir(plugin):
                             plugin = plugin + "/"
                         bench['plugin_location'] = plugin
                     playbook_values.update(bench=bench)
 
-                    run_ansible([playbook_path], inventory_path, extra_vars=playbook_values)
+                    run_ansible([playbook_path],
+                                inventory_path,
+                                extra_vars=playbook_values)
+
 
 @enostask("""
 usage: enos backup [--backup_dir=BACKUP_DIR] [-e ENV|--env=ENV]
@@ -425,8 +436,8 @@ Options:
 def backup(env=None, **kwargs):
 
     backup_dir = kwargs['--backup_dir'] \
-            or kwargs['--env'] \
-            or SYMLINK_NAME
+        or kwargs['--env'] \
+        or SYMLINK_NAME
 
     backup_dir = to_abs_path(backup_dir)
     # create if necessary
@@ -504,13 +515,11 @@ def tc(env=None, **kwargs):
     if test:
         logging.info('Checking the constraints')
         utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
-        options = {
-                'action': 'test',
-                'tc_output_dir': env['resultdir'],
-                # NOTE(msimonin): we retrieve eth name from the env instead
-                # of env['config'] in case os hasn't been called
-                'network_interface': env['eths'][NETWORK_IFACE]
-                }
+        # NOTE(msimonin): we retrieve eth name from the env instead
+        # of env['config'] in case os hasn't been called
+        options = {'action': 'test',
+                   'tc_output_dir': env['resultdir'],
+                   'network_interface': env['eths'][NETWORK_IFACE]}
         run_ansible([utils_playbook], env['inventory'],
                 extra_vars=options)
         return
@@ -519,14 +528,12 @@ def tc(env=None, **kwargs):
     logging.info('Getting the ips of all nodes')
     utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
     ips_file = os.path.join(env['resultdir'], 'ips.txt')
-    options = {
-            'action': 'ips',
-            'ips_file': ips_file,
-            # NOTE(msimonin): we retrieve eth name from the env instead
-            # of env['config'] in case os hasn't been called
-            'network_interface': env['eths'][NETWORK_IFACE],
-            'neutron_external_interface': env['eths'][EXTERNAL_IFACE]
-    }
+    # NOTE(msimonin): we retrieve eth name from the env instead
+    # of env['config'] in case os hasn't been called
+    options = {'action': 'ips',
+               'ips_file': ips_file,
+               'network_interface': env['eths'][NETWORK_IFACE],
+               'neutron_external_interface': env['eths'][EXTERNAL_IFACE]}
     run_ansible([utils_playbook], env['inventory'], extra_vars=options)
 
     # 2.a building the group constraints

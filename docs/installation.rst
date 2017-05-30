@@ -47,6 +47,13 @@ The configuration may vary from one provider to another, please refer to the
 dedicated :ref:`provider` configuration
 
 
+.. note::
+
+    If a key is defined several times in the configuration file, only the last
+    occurence will be taken into account. In particular to switch from one
+    provider to another, you can move down the key ``provider`` and its
+    associated ``resources`` key.
+
 Deployment
 ----------
 
