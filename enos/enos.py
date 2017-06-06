@@ -24,7 +24,7 @@ Commands:
   ssh-tunnel     Print configuration for port forwarding with horizon.
   tc             Enforce network constraints
   info           Show information of the actual deployment.
-  destroy        Destroy the resources used by the deployment
+  destroy        Destroy the deployment and optionally the related resources.
   deploy         Shortcut for enos up, then enos os and enos config.
 
 See 'enos <command> --help' for more information on a specific
@@ -583,20 +583,39 @@ def info(env=None, **kwargs):
 
 
 @enostask("""
-usage: enos destroy [-e ENV|--env=ENV] [-s|--silent|-vv]
+usage: enos destroy [-e ENV|--env=ENV] [-s|--silent|-vv] [--hard]
+                    [--include-images]
+
+Destroy the deployment.
 
 Options:
   -e ENV --env=ENV     Path to the environment directory. You should
                        use this option when you want to link a specific
                        experiment [default: %s].
   -h --help            Show this help message.
+  --hard               Destroy the underlying resources as well.
+  --include-images     Remove also all the docker images.
   -s --silent          Quiet mode.
   -vv                  Verbose mode.
 """ % SYMLINK_NAME)
 @check_env
 def destroy(env=None, **kwargs):
-    provider = make_provider(env)
-    provider.destroy(CALL_PATH, env)
+    hard = kwargs['--hard']
+    if hard:
+        logging.info('Destroying all the resources')
+        provider = make_provider(env)
+        provider.destroy(CALL_PATH, env)
+    else:
+        command = ['destroy', '--yes-i-really-really-mean-it']
+        if kwargs['--include-images']:
+            command.append('--include-images')
+        kolla_kwargs = {'--': True,
+                  '--env': kwargs['--env'],
+                  '-v': kwargs['-v'],
+                  '<command>': command,
+                  '--silent': kwargs['--silent'],
+                  'kolla': True}
+        kolla(env=env, **kolla_kwargs)
 
 
 @enostask("""
@@ -632,11 +651,35 @@ def deploy(**kwargs):
     init_os(**kwargs)
 
 
-def main():
-    args = docopt(__doc__,
-                  version=VERSION,
-                  options_first=True)
+@enostask("""
+usage: enos kolla [-e ENV|--env=ENV] [-s|--silent|-vv] -- <command>...
 
+Run arbitrary Kolla command.
+
+Options:
+  -e ENV --env=ENV     Path to the environment directory. You should
+                       use this option when you want to link a specific
+                       experiment [default: %s].
+  -h --help            Show this help message.
+  -s --silent          Quiet mode.
+  -vv                  Verbose mode.
+  command              Kolla command (e.g prechecks, checks, pull)
+""" % SYMLINK_NAME)
+@check_env
+def kolla(env=None, **kwargs):
+    logging.info('Kolla command')
+    logging.info(kwargs)
+    kolla_path = os.path.join(env['resultdir'], 'kolla')
+    kolla_cmd = [os.path.join(kolla_path, "tools", "kolla-ansible")]
+    kolla_cmd.extend(kwargs['<command>'])
+    kolla_cmd.extend(["-i", "%s/multinode" % env['resultdir'],
+                      "--passwords", "%s/passwords.yml" % env['resultdir'],
+                      "--configdir", "%s" % env['resultdir']])
+    logging.info(kolla_cmd)
+    call(kolla_cmd)
+
+
+def configure_logging(args):
     if '-vv' in args['<args>']:
         logging.basicConfig(level=logging.DEBUG)
         args['<args>'].remove('-vv')
@@ -649,6 +692,13 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO)
 
+
+def main():
+    args = docopt(__doc__,
+                  version=VERSION,
+                  options_first=True)
+
+    configure_logging(args)
     argv = [args['<command>']] + args['<args>']
 
     if args['<command>'] == 'deploy':
@@ -671,6 +721,8 @@ def main():
         info(**docopt(info.__doc__, argv=argv))
     elif args['<command>'] == 'destroy':
         destroy(**docopt(destroy.__doc__, argv=argv))
+    elif args['<command>'] == 'kolla':
+        kolla(**docopt(kolla.__doc__, argv=argv))
     else:
         pass
 
