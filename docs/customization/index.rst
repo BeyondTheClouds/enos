@@ -39,8 +39,8 @@ Note on the network interfaces:
 
 Providers do their best to configure the network decently. This probably doesn't
 cover all the possible use cases. But, if you know what interfaces are configured by
-the provider you can specify a more precise allocation under he ``kolla`` key.
-For instance :
+the provider you can specify a more precise allocation under the ``kolla`` key.
+For instance:
 
 .. code-block:: yaml
 
@@ -48,6 +48,22 @@ For instance :
       network_interface: eth1
       neutron_external_interface: eth2
       tunnel_interface: eth3
+
+Running from kolla/master
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+if you want to live on the bleeding edge you can run the latest Kolla code with
+the latest built kolla images.
+
+.. code-block:: yaml
+
+    kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
+    kolla_ref: "master"
+
+    kolla:
+      docker_namespace: "beyondtheclouds"
+      openstack_release: "latest"
+
 
 Changing the topology
 ---------------------
