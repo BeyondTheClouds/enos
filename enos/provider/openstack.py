@@ -306,13 +306,20 @@ def allow_address_pairs(session, network, subnet):
     logging.info('[nova]: Allowing address pairs for ports %s' %
             map(lambda p: p['fixed_ips'], ports_to_update))
     for port in ports_to_update:
-        nclient.update_port(port['id'], {
-            'port': {
-                'allowed_address_pairs': [{
-                    'ip_address': subnet
-                    }]
-                }
-            })
+        try:
+            nclient.update_port(port['id'], {
+                'port': {
+                    'allowed_address_pairs': [{
+                        'ip_address': subnet
+                        }]
+                    }
+                })
+        except:
+            # NOTE(msimonin): dhcp and router interface port
+            # seems to have enabled_sec_groups = False which
+            # prevent them to be updated, just throw a warning
+            # a skip them
+            logging.warn("Can't update port %s" % port)
 
 
 def check_environment(conf):
