@@ -1,6 +1,8 @@
 import unittest
 from enos.utils.extra import *
+from enos.utils.errors import *
 from enos.provider.host import Host
+import copy
 
 class TestExpandGroups(unittest.TestCase):
     def test_expand_groups(self):
@@ -17,37 +19,6 @@ class TestExpandGroups(unittest.TestCase):
         grps = "a&![,[1-3]"
         expanded = expand_groups(grps)
         self.assertEquals(3, len(expanded))
-
-
-class TestBuildResources(unittest.TestCase):
-
-    def test_build_resources(self):
-        topology = {
-                "grp1": {
-                    "a":{
-                        "control": 1,
-                        }
-                    },
-                "grp2": {
-                    "a":{
-                        "compute": 10,
-                        }
-                    },
-                "grp3": {
-                    "a":{
-                        "compute": 10,
-                        }
-                    }
-                }
-
-        resources_expected = {
-                "a": {
-                    "control": 1,
-                    "compute": 20
-                    }
-                }
-        resources_actual = build_resources(topology)
-        self.assertDictEqual(resources_expected, resources_actual)
 
 
 class TestBuildRoles(unittest.TestCase):
@@ -190,7 +161,6 @@ class TestBuildRoles(unittest.TestCase):
 
 class TestMakeProvider(unittest.TestCase):
 
-    # TODO: test raises error
     def __provider_env(self, provider_name):
         "Returns env with a provider key"
         return {"config": {"provider": provider_name}}
@@ -284,6 +254,77 @@ class TestResourcesIterator(unittest.TestCase):
                     ("a", "storage", 3),
                     ("b", "compute", 2)]
         self.assertItemsEqual(expected, actual)
+
+
+class TestLoadProviderConfig(unittest.TestCase):
+    def test_load_provider_config_nest_type(self):
+        provider_config = 'myprovider'
+        expected = {
+            'type': 'myprovider'
+        }
+        provider_config = load_provider_config(copy.deepcopy(provider_config))
+        self.assertDictEqual(expected, provider_config)
+
+    def test_load_provider_config_nest_type_with_defaults(self):
+        provider_config = 'myprovider'
+        default_provider_config = {
+            'option1': 'value1',
+            'option2': 'value2',
+        }
+        expected = {
+            'type': 'myprovider',
+            'option1': 'value1',
+            'option2': 'value2',
+        }
+        provider_config = load_provider_config(
+            copy.deepcopy(provider_config),
+            default_provider_config=default_provider_config)
+        self.assertDictEqual(expected, provider_config)
+
+    def test_load_provider_config_with_defaults(self):
+        provider_config = {
+            'type': 'myprovider',
+            'option1': 'myvalue1'
+        }
+        default_provider_config = {
+            'option1': 'value1',
+            'option2': 'value2',
+        }
+        expected = {
+            'type': 'myprovider',
+            'option1': 'myvalue1',
+            'option2': 'value2',
+        }
+        provider_config = load_provider_config(
+            copy.deepcopy(provider_config),
+            default_provider_config=default_provider_config)
+        self.assertDictEqual(expected, provider_config)
+
+    def test_load_provider_config_with_missing_keys(self):
+        from collections import OrderedDict
+
+        provider_config = {
+            'is-overrided1': 'overrided-value',
+            'is-overrided2': 'overrided-value'
+        }
+
+        # Note: Go with an OrderedDict and its order preserving keys
+        # extraction, rather than vanilla dict. OrderedDict makes the
+        # assertRaisesRegexp reliable on the order of missing keys in
+        # the error message.
+        default_provider_config = OrderedDict([
+            ('is-overrided1', None),
+            ('missing-overriding1', None),
+            ('is-overrided2', None),
+            ('missing-overriding2', None),
+            ('no-overriding-needed', False)])
+
+        with self.assertRaisesRegexp(
+                EnosProviderMissingConfigurationKeys,
+                "\['missing-overriding1', 'missing-overriding2'\]"):
+            load_provider_config(
+                provider_config,
+                default_provider_config)
 
 
 if __name__ == '__main__':

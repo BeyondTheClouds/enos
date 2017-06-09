@@ -35,7 +35,8 @@ from utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, NETWORK_IFACE,
                              EXTERNAL_IFACE, VERSION)
 from utils.extra import (run_ansible, generate_inventory,
                          bootstrap_kolla, to_abs_path, pop_ip,
-                         make_provider, mk_enos_values, wait_ssh)
+                         make_provider, mk_enos_values, wait_ssh,
+                         load_config)
 from utils.network_constraints import (build_grp_constraints,
                                        build_ip_constraints)
 from utils.enostask import (enostask, check_env)
@@ -121,12 +122,19 @@ def up(env=None, **kwargs):
 
     # Calls the provider and initialise resources
     provider = make_provider(env)
+    config = load_config(env['config'],
+                         provider.topology_to_resources,
+                         provider.default_config())
     rsc, provider_net, eths = \
-        provider.init(env['config'], CALL_PATH, kwargs['--force-deploy'])
+        provider.init(config, CALL_PATH, kwargs['--force-deploy'])
 
     env['rsc'] = rsc
     env['provider_net'] = provider_net
     env['eths'] = eths
+
+    logging.debug("Provides ressources: %s", env['rsc'])
+    logging.debug("Provides network information: %s", env['provider_net'])
+    logging.debug("Provides network interfaces: %s", env['eths'])
 
     # Generates inventory for ansible/kolla
     base_inventory = env['config']['inventory']
@@ -156,15 +164,13 @@ def up(env=None, **kwargs):
         'external_vip':      pop_ip(env)
     })
 
-    # Executes hooks and runs playbook that initializes resources (eg,
+    # Runs playbook that initializes resources (eg,
     # installs the registry, install monitoring tools, ...)
-    provider.before_preintsall(env)
     up_playbook = os.path.join(ANSIBLE_DIR, 'up.yml')
     run_ansible([up_playbook],
                 inventory,
                 extra_vars=env['config'],
                 tags=kwargs['--tags'])
-    provider.after_preintsall(env)
 
 
 @enostask("""

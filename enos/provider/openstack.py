@@ -2,7 +2,6 @@
 from ..utils.extra import (build_roles,
                            get_total_wanted_machines,
                            gen_resources)
-from ..utils.provider import load_config
 from .host import Host
 from glanceclient import client as glance
 from keystoneauth1.identity import v2
@@ -29,16 +28,6 @@ SUBNET_NAME = "%s-subnet" % PREFIX
 SUBNET_CIDR = '10.87.23.0/24'
 ALLOCATION_POOL = {'start': '10.87.23.10', 'end': '10.87.23.100'}
 DNS_NAMESERVERS = ['8.8.8.8', '8.8.4.4']
-
-# Default generic provider config
-PROVIDER_CONFIG = {
-    'configure_network': CONFIGURE_NETWORK,
-    'network': {'name': NETWORK_NAME},
-    'subnet': {'name': SUBNET_NAME, 'cidr': SUBNET_CIDR},
-    'dns_nameservers': DNS_NAMESERVERS,
-    'allocation_pool': ALLOCATION_POOL,
-    'gateway': True
-}
 
 # These are private resources
 ROUTER_NAME = "%s-router" % PREFIX
@@ -397,14 +386,11 @@ def finalize(conf, env, servers, gateway, groupby, extra_ips=[]):
 
 
 class Openstack(Provider):
-    def init(self, config, calldir, force_deploy=False):
+    def init(self, conf, calldir, force_deploy=False):
         """python -m enos.enos up
         Read the resources in the configuration files.  Resource claims must be
         grouped by sizes according to the predefined SIZES map.
         """
-        conf = self.load_openstack_config(config)
-        self.check_conf(conf['provider'])
-
         env = check_environment(conf)
         servers = check_servers(
             env['session'],
@@ -437,20 +423,20 @@ class Openstack(Provider):
             gateway,
             lambda s: env['id_to_flavor'][s.flavor['id']])
 
-    def load_openstack_config(self, config):
-        """Augment config with openstack default provider config."""
-        return load_config(config, default_provider_config=PROVIDER_CONFIG)
+    def default_config(self):
+        return {
+            'configure_network': CONFIGURE_NETWORK,
+            'network': {'name': NETWORK_NAME},
+            'subnet': {'name': SUBNET_NAME, 'cidr': SUBNET_CIDR},
+            'dns_nameservers': DNS_NAMESERVERS,
+            'allocation_pool': ALLOCATION_POOL,
+            'gateway': True,
 
-    def check_conf(self, provider_config):
-        """Check the provider config."""
-        # Check that the configuration is given in a dict
-        if type(provider_config) is not dict:
-            raise Exception('Configuration must be a dict')
-
-        mandatory_keys = ['key_name', 'image_name', 'user']
-        for key in mandatory_keys:
-            if provider_config.get(key, None) is None:
-                raise Exception("%s must be in provider config" % key)
+            # Mandatory keys
+            'key_name': None,
+            'image_name': None,
+            'user': None
+        }
 
     def destroy(self, calldir, env):
         session = get_session()

@@ -4,7 +4,6 @@ from jinja2 import Environment, FileSystemLoader
 from provider import Provider
 from ..utils.constants import TEMPLATE_DIR
 from ..utils.extra import build_roles, gen_resources
-from ..utils.provider import load_config
 
 import logging
 import os
@@ -37,22 +36,13 @@ SIZES = {
     }
 }
 
-DEFAULT_PROVIDER_CONFIG = {
-    'backend': 'virtualbox',
-    'box': 'debian/jessie64',
-    'user': 'root',
-    'interfaces': ('eth1', 'eth2')
-}
-
 
 class Enos_vagrant(Provider):
-    def init(self, config, calldir, force_deploy=False):
+    def init(self, conf, calldir, force_deploy=False):
         """python -m enos.enos up
         Read the resources in the configuration files. Resource claims must be
         grouped by sizes according to the predefined SIZES map.
         """
-        conf = load_config(config,
-                default_provider_config=DEFAULT_PROVIDER_CONFIG)
         provider_conf = conf['provider']
 
         net_pools = {
@@ -137,3 +127,11 @@ class Enos_vagrant(Provider):
                             quiet_stdout=False,
                             quiet_stderr=True)
         v.destroy()
+
+    def default_config(self):
+        return {
+            'backend': 'virtualbox',
+            'box': 'debian/jessie64',
+            'user': 'root',
+            'interfaces': ('eth1', 'eth2')
+        }

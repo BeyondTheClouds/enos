@@ -5,9 +5,7 @@ from .host import Host
 from itertools import islice
 from netaddr import IPAddress, IPNetwork, IPSet
 from provider import Provider
-from ..utils.constants import EXTERNAL_IFACE
-from ..utils.extra import build_roles, get_total_wanted_machines
-from ..utils.provider import load_config
+from ..utils.extra import build_roles, get_total_wanted_machines, load_config
 
 import execo as EX
 import execo_g5k as EX5
@@ -17,17 +15,6 @@ import pprint
 
 
 ROLE_DISTRIBUTION_MODE_STRICT = "strict"
-DEFAULT_PROVIDER_CONFIG = {
-    'name': 'Enos',
-    'walltime': '02:00:00',
-    'env_name': 'jessie-x64-min',
-    'reservation': None,
-    'vlans': {'rennes': "{type='kavlan'}/vlan=1"},
-    'role_distribution': ROLE_DISTRIBUTION_MODE_STRICT,
-    'single_interface': False,
-    'user': 'root'
-}
-
 MAX_ATTEMPTS = 5
 DEFAULT_CONN_PARAMS = {'user': 'root'}
 
@@ -35,15 +22,12 @@ pf = pprint.PrettyPrinter(indent=4).pformat
 
 
 class G5k(Provider):
-    def init(self, config, calldir, force_deploy=False):
+    def init(self, conf, calldir, force_deploy=False):
         """python -m enos.enos up --provider=g5k
 
         Read the resources in the configuration files.  Resource claims must be
         grouped by clusters available on Grid'5000.
         """
-        conf = load_config(config,
-                default_provider_config=DEFAULT_PROVIDER_CONFIG)
-
         jobs, vlans, nodes = self._get_jobs_and_vlans(conf)
         deployed, deployed_nodes_vlan = self._deploy(conf,
                                                      nodes,
@@ -70,84 +54,24 @@ class G5k(Provider):
         return (roles, network, (network_interface, external_interface))
 
     def destroy(self, calldir, env):
-        conf = load_config(env['config'])
+        conf = load_config(env['config'], self.default_config())
         provider_conf = conf['provider']
         gridjob, _ = EX5.planning.get_job_by_name(provider_conf['name'])
         if gridjob is not None:
             EX5.oargriddel([gridjob])
             logging.info("Killing the job %s" % gridjob)
 
-    def before_preintsall(self, env):
-        # Create a virtual interface for veth0 (if any)
-        # - name: Installing bridge-utils
-        #  apt: name=bridge-utils state=present
-        #
-        # - name: Creating virtual interface veth0
-        #   shell: ip link show veth0 || ip link add type veth peer
-        #
-        # - name: Creating a bridge
-        #   shell: brctl show | grep br0 || brctl addbr br0
-        #
-        # - name:  Setting IP {{ neutron_external_address }} for veth0
-        #   shell: ip addr show | grep {{ neutron_external_address }}
-        #          || ip addr add {{ neutron_external_address }} dev veth0
-        #
-        # - name: Turning veth0 up
-        #   shell: ip link set veth0 up
-        #
-        # - name: Turning veth1 up
-        #   shell: ip link set veth1 up
-        #
-        # - name: Connecting veth1 to br0
-        #   shell: brctl addif br0 eth0
-        #
-        # - name: Connecting eth0 to br0
-        #   shell: brctl addif br0 veth1
-        #
-        # - name: Turning br0 up
-        #   shell: ifconfig br0 up
-        nodes = map(lambda n: EX.Host(n.address), sum(env['rsc'].values(), []))
-        if env['eths'][EXTERNAL_IFACE] == 'veth0':
-            self._exec_command_on_nodes(
-                nodes,
-                'ip link show veth0 || ip link add type veth peer',
-                'Creating a veth')
-
-        # Bind volumes of docker
-        cmd = []
-        cmd.append('mkdir -p /tmp/docker/volumes')
-        cmd.append('mkdir -p /var/lib/docker/volumes')
-        self._exec_command_on_nodes(
-            nodes,
-            ';'.join(cmd),
-            'Creating docker volumes directory in /tmp')
-        cmd = []
-        cmd.append('(mount | grep /tmp/docker/volumes)')
-        cmd.append('mount --bind /tmp/docker/volumes /var/lib/docker/volumes')
-        self._exec_command_on_nodes(
-            nodes,
-            '||'.join(cmd),
-            'Bind mount')
-
-        # Bind nova local storage if there is any nova compute
-        #
-        # FIXME: This does the hypotheses that nova is installed under
-        # compute node, but this is not necessarily. Nova could be
-        # installed on whatever the user choose. For this reason it
-        # will be a better strategy to parse the inventory file.
-        computes = map(lambda n: EX.Host(n.address),
-                       env['rsc'].get('compute', []))
-        self._exec_command_on_nodes(
-            computes,
-            'mkdir -p /tmp/nova ; mkdir -p /var/lib/nova',
-            'Creating nova directory in /tmp')
-        self._exec_command_on_nodes(
-            computes,
-            '(mount | grep /tmp/nova) || mount --bind /tmp/nova /var/lib/nova',
-            'Bind mount')
-
-    def after_preintsall(self, env):
-        pass
+    def default_config(self):
+        return {
+            'name': 'Enos',
+            'walltime': '02:00:00',
+            'env_name': 'jessie-x64-min',
+            'reservation': False,
+            'vlans': {'rennes': "{type='kavlan'}/vlan=1"},
+            'role_distribution': ROLE_DISTRIBUTION_MODE_STRICT,
+            'single_interface': False,
+            'user': 'root'
+        }
 
     def __str__(self):
         return 'G5k'
@@ -399,6 +323,11 @@ class G5k(Provider):
                                 "neutron_external_interface."
                                 % conf['resources'].keys()[0])
 
+            self._exec_command_on_nodes(
+                kavlan_nodes,
+                'ip link show veth0 || ip link add type veth peer',
+                'Creating a veth')
+
         return (network_interface, external_interface)
 
     def _exec_command_on_nodes(self, nodes, cmd, label, conn_params=None):
@@ -416,9 +345,32 @@ class G5k(Provider):
         if not remote.finished_ok:
             raise Exception('An error occcured during remote execution')
 
-    def _provision(self, deployed_nodes_vlan):
+    def _provision(self, nodes):
         # Provision nodes so we can run Ansible on it
         self._exec_command_on_nodes(
-            deployed_nodes_vlan,
-            'apt-get update && apt-get -y --force-yes install %s'
-            % ' '.join(['python']), 'Installing python...')
+            nodes,
+            'apt-get update && apt-get -y --force-yes install python',
+            'Installing python...')
+
+        # Bind volumes of docker in /tmp (free storage location on G5k)
+        self._exec_command_on_nodes(
+            nodes,
+            ('mkdir -p /tmp/docker/volumes; '
+             'mkdir -p /var/lib/docker/volumes'),
+            'Creating docker volumes directory in /tmp')
+
+        self._exec_command_on_nodes(
+            nodes,
+            ('(mount | grep /tmp/docker/volumes) || '
+             'mount --bind /tmp/docker/volumes /var/lib/docker/volumes'),
+            'Bind mount')
+
+        # Bind nova local storage in /tmp
+        self._exec_command_on_nodes(
+            nodes,
+            'mkdir -p /tmp/nova ; mkdir -p /var/lib/nova',
+            'Creating nova directory in /tmp')
+        self._exec_command_on_nodes(
+            nodes,
+            '(mount | grep /tmp/nova) || mount --bind /tmp/nova /var/lib/nova',
+            'Bind mount')
