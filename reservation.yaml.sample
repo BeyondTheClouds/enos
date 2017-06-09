@@ -60,6 +60,50 @@ resources:
   tiny:
     compute: 1
 
+# ############################################### #
+# Static provider parameter                       #
+# ############################################### #
+provider:
+  type: static
+  network:
+    start: 192.168.142.3
+    end:  192.168.142.119
+    cidr: 192.168.142.0/24
+    gateway: 192.168.142.1
+    dns: 8.8.8.8
+  eths:
+    - eth1
+    - eth2
+
+resources:
+  control:
+    address: ip-control-node
+    # alias: control-node
+    # user: root
+    # port: 2222
+    # keyfile: /path/to/private_key
+    # extra: ...
+  network:
+    address: ip-network-node
+    # alias: network-node
+    # user: root
+    # port: 2222
+    # keyfile: /path/to/private_key
+    # extra: ...
+  compute:
+    - address: ip-compute-node1
+      # alias: compute-node1
+      # user: root
+      # port: 2222
+      # keyfile: /path/to/private_key
+      # extra: ...
+    - address: ip-compute-node2
+      # alias: compute-node2
+      # user: root
+      # port: 2222
+      # keyfile: /path/to/private_key
+      # extra: ...
+
 
 
 # ############################################### #
