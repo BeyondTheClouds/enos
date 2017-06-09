@@ -51,8 +51,12 @@ import os
 import sys
 from subprocess import call
 
+import json
+import pickle
 import yaml
+
 import itertools
+import operator
 
 CALL_PATH = os.getcwd()
 
@@ -577,18 +581,31 @@ def tc(env=None, **kwargs):
 
 
 @enostask("""
-usage: enos info [-e ENV|--env=ENV]
-
+usage: enos info [-e ENV|--env=ENV] [--out={json,pickle,yaml}]
 
 Show information of the `ENV` deployment.
 
 Options:
-  -e ENV --env=ENV     Path to the environment directory. You should
-                       use this option when you want to link a specific
-                       experiment [default: %s].
+
+  -e ENV --env=ENV         Path to the environment directory. You should use
+                           this option when you want to link a
+                           specific experiment [default: %s].
+
+  --out {json,pickle,yaml} Output the result in either json, pickle or
+                           yaml format.
 """ % SYMLINK_NAME)
 def info(env=None, **kwargs):
-    pprint.pprint(env)
+    if not kwargs['--out']:
+        pprint.pprint(env)
+    elif kwargs['--out'] == 'json':
+        print json.dumps(env, default=operator.attrgetter('__dict__'))
+    elif kwargs['--out'] == 'pickle':
+        print pickle.dumps(env)
+    elif kwargs['--out'] == 'yaml':
+        print yaml.dump(env)
+    else:
+        print("--out doesn't suppport %s output format" % kwargs['--out'])
+        print(info.__doc__)
 
 
 @enostask("""
