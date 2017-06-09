@@ -1,7 +1,7 @@
 from enos.provider.g5k import G5k, ROLE_DISTRIBUTION_MODE_STRICT
-from execo.host import Host
 from execo_g5k import OarSubmission
 from execo_g5k import api_utils as api
+from enos.utils.extra import load_config
 import mock
 import unittest
 
@@ -135,4 +135,62 @@ class TestCreateReservation(unittest.TestCase):
                 (OarSubmission("{cluster='b'}/nodes=10", name='test'), 'myothersite')]
         self.equalsJobSpecs(expected, jobs_specs)
 
+class TestBuildResources(unittest.TestCase):
+    def test_build_resources(self):
+        topology = {
+                "grp1": {
+                    "a":{
+                        "control": 1,
+                        }
+                    },
+                "grp2": {
+                    "a":{
+                        "compute": 10,
+                        }
+                    },
+                "grp3": {
+                    "a":{
+                        "compute": 10,
+                        }
+                    }
+                }
 
+        resources_expected = {
+                "a": {
+                    "control": 1,
+                    "compute": 20
+                    }
+                }
+        resources_actual = G5k().topology_to_resources(topology)
+        self.assertDictEqual(resources_expected, resources_actual)
+
+class TestLoadConfig(unittest.TestCase):
+    def test_load_config_with_topology(self):
+        config = {
+            'topology': {
+                'grp1': {
+                    'a': {
+                        'control': 1,
+                    }
+                },
+                'grp[2-6]': {
+                    'a': {
+                        'compute': 10,
+                    }
+                }
+            },
+            'provider': 'test_provider'
+        }
+        expected_resources = {
+            'resources': {
+                "a": {
+                    "control": 1,
+                    "compute": 50
+                }
+            }
+        }
+        conf = load_config(config,
+                           G5k().topology_to_resources,
+                           default_provider_config={})
+        self.assertDictEqual(expected_resources['resources'],
+                             conf['resources'])

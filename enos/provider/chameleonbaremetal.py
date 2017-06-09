@@ -1,7 +1,6 @@
 from blazarclient import client as blazar_client
 from keystoneclient import client as keystone
 from neutronclient.neutron import client as neutron
-from ..utils.provider import load_config
 
 import chameleonkvm as cc
 import datetime
@@ -12,29 +11,6 @@ import time
 
 LEASE_NAME = "enos-lease"
 PORT_NAME = "enos-port"
-
-PROVIDER_CONFIG = {
-    'provider': 'chameleonbaremetal',
-    # Name os the lease to use
-    'lease_name': 'enos-lease',
-    # Glance image to use
-    'image_name': 'CC-Ubuntu16.04',
-    # User to use to connect to the machines
-    # (sudo will be used to configure them)
-    'user': 'cc',
-    # True iff Enos must configure a network stack for you
-    'configure_network': False,
-    # Name of the network to use or to create
-    'network': {'name': 'sharednet1'},
-    # Name of the subnet to use or to create
-    'subnet': {'name': 'sharednet1-subnet'},
-    # DNS server to use when creating network
-    'dns_nameservers': ['130.202.101.6', '130.202.101.37'],
-    # Name of the network interface available on the nodes
-    'network_interface': 'eno1',
-    # Experiment duration
-    "walltime": "02:00:00",
-}
 
 
 def lease_is_reusable(lease):
@@ -184,12 +160,7 @@ def check_extra_ports(session, network, total):
 
 
 class Chameleonbaremetal(cc.Chameleonkvm):
-    def init(self, config, calldir, force_deploy=False):
-        conf = load_config(config,
-                default_provider_config=PROVIDER_CONFIG)
-        conf = self.load_openstack_config(conf)
-        self.check_conf(conf['provider'])
-
+    def init(self, conf, calldir, force_deploy=False):
         env = openstack.check_environment(conf)
         lease = check_reservation(conf)
         extra_ips = check_extra_ports(env['session'], env['network'], 5)
@@ -234,3 +205,30 @@ class Chameleonbaremetal(cc.Chameleonkvm):
         lease = get_reservation(bclient)
         bclient.lease.delete(lease['id'])
         logging.info("Destroyed %s" % lease_to_s(lease))
+
+    def default_config(self):
+        default_config = super(Chameleonbaremetal, self).default_config()
+        default_config.update({
+            'type': 'chameleonbaremetal',
+            # Name os the lease to use
+            'lease_name': 'enos-lease',
+            # Glance image to use
+            'image_name': 'CC-Ubuntu16.04',
+            # User to use to connect to the machines
+            # (sudo will be used to configure them)
+            'user': 'cc',
+            # True iff Enos must configure a network stack for you
+            'configure_network': False,
+            # Name of the network to use or to create
+            'network': {'name': 'sharednet1'},
+            # Name of the subnet to use or to create
+            'subnet': {'name': 'sharednet1-subnet'},
+            # DNS server to use when creating network
+            'dns_nameservers': ['130.202.101.6', '130.202.101.37'],
+            # Name of the network interface available on the nodes
+            'network_interface': 'eno1',
+            # Experiment duration
+            "walltime": "02:00:00",
+        })
+
+        return default_config

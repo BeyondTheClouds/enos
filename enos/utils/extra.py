@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from .errors import (EnosFailedHostsError, EnosUnreachableHostsError)
+from .errors import (EnosFailedHostsError, EnosUnreachableHostsError,
+                     EnosProviderMissingConfigurationKeys)
 from ansible.executor.playbook_executor import PlaybookExecutor
 from ansible.inventory import Inventory
 from ansible.parsing.dataloader import DataLoader
@@ -343,29 +344,6 @@ def to_abs_path(path):
         return os.path.join(os.getcwd(), path)
 
 
-def build_resources(topology):
-    """
-    Build the resource list
-    For now we are just aggregating all the resources
-    This could be part of a flat resource builder
-
-    NOTE: topology must be expanded before calling build_resources
-    """
-
-    def merge_add(cluster_roles, roles):
-        """Merge two dicts, sum the values"""
-        for role, nb in roles.items():
-            cluster_roles.setdefault(role, 0)
-            cluster_roles[role] = cluster_roles[role] + nb
-
-    resource = {}
-    for group, clusters in topology.items():
-        for cluster, roles in clusters.items():
-            resource.setdefault(cluster, {})
-            merge_add(resource[cluster], roles)
-    return resource
-
-
 def expand_groups(grp):
     """Expand group names.
     e.g:
@@ -573,3 +551,48 @@ def gen_resources(resources):
     for l1, roles in resources.items():
         for l2, l3 in roles.items():
             yield l1, l2, l3
+
+
+def load_config(config, provider_topo2rsc, default_provider_config):
+    """Load and set default values to the configuration
+
+        Groups syntax is expanded here.
+    """
+    conf = config.copy()
+    if 'topology' in config:
+        # expand the groups first
+        conf['topology'] = expand_topology(config['topology'])
+        # We are here using a flat combination of the resource
+        # resulting in (probably) deploying one single region
+        conf['resources'] = provider_topo2rsc(conf['topology'])
+
+    conf['provider'] = load_provider_config(
+        conf['provider'],
+        default_provider_config=default_provider_config)
+    return conf
+
+
+def load_provider_config(provider_config, default_provider_config={}):
+    """Load a set default values for the provider configuration.
+
+    This methods checks that every `None` keys in the
+    `default_provider_config` are overridden by a value in `provider
+    config`.
+
+    """
+    if type(provider_config) is not dict:
+        provider_config = {'type': provider_config}
+
+    # Throw error for missing overridden values of required keys
+    missing_overridden = [k for k, v in default_provider_config.items()
+                          if v is None and
+                          k not in provider_config.keys()]
+    if missing_overridden:
+        raise EnosProviderMissingConfigurationKeys(missing_overridden)
+
+    # Builds the provider configuration by merging default and user
+    # config
+    new_provider_config = default_provider_config.copy()
+    new_provider_config.update(provider_config)
+
+    return new_provider_config

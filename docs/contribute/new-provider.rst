@@ -4,12 +4,12 @@ Write a new provider
 ====================
 
 The actual implementation gives two providers: :ref:`grid5000` and
-:ref:`vagrant-provider`. If you want to support another testbed, 
+:ref:`vagrant-provider`. If you want to support another testbed,
 then implementing a new one is easy as 500 lines of Python code.
 
 The new provider should follow the `provider.py`_ interface which
-consists in four methods: ``init``, ``destroy``, ``before_preintsall``
-and ``after_preinstall``.
+consists in three methods: ``init``, ``destroy`` and
+``default_config``.
 
 .. _provider.py: https://github.com/BeyondTheClouds/enos/blob/master/enos/provider/provider.py
 
@@ -28,9 +28,11 @@ with:
 
    # Use rsc to book resources ...
 
-At the end of the ``init``, the provider should return a list of hosts
-that Enos can SSH on, together with a pool of available IP for
-OpenStack Network.
+At the end of the ``init``, the provider should return a list of
+`host.py`_ that Enos can SSH on, together with a pool of available IP
+for OpenStack Network.
+
+.. _host.py: https://github.com/BeyondTheClouds/enos/blob/master/enos/provider/host.py
 
 Destroy Method
 --------------
@@ -39,13 +41,16 @@ The ``destoy`` method destroys resources that have been used for the
 deployment. The provider can rely on the environment variable to get
 information related to its deployment.
 
-Before and After Preinstall Methods
------------------------------------
+Default Provider Configuration Methods
+--------------------------------------
 
-During its up phase, Enos calls a provider to get resources and then
-provisions them with docker and other util tools. The provider can use
-theses two methods to perform extra actions before and after the
-provisioning.
+The ``default_config`` specifies keys used to configure the provider
+with a ``dict``. A key could be *optional* and so should be provided
+with a default value, or *required* and so should be set to ``None``.
+The user then can override these keys in the reservation file, under
+the ``provider`` key. Keys marked as ``None`` in the
+``default_config`` are automatically tested for overriding in the
+reservation file.
 
 Provider Instantiation
 ----------------------
@@ -72,5 +77,5 @@ provider name should be accessible throughout the ``type`` key:
      ...
 
 Then the provider can access ``extra-var`` with
-``config['provider']['extra-var']``. Supported extra information
-should be well documented into the provider documentation.
+``config['provider']['extra-var']``. Supported extra information is
+documented into the provider documentation.
