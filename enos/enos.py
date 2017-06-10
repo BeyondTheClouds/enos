@@ -259,15 +259,15 @@ def init_os(env=None, **kwargs):
     for image in images:
         cmd.append("wget -q -O /tmp/%s %s" % (image['name'], image['url']))
         cmd.append("openstack image list "
-                   "--property name=%s -c Name -f value "
-                   "| grep %s"
+                   "--property name=%(image_name) -c Name -f value "
+                   "| grep %(image_name)"
                    "|| openstack image create"
                    " --disk-format=qcow2"
                    " --container-format=bare"
                    " --property architecture=x86_64"
                    " --public"
-                   " --file /tmp/%s"
-                   " %s" % (image['name'], image['name'], image['name'], image['name']))
+                   " --file /tmp/%(image_name)"
+                   " %(image_name)" % {'image_name': image['name'], })
 
     # flavors name, ram, disk, vcpus
 
