@@ -53,8 +53,8 @@ provider:
   type: vagrant
   box: debian/contrib-jessie64
 resources:
-  large:
-    controller: 1
+  extra-large:
+    control: 1
   medium:
     network: 1
   tiny:
@@ -67,7 +67,6 @@ resources:
 # ############################################### #
 
 # This will describe the topology of your services
-#inventory: /Users/msimonin/sed/discovery/openstack/enos-scenarios/myosprofiler/inventory
 inventory: inventories/inventory.sample
 
 # ############################################### #

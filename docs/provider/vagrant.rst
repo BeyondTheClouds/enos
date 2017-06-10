@@ -51,7 +51,7 @@ Note that `vagrant libvirt <https://github.com/vagrant-libvirt/vagrant-libvirt>`
 Default provider configuration
 -------------------------------
 
-The provider comes with the following default options :
+The provider comes with the following default options:
 
 .. code-block:: yaml
 

@@ -20,3 +20,9 @@ class Host(object):
     def __repr__(self):
         args = [self.alias, "address=%s" % self.address]
         return "Host(%s)" % ", ".join(args)
+
+    def __str__(self):
+        args = [self.alias, "address=%s" % self.address, "user=%s" %
+                self.user, "keyfile=%s" % self.keyfile, "port=%s" %
+                self.port, "extra=%s" % self.extra]
+        return "Host(%s)" % ", ".join(args)
