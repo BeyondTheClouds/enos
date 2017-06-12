@@ -181,6 +181,12 @@ class TestMakeProvider(unittest.TestCase):
         self.assertIsInstance(make_provider(self.__provider_env('vagrant')), Enos_vagrant)
         self.assertIsInstance(make_provider(self.__provider_env_ext('vagrant')), Enos_vagrant)
 
+    def test_make_static(self):
+        "Tests the creation of Static provider"
+        from enos.provider.static import Static
+        self.assertIsInstance(make_provider(self.__provider_env('static')), Static)
+        self.assertIsInstance(make_provider(self.__provider_env_ext('static')), Static)
+
     def test_make_unexist(self):
         "Tests the raise of error for unknown/unloaded provider"
         with self.assertRaises(ImportError):

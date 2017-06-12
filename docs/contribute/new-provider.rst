@@ -3,15 +3,18 @@
 Write a new provider
 ====================
 
-The actual implementation gives two providers: :ref:`grid5000` and
-:ref:`vagrant-provider`. If you want to support another testbed,
-then implementing a new one is easy as 500 lines of Python code.
+The actual implementation gives providers for :ref:`static` resources, 
+:ref:`vagrant-provider`, :ref:`grid5000` and :ref:`openstack` itself. If 
+you want to support another testbed, then implementing a new provider 
+is easy as 500 lines of Python code.
 
 The new provider should follow the `provider.py`_ interface which
 consists in three methods: ``init``, ``destroy`` and
-``default_config``.
+``default_config``. Another good starting point is the simple `static
+implementation`_.
 
 .. _provider.py: https://github.com/BeyondTheClouds/enos/blob/master/enos/provider/provider.py
+.. _static implementation: https://github.com/BeyondTheClouds/enos/blob/master/enos/provider/static.py
 
 Init Method
 -----------

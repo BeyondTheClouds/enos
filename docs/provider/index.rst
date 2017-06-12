@@ -14,6 +14,7 @@ the followings:
 .. toctree::
    :maxdepth: 2
 
+   static
    grid5000
    vagrant
    openstack
