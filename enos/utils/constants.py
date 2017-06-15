@@ -19,5 +19,8 @@ ANSIBLE_DIR = os.path.join(ENOS_PATH, 'ansible')
 NETWORK_IFACE = 0
 EXTERNAL_IFACE = 1
 
+# fake neutron external interface name
+FAKE_NEUTRON_EXTERNAL_INTERFACE = 'fake_interface'
+
 # ENOS Setup
 VERSION = '3.0.0'

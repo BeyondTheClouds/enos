@@ -8,9 +8,9 @@ from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
 from collections import namedtuple
 from constants import (ENOS_PATH, ANSIBLE_DIR, NETWORK_IFACE,
-                       EXTERNAL_IFACE)
+                       EXTERNAL_IFACE,FAKE_NEUTRON_EXTERNAL_INTERFACE)
 from itertools import groupby
-from netaddr import IPRange
+from netaddr import (IPRange, IPSet, IPAddress)
 
 import logging
 import operator
@@ -143,6 +143,142 @@ def wait_ssh(env, retries=100, interval=30):
         raise Exception('Maximum retries reached')
 
 
+def map_device_on_host_networks(provider_nets, devices):
+    """Decorate each networks with the corresponding nic name."""
+    networks = copy.deepcopy(provider_nets)
+    for network in networks:
+        for device in devices:
+            network.setdefault('devices', None)
+            ip_set = IPSet([network['cidr']])
+            if 'ipv4' not in device:
+                continue
+            ips = device['ipv4']
+            if not isinstance(ips, list):
+                ips = [ips]
+            if len(ips) < 1:
+                continue
+            ip = IPAddress(ips[0]['address'])
+            if ip in ip_set:
+                network['devices'] = device['device']
+                continue
+    return networks
+
+
+def update_env(env, facts, mapping):
+    internal_mapping = update_provider_nets(env['provider_nets'], mapping)
+    extra_mapping = {}
+    if 'neutron_external_interface' not in internal_mapping.values():
+        extra_mapping = {
+            'neutron_external_interface': FAKE_NEUTRON_EXTERNAL_INTERFACE
+        }
+    update_hosts(env['rsc'],
+                 facts,
+                 internal_mapping,
+                 extra_mapping=extra_mapping)
+
+
+def update_provider_nets(provider_nets, mapping):
+    """Update the provider nets with the mapping information.
+
+    Side effects :
+        -  add mapto info to each provider_net"""
+    # sorting by cidr
+    provider_nets = sorted(provider_nets, key=lambda n: n['cidr'])
+    # Build the internal mapping : this is the mapping treanslated in terms
+    # of cidr
+    internal_mapping = {}
+    idx = 0
+    for provider_net in provider_nets:
+        mapto = provider_net.get('mapto', None)
+        if mapto is None:
+            kolla_network = mapping(provider_net, idx)
+            provider_net['mapto'] = kolla_network
+        internal_mapping[provider_net['cidr']] = provider_net['mapto']
+        idx = idx + 1
+
+    return internal_mapping
+
+
+def update_hosts(rsc, facts, internal_mapping, extra_mapping={}):
+    # Update every hosts in rsc
+    # NOTE(msimonin): due to the deserialization
+    # between phases, hosts in rsc are unique instance so we need to update
+    # every single host in every single role
+    for host in gen_rsc(rsc):
+        networks = facts[host.alias]['networks']
+        for network in sorted(networks, key=lambda n: n['cidr']):
+            # Get the kolla_network associated with this network
+            kolla_network = internal_mapping[network['cidr']]
+            if kolla_network is not None and network['devices'] is not None:
+                host.extra.update({kolla_network: network['devices']})
+        # Add extra mappings
+        host.extra.update(extra_mapping)
+
+
+def check_network(env):
+    """Checks the network interfaces on the nodes
+
+    Beware, this has a side effect on each Host in env['rsc'].
+    """
+    def get_devices(facts):
+        """Extract the network devices information from the facts."""
+        devices = []
+        for interface in facts['ansible_interfaces']:
+            ansible_interface = 'ansible_' + interface
+            # filter here (active/ name...)
+            if 'ansible_' + interface in facts:
+                interface = facts[ansible_interface]
+                devices.append(interface)
+        return devices
+
+    utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
+    facts_file = os.path.join(env['resultdir'], 'facts.yml')
+    options = {
+        'action': 'check_network',
+        'facts_file': facts_file,
+        'fake_neutron_external_interface': FAKE_NEUTRON_EXTERNAL_INTERFACE}
+    run_ansible([utils_playbook], env['inventory'],
+        extra_vars=options,
+        on_error_continue=False)
+
+    # Read the file
+    # Match provider networks to interface names for each host
+    with open(facts_file) as f:
+        facts = yaml.load(f)
+        for host, host_facts in facts.items():
+            host_nets = map_device_on_host_networks(env['provider_nets'],
+                                                    get_devices(host_facts))
+            # Add the mapping : provider_networks <-> nic name
+            host_facts['networks'] = host_nets
+
+    # Finally update the env with this information
+    update_env(env, facts, kolla_indexed_network_mapping)
+
+
+def get_kolla_net(provider_nets, net_name):
+    kolla_net = get_provider_net(provider_nets, {'mapto': net_name})
+    if len(kolla_net) > 0:
+        return kolla_net[0]
+    return None
+
+
+def get_provider_net(provider_nets, criteria):
+    provider_net = provider_nets
+    for k, v in criteria.items():
+        provider_net = filter(lambda n: n[k] == v, provider_net)
+    return provider_net
+
+
+def render_template(template_name, vars, output_path):
+    loader = jinja2.FileSystemLoader(searchpath=TEMPLATE_DIR)
+    env = jinja2.Environment(loader=loader)
+    template = env.get_template(template_name)
+
+    rendered_text = template.render(vars)
+    with open(output_path, 'w') as f:
+        f.write(rendered_text)
+
+
 def generate_inventory(roles, base_inventory, dest):
     """
     Generate the inventory.
@@ -237,9 +373,7 @@ based on the Enos environment.
 
     """
     values = {
-        'network_interface':          env['eths'][NETWORK_IFACE],
         'kolla_internal_vip_address': env['config']['vip'],
-        'neutron_external_interface': env['eths'][EXTERNAL_IFACE],
         'neutron_external_address':   env['config']['external_vip'],
         'influx_vip':                 env['config']['influx_vip'],
         'kolla_ref':                  env['config']['kolla_ref'],
@@ -354,8 +488,8 @@ def expand_topology(topology):
     return expanded
 
 
-def pop_ip(env=None):
-    """Picks an ip from env['provider_net'].
+def pop_ip(provider_net):
+    """Picks an ip from the provider_net
 
     It will first take ips in the extra_ips if possible.
     extra_ips is a list of isolated ips whereas ips described
@@ -363,20 +497,20 @@ def pop_ip(env=None):
     list of ips.
     """
     # Construct the pool of ips
-    extra_ips = env['provider_net'].get('extra_ips', [])
+    extra_ips = provider_net.get('extra_ips', [])
     if len(extra_ips) > 0:
         ip = extra_ips.pop()
-        env['provider_net']['extra_ips'] = extra_ips
+        provider_net['extra_ips'] = extra_ips
         return ip
 
-    ips = list(IPRange(env['provider_net']['start'],
-                       env['provider_net']['end']))
+    ips = list(IPRange(provider_net['start'],
+                       provider_net['end']))
 
     # Get the next ip
     ip = str(ips.pop())
 
     # Remove this ip from the env
-    env['provider_net']['end'] = str(ips.pop())
+    provider_net['end'] = str(ips.pop())
 
     return ip
 
@@ -537,6 +671,13 @@ def gen_resources(resources):
             yield l1, l2, l3
 
 
+def gen_rsc(rsc):
+    """Generator for the hosts in env['rsc']."""
+    for role, hosts in rsc.items():
+        for host in hosts:
+            yield host
+
+
 def load_config(config, provider_topo2rsc, default_provider_config):
     """Load and set default values to the configuration
 
@@ -611,3 +752,15 @@ def seekpath(path):
     logging.debug("Seeking %s path resolves to %s", path, abspath)
 
     return abspath
+
+def kolla_indexed_network_mapping(network, idx):
+    """Gives the corresponding kolla network based
+    on the index of the network in the provider networks."""
+    return {
+        0: 'network_interface',
+        1: 'neutron_external_interface',
+        2: 'tunnel_interface',
+        3: 'storage_interface',
+        4: 'cluster_interface',
+        5: 'dns_interface'
+    }.get(idx)

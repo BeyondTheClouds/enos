@@ -60,5 +60,6 @@ The provider comes with the following default options:
       backend: virtualbox
       box: debian/jessie64
       user: root
+      networks: 3
 
 They can be overriden in the configuration file.
