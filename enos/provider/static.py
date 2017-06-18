@@ -41,7 +41,9 @@ class Static(Provider):
                               # the last available ip, `cidr` the
                               # network of available ips, the ip
                               # address of the `gateway` and the ip
-                              # address of the `dns`
+                              # address of the `dns`,
+                              # `extra_ips` is an array of vips to be asssigned
+                              # during the deployment
 
             'eths':    None   # A pair that contains the name of
                               # network and external interfaces

@@ -3,8 +3,8 @@
 Static
 ======
 
-The static provider reuses already running resources to deploy
-OpenStack on.
+The static provider reuses already available resources (machines, network) to
+deploy OpenStack on.
 
 Installation
 ------------
@@ -15,8 +15,8 @@ Configuration
 -------------
 
 The static provider requires already running resources to deploy
-OpenStack on. Information in the provider description then tells Enos
-where these resources are and how to access to theme. Concretely, you
+OpenStack on. Information in the provider description tells Enos
+where these resources are and how to access to them. Concretely, you
 have to fill the following information to properly configure Enos with
 already running resources.
 
@@ -25,14 +25,21 @@ already running resources.
    provider:  # Configuration for the static provider
               # All keys are mandatory
      type: static
-     network: # Defines IP pool to create an OpenStack network
+     network:
+       extra_ips: # Array of (virtual) IPs to be assigned
+                  # during the deployment (e.g HAProxy)
+                  # At least 5 IPs routable through the
+                  # APIs interface
+       # Openstack external network will be configured according
+       # to the following keys/values. Ips have to be routable through
+       # the external interface
        start:   # First available ip
        end:     # Last available ip
        cidr:    # cidr notation to describe the pool of ips
        gateway: # Ip address of the gateway
        dns:     # Ip address of the DNS
      eths:
-       - eth1   # Name of the fqdn interface
+       - eth1   # Name of the APIs interface
        - eth2   # Name of the external interface
 
    resources: # An object with roles and there associated resources
