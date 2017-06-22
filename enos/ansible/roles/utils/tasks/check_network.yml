@@ -1,0 +1,12 @@
+---
+- name: Dump network information in a file
+  template:
+    src: facts.yml.j2
+    dest: "{{ facts_file }}"
+  delegate_to: localhost
+  run_once: true
+
+- name: Create a fake external neutron interface (just in case)
+  shell: ip link show {{ fake_neutron_external_interface }} || ip l a {{ fake_neutron_external_interface }} type dummy
+
+

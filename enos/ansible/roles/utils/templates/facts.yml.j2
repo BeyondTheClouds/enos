@@ -1,0 +1,5 @@
+---
+{% for host in groups['all'] %}
+{{ host | indent(width=0) }}:
+{{ hostvars[host] | to_nice_yaml(2) | indent(width=2, indentfirst=true) }}
+{% endfor %}
