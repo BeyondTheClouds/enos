@@ -23,11 +23,10 @@ class Static(Provider):
                              port=resource.get('port', None),
                              extra=resource.get('extra', {}))]
 
-        network = config['provider']['network']
-        eths = config['provider']['eths']
+        networks = config['provider']['networks']
         roles = {r: _make_hosts(vs) for (r, vs) in config['resources'].items()}
 
-        return (roles, network, eths)
+        return (roles, networks)
 
     def destroy(self, env):
         logging.warning('Resource destruction is not implemented '
@@ -36,17 +35,21 @@ class Static(Provider):
 
     def default_config(self):
         return {
-            'network': None,  # A dict to configure the network with
-                              # `start` the first available ip, `end`
-                              # the last available ip, `cidr` the
-                              # network of available ips, the ip
-                              # address of the `gateway` and the ip
-                              # address of the `dns`,
-                              # `extra_ips` is an array of vips to be asssigned
-                              # during the deployment
-
-            'eths':    None   # A pair that contains the name of
-                              # network and external interfaces
+            'networks': None,  # An array of networks
+                               # one network looks like the following
+                               # {
+                               #   'cidr': '192.168.0.0/24',
+                               #   in case Enos needs to pick ips
+                               #     e.g : Kolla vips, Openstack ext-net ...
+                               #   'start': '192.168.0.10',
+                               #   'end': '192.168.0.50',
+                               # same as above but used in case you don't have
+                               # a contiguous set of ips
+                               #   'extra_ips': []
+                               #   'dns': '8.8.8.8',
+                               #   'gateway': '192.168.0.254'
+                               # (optionnal) mapping to one kolla network
+                               #   'mapto': '<kolla network name>'
         }
 
     def topology_to_resources(self, topology):

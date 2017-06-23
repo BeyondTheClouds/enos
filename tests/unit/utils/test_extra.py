@@ -557,6 +557,29 @@ class TestUpdateProviderNets(unittest.TestCase):
         self.assertEqual('192.168.143.0/24', net2['cidr'])
         self.assertDictEqual(internal_mapping_expected, internal_mapping)
 
+    def test_update_provider_nets_unchanged(self):
+        provider_nets = [
+            {
+                'cidr': '192.168.142.0/24',
+                'mapto': 'network2'
+            },
+            {
+                'cidr': '192.168.143.0/24',
+                'mapto': 'network1'
+            }
+        ]
+        internal_mapping_expected = {
+            '192.168.142.0/24': 'network2',
+            '192.168.143.0/24': 'network1',
+        }
+        # mapto has precedence if present in provider_net
+        internal_mapping = update_provider_nets(provider_nets, self.mapping)
+        net1 = filter(lambda n: n['mapto'] == 'network2', provider_nets)[0]
+        self.assertEqual('192.168.142.0/24', net1['cidr'])
+        net2 = filter(lambda n: n['mapto'] == 'network1', provider_nets)[0]
+        self.assertEqual('192.168.143.0/24', net2['cidr'])
+        self.assertDictEqual(internal_mapping_expected, internal_mapping)
+
 
 class TestUpdateHosts(unittest.TestCase):
 

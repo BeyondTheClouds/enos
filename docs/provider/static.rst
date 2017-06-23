@@ -25,22 +25,21 @@ already running resources.
    provider:  # Configuration for the static provider
               # All keys are mandatory
      type: static
-     network:
-       extra_ips: # Array of (virtual) IPs to be assigned
-                  # during the deployment (e.g HAProxy)
-                  # At least 5 IPs routable through the
-                  # APIs interface
-       # Openstack external network will be configured according
-       # to the following keys/values. Ips have to be routable through
-       # the external interface
-       start:   # First available ip
-       end:     # Last available ip
-       cidr:    # cidr notation to describe the pool of ips
-       gateway: # Ip address of the gateway
-       dns:     # Ip address of the DNS
-     eths:
-       - eth1   # Name of the APIs interface
-       - eth2   # Name of the external interface
+     networks: # An array of networks
+     # one network looks like the following
+       cidr: 192.168.0.0/24,
+     # in case Enos needs to pick ips
+     #  e.g : Kolla vips, Openstack ext-net ...
+       start: 192.168.0.10,
+       end: 192.168.0.50,
+     # same as above but used in case you don't have
+     # a contiguous set of ips
+       extra_ips: []
+       dns: 8.8.8.8,
+       gateway: 192.168.0.254
+     # optionnaly the mapping to a kolla network can be specified
+        mapto: <one kolla network name>
+
 
    resources: # An object with roles and there associated resources
      control:   # The role control, followed by resource info:
