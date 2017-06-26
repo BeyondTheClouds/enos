@@ -31,13 +31,19 @@ See 'enos <command> --help' for more information on a specific
 command.
 
 """
-from utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, NETWORK_IFACE,
-                             EXTERNAL_IFACE, VERSION)
+from utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, VERSION)
 from utils.errors import EnosFilePathError
-from utils.extra import (run_ansible, generate_inventory,
-                         bootstrap_kolla, pop_ip, make_provider,
-                         mk_enos_values, wait_ssh, load_config,
-                         seekpath)
+from utils.extra import (check_network,
+                         bootstrap_kolla,
+                         generate_inventory,
+                         get_kolla_net,
+                         load_config,
+                         make_provider,
+                         mk_enos_values,
+                         pop_ip,
+                         run_ansible,
+                         seekpath,
+                         wait_ssh)
 from utils.network_constraints import (build_grp_constraints,
                                        build_ip_constraints)
 from utils.enostask import (enostask, check_env)
@@ -498,9 +504,9 @@ def tc(env=None, **kwargs):
         # NOTE(msimonin): we retrieve eth name from the env instead
         # of env['config'] in case os hasn't been called
         options = {'action': 'test',
-                   'tc_output_dir': env['resultdir'],
-                   'network_interface': env['eths'][NETWORK_IFACE]}
-        run_ansible([utils_playbook], env['inventory'], extra_vars=options)
+                   'tc_output_dir': env['resultdir']}
+        run_ansible([utils_playbook], env['inventory'],
+                extra_vars=options)
         return
 
     # 1. getting  ips/devices information
@@ -510,9 +516,7 @@ def tc(env=None, **kwargs):
     # NOTE(msimonin): we retrieve eth name from the env instead
     # of env['config'] in case os hasn't been called
     options = {'action': 'ips',
-               'ips_file': ips_file,
-               'network_interface': env['eths'][NETWORK_IFACE],
-               'neutron_external_interface': env['eths'][EXTERNAL_IFACE]}
+               'ips_file': ips_file}
     run_ansible([utils_playbook], env['inventory'], extra_vars=options)
 
     # 2.a building the group constraints

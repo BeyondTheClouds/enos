@@ -7,11 +7,14 @@ from ansible.inventory import Inventory
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
 from collections import namedtuple
-from constants import (ENOS_PATH, ANSIBLE_DIR, NETWORK_IFACE,
-                       EXTERNAL_IFACE,FAKE_NEUTRON_EXTERNAL_INTERFACE)
+from constants import (ENOS_PATH, ANSIBLE_DIR,
+                       FAKE_NEUTRON_EXTERNAL_INTERFACE,
+                       TEMPLATE_DIR)
 from itertools import groupby
 from netaddr import (IPRange, IPSet, IPAddress)
 
+import copy
+import jinja2
 import logging
 import operator
 import os
@@ -206,13 +209,17 @@ def update_hosts(rsc, facts, internal_mapping, extra_mapping={}):
     # every single host in every single role
     for host in gen_rsc(rsc):
         networks = facts[host.alias]['networks']
+        enos_devices = []
         for network in sorted(networks, key=lambda n: n['cidr']):
             # Get the kolla_network associated with this network
             kolla_network = internal_mapping[network['cidr']]
             if kolla_network is not None and network['devices'] is not None:
                 host.extra.update({kolla_network: network['devices']})
+                enos_devices.append(network['devices'])
         # Add extra mappings
         host.extra.update(extra_mapping)
+        # Add the list of devices in used by Enos
+        host.extra.update({'enos_devices': enos_devices})
 
 
 def check_network(env):
@@ -296,6 +303,15 @@ def generate_inventory(roles, base_inventory, dest):
 
 
 def generate_inventory_string(n, role):
+
+    def to_inventory_string(v):
+        if isinstance(v, list):
+            # [a, b, c] -> "['a','b','c']"
+            s = map(lambda x: "'%s'" % x, v)
+            s = "\"[%s]\"" % ','.join(s)
+            return s
+        return v
+
     i = [n.alias, "ansible_host=%s" % n.address]
     if n.user is not None:
         i.append("ansible_ssh_user=%s" % n.user)
@@ -332,7 +348,7 @@ def generate_inventory_string(n, role):
     # Add custom variables
     for k, v in n.extra.items():
         if k not in ["gateway", "gateway_user", "forward_agent"]:
-            i.append("%s=%s" % (k, v))
+            i.append("%s=%s" % (k, to_inventory_string(v)))
     return " ".join(i)
 
 
@@ -752,6 +768,7 @@ def seekpath(path):
     logging.debug("Seeking %s path resolves to %s", path, abspath)
 
     return abspath
+
 
 def kolla_indexed_network_mapping(network, idx):
     """Gives the corresponding kolla network based
