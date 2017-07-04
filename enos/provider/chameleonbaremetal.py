@@ -160,7 +160,7 @@ def check_extra_ports(session, network, total):
 
 
 class Chameleonbaremetal(cc.Chameleonkvm):
-    def init(self, conf, calldir, force_deploy=False):
+    def init(self, conf, force_deploy=False):
         env = openstack.check_environment(conf)
         lease = check_reservation(conf)
         extra_ips = check_extra_ports(env['session'], env['network'], 5)
@@ -199,7 +199,7 @@ class Chameleonbaremetal(cc.Chameleonkvm):
             gateway,
             lambda s: s.name.split('-')[1], extra_ips=extra_ips)
 
-    def destroy(self, calldir, env):
+    def destroy(self, env):
         # destroy the associated lease should be enough
         bclient = create_blazar_client(env['config'])
         lease = get_reservation(bclient)

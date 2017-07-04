@@ -12,6 +12,12 @@ class EnosUnreachableHostsError(EnosError):
         self.hosts = hosts
 
 
+class EnosFilePathError(EnosError):
+    def __init__(self, filepath, msg=''):
+        super(EnosFilePathError, self).__init__(msg)
+        self.filepath = filepath
+
+
 class EnosProviderMissingConfigurationKeys(EnosError):
     def __init__(self, missing_overridden):
         super(EnosProviderMissingConfigurationKeys, self).__init__(

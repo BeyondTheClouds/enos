@@ -126,10 +126,12 @@ registry:
     - ceph1.rennes.grid5000.fr
     - ceph2.rennes.grid5000.fr
 
+
 # ############################################### #
-# Monitoring stack parameters                     #
+# Enos Customizations                             #
 # ############################################### #
 enable_monitoring: no
+
 
 # ############################################### #
 # Kolla parameters                                #

@@ -23,12 +23,13 @@ def make_env(resultdir=None):
 
     """
     env = {
-        'config':      {},  # The config
-        'resultdir':   '',  # Path to the result directory
-        'config_file': '',  # The initial config file
-        'nodes':       {},  # Roles with nodes
-        'phase':       '',  # Last phase that have been run
-        'user':        ''   # User id for this job
+        'config':      {},          # The config
+        'resultdir':   '',          # Path to the result directory
+        'config_file': '',          # The initial config file
+        'nodes':       {},          # Roles with nodes
+        'phase':       '',          # Last phase that have been run
+        'user':        '',          # User id for this job
+        'cwd':         os.getcwd()  # Current Working Directory
     }
 
     if resultdir:
@@ -70,15 +71,16 @@ def enostask(doc):
         def decorated(*args, **kwargs):
             # Constructs the environment
             kwargs['env'] = make_env(kwargs['--env'])
-            # If no directory is provided, set the default one
-            if '--env' not in kwargs:
-                kwargs['env']['resultdir'] = SYMLINK_NAME
 
             # Proceeds with the function execution
-            fn(*args, **kwargs)
+            try:
+                fn(*args, **kwargs)
+            except Exception:
+                logging.exception("Exception")
 
             # Save the environment
-            save_env(kwargs['env'])
+            finally:
+                save_env(kwargs['env'])
         return decorated
     return decorator
 

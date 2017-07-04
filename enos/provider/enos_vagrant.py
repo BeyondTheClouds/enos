@@ -38,7 +38,7 @@ SIZES = {
 
 
 class Enos_vagrant(Provider):
-    def init(self, conf, calldir, force_deploy=False):
+    def init(self, conf, force_deploy=False):
         """python -m enos.enos up
         Read the resources in the configuration files. Resource claims must be
         grouped by sizes according to the predefined SIZES map.
@@ -77,7 +77,7 @@ class Enos_vagrant(Provider):
 
         vagrantfile = template.render(machines=machines,
                 provider_conf=provider_conf)
-        vagrantfile_path = os.path.join(calldir, "Vagrantfile")
+        vagrantfile_path = os.path.join(os.getcwd(), "Vagrantfile")
         with open(vagrantfile_path, 'w') as f:
             f.write(vagrantfile)
 
@@ -86,7 +86,7 @@ class Enos_vagrant(Provider):
         v_env = dict(os.environ)
         v_env['VAGRANT_DEFAULT_PROVIDER'] = provider_conf['backend']
 
-        v = vagrant.Vagrant(root=calldir,
+        v = vagrant.Vagrant(root=os.getcwd(),
                             quiet_stdout=False,
                             quiet_stderr=False,
                             env=v_env)
@@ -122,8 +122,8 @@ class Enos_vagrant(Provider):
         external_interface = provider_conf['interfaces'][1]
         return (roles, network, (network_interface, external_interface))
 
-    def destroy(self, calldir, env):
-        v = vagrant.Vagrant(root=calldir,
+    def destroy(self, env):
+        v = vagrant.Vagrant(root=os.getcwd(),
                             quiet_stdout=False,
                             quiet_stderr=True)
         v.destroy()

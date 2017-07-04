@@ -2,23 +2,29 @@ import unittest
 from enos.utils.extra import *
 from enos.utils.errors import *
 from enos.provider.host import Host
+import enos.utils.constants as const
 import copy
+import contextlib
+import os, shutil
+import tempfile
+import mock
+import ddt
 
 class TestExpandGroups(unittest.TestCase):
     def test_expand_groups(self):
         grps = "grp[1-3]"
         expanded = expand_groups(grps)
-        self.assertEquals(3, len(expanded))
+        self.assertEqual(3, len(expanded))
 
     def test_expand_one_group(self):
         grps = "grp"
         expanded = expand_groups(grps)
-        self.assertEquals(1, len(expanded))
+        self.assertEqual(1, len(expanded))
 
     def test_expand_groups_with_weird_name(self):
         grps = "a&![,[1-3]"
         expanded = expand_groups(grps)
-        self.assertEquals(3, len(expanded))
+        self.assertEqual(3, len(expanded))
 
 
 class TestBuildRoles(unittest.TestCase):
@@ -52,20 +58,20 @@ class TestBuildRoles(unittest.TestCase):
     def test_build_roles_same_number_of_nodes(self):
         deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4", "a-5", "a-6"])
         roles = build_roles(self.config, deployed_nodes, self.byCluster)
-        self.assertEquals(1, len(roles["controller"]))
-        self.assertEquals(1, len(roles["storage"]))
-        self.assertEquals(2, len(roles["compute"]))
-        self.assertEquals(1, len(roles["network"]))
-        self.assertEquals(1, len(roles["util"]))
+        self.assertEqual(1, len(roles["controller"]))
+        self.assertEqual(1, len(roles["storage"]))
+        self.assertEqual(2, len(roles["compute"]))
+        self.assertEqual(1, len(roles["network"]))
+        self.assertEqual(1, len(roles["util"]))
 
     def test_build_roles_one_less_deployed_nodes(self):
         deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4", "a-5"])
         roles = build_roles(self.config, deployed_nodes, self.byCluster)
-        self.assertEquals(1, len(roles["controller"]))
-        self.assertEquals(1, len(roles["storage"]))
-        self.assertEquals(1, len(roles["compute"]))
-        self.assertEquals(1, len(roles["network"]))
-        self.assertEquals(1, len(roles["util"]))
+        self.assertEqual(1, len(roles["controller"]))
+        self.assertEqual(1, len(roles["storage"]))
+        self.assertEqual(1, len(roles["compute"]))
+        self.assertEqual(1, len(roles["network"]))
+        self.assertEqual(1, len(roles["util"]))
 
     def test_build_roles_with_multiple_clusters(self):
         config = {
@@ -84,11 +90,11 @@ class TestBuildRoles(unittest.TestCase):
         }
         deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4", "a-5", "a-6", "b-1", "b-2"])
         roles = build_roles(config, deployed_nodes, self.byCluster)
-        self.assertEquals(1, len(roles["controller"]))
-        self.assertEquals(1, len(roles["storage"]))
-        self.assertEquals(4, len(roles["compute"]))
-        self.assertEquals(1, len(roles["network"]))
-        self.assertEquals(1, len(roles["util"]))
+        self.assertEqual(1, len(roles["controller"]))
+        self.assertEqual(1, len(roles["storage"]))
+        self.assertEqual(4, len(roles["compute"]))
+        self.assertEqual(1, len(roles["network"]))
+        self.assertEqual(1, len(roles["util"]))
 
     def test_build_roles_with_multiple_sizes(self):
         config = {
@@ -113,9 +119,9 @@ class TestBuildRoles(unittest.TestCase):
         }, ["a1", "b1", "b2", "c1", "c2", "d1"])
 
         roles = build_roles(config, deployed_nodes, self.bySize)
-        self.assertEquals(4, len(roles["compute"]))
-        self.assertEquals(1, len(roles["controller"]))
-        self.assertEquals(1, len(roles["storage"]))
+        self.assertEqual(4, len(roles["compute"]))
+        self.assertEqual(1, len(roles["controller"]))
+        self.assertEqual(1, len(roles["storage"]))
 
     def test_build_roles_with_topology(self):
         config = {
@@ -151,9 +157,9 @@ class TestBuildRoles(unittest.TestCase):
         deployed_nodes = map(lambda x: Host(x), ["a-1", "a-2", "a-3", "a-4", "a-5"])
         roles = build_roles(config, deployed_nodes, self.byCluster)
         # Check the sizes
-        self.assertEquals(2, len(roles["compute"]))
-        self.assertEquals(1, len(roles["network"]))
-        self.assertEquals(1, len(roles["control"]))
+        self.assertEqual(2, len(roles["compute"]))
+        self.assertEqual(1, len(roles["network"]))
+        self.assertEqual(1, len(roles["control"]))
         # Check the consistency betwwen groups
         self.assertListEqual(sorted(roles["grp1"]), sorted(roles["control"] + roles["network"] + roles["util"]))
         self.assertListEqual(sorted(roles["grp2"] + roles["grp3"]), sorted(roles["compute"]))
@@ -161,11 +167,13 @@ class TestBuildRoles(unittest.TestCase):
 
 class TestMakeProvider(unittest.TestCase):
 
-    def __provider_env(self, provider_name):
+    @staticmethod
+    def __provider_env(provider_name):
         "Returns env with a provider key"
         return {"config": {"provider": provider_name}}
 
-    def __provider_env_ext(self, provider_name):
+    @staticmethod
+    def __provider_env_ext(provider_name):
         "Returns env with an extended provider key that may include options"
         return {"config": {"provider": {"type": provider_name}}}
 
@@ -236,7 +244,7 @@ class TestGetTotalWantedMachines(unittest.TestCase):
                  }
             }
         }
-        self.assertEquals(8, get_total_wanted_machines(config["resources"]))
+        self.assertEqual(8, get_total_wanted_machines(config["resources"]))
 
 class TestResourcesIterator(unittest.TestCase):
     def test_resources_iterator(self):
@@ -331,6 +339,119 @@ class TestLoadProviderConfig(unittest.TestCase):
             load_provider_config(
                 provider_config,
                 default_provider_config)
+
+class TestSSH(unittest.TestCase):
+    longMessage = True
+    hosts = [Host('1.2.3.4')]
+    env = {'resultdir': 'foo/bar', 'inventory': 'foo/bar'}
+
+    def test_wait_ssh_succeed(self):
+        with mock.patch('enos.utils.extra.run_ansible',
+                        new_callable=mock.Mock()) as m:
+            m.return_value=None
+            self.assertIsNone(wait_ssh(self.env, interval=0))
+
+    def test_wait_ssh_eventually_succeed(self):
+        with mock.patch('enos.utils.extra.run_ansible',
+                        new_callable=mock.Mock()) as m:
+            effects = [EnosUnreachableHostsError(self.hosts)
+                       for i in range(1, 10)]
+            effects.append(None)
+            m.side_effect = effects
+            self.assertIsNone(wait_ssh(self.env, retries=10, interval=0))
+
+    def test_wait_ssh_fails(self):
+        with self.assertRaisesRegexp(Exception, 'Maximum retries reached'),\
+             mock.patch('enos.utils.extra.run_ansible',
+                        new_callable=mock.Mock()) as m:
+            m.side_effect=EnosUnreachableHostsError(self.hosts)
+            wait_ssh(self.env, interval=0)
+
+
+@ddt.ddt
+class TestPathLoading(unittest.TestCase):
+    longMessage = True
+
+    def setUp(self):
+        self.sourcedir = const.ENOS_PATH
+        self.workdir = os.path.realpath(tempfile.mkdtemp())
+
+    def tearDown(self):
+        shutil.rmtree(self.workdir)
+
+    def assertPathEqual(self, p1, p2, msg=None):
+        self.assertEqual(os.path.normpath(p1),
+                         os.path.normpath(p2),
+                         msg)
+
+    @ddt.data(('/abs/path/to/inventory.sample',
+               'inventories/inventory.sample'),
+              ('/abs/path/to/workload/', 'workload/'))
+    @ddt.unpack
+    def test_seek_path(self, abspath, relpath):
+        # Execution from the source directory
+        with working_directory(self.sourcedir):
+            self.assertPathEqual(seekpath(abspath),
+                                 abspath,
+                                 "Seeking for an %s defined "
+                                 "with an absolute path should always "
+                                 "return that path" % abspath)
+
+            self.assertPathEqual(seekpath(relpath),
+                                 os.path.join(const.ENOS_PATH, relpath),
+                                 "Seeking for %s from the source directory"
+                                 "should seek into enos source" % relpath)
+
+        # Execution from a working directory
+        with working_directory(self.workdir):
+            self.assertPathEqual(seekpath(abspath),
+                                 abspath,
+                                 "Seeking for %s defined "
+                                 "with an absolute path should always "
+                                 "return that path" % abspath)
+
+            self.assertPathEqual(seekpath(relpath),
+                                 os.path.join(const.ENOS_PATH, relpath),
+                                 "In absence of %s in the working "
+                                 "directory, enos should seek for that one "
+                                 "in sources" % relpath)
+
+            # Build a fake `relpath` in the working directory and
+            # check seekpath behaviour
+            os.makedirs(os.path.dirname(relpath))
+            os.path.lexists(relpath) or os.mknod(relpath)
+            self.assertPathEqual(seekpath(relpath),
+                                 os.path.join(self.workdir, relpath),
+                                 "In presence of %s in the working directory,"
+                                 "enos should take this one" % relpath)
+
+    def test_seek_unexisting_path(self):
+        unexisting = 'an/unexisting/path'
+
+        with working_directory(self.sourcedir):
+            with self.assertRaises(EnosFilePathError):
+                seekpath(unexisting)
+
+        with working_directory(self.workdir):
+            with self.assertRaises(EnosFilePathError):
+                seekpath(unexisting)
+
+
+@contextlib.contextmanager
+def working_directory(path):
+    """A context manager which changes the working directory to the given
+    path, and then changes it back to its previous value on exit.
+
+    See,
+    https://code.activestate.com/recipes/576620-changedirectory-context-manager/
+
+    """
+    prev_cwd = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prev_cwd)
 
 
 if __name__ == '__main__':

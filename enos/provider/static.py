@@ -6,14 +6,14 @@ import logging
 
 
 class Static(Provider):
-    def init(self, config, calldir, force=False):
+    def init(self, config, force=False):
         def _make_hosts(resource):
             """Builds Host objects for `resource`.
 
             A `resource` can be either (i) a dict with Host entries,
             or (ii) a list of Host entries.
             """
-            if type(resource) is list:
+            if isinstance(resource, list):
                 return sum(map(_make_hosts, resource), [])
             else:
                 return [Host(address=resource['address'],
@@ -29,7 +29,7 @@ class Static(Provider):
 
         return (roles, network, eths)
 
-    def destroy(self, calldir, env):
+    def destroy(self, env):
         logging.warning('Resource destruction is not implemented '
                         'for the static provider. Call `enos destroy` '
                         '(without --hard) to delete OpenStack containers.')

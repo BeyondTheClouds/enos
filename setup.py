@@ -26,8 +26,8 @@ setup(
         'docopt==0.6.2',
         'httplib2==0.9.2',
         'python-dateutil==2.2',
-        'python-neutronclient==6.1.0',
         'python-openstackclient>=3.0.0,<=4.0.0',
+        'python-neutronclient==6.3.0',
         'python-vagrant==0.5.14',
 #        'python-blazarclient==0.2.0'
     ],

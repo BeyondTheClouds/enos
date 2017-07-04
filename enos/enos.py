@@ -33,10 +33,11 @@ command.
 """
 from utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, NETWORK_IFACE,
                              EXTERNAL_IFACE, VERSION)
+from utils.errors import EnosFilePathError
 from utils.extra import (run_ansible, generate_inventory,
-                         bootstrap_kolla, to_abs_path, pop_ip,
-                         make_provider, mk_enos_values, wait_ssh,
-                         load_config)
+                         bootstrap_kolla, pop_ip, make_provider,
+                         mk_enos_values, wait_ssh, load_config,
+                         seekpath)
 from utils.network_constraints import (build_grp_constraints,
                                        build_ip_constraints)
 from utils.enostask import (enostask, check_env)
@@ -48,7 +49,6 @@ from docopt import docopt
 import pprint
 
 import os
-import sys
 from subprocess import call
 
 import json
@@ -57,8 +57,6 @@ import yaml
 
 import itertools
 import operator
-
-CALL_PATH = os.getcwd()
 
 
 @enostask("""
@@ -83,46 +81,21 @@ Options:
 def up(env=None, **kwargs):
     logging.debug('phase[up]: args=%s' % kwargs)
 
-    # Generates a directory for results
-    resultdir_name = kwargs['--env'] or \
-            'enos_' + datetime.today().isoformat()
-
-    resultdir = os.path.join(CALL_PATH, resultdir_name)
-    # The result directory cannot be created if a related file exists
-    if os.path.isfile(resultdir):
-        logging.error("Result directory cannot be created due to %s" %
-                resultdir)
-        sys.exit(1)
-
-    # Create the result directory if it does not exist
-    os.path.isdir(resultdir) or os.mkdir(resultdir)
-    logging.info('Generate results in %s' % resultdir)
-    env['resultdir'] = resultdir
-
-    # Symlink the result directory with the current directory
-    link = os.path.abspath(SYMLINK_NAME)
-
-    os.path.lexists(link) and os.remove(link)
-    try:
-        os.symlink(env['resultdir'], link)
-        logging.info("Symlinked %s to %s" % (env['resultdir'], link))
-    except OSError:
-        # An harmless error can occur due to a race condition when multiple
-        # regions are simultaneously deployed
-        logging.warning("Symlink %s to %s failed" %
-                (env['resultdir'], link))
-        pass
+    # Generate or get the directory for results
+    env['resultdir'] = _set_resultdir(kwargs['--env'])
+    logging.info("Directory for experiment results is %s", env['resultdir'])
 
     # Loads the configuration file
-    config_file = kwargs['-f']
+    config_file = os.path.abspath(kwargs['-f'])
     if os.path.isfile(config_file):
         env['config_file'] = config_file
         with open(config_file, 'r') as f:
             env['config'].update(yaml.load(f))
-            logging.info("Reloaded config %s", env['config'])
+            logging.info("Reloaded configuration file %s", env['config_file'])
+            logging.debug("Configuration is %s", env['config'])
     else:
-        logging.error('Configuration file %s does not exist', config_file)
-        sys.exit(1)
+        raise EnosFilePathError(
+            config_file, "Configuration file %s does not exist" % config_file)
 
     # Calls the provider and initialise resources
     provider = make_provider(env)
@@ -130,51 +103,45 @@ def up(env=None, **kwargs):
                          provider.topology_to_resources,
                          provider.default_config())
     rsc, provider_net, eths = \
-        provider.init(config, CALL_PATH, kwargs['--force-deploy'])
+        provider.init(config, kwargs['--force-deploy'])
 
     env['rsc'] = rsc
     env['provider_net'] = provider_net
     env['eths'] = eths
 
-    logging.debug("Provides ressources: %s", env['rsc'])
-    logging.debug("Provides network information: %s", env['provider_net'])
-    logging.debug("Provides network interfaces: %s", env['eths'])
+    logging.debug("Provider ressources: %s", env['rsc'])
+    logging.debug("Provider network information: %s", env['provider_net'])
+    logging.debug("Provider network interfaces: %s", env['eths'])
 
     # Generates inventory for ansible/kolla
-    base_inventory = env['config']['inventory']
+    base_inventory = seekpath(env['config']['inventory'])
     inventory = os.path.join(env['resultdir'], 'multinode')
     generate_inventory(env['rsc'], base_inventory, inventory)
     logging.info('Generates inventory %s' % inventory)
 
     env['inventory'] = inventory
 
+    # Wait for resources to be ssh reachable
     wait_ssh(env)
 
     # Set variables required by playbooks of the application
-    if 'ip' in env['config']['registry']:
-        registry_vip = env['config']['registry']['ip']
-    else:
-        registry_vip = pop_ip(env)
-
     env['config'].update({
-        'vip':               pop_ip(env),
-        'registry_vip':      registry_vip,
-        'influx_vip':        pop_ip(env),
-        'grafana_vip':       pop_ip(env),
-        'network_interface': eths[NETWORK_IFACE],
-        'resultdir':         env['resultdir'],
-        'rabbitmq_password': "demo",
-        'database_password': "demo",
-        'external_vip':      pop_ip(env)
+       'vip':               pop_ip(env),
+       'registry_vip':      env['config']['registry'].get('ip') or pop_ip(env),
+       'influx_vip':        pop_ip(env),
+       'grafana_vip':       pop_ip(env),
+       'network_interface': eths[NETWORK_IFACE],
+       'resultdir':         env['resultdir'],
+       'rabbitmq_password': "demo",
+       'database_password': "demo",
+       'external_vip':      pop_ip(env)
     })
 
     # Runs playbook that initializes resources (eg,
     # installs the registry, install monitoring tools, ...)
     up_playbook = os.path.join(ANSIBLE_DIR, 'up.yml')
-    run_ansible([up_playbook],
-                inventory,
-                extra_vars=env['config'],
-                tags=kwargs['--tags'])
+    run_ansible([up_playbook], inventory, extra_vars=env['config'],
+        tags=kwargs['--tags'])
 
 
 @enostask("""
@@ -349,7 +316,7 @@ def init_os(env=None, **kwargs):
 
 
 @enostask("""
-usage: enos bench [-e ENV|--env=ENV] [-s|--silent|-vv] (--workload=WORKLOAD)
+usage: enos bench [-e ENV|--env=ENV] [-s|--silent|-vv] [--workload=WORKLOAD]
 
 Run rally on this OpenStack.
 
@@ -363,7 +330,7 @@ Options:
   --workload=WORKLOAD  Path to the workload directory.
                        This directory must contain a run.yml file
                        that contains the description of the different
-                       scenarios to launch.
+                       scenarios to launch [default: workload/].
 """ % SYMLINK_NAME)
 @check_env
 def bench(env=None, **kwargs):
@@ -384,7 +351,7 @@ def bench(env=None, **kwargs):
 
     logging.debug('phase[bench]: args=%s' % kwargs)
     playbook_values = mk_enos_values(env)
-    workload_dir = kwargs["--workload"]
+    workload_dir = seekpath(kwargs["--workload"])
     with open(os.path.join(workload_dir, "run.yml")) as workload_f:
         workload = yaml.load(workload_f)
         for bench_type, desc in workload.items():
@@ -400,16 +367,13 @@ def bench(env=None, **kwargs):
                 if not (top_enabled and enabled):
                     continue
                 for a in cartesian(top_args):
-                    playbook_path = os.path.join(ANSIBLE_DIR,
-                            'run-bench.yml')
-                    inventory_path = os.path.join(env['resultdir'],
-                            'multinode')
+                    playbook_path = os.path.join(ANSIBLE_DIR, 'run-bench.yml')
+                    inventory_path = os.path.join(
+                        env['resultdir'], 'multinode')
                     # NOTE(msimonin) all the scenarios and plugins
                     # must reside on the workload directory
                     scenario_location = os.path.join(
-                        workload_dir,
-                        scenario["file"])
-                    scenario_location = os.path.abspath(scenario_location)
+                        workload_dir, scenario["file"])
                     bench = {
                         'type': bench_type,
                         'scenario_location': scenario_location,
@@ -418,8 +382,8 @@ def bench(env=None, **kwargs):
                     }
 
                     if "plugin" in scenario:
-                        plugin = os.path.abspath(
-                            os.path.join(workload_dir, scenario["plugin"]))
+                        plugin = os.path.join(workload_dir,
+                                           scenario["plugin"])
                         if os.path.isdir(plugin):
                             plugin = plugin + "/"
                         bench['plugin_location'] = plugin
@@ -452,7 +416,7 @@ def backup(env=None, **kwargs):
         or kwargs['--env'] \
         or SYMLINK_NAME
 
-    backup_dir = to_abs_path(backup_dir)
+    backup_dir = os.path.abspath(backup_dir)
     # create if necessary
     if not os.path.isdir(backup_dir):
         os.mkdir(backup_dir)
@@ -460,8 +424,7 @@ def backup(env=None, **kwargs):
     env['config']['backup_dir'] = backup_dir
     playbook_path = os.path.join(ANSIBLE_DIR, 'backup.yml')
     inventory_path = os.path.join(env['resultdir'], 'multinode')
-    run_ansible([playbook_path], inventory_path,
-            extra_vars=env['config'])
+    run_ansible([playbook_path], inventory_path, extra_vars=env['config'])
 
 
 @enostask("""
@@ -533,8 +496,7 @@ def tc(env=None, **kwargs):
         options = {'action': 'test',
                    'tc_output_dir': env['resultdir'],
                    'network_interface': env['eths'][NETWORK_IFACE]}
-        run_ansible([utils_playbook], env['inventory'],
-                extra_vars=options)
+        run_ansible([utils_playbook], env['inventory'], extra_vars=options)
         return
 
     # 1. getting  ips/devices information
@@ -630,7 +592,7 @@ def destroy(env=None, **kwargs):
     if hard:
         logging.info('Destroying all the resources')
         provider = make_provider(env)
-        provider.destroy(CALL_PATH, env)
+        provider.destroy(env)
     else:
         command = ['destroy', '--yes-i-really-really-mean-it']
         if kwargs['--include-images']:
@@ -705,7 +667,53 @@ def kolla(env=None, **kwargs):
     call(kolla_cmd)
 
 
-def configure_logging(args):
+def _set_resultdir(name=None):
+    """Set or get the directory to store experiment results.
+
+    Looks at the `name` and create the directory if it doesn't exist
+    or returns it in other cases. If the name is `None`, then the
+    function generates an unique name for the results directory.
+    Finally, it links the directory to `SYMLINK_NAME`.
+
+    :param name: file path to an existing directory. It could be
+    weather an absolute or a relative to the current working
+    directory.
+
+    Returns the file path of the results directory.
+
+    """
+    # Compute file path of results directory
+    resultdir_name = name or 'enos_' + datetime.today().isoformat()
+    resultdir_path = os.path.abspath(resultdir_name)
+
+    # Raise error if a related file exists
+    if os.path.isfile(resultdir_path):
+        raise EnosFilePathError(resultdir_path,
+                                "Result directory cannot be created due "
+                                "to existing file %s" % resultdir_path)
+
+    # Create the result directory if it does not exist
+    if not os.path.isdir(resultdir_path):
+        os.mkdir(resultdir_path)
+        logging.info('Generate results directory %s' % resultdir_path)
+
+    # Symlink the result directory with the 'cwd/current' directory
+    link_path = SYMLINK_NAME
+    os.path.lexists(link_path) and os.remove(link_path)
+    try:
+        os.symlink(resultdir_path, link_path)
+        logging.info("Symlink %s to %s" % (resultdir_path, link_path))
+    except OSError:
+        # An harmless error can occur due to a race condition when
+        # multiple regions are simultaneously deployed
+        logging.warning("Symlink %s to %s failed" %
+                        (resultdir_path, link_path))
+        pass
+
+    return resultdir_path
+
+
+def _configure_logging(args):
     if '-vv' in args['<args>']:
         logging.basicConfig(level=logging.DEBUG)
         args['<args>'].remove('-vv')
@@ -724,7 +732,7 @@ def main():
                   version=VERSION,
                   options_first=True)
 
-    configure_logging(args)
+    _configure_logging(args)
     argv = [args['<command>']] + args['<args>']
 
     if args['<command>'] == 'deploy':

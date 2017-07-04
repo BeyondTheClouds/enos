@@ -22,7 +22,7 @@ pf = pprint.PrettyPrinter(indent=4).pformat
 
 
 class G5k(Provider):
-    def init(self, conf, calldir, force_deploy=False):
+    def init(self, conf, force_deploy=False):
         """python -m enos.enos up --provider=g5k
 
         Read the resources in the configuration files.  Resource claims must be
@@ -53,7 +53,7 @@ class G5k(Provider):
 
         return (roles, network, (network_interface, external_interface))
 
-    def destroy(self, calldir, env):
+    def destroy(self, env):
         conf = load_config(env['config'], self.default_config())
         provider_conf = conf['provider']
         gridjob, _ = EX5.planning.get_job_by_name(provider_conf['name'])
