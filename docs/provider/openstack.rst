@@ -109,7 +109,7 @@ cases :
 
 .. code-block:: bash
 
-    python -m enos.enos deploy
+    enos deploy
 
 .. hint::
 
@@ -128,8 +128,8 @@ socks.
 .. code-block:: bash
 
     # terminal 1
-    python -m enos.enos up
-    python -m enos.enos os
+    enos up
+    enos os
 
     # terminal 2
     ssh -ND 2100 user@<floating-ip>
@@ -137,7 +137,7 @@ socks.
     # terminal 1
     export http_proxy=socks5://127.0.0.1:2100
     pip install requests[socks] # install requests support to socks
-    python -m enos.enos init
+    enos init
 
 Note that the proxy socks allows you to use any `openstack` command directly to
 the over-cloud.

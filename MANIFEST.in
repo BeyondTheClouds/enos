@@ -1,7 +1,10 @@
 # http://stackoverflow.com/a/24727824
-include README.md
+# https://www.youtube.com/watch?v=o-UbWsO9rZk
+include README.rst
+include LICENSE
 
 recursive-include enos/ansible *
 include enos/ansible.cfg
 recursive-include enos/templates *
-include enos/provider/g5k_networks.yaml
+recursive-include enos/inventories *
+recursive-include enos/workload *

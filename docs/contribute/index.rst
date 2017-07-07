@@ -1,3 +1,5 @@
+.. _contribute:
+
 Contribute
 ==========
 
@@ -8,33 +10,45 @@ For any questions, feature requests, issues please use the `GitHub issue tracker
 .. _BeyondTheClouds/enos: https://github.com/BeyondTheClouds/enos
 .. _GitHub issue tracker: https://github.com/BeyondTheClouds/enos/issues
 
+Install from sources and make them editable
+-------------------------------------------
+
+.. code-block:: bash
+
+    $ git clone https://github.com/BeyondTheClouds/enos.git
+    $ cd enos
+    $ virtualenv venv
+    $ source venv/bin/activate
+    (venv) $ pip install -e .
+
+
 Get tox
 -------
 
 .. code-block:: bash
 
-    $) pip install tox
+    (venv) $ pip install tox
 
 Running the tests
 -----------------
 
 .. code-block:: bash
 
-    $) tox
+    (venv) $ tox
 
 Running syntax checker
 ----------------------
 
 .. code-block:: bash
 
-    $) tox -e pep8
+    (venv) $ tox -e pep8
 
 Generate the documentation
 --------------------------
 
 .. code-block:: bash
 
-    $) tox -e docs
+    (venv) $ tox -e docs
 
 
 Other Topics
@@ -44,5 +58,3 @@ Other Topics
   :maxdepth: 1
 
   new-provider
-
-

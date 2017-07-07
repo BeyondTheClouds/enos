@@ -23,7 +23,7 @@ pf = pprint.PrettyPrinter(indent=4).pformat
 
 class G5k(Provider):
     def init(self, conf, force_deploy=False):
-        """python -m enos.enos up --provider=g5k
+        """enos up
 
         Read the resources in the configuration files.  Resource claims must be
         grouped by clusters available on Grid'5000.

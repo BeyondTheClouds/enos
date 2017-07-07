@@ -1,3 +1,4 @@
 # https://caremad.io/posts/2013/07/setup-vs-requirement/
-# get dependencies from `install_requires` of setup.py
+# The '.' specifies to get dependencies from `install_requires` of
+# setup.py
 .

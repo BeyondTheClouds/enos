@@ -8,38 +8,46 @@ Installation
 
 .. code-block:: bash
 
-    $ git clone https://github.com/BeyondTheClouds/enos
+    $ pip install enos
 
-You should also choose to go with a virtualenv. Please refer to the `virtualenv
-<https://virtualenv.pypa.io/en/stable/>`_ documentation for further information.
-
+You may prefer to go with a virtualenv. Please refer to the
+`virtualenv <https://virtualenv.pypa.io/en/stable/>`_ documentation
+and the rest of this section for further information.
 
 
 If virtualenv is missing:
 
 .. code-block:: bash
 
-    $ pip install virtualenv --user # Install virtualenv
+    $ pip install virtualenv --user     # Install virtualenv
     $ export PATH=~/.local/bin/:${PATH} # Put it into your path
 
-Then install the dependencies:
+Then install enos inside a virtualenv:
 
 .. code-block:: bash
 
-    $ cd enos
+    $ mkdir my-experiment && cd my-experiment
     $ virtualenv venv
     $ source venv/bin/activate
-    (venv)$ pip install -r requirements.txt
+    (venv) $ pip install enos
+
+
+.. note::
+
+   The latest *packaged* version of enos will install the latest
+   *stable* version of OpenStack. If you want to install the
+   development version of OpenStack, you should install enos from
+   sources (see :ref:`contribute`).
+
 
 Configuration
 -------------
 
-To get started you can copy the sample configuration file and edit the resulting
-file:
+To get started you can get the sample configuration file and edit it:
 
 .. code-block:: bash
 
-    $ cp reservation.yaml.sample reservation.yaml
+    $ curl https://raw.githubusercontent.com/BeyondTheClouds/enos/master/reservation.yaml.sample --output reservation.yaml
     $ <editor> reservation.yaml
 
 
@@ -61,4 +69,4 @@ Once your configuration is done, you can launch the deployment :
 
 .. code-block:: bash
 
-    python -m enos.enos deploy
+    (venv) $ enos deploy

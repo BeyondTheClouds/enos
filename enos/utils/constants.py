@@ -1,4 +1,11 @@
 # -*- coding: utf-8 -
+
+# Note: Never import dependencies to the rest of enos here: this will
+# put a mess during the packaging. `setup.py` imports this file to get
+# enos version. So importing the rest of enos here will evaluate the
+# rest of enos and obviously enos needs dependencies that won't be
+# installed yet.
+
 import os
 
 # PATH constants
@@ -13,4 +20,4 @@ NETWORK_IFACE = 0
 EXTERNAL_IFACE = 1
 
 # ENOS Setup
-VERSION = '2.0.0'
+VERSION = '2.0.1'

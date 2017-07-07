@@ -39,7 +39,7 @@ SIZES = {
 
 class Enos_vagrant(Provider):
     def init(self, conf, force_deploy=False):
-        """python -m enos.enos up
+        """enos up
         Read the resources in the configuration files. Resource claims must be
         grouped by sizes according to the predefined SIZES map.
         """

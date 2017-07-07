@@ -46,7 +46,7 @@ To enforce the constraints, you can invoke:
 
 .. code-block:: bash
 
-    python -m enos.enos tc
+    enos tc
 
 Note that The machines must be available, thus the `up` phase must have been called before.
 
@@ -66,7 +66,7 @@ Invoking
 
 .. code-block:: bash
 
-    python -m enos.enos tc --test
+    enos tc --test
 
 will generate various reports to validate the constraints. They are based on :code:`fping` and :code:`flent` latency and bandwidth measurements respectively. The reports will be located in the result directory.
 
@@ -75,7 +75,7 @@ Notes
 -----
 
 * :code:`default_delay`, :code:`default_rate`, :code:`default_loss` are mandatory
-* To disable the network constraints you can specify :code:`enable: false` under the :code:`network_constraints` key and launch again :code:`python -m enos.enos tc`
+* To disable the network constraints you can specify :code:`enable: false` under the :code:`network_constraints` key and launch again :code:`enos tc`
 * To exclude a group from any tc rule, you can add an optionnal :code:`except` key to the :code:`network_constraints`:
 
 .. code-block:: yaml
@@ -93,5 +93,3 @@ Notes
           symetric: true
       except:
         - grp1
-
-
