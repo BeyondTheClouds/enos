@@ -47,7 +47,7 @@ To get started you can get the sample configuration file and edit it:
 
 .. code-block:: bash
 
-    $ curl https://raw.githubusercontent.com/BeyondTheClouds/enos/master/reservation.yaml.sample --output reservation.yaml
+    $ curl https://raw.githubusercontent.com/BeyondTheClouds/enos/stable/ocata/reservation.yaml.sample --output reservation.yaml
     $ <editor> reservation.yaml
 
 
