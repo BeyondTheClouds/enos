@@ -40,7 +40,7 @@ of your reservation. In the case of an interactive deployment:
     frontend) oarsub -I -l 'walltime=2:00:00'
     node) source venv/bin/activate
     node) <edit configuration>
-    node) python -m enos.enos deploy
+    node) enos deploy
 
 Enos will need to access the G5K api from this node. In order to do so you need
 to instruct execo to use the external endpoint of the API :

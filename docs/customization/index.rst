@@ -105,7 +105,23 @@ branch). So we implement a *quick and dirty* way of patching Kolla
 code to enable custom configuration files to be used (and by extension
 custom kolla code). See the possible patch declaration in
 ``ansible/group_vars/all.yml``. Patches should be added in the
-configuration file of the experiment.
+configuration file of the experiment and you can rely on the ``{{ cwd
+}}`` key to link patches in your current working directory.
+
+For instance, adding the following in the configuration file tells
+enos to look into the current working directory for a file called
+``mariadb_boostrap.yml`` that will replace the kolla-ansible mariadb
+start playbook.
+
+
+.. code-block:: yaml
+
+   patches:
+   - name: Patch mariadb start
+     src: "{{ cwd }}"/mariadb_bootsrap.yml
+     dst: kolla/ansible/roles/mariadb/tasks/start.yml
+     enabled: "yes"
+
 
 
 Ansible configuration

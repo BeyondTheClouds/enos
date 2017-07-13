@@ -7,7 +7,7 @@ command:
 
 .. code-block:: bash
 
-		(venv)$ python -m enos.enos bench --workload=workload
+		(venv) $ enos bench --workload=workload
 
 enos will look into the :code:`workload` directory for a file named
 :code:`run.yml`. This file is the description of the workload to launch.
@@ -40,8 +40,8 @@ applied to the :code:`enabled` values.  The scenario must be parameterized
 accordingly. The key (rally here) defines the type of benchmark to launch: in
 the future we may support other type of scenarios.
 
-After running the workload, a backup of the environment can be done through
-:code:`python -m enos.enos backup`.
+After running the workload, a backup of the environment can be done
+through :code:`enos backup`.
 
 
 Rally

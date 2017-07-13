@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 from .errors import (EnosFailedHostsError, EnosUnreachableHostsError,
-                     EnosProviderMissingConfigurationKeys)
+                     EnosProviderMissingConfigurationKeys,
+                     EnosFilePathError)
 from ansible.executor.playbook_executor import PlaybookExecutor
 from ansible.inventory import Inventory
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
 from collections import namedtuple
-from constants import (TEMPLATE_DIR, ANSIBLE_DIR, NETWORK_IFACE,
-                       EXTERNAL_IFACE, SSH_RETRIES, SSH_RETRY_INTERVAL)
+from constants import (ENOS_PATH, ANSIBLE_DIR, NETWORK_IFACE,
+                       EXTERNAL_IFACE)
 from itertools import groupby
 from netaddr import IPRange
 
-import jinja2
 import logging
 import operator
 import os
@@ -115,40 +115,31 @@ def run_ansible(playbooks, inventory_path, extra_vars={},
                 raise EnosUnreachableHostsError(unreachable_hosts)
 
 
-def wait_ssh(env):
+def wait_ssh(env, retries=100, interval=30):
     """Wait for the resources to be ssh-reachable
 
-    Let ansible initiate a communication and retries if needed.
+    Let ansible initiates a communication and retries if needed.
+
+    :param retries: Number of time we'll be retrying an SSH connection
+    :param interval: Interval to wait in seconds between two retries
+
     """
     utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
-    options = {'action': 'ping',
-               'tc_output_dir': env['resultdir']}
-    retries = SSH_RETRIES
-    while retries > 0:
+    options = {'action': 'ping', 'tc_output_dir': env['resultdir']}
+
+    for i in range(0, retries):
         try:
-            run_ansible([utils_playbook], env['inventory'],
-                    extra_vars=options,
-                    on_error_continue=False)
+            run_ansible([utils_playbook],
+                        env['inventory'],
+                        extra_vars=options,
+                        on_error_continue=False)
             break
         except EnosUnreachableHostsError as e:
-            logging.info("Hosts unreachable : %s " % e.hosts)
-            logging.info("Retrying...")
-            retries = retries - 1
-        time.sleep(SSH_RETRY_INTERVAL)
-    if retries == 0:
+            logging.info("Hosts unreachable: %s " % e.hosts)
+            logging.info("Retrying... %s/%s" % (i + 1, retries))
+            time.sleep(interval)
+    else:
         raise Exception('Maximum retries reached')
-        run_ansible([utils_playbook], env['inventory'],
-            extra_vars=options)
-
-
-def render_template(template_name, vars, output_path):
-    loader = jinja2.FileSystemLoader(searchpath=TEMPLATE_DIR)
-    env = jinja2.Environment(loader=loader)
-    template = env.get_template(template_name)
-
-    rendered_text = template.render(vars)
-    with open(output_path, 'w') as f:
-        f.write(rendered_text)
 
 
 def generate_inventory(roles, base_inventory, dest):
@@ -301,6 +292,9 @@ def mk_enos_values(env):
     enos_values.update(
         {k: v for k, v in env['config'].items() if k != "kolla"})
 
+    # Add the Current Working Directory (cwd)
+    enos_values.update(cwd=env['cwd'])
+
     return enos_values
 
 
@@ -322,26 +316,15 @@ def bootstrap_kolla(env):
     globals_path = os.path.join(env['resultdir'], 'globals.yml')
     globals_values = get_kolla_required_values(env)
     globals_values.update(env['config']['kolla'])
+    globals_values.update(cwd=env['cwd'])
     with open(globals_path, 'w') as f:
         yaml.dump(globals_values, f, default_flow_style=False)
 
     # Patch kolla-ansible sources + Write admin-openrc and
     # password.yml in the result dir
     enos_values = mk_enos_values(env)
-    playbook = os.path.join(ANSIBLE_DIR, "bootstrap_kolla.yml")
+    playbook = os.path.join(ANSIBLE_DIR, 'bootstrap_kolla.yml')
     run_ansible([playbook], env['inventory'], extra_vars=enos_values)
-
-
-def to_abs_path(path):
-    """
-    if set, path is considered relative to the current working directory
-    if not just fail
-    Note: this does not check the existence
-    """
-    if os.path.isabs(path):
-        return path
-    else:
-        return os.path.join(os.getcwd(), path)
 
 
 def expand_groups(grp):
@@ -580,7 +563,7 @@ def load_provider_config(provider_config, default_provider_config={}):
     config`.
 
     """
-    if type(provider_config) is not dict:
+    if not isinstance(provider_config, dict):
         provider_config = {'type': provider_config}
 
     # Throw error for missing overridden values of required keys
@@ -596,3 +579,33 @@ def load_provider_config(provider_config, default_provider_config={}):
     new_provider_config.update(provider_config)
 
     return new_provider_config
+
+
+def seekpath(path):
+    """Seek for an enos file `path` and returns its absolute counterpart.
+
+    Seeking rules are:
+    - If `path` is absolute then return it
+    - Otherwise, look for `path` in the current working directory
+    - Otherwise, look for `path` in the source directory
+    - Otherwise, raise an `EnosFilePathError` exception
+
+    """
+    abspath = None
+
+    if os.path.isabs(path):
+        abspath = path
+    elif os.path.exists(os.path.abspath(path)):
+        abspath = os.path.abspath(path)
+    elif os.path.exists(os.path.join(ENOS_PATH, path)):
+        abspath = os.path.join(ENOS_PATH, path)
+    else:
+        raise EnosFilePathError(
+            path,
+            "There is no path to %s, neither in current "
+            "directory (%s) nor enos sources (%s)."
+            % (path, os.getcwd(), ENOS_PATH))
+
+    logging.debug("Seeking %s path resolves to %s", path, abspath)
+
+    return abspath

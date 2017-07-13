@@ -1,9 +1,17 @@
 # -*- coding: utf-8 -
+
+# Note: Never import dependencies to the rest of enos here: this will
+# put a mess during the packaging. `setup.py` imports this file to get
+# enos version. So importing the rest of enos here will evaluate the
+# rest of enos and obviously enos needs dependencies that won't be
+# installed yet.
+
 import os
 
 # PATH constants
-ENOS_PATH = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-SYMLINK_NAME = os.path.join(os.getcwd(), 'current')
+ENOS_PATH = os.path.abspath(
+  os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+SYMLINK_NAME = os.path.abspath(os.path.join(os.getcwd(), 'current'))
 TEMPLATE_DIR = os.path.join(ENOS_PATH, 'templates')
 ANSIBLE_DIR = os.path.join(ENOS_PATH, 'ansible')
 
@@ -11,11 +19,5 @@ ANSIBLE_DIR = os.path.join(ENOS_PATH, 'ansible')
 NETWORK_IFACE = 0
 EXTERNAL_IFACE = 1
 
-# Number of time we'll be retrying an ssh connection
-# to the machines after the provider init call.
-SSH_RETRIES = 100
-# Interval to wait in seconds between two retries
-SSH_RETRY_INTERVAL = 30
-
 # ENOS Setup
-VERSION = '2.0.0'
+VERSION = '2.0.1'

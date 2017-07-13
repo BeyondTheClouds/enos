@@ -2,11 +2,11 @@ import openstack
 
 
 class Chameleonkvm(openstack.Openstack):
-    def init(self, conf, calldir, force_deploy=False):
-        return super(Chameleonkvm, self).init(conf, calldir, force_deploy)
+    def init(self, conf, force_deploy=False):
+        return super(Chameleonkvm, self).init(conf, force_deploy)
 
-    def destroy(self, calldir, env):
-        super(Chameleonkvm, self).destroy(calldir, env)
+    def destroy(self, env):
+        super(Chameleonkvm, self).destroy(env)
 
     def default_config(self):
         default_config = super(Chameleonkvm, self).default_config()

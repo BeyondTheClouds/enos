@@ -393,8 +393,8 @@ def finalize(conf, env, servers, gateway, groupby, extra_ips=[]):
 
 
 class Openstack(Provider):
-    def init(self, conf, calldir, force_deploy=False):
-        """python -m enos.enos up
+    def init(self, conf, force_deploy=False):
+        """enos up
         Read the resources in the configuration files.  Resource claims must be
         grouped by sizes according to the predefined SIZES map.
         """
@@ -445,7 +445,7 @@ class Openstack(Provider):
             'user': None
         }
 
-    def destroy(self, calldir, env):
+    def destroy(self, env):
         session = get_session()
         nclient = nova.Client(NOVA_VERSION, session=session)
         servers = nclient.servers.list()
