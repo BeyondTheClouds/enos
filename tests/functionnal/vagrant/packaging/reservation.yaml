@@ -1,0 +1,71 @@
+
+---
+# ############################################### #
+# Enos Configuration File                         #
+# ############################################### #
+
+# Resources description : this is provider specific
+resources:
+  control:
+    address: 127.0.0.1
+    alias: enos-node
+    user: root
+  network:
+    address: 127.0.0.1
+    alias: enos-node
+    user: root
+  compute:
+    address: 127.0.0.1
+    alias: enos-node
+    user: root
+
+# Provider description and its options
+provider:
+  type: static
+  network:
+    start: 192.168.143.3
+    end:  192.168.143.119
+    cidr: 192.168.143.0/24
+    gateway: 192.168.143.1
+    dns: 8.8.8.8
+    extra_ips:
+      - 192.168.142.100
+      - 192.168.142.101
+      - 192.168.142.102
+      - 192.168.142.103
+      - 192.168.142.104
+  eths:
+    - eth1
+    - eth2
+
+# ############################################### #
+# Inventory to use                                #
+# ############################################### #
+
+# This will describe the topology of your services
+inventory: inventories/inventory.sample
+
+# true iff a monitoring stack should be deployed 
+# cadvisor/collectd - influxdb - grafana
+enable_monitoring: true
+
+# Do we use an persistent registry
+registry:
+  ceph: False
+
+# ############################################### #
+# Kolla parameters                                #
+# ############################################### #
+# Repository
+kolla_repo: https://git.openstack.org/openstack/kolla-ansible
+kolla_ref: stable/ocata
+
+# globals.yml
+kolla:
+  kolla_base_distro: centos
+  kolla_install_type: source
+  docker_namespace: beyondtheclouds
+  # openstack_logging_debug: True
+  enable_heat: "no"
+
+  node_custom_config: patch/

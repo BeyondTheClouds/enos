@@ -1,0 +1,33 @@
+#+TITLE: Script to bundle enos with its resources
+
+This scenario starts a VM thanks to Vagrant and then installs enos and
+tests a basic OpenStack deployment. At the end of the provision phase,
+the Vagrant box is ready to be exported with ~vagrant package~. The
+result is a self-contained box with all enos dependencies, including
+OpenStack kolla images. So, someone could use this box to test enos in
+an offline environment.
+
+* Building the box
+Start box provisioning:
+: vagrant up
+
+Build the box:
+: vagrant package
+
+* Using the box
+Configure a new Vagrantfile with the fresh box (see
+~Vagrantfile.sample~ for configuration example). Then start it and SSH
+on it. Now, inside the box go into the ~/opt/enos~ directory and load
+the virtual environment:
+
+From now, you can try enos:
+: python -m enos.enos deploy -f reservation.yaml
+
+* Customization
+Someone can change the version of enos by modifying ~ENOS~ values in
+the vagrant file. You can also change the ~reservation.yml~ to tune
+the deployed OpenStack.
+
+* Jenkins is using it
+
+Jenkins is using it to test the static provider.

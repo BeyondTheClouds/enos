@@ -1,0 +1,53 @@
+---
+# ############################################### #
+# Vagrant reservation parameters                  #
+# ############################################### #
+provider:
+  type: vagrant
+  box: debian/contrib-jessie64
+topology:
+  grp1:
+    extra-large:
+      control: 1
+  grp2:
+    medium:
+      network: 1
+      compute: 1
+
+network_constraints:
+  enable: true
+  default_delay: 10ms
+  default_rate: 100mbit
+  default_loss: 0
+
+# ############################################### #
+# Inventory to use                                #
+# ############################################### #
+
+# This will describe the topology of your services
+inventory: inventories/inventory.sample
+
+# ############################################### #
+# docker registry parameters
+# ############################################### #
+registry:
+  ceph: False
+
+# ############################################### #
+# Monitoring stack parameters                     #
+# ############################################### #
+enable_monitoring: no
+
+# ############################################### #
+# Kolla parameters                                #
+# ############################################### #
+# Repository
+kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
+kolla_ref: "stable/ocata"
+
+# Vars : globals.yml
+kolla:
+  kolla_base_distro: "centos"
+  kolla_install_type: "source"
+  docker_namespace: "beyondtheclouds"
+  enable_heat: "no"
