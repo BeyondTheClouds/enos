@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh -ex
 # NOTE(msimonin): -u won't work as _OLD_PYTHON_PATH is unset
 # when calling the first time activate
 
@@ -6,14 +6,14 @@
 BUILD_DIR=$HOME/enos_sources
 TEST_DIR=$BUILD_DIR/tests/functionnal/vagrant/packaging
 
-# Making the switch to enos venv when login
-cat << EOF >> ~/.profile
-. /home/vagrant/enos_sources/venv/bin/activate
-EOF
-
 cd $TEST_DIR
 virtualenv venv
 . venv/bin/activate
+
+# Making the switch to enos venv when login
+cat << EOF >> ~/.profile
+. $TEST_DIR/venv/bin/activate
+EOF
 
 pip install -e $BUILD_DIR
 
