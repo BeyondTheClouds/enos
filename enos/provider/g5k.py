@@ -28,7 +28,7 @@ class G5k(Provider):
         Read the resources in the configuration files.  Resource claims must be
         grouped by clusters available on Grid'5000.
         """
-        jobs, vlans, nodes = self._get_jobs_and_vlans(conf)
+        _, vlans, nodes = self._get_jobs_and_vlans(conf)
         deployed, deployed_nodes_vlan = self._deploy(conf,
                                                      nodes,
                                                      vlans,
@@ -54,7 +54,9 @@ class G5k(Provider):
         return (roles, network, (network_interface, external_interface))
 
     def destroy(self, env):
-        conf = load_config(env['config'], self.default_config())
+        conf = load_config(env['config'],
+                           self.topology_to_resources,
+                           self.default_config())
         provider_conf = conf['provider']
         gridjob, _ = EX5.planning.get_job_by_name(provider_conf['name'])
         if gridjob is not None:
@@ -118,10 +120,11 @@ class G5k(Provider):
         return gridjob
 
     def _check_nodes(self,
-                     nodes=[],
+                     nodes=None,
                      resources={},
                      mode=ROLE_DISTRIBUTION_MODE_STRICT):
         "Do we have enough nodes according to the resources mode."
+        nodes = nodes or []
         wanted_nodes = get_total_wanted_machines(resources)
 
         if mode == ROLE_DISTRIBUTION_MODE_STRICT and wanted_nodes > len(nodes):

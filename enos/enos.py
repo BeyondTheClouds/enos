@@ -699,7 +699,8 @@ def _set_resultdir(name=None):
 
     # Symlink the result directory with the 'cwd/current' directory
     link_path = SYMLINK_NAME
-    os.path.lexists(link_path) and os.remove(link_path)
+    if os.path.lexists(link_path):
+        os.remove(link_path)
     try:
         os.symlink(resultdir_path, link_path)
         logging.info("Symlink %s to %s" % (resultdir_path, link_path))

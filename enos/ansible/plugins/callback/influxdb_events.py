@@ -165,7 +165,7 @@ class CallbackModule(CallbackBase):
 
         try:
             influxdb.write_points(self.events, time_precision='u')
-        except:
+        except Exception:
             # Disable the plugin if writes fail
             self.disabled = True
             self._display.warning(

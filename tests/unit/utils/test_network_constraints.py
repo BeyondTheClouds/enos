@@ -255,7 +255,7 @@ class TestMergeConstraints(unittest.TestCase):
             'delay': '20ms'
         }
         overrides = [override]
-        merged = merge_constraints(constraints, overrides)
+        merge_constraints(constraints, overrides)
         self.assertDictEqual(override, constraints[0])
 
     def test_merge_constraints_default(self):
