@@ -4,15 +4,17 @@ set -xe
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-# common steps
-$SCRIPT_DIR/../vagrant_deps.sh
-$SCRIPT_DIR/../enos_deps.sh
-
 cd $SCRIPT_DIR
+
+sudo ../enos_deps.sh
 
 virtualenv venv
 . venv/bin/activate
 
 pip install -e ../../../..
 
-enos deploy -f vbox.yaml && enos destroy
+enos deploy -f grid5000.yaml &&\
+enos destroy
+
+# Clean everything
+enos destroy --hard

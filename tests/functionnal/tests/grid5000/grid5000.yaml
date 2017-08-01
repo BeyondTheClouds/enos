@@ -1,0 +1,61 @@
+---
+# ############################################### #
+# Grid'5000 reservation parameters                #
+# ############################################### #
+provider:
+  type: g5k
+  name: 'enos-jenkins'
+  walltime: '02:00:00'
+  # mandatory : you need to have exacly one vlan
+  vlans:
+     rennes: "{type='kavlan'}/vlan=1"
+  # Be less strict on node distribution especially
+  # when nodes are missing in the reservation
+  # or not deployed
+  role_distribution: debug
+
+# Resources description
+resources:
+  parapluie:
+    compute: 1
+
+# ############################################### #
+# Inventory to use                                #
+# ############################################### #
+
+# This will describe the topology of your services
+inventory: allinone.inventory
+
+# ############################################### #
+# docker registry parameters
+# ############################################### #
+registry:
+  ceph: False
+  ceph_keyring: /home/discovery/.ceph/ceph.client.discovery.keyring
+  ceph_id: discovery
+  ceph_rbd: discovery_kolla_registry/datas
+  ceph_mon_host:
+    - ceph0.rennes.grid5000.fr
+    - ceph1.rennes.grid5000.fr
+    - ceph2.rennes.grid5000.fr
+
+
+# ############################################### #
+# Enos Customizations                             #
+# ############################################### #
+enable_monitoring: yes
+
+
+# ############################################### #
+# Kolla parameters                                #
+# ############################################### #
+# Repository
+kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
+kolla_ref: "stable/ocata"
+
+# Vars : globals.yml
+kolla:
+  kolla_base_distro: "centos"
+  kolla_install_type: "source"
+  docker_namespace: "beyondtheclouds"
+  enable_heat: "no"
