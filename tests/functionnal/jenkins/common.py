@@ -6,11 +6,19 @@ import time
 from execo.time_utils import *
 from execo.process import *
 import logging
+import random
 
-WALLTIME = "03:00:00"
+WALLTIME = "02:00:00"
 JENKINS_FOLDER = "~/jenkins"
 JOB_NAME="discovery-jenkins-test"
 ENV_NAME="jessie-x64-big"
+#CLUSTERS=["parasilo", "paravance", "parapluie"]
+#exclu = ex5.api_utils.get_g5k_clusters()
+# list that contains all clusters excepts those in okay list
+#excluded = [c for c in exclu if c not in CLUSTERS]
+# Don't exclude anything for now
+excluded = ["sagittaire"]
+
 
 logging.basicConfig(level=logging.DEBUG)
 def retry(func):
@@ -37,11 +45,13 @@ def make_reservation(job_name=JOB_NAME, job_type='allow_classic_ssh'):
     if oargrid_job_id is None:
         logging.info("Starting a new job")
         planning = plan.get_planning(endtime=end)
-        slots = plan.compute_slots(planning, walltime=WALLTIME)
+        slots = plan.compute_slots(planning, walltime=WALLTIME, excluded_elements=excluded)
         startdate, enddate, resources = plan.find_free_slot(slots, {'grid5000':1})
         logging.info("startdate = %s, enddate = %s resources = %s" % (startdate, enddate, resources))
-        resources = plan.distribute_hosts(resources, {'grid5000':1})
-        specs = plan.get_jobs_specs(resources)
+        resources = plan.distribute_hosts(resources, {'grid5000':1}, excluded_elements=excluded)
+        # shuffling to load balance load accros nodes
+        random.shuffle(resources)
+        specs = plan.get_jobs_specs(resources, excluded_elements=excluded)
         spec, frontend = specs[0]
         spec.name = job_name
         logging.info("specs = %s" % spec)

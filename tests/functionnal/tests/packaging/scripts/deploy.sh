@@ -4,7 +4,7 @@
 
 # This script is called inside the virtual machine
 BUILD_DIR=$HOME/enos_sources
-TEST_DIR=$BUILD_DIR/tests/functionnal/vagrant/packaging
+TEST_DIR=$BUILD_DIR/tests/functionnal/tests/packaging
 
 cd $TEST_DIR
 virtualenv venv
