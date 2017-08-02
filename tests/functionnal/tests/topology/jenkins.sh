@@ -3,11 +3,10 @@ set -xe
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-# common steps
-$SCRIPT_DIR/../enos_deps.sh
-$SCRIPT_DIR/../vagrant_deps.sh
-
 cd $SCRIPT_DIR
+
+sudo ../enos_deps.sh
+sudo ../vagrant_deps.sh
 
 virtualenv venv
 . venv/bin/activate

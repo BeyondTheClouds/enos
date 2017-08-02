@@ -221,12 +221,13 @@ def wait_for_servers(session, servers):
 
 def check_servers(session, resources, extra_prefix="",
         force_deploy=False, key_name=None, image_id=None,
-        flavors='m1.medium', network=None, ext_net=None, scheduler_hints={}):
+        flavors='m1.medium', network=None, ext_net=None, scheduler_hints=None):
     """Checks the servers status for the deployment.
 
     If needed, it creates new servers and add a floating ip to one of them.
     This server can be used as a gateway to the others.
     """
+    scheduler_hints = scheduler_hints or {}
     nclient = nova.Client(NOVA_VERSION, session=session)
     servers = nclient.servers.list(
         search_opts={'name': '-'.join([PREFIX, extra_prefix])})
@@ -314,7 +315,7 @@ def allow_address_pairs(session, network, subnet):
                         }]
                     }
                 })
-        except:
+        except Exception:
             # NOTE(msimonin): dhcp and router interface port
             # seems to have enabled_sec_groups = False which
             # prevent them to be updated, just throw a warning
@@ -345,9 +346,10 @@ def check_environment(conf):
     }
 
 
-def finalize(conf, env, servers, gateway, groupby, extra_ips=[]):
+def finalize(conf, env, servers, gateway, groupby, extra_ips=None):
     # Distribute the machines according to the resource/topology
     # specifications
+    extra_ips = extra_ips or []
     r = build_roles(conf,
                     servers,
                     groupby)

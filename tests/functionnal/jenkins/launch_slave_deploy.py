@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 
 from common import *
-import os
 import logging
+import os
 from subprocess import call
 import sys
+
+def run_cmd(cmd):
+    logging.info(cmd)
+    call(cmd, shell=True)
 
 if len(sys.argv) > 1:
     job_name = sys.argv[1]
@@ -17,10 +21,11 @@ logging.info("Deploying %s" % host)
 deployed, undeployed = deploy(host)
 
 if len(deployed) == 1:
-  cmd = "rsync -avz %s root@%s:." % (JENKINS_FOLDER, host.address)
-  logging.info(cmd)
-  call(cmd, shell=True)
-  os.execl("/usr/bin/ssh", "ssh", "root@%s" % host.address,  "java -jar jenkins/slave.jar")
+    run_cmd("rsync -avz %s root@%s:." % (JENKINS_FOLDER, host.address))
+    # < /dev/null to prevent ssh to consume from stdin unexpectely
+    run_cmd("ssh root@%s jenkins/bootstrap.sh < /dev/null" % host.address)
+    # Launch the slave using the current user
+    os.execl("/usr/bin/ssh", "ssh", "discovery@%s" % host.address,  "java -jar jenkins/slave.jar")
 else:
-  logging.error("Deployment failed")
-  sys.exit(1)
+    logging.error("Deployment failed")
+    sys.exit(1)

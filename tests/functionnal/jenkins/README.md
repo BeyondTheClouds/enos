@@ -6,6 +6,7 @@ e.g: `ssh  -o StrictHostKeyChecking=no discovery@access.grid5000.fr "ssh luxembo
 ## On g5k frontend
 
 Install those scripts alongside the slave.jar file to use.
+You can get the slave.jar file from jenkins GUI.
 
 ## Existing jobs
 
@@ -21,9 +22,12 @@ Test the static provider and package the resulting box in a usable vagrant/vbox 
 * `enos-vagrant-topology`:
 Test the network emulation on a multinode vagrant/vbox setup.
 
+* `enos-g5k`
+Test the g5k provider in an allinone deployment.
+
 ## Misc.
 
 Each job is bound to a specific slave on G5K. If the slave is already created it
-could be reused (until the walltime expires - default to 03:00:00).
+could be reused (until the walltime expires - default to 02:00:00).
 
 Each job is scripted and the entry point for jenkins is `jenkins.sh`.

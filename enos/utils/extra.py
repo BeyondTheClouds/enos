@@ -34,6 +34,7 @@ KOLLA_MANDATORY_GROUPS = [
 
 def run_ansible(playbooks, inventory_path, extra_vars={},
         tags=None, on_error_continue=False):
+    extra_vars = extra_vars or {}
     variable_manager = VariableManager()
     loader = DataLoader()
 
@@ -555,7 +556,7 @@ def load_config(config, provider_topo2rsc, default_provider_config):
     return conf
 
 
-def load_provider_config(provider_config, default_provider_config={}):
+def load_provider_config(provider_config, default_provider_config=None):
     """Load a set default values for the provider configuration.
 
     This methods checks that every `None` keys in the
@@ -563,6 +564,7 @@ def load_provider_config(provider_config, default_provider_config={}):
     config`.
 
     """
+    default_provider_config = default_provider_config or {}
     if not isinstance(provider_config, dict):
         provider_config = {'type': provider_config}
 

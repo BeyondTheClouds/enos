@@ -1,11 +1,17 @@
 #!/usr/bin/env python
 
 from common import *
-import os
 import logging
+import os
 from subprocess import call
+import sys
 
-host, frontend = make_reservation()
+if len(sys.argv) > 1:
+    job_name = sys.argv[1]
+else:
+    job_name = 'enos-jenkins'
+
+host, frontend = make_reservation(job_name=job_name)
 # propagating the jenkins folder to the targetted site
 cmd = "rsync -avz %s %s:." % (JENKINS_FOLDER, frontend)
 logging.info(cmd)
