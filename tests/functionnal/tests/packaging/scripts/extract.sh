@@ -1,4 +1,4 @@
-#!/bin/sh -eux
+#!/bin/bash -eux
 BUILD_DIR=$HOME/enos
 
 cd $BUILD_DIR

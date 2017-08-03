@@ -13,13 +13,13 @@ dpkg -i vbox.deb || true
 apt-get -f -y  install
 
 # Get rid of size limitations on g5K
-dir=".vagrant.d"
-mkdir -p "/tmp/$dir"
-mkdir -p "/root/$dir"
-mount -o bind "/tmp/$dir" "/root/$dir"
-dir="VirtualBox VMs"
-mkdir -p "/tmp/$dir"
-mkdir -p "/root/$dir"
-mount -o bind "/tmp/$dir" "/root/$dir"
+#dir=".vagrant.d"
+#mkdir -p "/tmp/$dir"
+#mkdir -p "/root/$dir"
+#mount -o bind "/tmp/$dir" "/root/$dir"
+#dir="VirtualBox VMs"
+#mkdir -p "/tmp/$dir"
+#mkdir -p "/root/$dir"
+#mount -o bind "/tmp/$dir" "/root/$dir"
 
 
