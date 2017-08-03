@@ -709,7 +709,6 @@ def _set_resultdir(name=None):
         # multiple regions are simultaneously deployed
         logging.warning("Symlink %s to %s failed" %
                         (resultdir_path, link_path))
-        pass
 
     return resultdir_path
 

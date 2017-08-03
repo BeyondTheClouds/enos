@@ -3,11 +3,11 @@
 # NOTE(msimonin) in the future this *could* be replaced by
 # include:  "{{  bench.type }}"
 - include: "rally.yml"
-  when: 
+  when:
     - bench.type == "rally"
     - inventory_hostname in groups['disco/bench']
 
 - include: "shaker.yml"
-  when: 
+  when:
     - bench.type == "shaker"
     - inventory_hostname in groups['disco/bench']

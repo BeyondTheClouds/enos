@@ -1,10 +1,10 @@
 ---
 - include: "rally.yml"
-  when: 
+  when:
     - inventory_hostname in groups['disco/bench']
 
 - include: "shaker.yml"
-  when: 
+  when:
     - inventory_hostname in groups['disco/bench']
 
 - include: "influx.yml"

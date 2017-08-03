@@ -30,22 +30,15 @@
     src: docker.conf.j2
     dest: /etc/systemd/system/docker.service
 
-# NOTE(msimonin): ansible 2.2 introduces a systemctl module
-# But we need to wait until
-# https://github.com/BeyondTheClouds/enos/issues/41
 - name: Restart docker daemon
-  command: systemctl daemon-reload
-
-- name: Restart docker dameon
-  command: systemctl restart docker
+  systemd:
+    name: docker
+    state: restarted
+    daemon_reload: yes
 
 - name: Mount /run
   command: mount --make-shared /run
 
-# NOTE(msimonin):
-# freezing the version is due to
-# see https://github.com/ansible/ansible/issues/17495
-- name: Install docker-py
+- name: Install docker python binding
   pip:
-    name: docker-py
-    version: 1.7.0
+    name: docker

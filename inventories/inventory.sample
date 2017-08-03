@@ -1,3 +1,4 @@
+
 ## This is the original kolla multinode inventory
 ## augmented with some monitoring services
 ## disabling it will lead to a vanilla kolla openstack installation
@@ -15,17 +16,13 @@ monitoring
 [disco/bench:children]
 monitoring
 
-## Do not require a monitoring node. Put monitoring services on
-### control by default. You can override this by adding a monitoring
-### group at the top of this file, e.g.:
-### [monitoring]
-### monitoring01
 [monitoring:children]
 control
 
 # When compute nodes and control nodes use different interfaces,
 # you can specify "api_interface" and other interfaces like below:
 #compute01 neutron_external_interface=eth0 api_interface=em1 storage_interface=em1 tunnel_interface=em1
+
 [deployment]
 
 [baremetal:children]
@@ -120,9 +117,6 @@ network
 network
 compute
 manila-share
-
-[opendaylight:children]
-network
 
 [cinder:children]
 control

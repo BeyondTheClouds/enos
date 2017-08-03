@@ -20,7 +20,8 @@
 # NOTE(msimonin): without the pause
 # the file seems not to be synced in the next task.
 # Relaunching the play a second time is also a possible wokaround.
-- pause: seconds=1
+- name: Waiting a few seconds
+  pause: seconds=1
 
 - name: Test whether the rally deployment has been created or not
   command: docker run -v /root/rally_home:/home/rally rallyforge/rally rally deployment list
