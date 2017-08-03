@@ -75,9 +75,6 @@ def enostask(doc):
             # Proceeds with the function execution
             try:
                 fn(*args, **kwargs)
-            except Exception:
-                logging.exception("Exception")
-
             # Save the environment
             finally:
                 save_env(kwargs['env'])
