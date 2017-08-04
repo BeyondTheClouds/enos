@@ -5,6 +5,7 @@ include LICENSE
 
 recursive-include enos/ansible *
 include enos/ansible.cfg
+include enos/provider/openstack.sh
 recursive-include enos/templates *
 recursive-include enos/inventories *
 recursive-include enos/workload *
