@@ -1,4 +1,4 @@
-#!/bin/sh -ex
+#!/bin/bash -ex
 # NOTE(msimonin): -u won't work as _OLD_PYTHON_PATH is unset
 # when calling the first time activate
 
@@ -7,6 +7,8 @@ BUILD_DIR=$HOME/enos_sources
 TEST_DIR=$BUILD_DIR/tests/functionnal/tests/packaging
 
 cd $TEST_DIR
+. ../utils.sh
+
 virtualenv venv
 . venv/bin/activate
 
@@ -17,7 +19,9 @@ EOF
 
 pip install -e $BUILD_DIR
 
-enos deploy -f reservation.yaml && enos destroy
+enos deploy -f reservation.yaml
+sanity_check
+enos destroy
 
 # some cleaning
 sudo rm -rf enos_*

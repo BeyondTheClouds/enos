@@ -1,8 +1,8 @@
 ---
 - name: Patches kolla
   copy: src={{ item.src }} dest={{ resultdir }}/{{ item.dst }}
-  with_items: patches
-  when: "{{ item.enabled | bool }}"
+  with_items: "{{ patches }}"
+  when: item.enabled | bool
 
 - name: Generates OpenStack admin-openrc
   template: src=admin-openrc.j2 dest={{ resultdir }}/admin-openrc

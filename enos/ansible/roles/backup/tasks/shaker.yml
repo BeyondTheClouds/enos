@@ -4,7 +4,9 @@
   register: conf
 
 - name: Make a tar of the shaker execution environment
-  command: tar -czf /root/shaker.tar.gz /root/shaker_home
+  archive:
+    path: /root/shaker_home
+    dest: /root/shaker.tar.gz
   when: conf.stat.exists and conf.stat.isdir
 
 - name: Pull back the shaker execution environment

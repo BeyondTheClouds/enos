@@ -45,7 +45,7 @@ provider:
 # This will describe the topology of your services
 inventory: inventories/inventory.sample
 
-# true iff a monitoring stack should be deployed 
+# true iff a monitoring stack should be deployed
 # cadvisor/collectd - influxdb - grafana
 enable_monitoring: true
 
@@ -58,13 +58,14 @@ registry:
 # ############################################### #
 # Repository
 kolla_repo: https://git.openstack.org/openstack/kolla-ansible
-kolla_ref: stable/ocata
+kolla_ref: master
 
 # globals.yml
 kolla:
   kolla_base_distro: centos
   kolla_install_type: source
   docker_namespace: beyondtheclouds
+  openstack_release: latest
   # openstack_logging_debug: True
   enable_heat: "no"
 

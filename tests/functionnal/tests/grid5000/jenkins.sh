@@ -3,18 +3,16 @@
 set -xe
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+BASE_DIR=../../../..
 
 cd $SCRIPT_DIR
 
+. ../utils.sh
+
 sudo ../enos_deps.sh
 
-virtualenv venv
-. venv/bin/activate
-
-pip install -e ../../../..
-
-enos deploy -f grid5000.yaml &&\
-enos destroy
-
-# Clean everything
-enos destroy --hard
+sudo adduser discovery ci
+sudo chown ci:ci -R $BASE_DIR
+sudo chmod 774 -R $BASE_DIR
+sudo rm -rf venv
+sudo -u discovery ./deploy.sh

@@ -8,11 +8,13 @@
   when: logs.stat.exists and logs.stat.isdir
 
 - name: Making a tar of the log files
-  command: tar -czf /kolla-logs.tar.gz /tmp/kolla-logs
+  archive:
+    path: /tmp/kolla-logs
+    dest: /kolla-logs.tar.gz
   when: logs.stat.exists and logs.stat.isdir
 
 - name: Pull back kolla logs
-  fetch: 
+  fetch:
     src: /kolla-logs.tar.gz
     dest: "{{ backup_dir }}/{{ inventory_hostname }}-kolla-logs.tar.gz"
     flat: yes

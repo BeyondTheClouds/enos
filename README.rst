@@ -2,7 +2,7 @@ Enos
 ====
 
 |Build Status| |Documentation Status| |Join the chat at
-https://gitter.im/BeyondTheClouds/enos|
+https://gitter.im/BeyondTheClouds/enos| |Code style| |License|
 
 Enos deploys OpenStack and targets reproducible experiments. It allows
 easy:
@@ -28,3 +28,7 @@ Links
    :target: http://enos.readthedocs.io/en/latest/?badge=latest
 .. |Join the chat at https://gitter.im/BeyondTheClouds/enos| image:: https://badges.gitter.im/BeyondTheClouds/enos.svg
    :target: https://gitter.im/BeyondTheClouds/enos?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. |Code style| image:: https://api.codacy.com/project/badge/Grade/87536e9c0f0d47e08d1b9e0950c9d14b
+   :target: https://www.codacy.com/app/msimonin/enos?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=BeyondTheClouds/enos&amp;utm_campaign=Badge_Grade
+.. |License| image:: https://img.shields.io/badge/License-AGPL%20v3-blue.svg
+   :target: https://www.gnu.org/licenses/gpl-3.0

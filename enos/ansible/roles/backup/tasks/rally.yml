@@ -4,7 +4,9 @@
   register: conf
 
 - name: Make a tar of the rally execution environment
-  command: tar -czf /root/rally.tar.gz /root/rally_home
+  archive:
+    path: /root/rally_home
+    dest: /root/rally.tar.gz
   when: conf.stat.exists and conf.stat.isdir
 
 - name: Pull back the rally execution environment

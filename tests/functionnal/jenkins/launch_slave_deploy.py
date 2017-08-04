@@ -21,11 +21,11 @@ logging.info("Deploying %s" % host)
 deployed, undeployed = deploy(host)
 
 if len(deployed) == 1:
-    run_cmd("rsync -avz %s root@%s:." % (JENKINS_FOLDER, host.address))
+    run_cmd("rsync -avz %s root@%s:/tmp/" % (JENKINS_FOLDER, host.address))
     # < /dev/null to prevent ssh to consume from stdin unexpectely
-    run_cmd("ssh root@%s jenkins/bootstrap.sh < /dev/null" % host.address)
+    run_cmd("ssh root@%s /tmp/jenkins/bootstrap.sh" % host.address)
     # Launch the slave using the current user
-    os.execl("/usr/bin/ssh", "ssh", "discovery@%s" % host.address,  "java -jar jenkins/slave.jar")
+    # os.execl("/usr/bin/ssh", "ssh", "discovery@%s" % host.address,  "java -jar jenkins/slave.jar")
 else:
     logging.error("Deployment failed")
     sys.exit(1)

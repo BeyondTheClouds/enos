@@ -14,7 +14,7 @@
 - name: Install the tcpconns plugin
   copy: src="tcpconns-{{ item }}.conf"
         dest="/etc/collectd/collectd.conf.d/tcpconns-{{ item }}.conf"
-  when: inventory_hostname in groups['{{ item }}']
+  when: inventory_hostname in groups[item]
   with_items:
     - mariadb
     - keystone
@@ -51,12 +51,12 @@
 - name: Install the haproxy plugin
   copy: src={{ item.src }} dest={{ item.dst }}
   when: inventory_hostname in groups['haproxy']
-  with_items: 
+  with_items:
     - { src: haproxy.conf, dst: /etc/collectd/collectd.conf.d/haproxy.conf}
     - { src: haproxy.py, dst: /opt/collectd/haproxy/haproxy.py}
 
 - name: Restart collectd
   service:
     name: collectd
-    state: restarted 
+    state: restarted
 
