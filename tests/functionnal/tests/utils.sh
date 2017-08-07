@@ -17,9 +17,13 @@ nova\
   --flavor m1.tiny\
   --nic net-id=$(openstack network show private --column id --format value)\
   jenkins-vm
+nova delete jenkins-vm
 
-  echo "-ENOS BENCH-"
-  enos bench --workload=$BASE_DIR/enos/workload
+echo "-ENOS BENCH-"
+enos bench --workload=$BASE_DIR/enos/workload
 
-  echo "-/SANITY CHECK-"
+echo "-ENOS BACKUP-"
+enos backup
+
+echo "-/SANITY CHECK-"
 }
