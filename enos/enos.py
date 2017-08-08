@@ -49,7 +49,7 @@ from docopt import docopt
 import pprint
 
 import os
-from subprocess import call
+from subprocess import check_call
 
 import json
 import pickle
@@ -168,14 +168,14 @@ def install_os(env=None, **kwargs):
     kolla_path = os.path.join(env['resultdir'], 'kolla')
     if os.path.isdir(kolla_path):
         logging.info("Remove previous Kolla installation")
-        call("rm -rf %s" % kolla_path, shell=True)
+        check_call("rm -rf %s" % kolla_path, shell=True)
 
     logging.info("Cloning Kolla repository...")
-    call("git clone %s --branch %s --single-branch --quiet %s" %
-            (env['config']['kolla_repo'],
-             env['config']['kolla_ref'],
-             kolla_path),
-         shell=True)
+    check_call("git clone %s --branch %s --single-branch --quiet %s" %
+                   (env['config']['kolla_repo'],
+                    env['config']['kolla_ref'],
+                    kolla_path),
+               shell=True)
 
     # Bootstrap kolla running by patching kolla sources (if any) and
     # generating admin-openrc, globals.yml, passwords.yml
@@ -197,7 +197,7 @@ def install_os(env=None, **kwargs):
         kolla_cmd.extend(['--tags', kwargs['--tags']])
 
     logging.info("Calling Kolla...")
-    call(kolla_cmd)
+    check_call(kolla_cmd)
 
 
 @enostask("""
@@ -312,7 +312,7 @@ def init_os(env=None, **kwargs):
     cmd = '\n'.join(cmd)
 
     logging.info(cmd)
-    call(cmd, shell=True)
+    check_call(cmd, shell=True)
 
 
 @enostask("""
@@ -664,7 +664,7 @@ def kolla(env=None, **kwargs):
                       "--passwords", "%s/passwords.yml" % env['resultdir'],
                       "--configdir", "%s" % env['resultdir']])
     logging.info(kolla_cmd)
-    call(kolla_cmd)
+    check_call(kolla_cmd)
 
 
 def _set_resultdir(name=None):
