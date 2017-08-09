@@ -13,6 +13,9 @@ compute
 
 [monitoring:children]
 compute
+## This is the original kolla multinode inventory
+## augmented with some monitoring services
+## disabling it will lead to a vanilla kolla openstack installation
 
 ## Discovery specicifics
 [disco/registry:children]
@@ -28,15 +31,18 @@ monitoring
 monitoring
 
 ## Do not require a monitoring node. Put monitoring services on
-## control by default. You can override this by adding a monitoring
-## group at the top of this file, e.g.:
-## [monitoring]
-## monitoring01
+### control by default. You can override this by adding a monitoring
+### group at the top of this file, e.g.:
+### [monitoring]
+### monitoring01
 [monitoring:children]
 control
 
-## Original kolla-ansible file
-## See, http://git.openstack.org/cgit/openstack/kolla-ansible/tree/ansible/inventory/multinode?h=stable/ocata
+# When compute nodes and control nodes use different interfaces,
+# you can specify "api_interface" and other interfaces like below:
+#compute01 neutron_external_interface=eth0 api_interface=em1 storage_interface=em1 tunnel_interface=em1
+[deployment]
+
 [baremetal:children]
 control
 network
@@ -47,7 +53,7 @@ monitoring
 # You can explicitly specify which hosts run each project by updating the
 # groups in the sections below. Common services are grouped together.
 [chrony-server:children]
-control
+haproxy
 
 [chrony:children]
 control
@@ -64,6 +70,7 @@ monitoring
 
 [etcd:children]
 control
+compute
 
 [influxdb:children]
 monitoring
@@ -87,10 +94,26 @@ control
 [haproxy:children]
 network
 
+[hyperv]
+#hyperv_host
+
+[hyperv:vars]
+#ansible_user=user
+#ansible_password=password
+#ansible_port=5986
+#ansible_connection=winrm
+#ansible_winrm_server_cert_validation=ignore
+
 [mariadb:children]
 control
 
 [rabbitmq:children]
+control
+
+[outward-rabbitmq:children]
+control
+
+[qdrouterd:children]
 control
 
 [mongodb:children]
@@ -106,6 +129,14 @@ control
 control
 
 [neutron:children]
+network
+
+[openvswitch:children]
+network
+compute
+manila-share
+
+[opendaylight:children]
 network
 
 [cinder:children]
@@ -205,6 +236,15 @@ control
 [placement:children]
 control
 
+[bifrost:children]
+deployment
+
+[zun:children]
+control
+
+[skydive:children]
+monitoring
+
 # Additional control implemented here. These groups allow you to control which
 # services run on which hosts at a per-service level.
 #
@@ -221,10 +261,6 @@ glance
 
 # Nova
 [nova-api:children]
-nova
-
-# quick fix here waiting for a more up to date inventory
-[placement-api:children]
 nova
 
 [nova-conductor:children]
@@ -265,6 +301,9 @@ neutron
 neutron
 
 [neutron-vpnaas-agent:children]
+neutron
+
+[neutron-bgp-dragent:children]
 neutron
 
 # Ceph
@@ -535,7 +574,7 @@ designate
 designate
 
 [designate-mdns:children]
-designate
+network
 
 [designate-worker:children]
 designate
@@ -549,3 +588,18 @@ designate
 # Placement
 [placement-api:children]
 placement
+
+# Zun
+[zun-api:children]
+zun
+
+[zun-compute:children]
+compute
+
+# Skydive
+[skydive-analyzer:children]
+skydive
+
+[skydive-agent:children]
+compute
+network
