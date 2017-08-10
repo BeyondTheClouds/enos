@@ -1,15 +1,15 @@
 ---
 # this is a sample of workload
-# prerequisite: 
+# prerequisite:
 # - we rely on the rally template mechanism
-# 
-rally: 
+#
+rally:
     enabled: true
-    args: 
+    args:
       concurrency:
-        - 5
-      times: 
-        - 10
+        - 1
+      times:
+        - 1
     scenarios:
       - name: boot and list servers
         file: nova-boot-list-cc.yml

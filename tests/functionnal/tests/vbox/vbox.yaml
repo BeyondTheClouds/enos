@@ -44,3 +44,5 @@ kolla:
   docker_namespace: "beyondtheclouds"
   openstack_release: "latest"
   enable_heat: "no"
+
+  node_custom_config: patch/
