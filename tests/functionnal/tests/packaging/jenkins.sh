@@ -4,7 +4,7 @@ set -xe
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
-cd $SCRIPT_DIR
+cd "$SCRIPT_DIR"
 
 sudo ../vagrant_deps.sh
 

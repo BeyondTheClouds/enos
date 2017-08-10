@@ -43,3 +43,5 @@ kolla:
   kolla_install_type: "source"
   docker_namespace: "beyondtheclouds"
   enable_heat: "no"
+
+  node_custom_config: patch/
