@@ -5,7 +5,7 @@ from .host import Host
 from itertools import islice
 from netaddr import IPAddress, IPNetwork, IPSet
 from provider import Provider
-from ..utils.extra import build_roles, get_total_wanted_machines, load_config
+from ..utils.extra import build_roles, get_total_wanted_machines
 
 import execo as EX
 import execo_g5k as EX5
@@ -54,10 +54,7 @@ class G5k(Provider):
         return (roles, network, (network_interface, external_interface))
 
     def destroy(self, env):
-        conf = load_config(env['config'],
-                           self.topology_to_resources,
-                           self.default_config())
-        provider_conf = conf['provider']
+        provider_conf = env['config']['provider']
         gridjob, _ = EX5.planning.get_job_by_name(provider_conf['name'])
         if gridjob is not None:
             EX5.oargriddel([gridjob])
