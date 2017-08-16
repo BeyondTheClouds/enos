@@ -27,7 +27,8 @@ sanity_check "$BASE_DIR"
 enos destroy
 
 # some cleaning
-sudo rm -rf enos_*
+sudo rm -rf "$BASE_DIR"/enos_*
+sudo rm -rf "$BASE_DIR"/current
 sudo rm -rf /root/rally_home
 sudo rm -rf /root/shaker_home
 
