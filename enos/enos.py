@@ -127,7 +127,7 @@ def up(env=None, **kwargs):
     # Set variables required by playbooks of the application
     env['config'].update({
        'vip':               pop_ip(env),
-       'registry_vip':      env['config']['registry'].get('ip') or pop_ip(env),
+       'registry_vip':      pop_ip(env),
        'influx_vip':        pop_ip(env),
        'grafana_vip':       pop_ip(env),
        'network_interface': eths[NETWORK_IFACE],

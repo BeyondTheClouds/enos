@@ -1,3 +1,6 @@
+registry:
+  type: none
+
 cadvisor:
   housekeeping_interval: 5s
 

@@ -49,9 +49,8 @@ inventory: inventories/inventory.sample
 # cadvisor/collectd - influxdb - grafana
 enable_monitoring: true
 
-# Do we use an persistent registry
 registry:
-  ceph: False
+  type: none
 
 # ############################################### #
 # Kolla parameters                                #

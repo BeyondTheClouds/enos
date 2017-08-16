@@ -4,10 +4,6 @@
   roles:
     - { role: common,
         tags: ['common'] }
-
-- name: Configure the Docker registry
-  hosts: disco/registry
-  roles:
     - { role: registry,
         tags: ['registry'] }
 

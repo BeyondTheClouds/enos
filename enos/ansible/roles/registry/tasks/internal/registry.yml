@@ -1,0 +1,7 @@
+---
+- include: ceph.yml
+  when: registry.type == 'internal'
+        and registry.ceph is defined
+        and registry.ceph
+
+- include: ../install_registry.yml

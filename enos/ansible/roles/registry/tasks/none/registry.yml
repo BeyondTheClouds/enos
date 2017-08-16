@@ -1,0 +1,4 @@
+---
+- name: Nothing to be done
+  debug:
+    msg: None registry chosen
