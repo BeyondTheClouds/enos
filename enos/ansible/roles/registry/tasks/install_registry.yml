@@ -1,0 +1,31 @@
+- name: Checking that the vip is free on this host
+  command: "ip addr show {{ network_interface }}"
+  register: result
+  when: registry.type == "internal"
+
+- name: Add a vip address for the registry
+  command: "ip addr add {{ registry_ip }} dev {{ network_interface }}"
+  when: result.stdout.find(registry_ip) == -1 and registry.type == "internal"
+
+- name: Starting the Docker registry
+  docker_container:
+    name: registry
+    image: registry:2
+    state: started
+    restart_policy: always
+    detach: true
+    ports:
+      - "{{ registry_port }}:5000"
+    env:
+      REGISTRY_PROXY_REMOTEURL: https://registry-1.docker.io
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /mnt/registry
+    volumes:
+      - '/mnt/registry:/mnt/registry'
+
+- name: Waiting for the registry service to become available
+  wait_for:
+    host: "{{ registry_ip }}"
+    port: "{{ registry_port }}"
+    state: started
+    delay: 2
+    timeout: 120

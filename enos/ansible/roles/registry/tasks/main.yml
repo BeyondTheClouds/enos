@@ -1,35 +1,5 @@
 ---
-- include: ceph.yml
-  when: registry.ceph
+- include: "{{ registry.type }}/agent.yml"
 
-- name: Checking that the vip is free on this host
-  command: "ip addr show {{ network_interface }}"
-  register: result
-
-- name: Add a vip address for influx db
-  command: "ip addr add {{ registry_vip }} dev {{ network_interface }}"
-  when: result.stdout.find(registry_vip) == -1
-
-- name: Starting the Docker registry
-  docker_container:
-    name: registry
-    image: registry:2
-    state: started
-    restart_policy: always
-    detach: true
-    ports:
-      - '4000:5000'
-    env:
-      REGISTRY_PROXY_REMOTEURL: https://registry-1.docker.io
-      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /mnt/registry
-    volumes:
-      - '/mnt/registry:/mnt/registry'
-
-- name: Waiting for the registry service to become available
-  wait_for:
-    host: "{{ registry_vip }}"
-    port: 4000
-    state: started
-    delay: 2
-    timeout: 120
-
+- include: "{{ registry.type }}/registry.yml"
+  when: inventory_hostname in groups['disco/registry']

@@ -133,37 +133,50 @@ Further information can be found : `see here
 <http://docs.ansible.com/ansible/intro_configuration.html>`_.
 
 
-Using a persistent registry with Ceph
--------------------------------------
+Docker registry configuration
+-----------------------------
 
-Enos deploys a fresh registry that acts as a private docker registry
-mirroring the official one and cache containers close to your
-deployment resources.
+EnOS can deploy a docker registry in different ways. This is controlled by the
+configuration file.
 
-To get a persistent registry you can use a persistent Ceph Rados Block
-Device for the registry backend. Image will be cached during the first
-deployment and reused for the subsequent deployments.
-
-The relevant configuration section looks like this in your
-``reservation.yaml``:
+No registry
+~~~~~~~~~~~
 
 .. code-block:: yaml
 
     registry:
-      ceph: true|false
+      type: none
+
+With the above configuration, EnOS won't deploy any registry. Any docker agent
+in the deployment will use Docker Hub.
+
+
+Internal Registry
+~~~~~~~~~~~~~~~~~
+
+.. code-block:: yaml
+
+    registry:
+      type: internal
+
+With the above configuration, EnOS deploys a fresh registry that acts as a
+private docker registry mirroring the official one and cache images close to
+your deployment resources.
+
+This kind of registry can be made persistent by making sure the underlying
+storage backend is persitent. Historically, it has been provided on Grid5000 by
+linking a Ceph Rados Block to the registry backend. Thus you can use the
+following:
+
+.. code-block:: yaml
+
+    registry:
+      type: internal
+      ceph: true
       ceph_keyring: path to your keyring
       ceph_id: your ceph id
       ceph_rbd: rbd in the form "pool/rbd"
       ceph_mon_host: list of ceph monitor addresses
-
-
-* ``ceph: false`` starts a fresh registry that caches the images for
-  the duration of the experiment.
-* ``ceph: true`` uses a registry whose backend is the existing
-  ``ceph_rbd`` Ceph Rados Block Device at destination
-  ``ceph_mon_host`` with the pool ``ceph_id`` and key
-  ``ceph_keyring``.
-
 
 .. note ::
 
@@ -173,19 +186,25 @@ The relevant configuration section looks like this in your
    guide you to create your own Rados Block Device.
 
 
-Using a local registry
-----------------------
+External Registry
+~~~~~~~~~~~~~~~~~
 
-By default, Enos deploys a cache registry in the control node.
-You can tell enos to use a locally deployed insecure registry,
-that is accessible on port 4000, with :
 
 .. code-block:: yaml
 
     registry:
-      ip: my_ip
+      type: external
+      ip: 192.168.142.253
+      port: 5000
+
+With the above configuration, EnOS will configure all the docker agents to access
+the registry located at `registry.ip:registry:port`. Note that registry must be
+an insecure registry.
 
 .. note ::
 
-  If using a local registry, you can remove the disco/registry entry
-  from the inventory, to avoid deploying the cache registry.
+  If you deploy the external registry on the controller node of OpenStack, make
+  sure the port 5000 don't collide with the port of Keystone.
+
+  When using EnOS locally, it's a good idea to keep a separated external registry to
+  speed up the deployment.

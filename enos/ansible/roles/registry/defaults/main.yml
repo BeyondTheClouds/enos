@@ -1,0 +1,3 @@
+---
+registry_ip: "{{ registry.ip if registry.type == 'external' else registry_vip }}"
+registry_port: "{{ registry.port if registry.type == 'external' else 4000 }}"

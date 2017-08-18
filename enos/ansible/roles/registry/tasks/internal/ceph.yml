@@ -1,0 +1,51 @@
+---
+- name: Install Ceph
+  apt: name={{ item }} state=present
+  with_items:
+    - ceph
+    - ceph-common
+
+- name: Copy Ceph configuration
+  template: src=ceph.conf.j2 dest=/etc/ceph/ceph.conf
+
+- name: Copy Ceph Keyring
+  copy: src={{ registry.ceph_keyring }} dest=/etc/ceph/
+
+- name: Add rbd kernel module
+  modprobe: name=rbd state=present
+
+- name: Checking rbd maps
+  shell: "rbd --id {{ registry.ceph_id }} showmapped --format json"
+  register: output
+
+# don't add a new mapping if there's already one
+# TODO: be more precise:
+# check if the rbd is already in the mapped rbd
+- name: Add rbd mapping
+  command: "rbd --id {{ registry.ceph_id }} map {{ registry.ceph_rbd }}"
+  when: output.stdout == "{}"
+
+- name: Checking rbd maps
+  shell: "rbd --id {{ registry.ceph_id }} showmapped --format json"
+  register: output
+
+- set_fact:
+    rbd_maps: "{{ output.stdout | from_json }}"
+
+- name: Create the registry directory
+  file:
+    path: /mnt/registry
+    state: directory
+
+# Mount the rbd whose mapped pool/name correspond
+# to the one in the config file
+- name: Mount the Ceph device
+  mount:
+    name: /mnt/registry
+    src: "{{ item.value.device }}"
+    state: mounted
+    fstype: auto
+  with_dict: "{{ rbd_maps }}"
+  when:
+    - item.value.pool in registry.ceph_rbd
+    - item.value.name in registry.ceph_rbd

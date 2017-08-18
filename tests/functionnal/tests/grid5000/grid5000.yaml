@@ -30,14 +30,7 @@ inventory: allinone.inventory
 # docker registry parameters
 # ############################################### #
 registry:
-  ceph: False
-  ceph_keyring: /home/discovery/.ceph/ceph.client.discovery.keyring
-  ceph_id: discovery
-  ceph_rbd: discovery_kolla_registry/datas
-  ceph_mon_host:
-    - ceph0.rennes.grid5000.fr
-    - ceph1.rennes.grid5000.fr
-    - ceph2.rennes.grid5000.fr
+  type: internal
 
 
 # ############################################### #

@@ -1,0 +1,4 @@
+---
+- name: Nothing to be done
+  debug:
+    msg: External registry chosen

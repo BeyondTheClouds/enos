@@ -31,7 +31,7 @@ inventory: inventories/inventory.sample
 # docker registry parameters
 # ############################################### #
 registry:
-  ceph: False
+  type: none
 
 # ############################################### #
 # Monitoring stack parameters                     #
