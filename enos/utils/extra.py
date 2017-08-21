@@ -202,11 +202,12 @@ def update_provider_nets(provider_nets, mapping):
     return internal_mapping
 
 
-def update_hosts(rsc, facts, internal_mapping, extra_mapping={}):
+def update_hosts(rsc, facts, internal_mapping, extra_mapping=None):
     # Update every hosts in rsc
     # NOTE(msimonin): due to the deserialization
     # between phases, hosts in rsc are unique instance so we need to update
     # every single host in every single role
+    extra_mapping = extra_mapping or {}
     for host in gen_rsc(rsc):
         networks = facts[host.alias]['networks']
         enos_devices = []
@@ -252,7 +253,7 @@ def check_network(env):
     # Match provider networks to interface names for each host
     with open(facts_file) as f:
         facts = yaml.load(f)
-        for host, host_facts in facts.items():
+        for _, host_facts in facts.items():
             host_nets = map_device_on_host_networks(env['provider_nets'],
                                                     get_devices(host_facts))
             # Add the mapping : provider_networks <-> nic name
@@ -276,12 +277,12 @@ def get_provider_net(provider_nets, criteria):
     return provider_net
 
 
-def render_template(template_name, vars, output_path):
+def render_template(template_name, variables, output_path):
     loader = jinja2.FileSystemLoader(searchpath=TEMPLATE_DIR)
-    env = jinja2.Environment(loader=loader)
+    env = jinja2.Environment(loader=loader, autoescape=True)
     template = env.get_template(template_name)
 
-    rendered_text = template.render(vars)
+    rendered_text = template.render(variables)
     with open(output_path, 'w') as f:
         f.write(rendered_text)
 
@@ -689,7 +690,7 @@ def gen_resources(resources):
 
 def gen_rsc(rsc):
     """Generator for the hosts in env['rsc']."""
-    for role, hosts in rsc.items():
+    for _, hosts in rsc.items():
         for host in hosts:
             yield host
 

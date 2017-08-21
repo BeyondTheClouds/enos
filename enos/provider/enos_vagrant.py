@@ -45,9 +45,9 @@ class Enos_vagrant(Provider):
         """
         provider_conf = conf['provider']
         networks = provider_conf['networks']
-        slash_24 = map(lambda x: 142 + x, range(0, networks))
-        slash_24 = map(lambda x: IPNetwork("192.168.%s.1/24" % x), slash_24)
-        netpools = map(lambda x: list(x)[10:-10], slash_24)
+        slash_24 = [142 + x for x in range(0, networks)]
+        slash_24 = [IPNetwork("192.168.%s.1/24" % x) for x in slash_24]
+        netpools = [list(x)[10:-10] for x in slash_24]
 
         # Build a list of machines that will be used to generate the
         # Vagrantfile
@@ -109,13 +109,14 @@ class Enos_vagrant(Provider):
                                         port=port,
                                         keyfile=keyfile))
         logging.info(roles)
-        networks = map(lambda (ipnet, pool): {
+        networks = [{
             'cidr': str(ipnet.cidr),
             'start': str(pool[0]),
             'end': str(pool[-1]),
             'dns': '8.8.8.8',
             'gateway': str(ipnet.ip)
-            }, zip(slash_24, netpools))
+        } for ipnet, pool in zip(slash_24, netpools)]
+
         return (roles, networks)
 
     def destroy(self, env):

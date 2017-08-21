@@ -52,6 +52,7 @@ resources:
 provider:
   type: vagrant
   box: debian/contrib-jessie64
+  networks: 3
 resources:
   extra-large:
     control: 1
