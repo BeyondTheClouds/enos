@@ -204,28 +204,28 @@ class TestGenerateInventoryString(unittest.TestCase):
     def test_address(self):
         h = Host("1.2.3.4")
         role = "test"
-        self.assertEqual("1.2.3.4 ansible_host=1.2.3.4 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' g5k_role=test", generate_inventory_string(h, role))
+        self.assertEqual("1.2.3.4 ansible_host=1.2.3.4 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ControlPath=~/.ssh/%C' g5k_role=test", generate_inventory_string(h, role))
 
     def test_address_alias(self):
         h = Host("1.2.3.4", alias="alias")
         role = "test"
-        self.assertEqual("alias ansible_host=1.2.3.4 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' g5k_role=test", generate_inventory_string(h, role))
+        self.assertEqual("alias ansible_host=1.2.3.4 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ControlPath=~/.ssh/%C' g5k_role=test", generate_inventory_string(h, role))
 
 
     def test_address_user(self):
         h = Host("1.2.3.4", user="foo")
         role = "test"
-        self.assertEqual("1.2.3.4 ansible_host=1.2.3.4 ansible_ssh_user=foo ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' g5k_role=test", generate_inventory_string(h, role))
+        self.assertEqual("1.2.3.4 ansible_host=1.2.3.4 ansible_ssh_user=foo ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ControlPath=~/.ssh/%C' g5k_role=test", generate_inventory_string(h, role))
 
     def test_address_gateway(self):
         h = Host("1.2.3.4", extra={'gateway': '4.3.2.1'})
         role = "test"
-        self.assertEqual("1.2.3.4 ansible_host=1.2.3.4 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -W %h:%p -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null 4.3.2.1\"' g5k_role=test", generate_inventory_string(h, role))
+        self.assertEqual("1.2.3.4 ansible_host=1.2.3.4 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ControlPath=~/.ssh/%C -o ProxyCommand=\"ssh -W %h:%p -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null 4.3.2.1\"' g5k_role=test", generate_inventory_string(h, role))
 
     def test_address_gateway_same_user(self):
         h = Host("1.2.3.4", user="foo", extra={'gateway': '4.3.2.1'})
         role = "test"
-        self.assertEqual("1.2.3.4 ansible_host=1.2.3.4 ansible_ssh_user=foo ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -W %h:%p -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l foo 4.3.2.1\"' g5k_role=test", generate_inventory_string(h, role))
+        self.assertEqual("1.2.3.4 ansible_host=1.2.3.4 ansible_ssh_user=foo ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ControlPath=~/.ssh/%C -o ProxyCommand=\"ssh -W %h:%p -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -l foo 4.3.2.1\"' g5k_role=test", generate_inventory_string(h, role))
 
 
 class TestGetTotalWantedMachines(unittest.TestCase):
