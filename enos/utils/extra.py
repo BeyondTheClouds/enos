@@ -174,6 +174,9 @@ def generate_inventory_string(n, role):
     if forward_agent:
         common_args.append("-o ForwardAgent=yes")
 
+    # Make ControlPath smaller to fix too long name for Unix domain socket
+    common_args.append('-o ControlPath=~/.ssh/%C')
+
     gateway = n.extra.get('gateway', None)
     if gateway is not None:
         proxy_cmd = ["ssh -W %h:%p"]
