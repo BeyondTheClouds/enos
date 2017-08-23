@@ -185,8 +185,6 @@ def update_provider_nets(provider_nets, mapping):
 
     Side effects :
         -  add mapto info to each provider_net"""
-    # sorting by cidr
-    provider_nets = sorted(provider_nets, key=lambda n: n['cidr'])
     # Build the internal mapping : this is the mapping treanslated in terms
     # of cidr
     internal_mapping = {}
@@ -258,7 +256,6 @@ def check_network(env):
                                                     get_devices(host_facts))
             # Add the mapping : provider_networks <-> nic name
             host_facts['networks'] = host_nets
-
     # Finally update the env with this information
     update_env(env, facts, kolla_indexed_network_mapping)
 

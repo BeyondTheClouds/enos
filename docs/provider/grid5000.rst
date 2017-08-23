@@ -69,9 +69,42 @@ The provider comes with the following default options :
         walltime: 02:00:00
         env_name: jessie-x64-min
         reservation: None
-        vlans: '{rennes: "{type=kavlan}/vlan=1"}'
         role_distribution: strict
         single_interface: false
         user: root
+        networks: 2
 
 They can be overriden in the configuration file.
+
+Network management
+~~~~~~~~~~~~~~~~~~
+
+At a glance, the provider can configure several networks. Those networks are
+provided by different vlans in the Grid'5000 world. The provider then configure
+each network interface of the reserved nodes to use the right network. The
+provider finally returns the list of the networks configured so that EnOS can map
+them to those used by OpenStack.
+
+More deeply, the `network` key controls the number of vlans to reserve.
+
+- If you request more networks than the number of network cards on your nodes,
+  EnOS will reduce this number in order to put each available network interface
+  in a dedicated vlan.
+- If you request less networks than the number of network cards on your nodes,
+  EnOs will let some of the network interfaces unconfigured.
+
+You can skip the previous mecanism by providing a `vlan` key.
+
+.. code-block:: yaml
+
+    provider:
+      type: g5k
+      ...
+      vlan:
+        rennes: "{type='kavlan'}/vlan=1"
+
+.. note::
+
+    The number of available vlans is limited in Grid'5000. For instance,
+    maximum 3 simultaneous deployments with `networks: 2` in the same site can
+    be running.

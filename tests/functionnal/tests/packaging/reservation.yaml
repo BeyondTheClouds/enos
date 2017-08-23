@@ -22,21 +22,19 @@ resources:
 # Provider description and its options
 provider:
   type: static
-  network:
-    start: 192.168.143.3
-    end:  192.168.143.119
-    cidr: 192.168.143.0/24
-    gateway: 192.168.143.1
-    dns: 8.8.8.8
-    extra_ips:
-      - 192.168.142.100
-      - 192.168.142.101
-      - 192.168.142.102
-      - 192.168.142.103
-      - 192.168.142.104
-  eths:
-    - eth1
-    - eth2
+  networks:
+    - start: 192.168.142.100
+      end:  192.168.142.200
+      cidr: 192.168.142.0/24
+      gateway: 192.168.142.1
+      dns: 8.8.8.8
+      mapsto: network_interface
+    - start: 192.168.143.3
+      end:  192.168.143.119
+      cidr: 192.168.143.0/24
+      gateway: 192.168.143.1
+      dns: 8.8.8.8
+      mapsto: neutron_external_interface
 
 # ############################################### #
 # Inventory to use                                #

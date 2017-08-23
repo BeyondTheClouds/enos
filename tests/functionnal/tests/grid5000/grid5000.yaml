@@ -7,8 +7,6 @@ provider:
   name: 'enos-jenkins'
   walltime: '02:00:00'
   # mandatory : you need to have exacly one vlan
-  vlans:
-     rennes: "{type='kavlan'}/vlan=1"
   # Be less strict on node distribution especially
   # when nodes are missing in the reservation
   # or not deployed
