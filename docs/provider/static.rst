@@ -49,6 +49,9 @@ already running resources.
        user:      # ssh user name (optional)
        keyfile:   # path to ssh private key (optional)
        port:      # ssh port (optional)
+       extra:     # Extra variables passed to ansible (optional)
+         ansible_become: yes
+
      compute:   # A role can also have a list of resources
        - address: # Ip address of the first compute
          alias:   # ...
