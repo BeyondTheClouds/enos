@@ -30,8 +30,8 @@ example the following is a valid resources description:
       small:
         compute:1
 
-The list of the sizes may be found `here
-<https://github.com/BeyondTheClouds/enos/blob/master/enos/provider/enos_vagrant.py#L12>`_.
+The list of the sizes may be found :enos_src:`here
+<enos/provider/enos_vagrant.py#L12>`.
 
 By default virtualbox will be used. See below to learn how to change the default
 virtualbox backend.

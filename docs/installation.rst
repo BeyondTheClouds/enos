@@ -45,9 +45,9 @@ Configuration
 
 To get started you can get the sample configuration file and edit it:
 
-.. code-block:: bash
+.. parsed-literal::
 
-    $ curl https://raw.githubusercontent.com/BeyondTheClouds/enos/master/reservation.yaml.sample --output reservation.yaml
+    $ curl :enos_cdn:`reservation.yaml.sample` --output reservation.yaml
     $ <editor> reservation.yaml
 
 
@@ -76,7 +76,7 @@ The deployment is the combination of the following three phases:
 
 1. Acquire the raw resources that are necessary for the deployment of
    OpenStack. Enos acquires resources according to the ``provider``
-   and ``resources`` information in the reservation file. Someone can
+   and ``resources`` information in the reservation file. One can
    perform this phase by calling ``enos up``.
 
 2. Deploy OpenStack to the resources acquired during the previous
@@ -85,21 +85,19 @@ The deployment is the combination of the following three phases:
    by the ``inventory`` key to produce a file that gives a mapping of
    which OpenStack services have to be deployed to which resources.
    Enos then calls the Kolla-Ansible tool with this file to deploy the
-   containerized OpenStack services to the right resources. Someone
+   containerized OpenStack services to the right resources. One
    can perform this phase by calling ``enos os``.
 
    .. note::
 
       If you don't provide an ``inventory`` in your current working
       directory, then Enos uses a default one. You can view it on
-      GitHub at `enos/inventories/inventory.sample
-      <https://github.com/BeyondTheClouds/enos/blob/232cd4710a84bc12f67dbc7306c9463d1e61014e/enos/inventories/inventory.sample>`_.
-      Note that the produced file is available at
-      ``cwd/current/multinode`` (with ``cwd`` referencing to your
-      current working directory).
+      GitHub at :enos_src:`enos/inventories/inventory.sample`. Note
+      that the produced file is available at ``cwd/current/multinode``
+      (with ``cwd`` referencing to your current working directory).
 
 3. Initialize the freshly deployed OpenStack. Enos initializes
    OpenStack with the bare necessities, i.e., install a ``member``
    role, download and install a cirros image, install default flavors
    (m1.tiny, ..., m1.xlarge) and setup a network (one public/one
-   private). Someone can perform this phase by calling ``enos init``.
+   private). One can perform this phase by calling ``enos init``.

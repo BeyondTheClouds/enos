@@ -6,3 +6,4 @@ discover==0.4.0
 mock==2.0.0
 ddt==1.1.1
 ansible-lint>=3.4.13,<3.5.0
+GitPython==2.1.5
