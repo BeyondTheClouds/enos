@@ -40,6 +40,8 @@ setup(
         'python-neutronclient==6.3.0',
         'python-vagrant>=0.5.14,<0.6.0',
         # 'python-blazarclient==0.2.0',
+        # ReadTheDocs
+        'GitPython>=2.1.5'
     ],
     entry_points={'console_scripts': ['enos = enos.enos:main']},
     include_package_data=True
