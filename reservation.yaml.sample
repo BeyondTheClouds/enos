@@ -82,7 +82,8 @@ resources:
     # user: root
     # port: 2222
     # keyfile: /path/to/private_key
-    # extra: ...
+    # extra:
+    #   ansible_become: yes
   network:
     address: ip-network-node
     # alias: network-node

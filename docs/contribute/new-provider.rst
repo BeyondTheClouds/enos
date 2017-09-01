@@ -3,18 +3,17 @@
 Write a new provider
 ====================
 
-The actual implementation gives providers for :ref:`static` resources, 
-:ref:`vagrant-provider`, :ref:`grid5000` and :ref:`openstack` itself. If 
-you want to support another testbed, then implementing a new provider 
+The actual implementation gives providers for :ref:`static` resources,
+:ref:`vagrant-provider`, :ref:`grid5000` and :ref:`openstack` itself. If
+you want to support another testbed, then implementing a new provider
 is easy as 500 lines of Python code.
 
-The new provider should follow the `provider.py`_ interface which
-consists in three methods: ``init``, ``destroy`` and
-``default_config``. Another good starting point is the simple `static
-implementation`_.
+The new provider should follow the :enos_src:`provider.py
+<enos/provider/provider.py>` interface which consists in three
+methods: ``init``, ``destroy`` and ``default_config``. Another good
+starting point is the simple :enos_src:`static implementation
+<enos/provider/static.py>`.
 
-.. _provider.py: https://github.com/BeyondTheClouds/enos/blob/master/enos/provider/provider.py
-.. _static implementation: https://github.com/BeyondTheClouds/enos/blob/master/enos/provider/static.py
 
 Init Method
 -----------
@@ -32,10 +31,9 @@ with:
    # Use rsc to book resources ...
 
 At the end of the ``init``, the provider should return a list of
-`host.py`_ that Enos can SSH on, together with a pool of available IP
-for OpenStack Network.
+:enos_src:`host.py <enos/provider/host.py>` that Enos can SSH on,
+together with a pool of available IP for OpenStack Network.
 
-.. _host.py: https://github.com/BeyondTheClouds/enos/blob/master/enos/provider/host.py
 
 Destroy Method
 --------------
