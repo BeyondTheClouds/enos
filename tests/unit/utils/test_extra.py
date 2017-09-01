@@ -454,5 +454,237 @@ def working_directory(path):
         os.chdir(prev_cwd)
 
 
+class TestGetHostNet(unittest.TestCase):
+    def test_map_devices_all_match_single(self):
+        networks = [{
+            'cidr': '1.2.3.4/24'
+            }, {
+            'cidr': '4.5.6.7/24'
+            }]
+        devices = [{
+            'device': 'eth0',
+            'ipv4': [{'address': '1.2.3.5'}]
+        }, {
+            'device': 'eth1',
+            'ipv4': [{'address': '4.5.6.7'}]
+        }]
+        expected = [{
+            'cidr': '4.5.6.7/24',
+            'devices': 'eth1'
+            }, {
+            'cidr': '1.2.3.4/24',
+            'devices': 'eth0'
+            }]
+        self.assertItemsEqual(expected, map_device_on_host_networks(networks, devices))
+
+    def test_map_devices_all_match_multiple(self):
+        networks = [{
+            'cidr': '1.2.3.4/24'
+            }, {
+            'cidr': '4.5.6.7/24'
+            }]
+        devices = [{
+            'device': 'eth0',
+            'ipv4': [{'address': '1.2.3.5'}]
+        }, {
+            'device': 'eth1',
+            'ipv4': [{'address': '1.2.3.254'}]
+        }]
+        # only the last match is taken into account
+        expected = [{
+            'cidr': '1.2.3.4/24',
+            'devices': 'eth1'
+            }, {
+            'cidr': '4.5.6.7/24',
+            'devices': None
+            }]
+        self.assertItemsEqual(expected, map_device_on_host_networks(networks, devices))
+
+    def test_map_devices_net_veth(self):
+        networks = [{
+            'cidr': '1.2.3.4/24'
+            }, {
+            'cidr': '4.5.6.7/24'
+            }]
+        devices = [{
+            'device': 'eth0',
+            'ipv4': [{'address': '1.2.3.5'}]
+        }, {
+            'device': 'veth0',
+            'ipv4': []
+        }]
+        expected = [{
+            'cidr': '4.5.6.7/24',
+            'devices': None
+            }, {
+            'cidr': '1.2.3.4/24',
+            'devices': 'eth0'
+            }]
+        self.assertItemsEqual(expected, map_device_on_host_networks(networks, devices))
+
+
+class TestUpdateProviderNets(unittest.TestCase):
+
+    def setUp(self):
+        def mapping(network, idx):
+            if idx == 0:
+                return 'network1'
+            elif idx == 1:
+                return 'network2'
+            else:
+                return None
+
+        self.mapping = mapping
+
+    def test_update_provider_nets(self):
+        provider_nets = [
+            {
+                'cidr': '192.168.142.0/24',
+            },
+            {
+                'cidr': '192.168.143.0/24',
+            }
+        ]
+        internal_mapping_expected = {
+            '192.168.142.0/24': 'network1',
+            '192.168.143.0/24': 'network2',
+        }
+
+        internal_mapping = update_provider_nets(provider_nets, self.mapping)
+        net1 = filter(lambda n: n['mapto'] == 'network1', provider_nets)[0]
+        self.assertEqual('192.168.142.0/24', net1['cidr'])
+        net2 = filter(lambda n: n['mapto'] == 'network2', provider_nets)[0]
+        self.assertEqual('192.168.143.0/24', net2['cidr'])
+        self.assertDictEqual(internal_mapping_expected, internal_mapping)
+
+    def test_update_provider_nets_unchanged(self):
+        provider_nets = [
+            {
+                'cidr': '192.168.142.0/24',
+                'mapto': 'network2'
+            },
+            {
+                'cidr': '192.168.143.0/24',
+                'mapto': 'network1'
+            }
+        ]
+        internal_mapping_expected = {
+            '192.168.142.0/24': 'network2',
+            '192.168.143.0/24': 'network1',
+        }
+        # mapto has precedence if present in provider_net
+        internal_mapping = update_provider_nets(provider_nets, self.mapping)
+        net1 = filter(lambda n: n['mapto'] == 'network2', provider_nets)[0]
+        self.assertEqual('192.168.142.0/24', net1['cidr'])
+        net2 = filter(lambda n: n['mapto'] == 'network1', provider_nets)[0]
+        self.assertEqual('192.168.143.0/24', net2['cidr'])
+        self.assertDictEqual(internal_mapping_expected, internal_mapping)
+
+
+class TestUpdateHosts(unittest.TestCase):
+
+    def setUp(self):
+        self.mapping = {
+            '1.2.3.0/24': 'network1',
+            '2.2.3.0/24': 'network2',
+        }
+
+    def test_update_hosts(self):
+        rsc = {'control': [Host('1.2.3.4', alias='foo'), Host('1.2.3.5', alias='bar')]}
+        facts = {
+                'foo': {
+                    'networks': [{
+                        'cidr': '1.2.3.0/24',
+                        'devices': 'eth0'
+                    }, {
+                        'cidr': '2.2.3.0/24',
+                        'devices': 'eth1'
+                    }]},
+                'bar': {
+                    'networks': [{
+                        'cidr': '1.2.3.0/24',
+                        'devices': 'eth0'
+                    }, {
+                        'cidr': '2.2.3.0/24',
+                        'devices': 'eth1'
+                    }]},
+                }
+
+        update_hosts(rsc, facts, self.mapping)
+        for host in gen_rsc(rsc):
+            self.assertEqual('eth0', host.extra['network1'])
+            self.assertEqual('eth1', host.extra['network2'])
+
+    def test_update_hosts_inverted(self):
+        rsc = {'control': [Host('1.2.3.4', alias='foo'), Host('1.2.3.5', alias='bar')]}
+        facts = {
+            'foo': {
+                'networks': [{
+                    'cidr': '1.2.3.0/24',
+                    'devices': 'eth0'
+                }, {
+                    'cidr': '2.2.3.0/24',
+                    'devices': 'eth1'
+                }]},
+            'bar': {
+                'networks': [{
+                    'cidr': '1.2.3.0/24',
+                    'devices': 'eth1'
+                }, {
+                    'cidr': '2.2.3.0/24',
+                    'devices': 'eth0'
+                }]},
+            }
+
+        update_hosts(rsc, facts, self.mapping)
+        for host in gen_rsc(rsc):
+            if host.alias == 'foo':
+                self.assertEqual('eth0', host.extra['network1'])
+                self.assertEqual('eth1', host.extra['network2'])
+            elif host.alias == 'bar':
+                self.assertEqual('eth1', host.extra['network1'])
+                self.assertEqual('eth0', host.extra['network2'])
+
+    def test_update_hosts_unmatch(self):
+        rsc = {'control': [Host('1.2.3.4', alias='foo')]}
+        facts = {
+                'foo': {
+                    'networks': [{
+                        'cidr': '1.2.3.0/24',
+                        'devices': 'eth0'
+                    }, {
+                        'cidr': '2.2.3.0/24',
+                        'devices': None
+                    }]},
+                }
+
+        update_hosts(rsc, facts, self.mapping)
+        for host in gen_rsc(rsc):
+            self.assertEqual('eth0', host.extra['network1'])
+            self.assertTrue('network2' not in host.extra)
+
+
+class TestGetProviderNEt(unittest.TestCase):
+
+    def setUp(self):
+        self.provider_nets = [
+            {
+                'cidr': '192.168.142.0/24',
+                'mapto': 'kolla_net1'
+            },
+            {
+                'cidr': '192.168.143.0/24',
+                'mapto': 'kolla_net2'
+            }
+        ]
+
+    def test_get_provider_net_one_match(self):
+        provider_net = get_provider_net(self.provider_nets, {'mapto': 'kolla_net1'})
+        expected_provider_net = {
+            'cidr': '192.168.142.0/24',
+            'mapto': 'kolla_net1'
+        }
+        self.assertDictEqual(expected_provider_net, provider_net[0])
+
 if __name__ == '__main__':
     unittest.main()

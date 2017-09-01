@@ -14,9 +14,9 @@ Vagrant.configure(2) do |config|
   {% for machine in machines %}
   config.vm.define "{{ machine.name }}" do |my|
     my.vm.hostname = "{{ machine.name }}"
-    my.vm.network :private_network, ip: "{{ machine.ip1 }}", auto_config: true
-    my.vm.network :private_network, ip: "{{ machine.ip2 }}", auto_config: true
-    my.vm.network :private_network, ip: "{{ machine.ip3 }}", auto_config: true
+    {% for ip in machine.ips %}
+    my.vm.network :private_network, ip: "{{ ip }}", auto_config: true
+    {% endfor %}
     my.vm.provider :virtualbox do |vb|
       vb.cpus={{ machine.cpu }}
       vb.memory={{ machine.mem }}
