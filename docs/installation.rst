@@ -47,7 +47,7 @@ To get started you can get the sample configuration file and edit it:
 
 .. parsed-literal::
 
-    $ curl :enos_cdn:`reservation.yaml.sample` --output reservation.yaml
+    $ enos new > reservation.yaml
     $ <editor> reservation.yaml
 
 

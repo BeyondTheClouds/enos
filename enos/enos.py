@@ -16,6 +16,7 @@ General options:
   -vv               Verbose mode.
 
 Commands:
+  new            Print a reservation.yaml example
   up             Get resources and install the docker registry.
   os             Run kolla and install OpenStack.
   init           Initialise OpenStack with the bare necessities.
@@ -26,6 +27,7 @@ Commands:
   info           Show information of the actual deployment.
   destroy        Destroy the deployment and optionally the related resources.
   deploy         Shortcut for enos up, then enos os and enos config.
+
 
 See 'enos <command> --help' for more information on a specific
 command.
@@ -465,6 +467,26 @@ def ssh_tunnel(env=None, **kwargs):
 
 
 @enostask("""
+usage: enos new [-e ENV|--env=ENV] [-s|--silent|-vv]
+
+Print reservation example, to be manually edited and customized:
+
+  enos new > reservation.yaml
+
+Options:
+  -h --help            Show this help message.
+  -s --silent          Quiet mode.
+  -vv                  Verbose mode.
+""")
+def new(env=None, **kwargs):
+    from utils.constants import TEMPLATE_DIR
+    logging.debug('phase[new]: args=%s' % kwargs)
+    with open(os.path.join(TEMPLATE_DIR, 'reservation.yaml.sample'),
+              mode='r') as content:
+        print content.read()
+
+
+@enostask("""
 usage: enos tc [-e ENV|--env=ENV] [--test] [-s|--silent|-vv]
 
 Enforce network constraints
@@ -757,6 +779,8 @@ def main():
         destroy(**docopt(destroy.__doc__, argv=argv))
     elif args['<command>'] == 'kolla':
         kolla(**docopt(kolla.__doc__, argv=argv))
+    elif args['<command>'] == 'new':
+        new(**docopt(new.__doc__, argv=argv))
     else:
         pass
 
