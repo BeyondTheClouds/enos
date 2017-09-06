@@ -33,8 +33,8 @@ See 'enos <command> --help' for more information on a specific
 command.
 
 """
-from utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, NETWORK_IFACE,
-                             EXTERNAL_IFACE, VERSION)
+from utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
+                             NETWORK_IFACE, EXTERNAL_IFACE, VERSION)
 from utils.errors import EnosFilePathError
 from utils.extra import (run_ansible, generate_inventory,
                          bootstrap_kolla, pop_ip, make_provider,
@@ -116,7 +116,12 @@ def up(env=None, **kwargs):
     logging.debug("Provider network interfaces: %s", env['eths'])
 
     # Generates inventory for ansible/kolla
-    base_inventory = seekpath(env['config']['inventory'])
+    inventory_conf = env['config'].get('inventory')
+    if not inventory_conf:
+        logging.debug("No inventory specified, using the sample.")
+        base_inventory = os.path.join(INVENTORY_DIR, 'inventory.sample')
+    else:
+        base_inventory = seekpath(inventory_conf)
     inventory = os.path.join(env['resultdir'], 'multinode')
     generate_inventory(env['rsc'], base_inventory, inventory)
     logging.info('Generates inventory %s' % inventory)
