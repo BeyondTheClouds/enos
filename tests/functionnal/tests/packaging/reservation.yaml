@@ -5,19 +5,19 @@
 # ############################################### #
 
 # Resources description : this is provider specific
+hosts:
+  1: &h1
+    address: 127.0.0.1
+    alias: enos-node
+    user: root
+
 resources:
   control:
-    address: 127.0.0.1
-    alias: enos-node
-    user: root
+    - *h1
   network:
-    address: 127.0.0.1
-    alias: enos-node
-    user: root
+    - *h1
   compute:
-    address: 127.0.0.1
-    alias: enos-node
-    user: root
+    - *h1
 
 # Provider description and its options
 provider:
