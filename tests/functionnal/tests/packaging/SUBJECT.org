@@ -676,9 +676,9 @@ Neutron service that is inside ~grp1~ and VMs are inside the ~grp2~
 
 Now, reconfigure Neutron to use DVR[fn:dvr]. DVR will push Neutron
 agent directly on compute of ~grp2~ and ~grp3~. With EnOS, you should
-do so by updating the ~reservation.yaml~ and add ~enable_dvr: "yes"~
-under the ~kolla~ key. Then call the following line to tell EnOS to
-reconfigure Neutron:
+do so by updating the ~reservation.yaml~ and add ~enable_neutron_dvr:
+"yes"~ under the ~kolla~ key. Then call the following line to tell
+EnOS to reconfigure Neutron:
 : enos os --tags=neutron --reconfigure
 
 Finally, re-execute the ~dense_l3_east_west~ scenario and compare your
