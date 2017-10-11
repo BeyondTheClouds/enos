@@ -62,3 +62,26 @@ The provider comes with the following default options:
       user: root
 
 They can be overriden in the configuration file.
+
+A note on KVM
+-------------
+
+KVM is not supported in Vagrant when using VirtualBox.
+To manually set qemu as hypervisor, the ``reservation.yaml`` has to be modified.
+To tell kolla that a custom config will be used, patch the ``reservation.yaml`` with the following command: ``node_custom_config: "{{cwd}}/patch"``, in the kolla parameters (``{{cwd}}`` is the working directory of Enos).
+
+For example in ``reservation.yaml``:  
+
+.. code-block:: yaml
+
+    kolla:
+     [...]
+     node_custom_config: "{{cwd}}/patch"
+
+Then in ``{{cwd}}/patch``, create a file ``nova.conf`` that will overloads the default one, and add:
+
+.. code-block:: ini
+
+    [libvirt]
+     virt_type=qemu
+
