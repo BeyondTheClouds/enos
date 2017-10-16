@@ -245,8 +245,20 @@ based on the Enos environment.
         'kolla_ref':                  env['config']['kolla_ref'],
         'resultdir':                  env['resultdir']
     }
+
+    # Manage monitoring stack
     if 'enable_monitoring' in env['config']:
         values['enable_monitoring'] = env['config']['enable_monitoring']
+
+    # Manage docker registry
+    registry_type = env['config']['registry']['type']
+    if registry_type == 'internal':
+        values['docker_registry'] = \
+            "%s:4000" % env['config']['registry_vip']
+    elif registry_type == 'external':
+        values['docker_registry'] = \
+            "%s:%s" % (env['config']['registry']['ip'],
+                       env['config']['registry']['port'])
 
     return values
 
