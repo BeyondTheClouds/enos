@@ -20,6 +20,7 @@ cat << EOF >> ~/.profile
 . $TEST_DIR/venv/bin/activate
 EOF
 
+pip install -U pip
 pip install -e "$BASE_DIR"
 
 enos deploy -f reservation.yaml

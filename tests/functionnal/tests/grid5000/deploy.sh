@@ -15,6 +15,7 @@ virtualenv venv
 # shellcheck disable=SC1091
 . venv/bin/activate
 
+pip install -U pip
 pip install -e "$BASE_DIR"
 
 echo "-ENOS DEPLOY-"

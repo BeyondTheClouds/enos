@@ -10,6 +10,7 @@ sudo ../vagrant_deps.sh
 
 virtualenv venv
 . venv/bin/activate
+pip install -U pip
 pip install -e ../../../..
 
 enos up -f topology.yaml &&\
