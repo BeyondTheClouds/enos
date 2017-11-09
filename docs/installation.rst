@@ -8,19 +8,12 @@ Installation
 
 .. code-block:: bash
 
-    $ pip install enos
+    $ pip install -U enos
 
 You may prefer to go with a virtualenv. Please refer to the
 `virtualenv <https://virtualenv.pypa.io/en/stable/>`_ documentation
 and the rest of this section for further information.
 
-
-If virtualenv is missing:
-
-.. code-block:: bash
-
-    $ pip install virtualenv --user     # Install virtualenv
-    $ export PATH=~/.local/bin/:${PATH} # Put it into your path
 
 Then install enos inside a virtualenv:
 
@@ -29,6 +22,7 @@ Then install enos inside a virtualenv:
     $ mkdir my-experiment && cd my-experiment
     $ virtualenv venv
     $ source venv/bin/activate
+    (venv) $ pip install -U pip
     (venv) $ pip install enos
 
 
