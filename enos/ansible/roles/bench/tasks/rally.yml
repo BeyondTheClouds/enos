@@ -11,7 +11,7 @@
   when: not sqlite.stat.exists
   docker_container:
     name: "{{ 'database' | to_uuid }}"
-    image: rallyforge/rally
+    image: "{{ rally_container_image }}"
     state: started
     volumes:
     - /root/rally_home:/home/rally
@@ -24,14 +24,14 @@
   pause: seconds=5
 
 - name: Test whether the rally deployment has been created or not
-  command: docker run -v /root/rally_home:/home/rally rallyforge/rally rally deployment list
+  command: "docker run -v /root/rally_home:/home/rally {{ rally_container_image }} rally deployment list"
   register: deployment
 
 - name: Deploy discovery context
   when: "'discovery' not in deployment.stdout"
   docker_container:
     name: "{{ 'deployment' | to_uuid }}"
-    image: rallyforge/rally
+    image: "{{ rally_container_image }}"
     state: started
     volumes:
       - /root/rally_home:/home/rally
@@ -60,7 +60,7 @@
 - name: Run benchmark
   docker_container:
     name: "{{ bench.scenario_location | to_uuid }}"
-    image: rallyforge/rally
+    image: "{{ rally_container_image }}"
     state: started
     volumes:
       - /root/rally_home:/home/rally
@@ -75,14 +75,14 @@
   retries: 10000
 
 - name: Find the last available report
-  shell: docker run -v /root/rally_home:/home/rally rallyforge/rally  rally task list --uuids-only | tail -n 1
+  shell: "docker run -v /root/rally_home:/home/rally {{ rally_container_image }}  rally task list --uuids-only | tail -n 1"
   register: task_uuid
 
 # Download rally results only if there are some reports to get back
 - name: Generating rally reports (html)
-  command: docker run -v /root/rally_home:/home/rally rallyforge/rally rally task report --uuid {{ task_uuid.stdout }} --out report-{{ bench.scenario_location | basename }}-{{ task_uuid.stdout }}.html
+  command: "docker run -v /root/rally_home:/home/rally {{ rally_container_image }} rally task report --uuid {{ task_uuid.stdout }} --out report-{{ bench.scenario_location | basename }}-{{ task_uuid.stdout }}.html"
   when: task_uuid.stdout != ""
 
 - name: Generating rally reports (json)
-  shell: docker run -v /root/rally_home:/home/rally rallyforge/rally rally task results --uuid {{ task_uuid.stdout }} > /root/rally_home/report-{{ bench.scenario_location | basename }}-{{ task_uuid.stdout }}.json
+  shell: "docker run -v /root/rally_home:/home/rally {{ rally_container_image }} rally task results --uuid {{ task_uuid.stdout }} > /root/rally_home/report-{{ bench.scenario_location | basename }}-{{ task_uuid.stdout }}.json"
   when: task_uuid.stdout != ""
