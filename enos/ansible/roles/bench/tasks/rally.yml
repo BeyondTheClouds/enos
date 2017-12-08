@@ -1,21 +1,17 @@
 ---
-# Install and launch a rally benchmark
+# ---------------------------------------------- Setup rally
 - name: Install rally result directory
   file: path=/root/rally_home state=directory owner=65500
 
-- name: Test whether the rally database has been initialized or not
-  stat: path=/root/rally_home/.rally.sqlite
+- name: Test whether the rally database has been initialized
+  stat: path=/root/rally_home/rally.db
   register: sqlite
 
 - name: Initialize database
   when: not sqlite.stat.exists
-  docker_container:
-    name: "{{ 'database' | to_uuid }}"
-    image: "{{ rally_container_image }}"
-    state: started
-    volumes:
-    - /root/rally_home:/home/rally
-    command: rally-manage db create
+  command: >
+    docker run -v /root/rally_home:/home/rally/data {{ rally_container_image }} 
+           db create
 
 # NOTE(msimonin): without the pause
 # the file seems not to be synced in the next task.
@@ -23,8 +19,10 @@
 - name: Waiting a few seconds
   pause: seconds=5
 
-- name: Test whether the rally deployment has been created or not
-  command: "docker run -v /root/rally_home:/home/rally {{ rally_container_image }} rally deployment list"
+- name: Test whether the rally deployment has been created
+  command: > 
+    docker run -v /root/rally_home:/home/rally/data {{ rally_container_image }} 
+           deployment list
   register: deployment
 
 - name: Deploy discovery context
@@ -34,55 +32,58 @@
     image: "{{ rally_container_image }}"
     state: started
     volumes:
-      - /root/rally_home:/home/rally
+      - /root/rally_home:/home/rally/data
     env: "{{ os_env }}"
-    command: rally deployment create --fromenv --name=discovery
+    command: deployment create --fromenv --name=discovery
 
+# ----------------------------------- Setup & run rally test
 - name: Copy rally scenarios
   copy: src={{ bench.scenario_location }} dest=/root/rally_home/ owner=655500
 
 - name: Create plugin directory
+  when: bench.plugin_location is defined
   file:
     path: /root/rally_home/.rally/plugins
     state: directory
     mode: 0755
-  when: bench.plugin_location is defined
 
 - name: Copy rally plugins
-  copy: src={{ bench.plugin_location }} dest=/root/rally_home/.rally/plugins owner=655500
   when: bench.plugin_location is defined
+  copy: src={{ bench.plugin_location }} dest=/root/rally_home/.rally/plugins owner=655500
 
-- name: create arg file
+- name: Create rally-args.json with arguments for the scenario
   copy:
     content: "{{ bench.args }}"
     dest: /root/rally_home/rally-args.json
 
-- name: Run benchmark
-  docker_container:
-    name: "{{ bench.scenario_location | to_uuid }}"
-    image: "{{ rally_container_image }}"
-    state: started
-    volumes:
-      - /root/rally_home:/home/rally
-    command: rally task start {{ bench.scenario_location | basename }} --task-args-file /home/rally/rally-args.json
-  register: docker_output
-
-- name: Wait for the end of the test, this may take a while...
-  command: "docker ps -q --filter id={{ docker_output.ansible_facts.docker_container.Id }}"
-  register: finished
-  until: finished.stdout == ""
-  delay: 20
-  retries: 10000
-
-- name: Find the last available report
-  shell: "docker run -v /root/rally_home:/home/rally {{ rally_container_image }}  rally task list --uuids-only | tail -n 1"
+- name: Run scenario {{ bench.scenario_location | basename }} 
+  command: >
+    docker run -v /root/rally_home:/home/rally/data {{ rally_container_image }}
+           task start /home/rally/data/{{ bench.scenario_location | basename }}
+           --task-args-file /home/rally/data/rally-args.json
+           --deployment discovery
+           
+# -------------------------------- Download results (if any)
+- name: Find report identifier
+  shell: > 
+    docker run -v /root/rally_home:/home/rally/data {{ rally_container_image }}\
+           task list --uuids-only\
+           --deployment discovery\
+          | tail -n 1
   register: task_uuid
 
-# Download rally results only if there are some reports to get back
-- name: Generating rally reports (html)
-  command: "docker run -v /root/rally_home:/home/rally {{ rally_container_image }} rally task report --uuid {{ task_uuid.stdout }} --out report-{{ bench.scenario_location | basename }}-{{ task_uuid.stdout }}.html"
+- name: Generating rally reports (html) for {{ task_uuid.stdout }}
   when: task_uuid.stdout != ""
+  command: >
+    docker run -v /root/rally_home:/home/rally/data {{ rally_container_image }} 
+           task report --uuid {{ task_uuid.stdout }} 
+           --html-static --out 
+           /home/rally/data/report-{{ bench.scenario_location | basename }}-{{ task_uuid.stdout }}.html
 
-- name: Generating rally reports (json)
-  shell: "docker run -v /root/rally_home:/home/rally {{ rally_container_image }} rally task results --uuid {{ task_uuid.stdout }} > /root/rally_home/report-{{ bench.scenario_location | basename }}-{{ task_uuid.stdout }}.json"
+- name: Generating rally reports (json) for {{ task_uuid.stdout }}
   when: task_uuid.stdout != ""
+  command: > 
+    docker run -v /root/rally_home:/home/rally/data {{ rally_container_image }} 
+           task report --uuid {{ task_uuid.stdout }} 
+           --json --out 
+           /home/rally/data/report-{{ bench.scenario_location | basename }}-{{ task_uuid.stdout }}.json
