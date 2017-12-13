@@ -173,16 +173,19 @@ def install_os(env=None, **kwargs):
 
     # Clone or pull Kolla
     kolla_path = os.path.join(env['resultdir'], 'kolla')
-    if os.path.isdir(kolla_path):
-        logging.info("Remove previous Kolla installation")
-        check_call("rm -rf %s" % kolla_path, shell=True)
 
-    logging.info("Cloning Kolla repository...")
-    check_call("git clone %s --branch %s --single-branch --quiet %s" %
+    # # Note(tp-polytech): Do not remove already installed kolla to
+    # # save the bandwidth
+    # logging.info("Remove previous Kolla installation")
+    # check_call("rm -rf %s" % kolla_path, shell=True)
+
+    if not os.path.isdir(kolla_path):
+        logging.info("Cloning Kolla repository...")
+        check_call("git clone %s --branch %s --single-branch --quiet %s" %
                    (env['config']['kolla_repo'],
                     env['config']['kolla_ref'],
                     kolla_path),
-               shell=True)
+                   shell=True)
 
     # Bootstrap kolla running by patching kolla sources (if any) and
     # generating admin-openrc, globals.yml, passwords.yml
@@ -230,30 +233,27 @@ def init_os(env=None, **kwargs):
 
     cmd = []
     cmd.append('. %s' % os.path.join(env['resultdir'], 'admin-openrc'))
-    # add cirros image
-    url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'
-    images = [{'name': 'cirros.uec',
-               'url': url}]
+
+    # NOTE(tp-polytech): Install cirros and debian-9 images from
+    # /home/vagrant. Do not download them.
+    images = ['cirros', 'debian-9']
     for image in images:
-        cmd.append("wget -q -O /tmp/%s %s" % (image['name'], image['url']))
         cmd.append("openstack image list "
-                   "--property name=%(image_name)s -c Name -f value "
-                   "| grep %(image_name)s"
+                   "--property name=%(image_name)s -c Name -f value |fgrep %(image_name)s"
                    "|| openstack image create"
                    " --disk-format=qcow2"
                    " --container-format=bare"
                    " --property architecture=x86_64"
                    " --public"
-                   " --file /tmp/%(image_name)s"
-                   " %(image_name)s" % {'image_name': image['name'], })
+                   " --file /home/vagrant/%(image_name)s.qcow2"
+                   " %(image_name)s" % {'image_name': image })
 
     # flavors name, ram, disk, vcpus
-
     flavors = [('m1.tiny', 512, 1, 1),
-               ('m1.small', 2048, 20, 1),
-               ('m1.medium', 4096, 40, 2),
-               ('m1.large', 8192, 80, 4),
-               ('m1.xlarge', 16384, 160, 8)]
+               ('m1.small', 512, 5, 1),
+               ('m1.medium', 4096, 10, 2),
+               ('m1.large', 8192, 20, 4),
+               ('m1.xlarge', 16384, 30, 8)]
     for flavor in flavors:
         cmd.append("openstack flavor create %s"
                    " --id auto"
@@ -301,20 +301,61 @@ def init_os(env=None, **kwargs):
                    env['provider_net']['dns']))
 
     cmd.append("openstack network create private"
+               " --share"
                " --provider-network-type vxlan")
 
+    # NOTE(ty-polytech): The 192.168.0.0/18 collides with the
+    # 192.168.143.0/24 of public IP provided by Vagrant.
     cmd.append("openstack subnet create private-subnet"
                " --network private"
-               " --subnet-range 192.168.0.0/18"
-               " --gateway 192.168.0.1"
+               " --subnet-range 10.0.0.0/24"
+               " --gateway 10.0.0.1"
                " --dns-nameserver %s"
                " --ip-version 4" % (env["provider_net"]['dns']))
 
     # create a router between this two networks
     cmd.append('openstack router create router')
-    # NOTE(msimonin): not sure how to handle these 2 with openstack cli
-    cmd.append('neutron router-gateway-set router public')
-    cmd.append('neutron router-interface-add router private-subnet')
+    cmd.append('openstack router set router --external-gateway public')
+    cmd.append('openstack router add subnet router private-subnet')
+
+    cmd.append("sleep 10")
+
+    # NOTE(tp-polytech): From the frontend, access OpenStack VMs on their private
+    # network 10.0.0.0/24 via the router
+    cmd.append('sudo ip route add 10.0.0.0/24 via '
+               '$(openstack router show router -c external_gateway_info -f value'
+               '  | jq -r ".external_fixed_ips[0] | .ip_address")')
+
+
+    # NOTE(tp-polytech): Make OpenStack VMs ping the outside world.
+    # When you perform a VirtualBox deployment with Vagrant, then
+    # Vagrant automatically starts one network (ie, NIC enp0s3) to
+    # perform SSH connection (i.e., vagrant SSH) on the VM. VirtualBox
+    # lets you specify different kind of Virtual Networking (see,
+    # https://www.virtualbox.org/manual/ch06.html#networkingmodes).
+    # The one implicitly started by Vagrant is a NAT one. The NAT
+    # network makes it possible to you browse the WEB, download files,
+    # ... inside the VM. So, we should reference the NIC of that NAT
+    # network in the configuration of Neutron (i.e.,
+    # `neutron_external_network: enp0s3`). Unfortunately, we cannot
+    # specify how this network is configured. Hence, we cannot say to
+    # use a specific range of IPs for our public IP pool.
+    #
+    # The solution we choose, in EnOS, is asking Vagrant to start a
+    # third network for public communication (i.e., 192.168.143.0/24,
+    # enp0s9). The public network is configured as a `Host-only
+    # networking` by Vagrant. But, network traffic on Host-only
+    # networking are not supposed to go out.
+    #
+    # Because of `Host-only networking`, we have to use enp0s3 as a
+    # gateway (see,
+    # https://www.systutorials.com/1372/setting-up-gateway-using-iptables-and-route-on-linux/).
+    # We have to change the source IP of out packet (192.168.143.*) to
+    # gateway's IP (10.0.2.*). The `iptables` will then automatically
+    # change the replied packet's destination IP (10.0.2.*) to the
+    # original source IP (192.168.143.*). This process is called a
+    # SNAT and we can implement it with `iptables`.
+    cmd.append('sudo iptables -t nat -A POSTROUTING -o enp0s3 -j MASQUERADE')
 
     cmd = '\n'.join(cmd)
 

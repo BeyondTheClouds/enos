@@ -7,10 +7,6 @@
   with_items:
     - python-setuptools
 
-- easy_install:
-    name: pip
-    state: latest
-
 - name: Install docker python binding
   pip:
     name: docker
