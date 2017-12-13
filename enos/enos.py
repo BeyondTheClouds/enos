@@ -173,16 +173,16 @@ def install_os(env=None, **kwargs):
 
     # Clone or pull Kolla
     kolla_path = os.path.join(env['resultdir'], 'kolla')
-    if os.path.isdir(kolla_path):
-        logging.info("Remove previous Kolla installation")
-        check_call("rm -rf %s" % kolla_path, shell=True)
+        # logging.info("Remove previous Kolla installation")
+        # check_call("rm -rf %s" % kolla_path, shell=True)
 
-    logging.info("Cloning Kolla repository...")
-    check_call("git clone %s --branch %s --single-branch --quiet %s" %
+    if not os.path.isdir(kolla_path):
+        logging.info("Cloning Kolla repository...")
+        check_call("git clone %s --branch %s --single-branch --quiet %s" %
                    (env['config']['kolla_repo'],
                     env['config']['kolla_ref'],
                     kolla_path),
-               shell=True)
+                   shell=True)
 
     # Bootstrap kolla running by patching kolla sources (if any) and
     # generating admin-openrc, globals.yml, passwords.yml
@@ -230,30 +230,26 @@ def init_os(env=None, **kwargs):
 
     cmd = []
     cmd.append('. %s' % os.path.join(env['resultdir'], 'admin-openrc'))
-    # add cirros image
-    url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'
-    images = [{'name': 'cirros.uec',
-               'url': url}]
+
+    # Note: Install cirros and debian-9 images from /home/vagrant
+    images = ['cirros', 'debian-9']
     for image in images:
-        cmd.append("wget -q -O /tmp/%s %s" % (image['name'], image['url']))
         cmd.append("openstack image list "
-                   "--property name=%(image_name)s -c Name -f value "
-                   "| grep %(image_name)s"
+                   "--property name=%(image_name)s -c Name -f value |fgrep %(image_name)s"
                    "|| openstack image create"
                    " --disk-format=qcow2"
                    " --container-format=bare"
                    " --property architecture=x86_64"
                    " --public"
-                   " --file /tmp/%(image_name)s"
-                   " %(image_name)s" % {'image_name': image['name'], })
+                   " --file /home/vagrant/%(image_name)s.qcow2"
+                   " %(image_name)s" % {'image_name': image })
 
     # flavors name, ram, disk, vcpus
-
     flavors = [('m1.tiny', 512, 1, 1),
-               ('m1.small', 2048, 20, 1),
-               ('m1.medium', 4096, 40, 2),
-               ('m1.large', 8192, 80, 4),
-               ('m1.xlarge', 16384, 160, 8)]
+               ('m1.small', 2048, 5, 1),
+               ('m1.medium', 4096, 10, 2),
+               ('m1.large', 8192, 20, 4),
+               ('m1.xlarge', 16384, 30, 8)]
     for flavor in flavors:
         cmd.append("openstack flavor create %s"
                    " --id auto"
@@ -305,16 +301,32 @@ def init_os(env=None, **kwargs):
 
     cmd.append("openstack subnet create private-subnet"
                " --network private"
-               " --subnet-range 192.168.0.0/18"
-               " --gateway 192.168.0.1"
+               " --subnet-range 10.0.0.0/24"
+               " --gateway 10.0.0.1"
                " --dns-nameserver %s"
                " --ip-version 4" % (env["provider_net"]['dns']))
 
+    # Note: Fix public ip routing
+    cmd.append(' sudo ovs-dpctl del-dp ovs-system')
+
     # create a router between this two networks
     cmd.append('openstack router create router')
-    # NOTE(msimonin): not sure how to handle these 2 with openstack cli
-    cmd.append('neutron router-gateway-set router public')
-    cmd.append('neutron router-interface-add router private-subnet')
+    cmd.append('openstack router set router --external-gateway public')
+    cmd.append('openstack router add subnet router private-subnet')
+    # cmd.append('openstack router add subnet router public-subnet')
+
+    cmd.append('export  THE_BRIDGE=brq$(openstack network list --name public -c ID -f value | cut -c 1-11)')
+    cmd.append('while ! ip a | grep ${THE_BRIDGE}; do echo "Waiting for ${THE_BRIDGE}"; sleep 5; done')
+    cmd.append('sudo ip addr add 192.168.143.127/24 dev '
+               'brq$(openstack network list --name public -c ID -f value | cut -c 1-11)')
+
+    # cmd.append('sudo ip addr del 192.168.143.127/24 dev enp0s9')
+    # cmd.append('sudo ip flush add dev br-ex')
+    # cmd.append('sudo ip link set br-ex up')
+    # cmd.append('sudo ip route add 192.168.143.0/24 dev br-ex')
+
+    # Note: Add vagrant key. Connect on instances with `ssh -l debian floating-ip`
+    cmd.append('openstack keypair create --public-key /home/vagrant/.ssh/id_rsa.pub admin')
 
     cmd = '\n'.join(cmd)
 
