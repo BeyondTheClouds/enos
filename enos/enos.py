@@ -246,7 +246,7 @@ def init_os(env=None, **kwargs):
 
     # flavors name, ram, disk, vcpus
     flavors = [('m1.tiny', 512, 1, 1),
-               ('m1.small', 2048, 5, 1),
+               ('m1.small', 512, 5, 1),
                ('m1.medium', 4096, 10, 2),
                ('m1.large', 8192, 20, 4),
                ('m1.xlarge', 16384, 30, 8)]
@@ -296,7 +296,10 @@ def init_os(env=None, **kwargs):
                    env['provider_net']['gateway'],
                    env['provider_net']['dns']))
 
+    cmd.append("sleep 10")
+
     cmd.append("openstack network create private"
+               " --share"
                " --provider-network-type vxlan")
 
     cmd.append("openstack subnet create private-subnet"
@@ -306,27 +309,33 @@ def init_os(env=None, **kwargs):
                " --dns-nameserver %s"
                " --ip-version 4" % (env["provider_net"]['dns']))
 
-    # Note: Fix public ip routing
-    cmd.append(' sudo ovs-dpctl del-dp ovs-system')
+    cmd.append("sleep 10")
 
     # create a router between this two networks
     cmd.append('openstack router create router')
     cmd.append('openstack router set router --external-gateway public')
     cmd.append('openstack router add subnet router private-subnet')
-    # cmd.append('openstack router add subnet router public-subnet')
 
-    cmd.append('export  THE_BRIDGE=brq$(openstack network list --name public -c ID -f value | cut -c 1-11)')
-    cmd.append('while ! ip a | grep ${THE_BRIDGE}; do echo "Waiting for ${THE_BRIDGE}"; sleep 5; done')
-    cmd.append('sudo ip addr add 192.168.143.127/24 dev '
-               'brq$(openstack network list --name public -c ID -f value | cut -c 1-11)')
+    # Note: Access VM in 10.0.0.0/24 via the router
+    cmd.append('export OS_ROUTER_IP=openstack router show router -c external_gateway_info -f value'
+               '| jq -r ".external_fixed_ips[0] | .ip_address"')
+    cmd.append('sudo ip route add 10.0.0.0/24 via ${OS_ROUTER_IP}')
+
+    # Note: Go through the dchp to access VM in 10.0.0.0/24
+    # cmd.append('export  THE_BRIDGE=brq$(openstack network list --name private -c ID -f value | cut -c 1-11)')
+    # cmd.append('sudo ip route add 10.0.0.0/24 dev ${THE_BRIDGE}')
+
+    # # Note: adding a router do the following for us! Maybe we have
+    # # to wait that the bridge appears before adding the router.
+    # cmd.append('while ! ip a | grep ${THE_BRIDGE}; do echo "Waiting for ${THE_BRIDGE}"; sleep 5; done')
+    # cmd.append('sudo ip addr add 192.168.143.127/24 dev '
+    #            'brq$(openstack network list --name public -c ID -f value | cut -c 1-11)')
+    # cmd.append('sudo ip route add 10.0.0/24 via 192.168.143.127')
 
     # cmd.append('sudo ip addr del 192.168.143.127/24 dev enp0s9')
     # cmd.append('sudo ip flush add dev br-ex')
     # cmd.append('sudo ip link set br-ex up')
     # cmd.append('sudo ip route add 192.168.143.0/24 dev br-ex')
-
-    # Note: Add vagrant key. Connect on instances with `ssh -l debian floating-ip`
-    cmd.append('openstack keypair create --public-key /home/vagrant/.ssh/id_rsa.pub admin')
 
     cmd = '\n'.join(cmd)
 
