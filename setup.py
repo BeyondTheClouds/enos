@@ -37,10 +37,11 @@ setup(
         'httplib2==0.9.2',
         'python-dateutil==2.2',
         'python-openstackclient>=3.0.0,<=4.0.0',
-        'python-neutronclient==6.3.0',
         'python-vagrant>=0.5.14,<0.6.0',
+        # - Chameleon
         # 'python-blazarclient==0.2.0',
-        # ReadTheDocs
+        'python-neutronclient==6.3.0',
+        # - ReadTheDocs
         'GitPython>=2.1.5'
     ],
     entry_points={'console_scripts': ['enos = enos.enos:main']},
