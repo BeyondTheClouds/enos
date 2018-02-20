@@ -304,6 +304,7 @@ def init_os(env=None, **kwargs):
                " --provider-network-type vxlan")
 
     cmd.append("openstack subnet create private-subnet"
+               " --dhcp"
                " --network private"
                " --subnet-range 192.168.0.0/18"
                " --gateway 192.168.0.1"
@@ -312,9 +313,8 @@ def init_os(env=None, **kwargs):
 
     # create a router between this two networks
     cmd.append('openstack router create router')
-    # NOTE(msimonin): not sure how to handle these 2 with openstack cli
-    cmd.append('neutron router-gateway-set router public')
-    cmd.append('neutron router-interface-add router private-subnet')
+    cmd.append('openstack router set router --external-gateway public')
+    cmd.append('openstack router add subnet router private-subnet')
 
     cmd = '\n'.join(cmd)
 
