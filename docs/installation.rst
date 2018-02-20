@@ -90,6 +90,19 @@ The deployment is the combination of the following three phases:
       that the produced file is available at ``cwd/current/multinode``
       (with ``cwd`` referencing to your current working directory).
 
+   .. warning::
+
+      If you run Enos on macOS, chances are that the BSD version of `docopt`
+      has been installed. Since it is not compatible with Kolla-Ansible,
+      it leads to failures during the second phase of Enos. macOS users
+      should first install the GNU version of `docopt`, and call ``enos
+      deploy`` or ``enos os`` with an appropriate PATH environment variable:
+
+      .. code-block:: bash
+
+         (venv) $ brew install gnu-docopt
+         (venv) $ PATH="/usr/local/opt/gnu-getopt/bin:$PATH" enos deploy
+
 3. Initialize the freshly deployed OpenStack. Enos initializes
    OpenStack with the bare necessities, i.e., install a ``member``
    role, download and install a cirros image, install default flavors
