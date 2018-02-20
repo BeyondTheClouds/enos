@@ -131,7 +131,7 @@ class Enos_vagrant(Provider):
     def default_config(self):
         return {
             'backend': 'virtualbox',
-            'box': 'debian/jessie64',
+            'box': 'bento/debian-9',
             'user': 'root',
-            'interfaces': ('eth1', 'eth2')
+            'interfaces': ('enp0s8', 'enp0s9')
         }
