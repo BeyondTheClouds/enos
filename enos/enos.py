@@ -230,39 +230,92 @@ def init_os(env=None, **kwargs):
 
     cmd = []
     cmd.append('. %s' % os.path.join(env['resultdir'], 'admin-openrc'))
-    # add cirros image
-    url = 'http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img'
-    images = [{'name': 'cirros.uec',
-               'url': url}]
+
+    # Images
+    images = [{'name': 'debian-9',
+               'url':  ('https://cdimage.debian.org/cdimage/openstack/'
+                        'current-9/debian-9-openstack-amd64.qcow2')},
+              {'name': 'cirros.uec',
+               'url':  ('http://download.cirros-cloud.net/'
+                        '0.3.4/cirros-0.3.4-x86_64-disk.img')}]
     for image in images:
-        cmd.append("wget -q -O /tmp/%s %s" % (image['name'], image['url']))
-        cmd.append("openstack image list "
-                   "--property name=%(image_name)s -c Name -f value "
-                   "| grep %(image_name)s"
-                   "|| openstack image create"
+        cmd.append("ls -l /tmp/%(name)s.qcow2 || "
+                   "curl -o /tmp/%(name)s.qcow2 %(url)s" % image)
+        cmd.append("openstack image show %(name)s || "
+                   "openstack image create"
                    " --disk-format=qcow2"
                    " --container-format=bare"
                    " --property architecture=x86_64"
                    " --public"
-                   " --file /tmp/%(image_name)s"
-                   " %(image_name)s" % {'image_name': image['name'], })
+                   " --file /tmp/%(name)s.qcow2"
+                   " %(name)s" % image)
 
-    # flavors name, ram, disk, vcpus
-
-    flavors = [('m1.tiny', 512, 1, 1),
-               ('m1.small', 2048, 20, 1),
-               ('m1.medium', 4096, 40, 2),
-               ('m1.large', 8192, 80, 4),
-               ('m1.xlarge', 16384, 160, 8)]
+    # Flavors
+    flavors = [{'name': 'm1.tiny',   'ram': 512,   'disk': 1,   'vcpus': 1},
+               {'name': 'm1.small',  'ram': 2048,  'disk': 20,  'vcpus': 1},
+               {'name': 'm1.medium', 'ram': 4096,  'disk': 40,  'vcpus': 2},
+               {'name': 'm1.large',  'ram': 8192,  'disk': 80,  'vcpus': 4},
+               {'name': 'm1.xlarge', 'ram': 16384, 'disk': 160, 'vcpus': 8}]
     for flavor in flavors:
-        cmd.append("openstack flavor create %s"
+        cmd.append("openstack flavor show %(name)s || "
+                   "openstack flavor create %(name)s"
                    " --id auto"
-                   " --ram %s"
-                   " --disk %s"
-                   " --vcpus %s"
-                   " --public" % (flavor[0], flavor[1], flavor[2], flavor[3]))
+                   " --ram %(ram)s"
+                   " --disk %(disk)s"
+                   " --vcpus %(vcpus)s"
+                   " --public" % flavor)
 
-    # security groups - allow everything
+    # Default networks (one private/one public)
+    # - private net
+    cmd.append("openstack network show private || "
+               "openstack network create private"
+               " --provider-network-type vxlan")
+
+    # NOTE(rcherrueau): Do not use 192.168.0.0/18 that collides with
+    # the 192.168.143.0/24 of public IP provided by Vagrant. We have
+    # to use 10.0.0.0. Referring to g5k kavlan doc
+    # (see,https://www.grid5000.fr/mediawiki/index.php/KaVLAN#Reserving_a_VLAN)
+    # 10.0.0.0/24 may overlap with kavlan-4 of Bordeaux, but the
+    # Bordeaux cluster does not exist anymore.
+    cmd.append("openstack subnet show private-subnet || "
+               "openstack subnet create private-subnet"
+               " --network private"
+               " --subnet-range 10.0.0.0/24"
+               " --gateway 10.0.0.1"
+               " --dns-nameserver %(dns)s"
+               " --ip-version 4" % env["provider_net"])
+
+    # - public net
+    cmd.append("openstack network show public || "
+               "openstack network create public"
+               " --share"
+               " --provider-physical-network physnet1"
+               " --provider-network-type flat"
+               " --external")
+
+    cmd.append("openstack subnet show public-subnet || "
+               "openstack subnet create public-subnet"
+               " --network public"
+               " --subnet-range %(cidr)s"
+               " --no-dhcp"
+               " --allocation-pool start=%(start)s,end=%(end)s"
+               " --gateway %(gateway)s"
+               " --dns-nameserver %(dns)s"
+               " --ip-version 4" % env['provider_net'])
+
+    # Create a router between this two networks
+    cmd.append('openstack router show router || '
+               'openstack router create router')
+    cmd.append('openstack router show router'
+               ' -c external_gateway_info -f value | fgrep -v None || '
+               'openstack router set router --external-gateway public')
+    cmd.append('openstack router show router '
+               ' -c interfaces_info -f value|fgrep -v "[]" || '
+               'openstack router add subnet router private-subnet')
+
+    # Security groups - allow everything
+    cmd.append('for i in $(openstack security group rule list -c ID -f value);'
+               'do openstack security group rule delete $i; done')
     protos = ['icmp', 'tcp', 'udp']
     for proto in protos:
         cmd.append("openstack security group rule create default"
@@ -270,51 +323,10 @@ def init_os(env=None, **kwargs):
                    " --dst-port 1:65535"
                    " --src-ip 0.0.0.0/0" % proto)
 
-    # quotas - set some unlimited for admin project
-    quotas = ['cores', 'ram', 'instances']
-    for quota in quotas:
-        cmd.append('nova quota-class-update --%s -1 default' % quota)
-
-    quotas = ['fixed-ips', 'floating-ips']
+    # Quotas - set some unlimited for admin project
+    quotas = ['cores', 'ram', 'instances', 'fixed-ips', 'floating-ips']
     for quota in quotas:
         cmd.append('openstack quota set --%s -1 admin' % quota)
-
-    # default network (one public/one private)
-    cmd.append("openstack network create public"
-               " --share"
-               " --provider-physical-network physnet1"
-               " --provider-network-type flat"
-               " --external")
-
-    cmd.append("openstack subnet create public-subnet"
-               " --network public"
-               " --subnet-range %s"
-               " --no-dhcp"
-               " --allocation-pool start=%s,end=%s"
-               " --gateway %s"
-               " --dns-nameserver %s"
-               " --ip-version 4" % (
-                   env['provider_net']['cidr'],
-                   env['provider_net']['start'],
-                   env['provider_net']['end'],
-                   env['provider_net']['gateway'],
-                   env['provider_net']['dns']))
-
-    cmd.append("openstack network create private"
-               " --provider-network-type vxlan")
-
-    cmd.append("openstack subnet create private-subnet"
-               " --dhcp"
-               " --network private"
-               " --subnet-range 192.168.0.0/18"
-               " --gateway 192.168.0.1"
-               " --dns-nameserver %s"
-               " --ip-version 4" % (env["provider_net"]['dns']))
-
-    # create a router between this two networks
-    cmd.append('openstack router create router')
-    cmd.append('openstack router set router --external-gateway public')
-    cmd.append('openstack router add subnet router private-subnet')
 
     cmd = '\n'.join(cmd)
 
