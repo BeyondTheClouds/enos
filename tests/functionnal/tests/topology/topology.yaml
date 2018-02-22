@@ -4,7 +4,6 @@
 # ############################################### #
 provider:
   type: vagrant
-  box: debian/contrib-jessie64
 topology:
   grp1:
     extra-large:
