@@ -64,7 +64,7 @@ class G5k(Provider):
         return {
             'name': 'Enos',
             'walltime': '02:00:00',
-            'env_name': 'jessie-x64-min',
+            'env_name': 'debian9-x64-nfs',
             'reservation': False,
             'vlans': {'rennes': "{type='kavlan'}/vlan=1"},
             'role_distribution': ROLE_DISTRIBUTION_MODE_STRICT,
