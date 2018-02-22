@@ -313,12 +313,18 @@ def init_os(env=None, **kwargs):
                ' -c interfaces_info -f value|fgrep -v "[]" || '
                'openstack router add subnet router private-subnet')
 
+    # Get admin security group id
+    cmd.append('ADMIN_PROJECT_ID=$(openstack project list'
+               ' --user admin -c ID -f value)')
+    cmd.append('ADMIN_SEC_GROUP=$(openstack security group list'
+               ' --project ${ADMIN_PROJECT_ID} -c ID -f value)')
+
     # Security groups - allow everything
     cmd.append('for i in $(openstack security group rule list -c ID -f value);'
                'do openstack security group rule delete $i; done')
     protos = ['icmp', 'tcp', 'udp']
     for proto in protos:
-        cmd.append("openstack security group rule create default"
+        cmd.append("openstack security group rule create ${ADMIN_SEC_GROUP}"
                    " --protocol %s"
                    " --dst-port 1:65535"
                    " --src-ip 0.0.0.0/0" % proto)
