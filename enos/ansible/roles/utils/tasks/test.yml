@@ -1,18 +1,21 @@
 ---
-- include: "setup_flent_{{ ansible_distribution }}.yml"
-
-- name: Installing flent/netperf
+- name: Installing netperf
   apt:
-    name: "{{ item }}"
+    name: netperf
     allow_unauthenticated: yes
-  with_items:
-    - flent
-    - netperf
+    update_cache: true
 
 - name: Installing fping
   apt:
-   name: fping
-   update_cache: true
+    name: fping
+    update_cache: true
+
+- name: Installing flent 
+  pip: 
+    name: "{{ item }}"
+  with_items:
+    - numpy
+    - flent
 
 - name: Uploading the host list
   template:
