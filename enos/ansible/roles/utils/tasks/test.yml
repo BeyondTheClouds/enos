@@ -1,14 +1,17 @@
 ---
-- name: Installing netperf
-  apt:
-    name: netperf
-    allow_unauthenticated: yes
-    update_cache: true
+- name: Active unfree repository (for netperf)
+  apt_repository:
+    repo: deb http://deb.debian.org/debian/ stable main contrib non-free
+    state: present
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
 
-- name: Installing fping
+- name: Installing fping, netperf
   apt:
-    name: fping
-    update_cache: true
+    name: "{{ item }}"
+  with_items:
+    - fping
+    - netperf
 
 - name: Installing flent 
   pip: 
