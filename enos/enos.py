@@ -27,6 +27,7 @@ Commands:
   info           Show information of the actual deployment.
   destroy        Destroy the deployment and optionally the related resources.
   deploy         Shortcut for enos up, then enos os and enos config.
+  kolla          Runs arbitrary kolla command on nodes
 
 
 See 'enos <command> --help' for more information on a specific
@@ -59,6 +60,31 @@ import yaml
 
 import itertools
 import operator
+
+
+def get_and_bootstrap_kolla(env, force=False):
+    """This gets kolla in the current directory.
+
+    force iff a potential previous installation must be overwritten.
+    """
+
+    kolla_path = os.path.join(env['resultdir'], 'kolla')
+
+    if force and os.path.isdir(kolla_path):
+        logging.info("Remove previous Kolla installation")
+        check_call("rm -rf %s" % kolla_path, shell=True)
+    if not os.path.isdir(kolla_path):
+        logging.info("Cloning Kolla repository...")
+        check_call("git clone %s --branch %s --single-branch --quiet %s" %
+                       (env['config']['kolla_repo'],
+                        env['config']['kolla_ref'],
+                        kolla_path),
+                   shell=True)
+        # Bootstrap kolla running by patching kolla sources (if any) and
+        # generating admin-openrc, globals.yml, passwords.yml
+        bootstrap_kolla(env)
+
+    return kolla_path
 
 
 @enostask("""
@@ -171,23 +197,7 @@ Options:
 def install_os(env=None, **kwargs):
     logging.debug('phase[os]: args=%s' % kwargs)
 
-    # Clone or pull Kolla
-    kolla_path = os.path.join(env['resultdir'], 'kolla')
-    if os.path.isdir(kolla_path):
-        logging.info("Remove previous Kolla installation")
-        check_call("rm -rf %s" % kolla_path, shell=True)
-
-    logging.info("Cloning Kolla repository...")
-    check_call("git clone %s --branch %s --single-branch --quiet %s" %
-                   (env['config']['kolla_repo'],
-                    env['config']['kolla_ref'],
-                    kolla_path),
-               shell=True)
-
-    # Bootstrap kolla running by patching kolla sources (if any) and
-    # generating admin-openrc, globals.yml, passwords.yml
-    bootstrap_kolla(env)
-
+    kolla_path = get_and_bootstrap_kolla(env, force=True)
     # Construct kolla-ansible command...
     kolla_cmd = [os.path.join(kolla_path, "tools", "kolla-ansible")]
 
@@ -702,7 +712,7 @@ Options:
 def kolla(env=None, **kwargs):
     logging.info('Kolla command')
     logging.info(kwargs)
-    kolla_path = os.path.join(env['resultdir'], 'kolla')
+    kolla_path = get_and_bootstrap_kolla(env, force=False)
     kolla_cmd = [os.path.join(kolla_path, "tools", "kolla-ansible")]
     kolla_cmd.extend(kwargs['<command>'])
     kolla_cmd.extend(["-i", "%s/multinode" % env['resultdir'],
