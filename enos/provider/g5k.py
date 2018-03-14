@@ -200,11 +200,6 @@ class G5k(Provider):
         provider_conf = conf['provider']
         # we put the nodes in the first vlan we have
         vlan = self._get_primary_vlan(vlans)
-        # Deploy all the nodes
-        logging.info("Deploying %s on %d nodes %s" % (
-            provider_conf['env_name'],
-            len(nodes),
-            '(forced)' if force_deploy else ''))
 
         kw = {
             'hosts': nodes,
@@ -212,8 +207,14 @@ class G5k(Provider):
         }
         if provider_conf.get('env_file'):
             kw.update({'env_file': provider_conf.get('env_file')})
+            provider_conf.pop('env_name')
         if provider_conf.get('env_name'):
             kw.update({'env_name': provider_conf.get('env_name')})
+
+        logging.info("%s deploying %s nodes with %s" % (
+            '(forced)' if force_deploy else '',
+            len(nodes),
+            kw))
 
         deployed, undeployed = EX5.deploy(
             EX5.Deployment(**kw), check_deployed_command=not force_deploy)
