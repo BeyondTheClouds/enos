@@ -206,12 +206,17 @@ class G5k(Provider):
             len(nodes),
             '(forced)' if force_deploy else ''))
 
+        kw = {
+            'hosts': nodes,
+            'vlan': vlan[1],
+        }
+        if provider_conf.get('env_file'):
+            kw.update({'env_file': provider_conf.get('env_file')})
+        if provider_conf.get('env_name'):
+            kw.update({'env_name': provider_conf.get('env_name')})
+
         deployed, undeployed = EX5.deploy(
-            EX5.Deployment(
-                nodes,
-                env_name=provider_conf['env_name'],
-                vlan=vlan[1]
-            ), check_deployed_command=not force_deploy)
+            EX5.Deployment(**kw), check_deployed_command=not force_deploy)
 
         # Check the deployment
         if len(undeployed) > 0:
