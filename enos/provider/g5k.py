@@ -315,7 +315,7 @@ class G5k(Provider):
 
             self._exec_command_on_nodes(
                 kavlan_nodes,
-                "ifconfig %s up && dhclient -nw %s" % (
+                "ip link set dev %s up && dhclient -nw %s" % (
                     external_interface, external_interface),
                 'mounting secondary interface')
         else:
