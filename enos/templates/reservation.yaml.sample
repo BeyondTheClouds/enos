@@ -51,7 +51,9 @@ resources:
 # ############################################### #
 provider:
   type: vagrant
-  box: debian/contrib-jessie64
+  box: bento/debian-9
+  interfaces: [enp0s8, enp0s9]
+
 resources:
   extra-large:
     control: 1

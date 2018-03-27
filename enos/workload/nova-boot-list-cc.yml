@@ -12,6 +12,7 @@
         image:
           name: {{image_name}}
         detailed: true
+        auto_assign_nic: true
       runner:
         concurrency: {{concurrency}}
         times: {{times}}
@@ -20,6 +21,9 @@
         users:
           tenants: 1
           users_per_tenant: 1
+        network:
+          start_cidr: "10.2.0.0/24"
+          networks_per_tenant: 1
         quotas:
           neutron:
             network: -1

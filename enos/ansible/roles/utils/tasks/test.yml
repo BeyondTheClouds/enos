@@ -1,18 +1,24 @@
 ---
-- include: "setup_flent_{{ ansible_distribution }}.yml"
+- name: Active unfree repository (for netperf)
+  apt_repository:
+    repo: deb http://deb.debian.org/debian/ stable main contrib non-free
+    state: present
+    update_cache: yes
+  when: ansible_os_family == 'Debian'
 
-- name: Installing flent/netperf
+- name: Installing fping, netperf
   apt:
     name: "{{ item }}"
-    allow_unauthenticated: yes
   with_items:
-    - flent
+    - fping
     - netperf
 
-- name: Installing fping
-  apt:
-   name: fping
-   update_cache: true
+- name: Installing flent 
+  pip: 
+    name: "{{ item }}"
+  with_items:
+    - numpy
+    - flent
 
 - name: Uploading the host list
   template:

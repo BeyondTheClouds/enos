@@ -37,7 +37,6 @@ setup(
         'httplib2==0.9.2',
         'python-dateutil>=2.2',
         'python-openstackclient>=3.0.0,<=4.0.0',
-        'python-neutronclient==6.3.0',
         'python-vagrant>=0.5.14,<0.6.0',
         # - Chameleon
         # NOTE(msimonin): chameleon provider is using

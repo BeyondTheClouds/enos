@@ -1,7 +1,0 @@
----
-# This is specific to Debian8
-- name: Adding flent repository
-  apt_repository:
-    repo: deb http://download.opensuse.org/repositories/home:/tohojo:/flent/Debian_8.0/ /
-    state: present
-    update_cache: yes
