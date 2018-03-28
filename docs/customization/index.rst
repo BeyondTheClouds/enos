@@ -208,3 +208,9 @@ an insecure registry.
 
   When using EnOS locally, it's a good idea to keep a separated external registry to
   speed up the deployment.
+
+Single interface deployment
+---------------------------
+
+Please refer to this discussion :  https://github.com/BeyondTheClouds/enos/issues/227
+
