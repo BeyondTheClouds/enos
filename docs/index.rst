@@ -50,6 +50,7 @@ A typical experiment using Enos is the sequence of several phases:
     network-emulation/index
     analysis/index
     contribute/index
+    jenkins/index
 
 Why Enos ?
 -----------
