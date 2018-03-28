@@ -133,5 +133,6 @@ class Enos_vagrant(Provider):
             'backend': 'virtualbox',
             'box': 'bento/debian-9',
             'user': 'root',
-            'interfaces': ('enp0s8', 'enp0s9')
+            # NOTE(msimonin) bento enforce old interface naming
+            'interfaces': ('eth0', 'eth1')
         }
