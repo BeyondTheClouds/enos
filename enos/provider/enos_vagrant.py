@@ -134,5 +134,7 @@ class Enos_vagrant(Provider):
             'box': 'bento/debian-9',
             'user': 'root',
             # NOTE(msimonin) bento enforce old interface naming
-            'interfaces': ('eth0', 'eth1')
+            # eth0 is the default nat-ed interface 10.0.2.15
+            # we don't use it
+            'interfaces': ('eth1', 'eth2')
         }
