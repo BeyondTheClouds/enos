@@ -250,7 +250,7 @@ def init_os(env=None, **kwargs):
                         '0.3.4/cirros-0.3.4-x86_64-disk.img')}]
     for image in images:
         cmd.append("ls -l /tmp/%(name)s.qcow2 || "
-                   "curl -o /tmp/%(name)s.qcow2 %(url)s" % image)
+                   "curl -L -o /tmp/%(name)s.qcow2 %(url)s" % image)
         cmd.append("openstack image show %(name)s || "
                    "openstack image create"
                    " --disk-format=qcow2"
