@@ -19,7 +19,7 @@
   register: docker_output
 
 - name: Wait for the end of the test, this may take a while...
-  command: "docker ps -q --filter id={{ docker_output.ansible_facts.ansible_docker_container.Id }}"
+  command: "docker ps -q --filter id={{ docker_output.ansible_facts.docker_container.Id }}"
   register: finished
   until: finished.stdout == ""
   delay: 20
