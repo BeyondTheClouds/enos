@@ -57,8 +57,9 @@ def create_blazar_client(config):
 
 
 def get_reservation(bclient, config):
+    lease_name = config['provider']['lease_name']
     leases = bclient.lease.list()
-    leases = [l for l in leases if l["name"] == config['provider']['lease_name']]
+    leases = [l for l in leases if l["name"] == lease_name]
     if len(leases) >= 1:
         lease = leases[0]
         if lease_is_reusable(lease):
@@ -201,7 +202,7 @@ class Chameleonbaremetal(cc.Chameleonkvm):
     def destroy(self, env):
         # destroy the associated lease should be enough
         bclient = create_blazar_client(env['config'])
-        lease = get_reservation(bclient)
+        lease = get_reservation(bclient, env['config'])
         bclient.lease.delete(lease['id'])
         logging.info("Destroyed %s" % lease_to_s(lease))
 
