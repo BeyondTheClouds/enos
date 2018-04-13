@@ -9,7 +9,6 @@ import openstack
 import os
 import time
 
-LEASE_NAME = "enos-lease"
 PORT_NAME = "enos-port"
 
 
@@ -57,9 +56,9 @@ def create_blazar_client(config):
             auth_token=kclient.auth_token)
 
 
-def get_reservation(bclient):
+def get_reservation(bclient, config):
     leases = bclient.lease.list()
-    leases = [l for l in leases if l["name"] == LEASE_NAME]
+    leases = [l for l in leases if l["name"] == config['provider']['lease_name']]
     if len(leases) >= 1:
         lease = leases[0]
         if lease_is_reusable(lease):
@@ -129,7 +128,7 @@ def wait_reservation(bclient, lease):
 
 def check_reservation(config):
     bclient = create_blazar_client(config)
-    lease = get_reservation(bclient)
+    lease = get_reservation(bclient, config)
     if lease is None:
         lease = create_reservation(bclient, config)
     wait_reservation(bclient, lease)
