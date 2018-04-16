@@ -333,11 +333,15 @@ def init_os(env=None, **kwargs):
     cmd.append('for i in $(openstack security group rule list -c ID -f value);'
                'do openstack security group rule delete $i; done')
     protos = ['icmp', 'tcp', 'udp']
+    directions = ['ingress', 'egress']
     for proto in protos:
-        cmd.append("openstack security group rule create ${ADMIN_SEC_GROUP}"
-                   " --protocol %s"
-                   " --dst-port 1:65535"
-                   " --src-ip 0.0.0.0/0" % proto)
+        for direction in directions:
+            cmd.append("openstack security group rule create"
+                       " ${ADMIN_SEC_GROUP}"
+                       " --protocol %s"
+                       " --dst-port 1:65535"
+                       " --src-ip 0.0.0.0/0"
+                       " --%s" % (proto, direction))
 
     # Quotas - set some unlimited for admin project
     quotas = ['cores', 'ram', 'instances', 'fixed-ips', 'floating-ips']
