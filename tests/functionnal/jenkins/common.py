@@ -11,7 +11,7 @@ import random
 WALLTIME = "02:00:00"
 JENKINS_FOLDER = "~/jenkins"
 JOB_NAME="discovery-jenkins-test"
-ENV_NAME="jessie-x64-big"
+ENV_NAME="debian9-x64-big"
 #CLUSTERS=["parasilo", "paravance", "parapluie"]
 #exclu = ex5.api_utils.get_g5k_clusters()
 # list that contains all clusters excepts those in okay list
