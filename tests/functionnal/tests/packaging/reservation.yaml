@@ -57,14 +57,13 @@ registry:
 # ############################################### #
 # Repository
 kolla_repo: https://git.openstack.org/openstack/kolla-ansible
-kolla_ref: master
+kolla_ref: stable/queens
 
 # globals.yml
 kolla:
   kolla_base_distro: centos
   kolla_install_type: source
   docker_namespace: beyondtheclouds
-  openstack_release: latest
   # openstack_logging_debug: True
   enable_heat: "no"
 
