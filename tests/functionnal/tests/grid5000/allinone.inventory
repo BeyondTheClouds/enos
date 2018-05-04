@@ -30,17 +30,38 @@ monitoring
 [disco/bench:children]
 monitoring
 
-## Do not require a monitoring node. Put monitoring services on
-### control by default. You can override this by adding a monitoring
-### group at the top of this file, e.g.:
-### [monitoring]
-### monitoring01
+# --- 
+# ENOS NOTE
+# A difference between external-compute and internal-compute is made in stable/queens
+# see: https://review.openstack.org/#/c/510327/
+# and: https://docs.openstack.org/releasenotes/neutron/pike.html#prelude
+# in short internal-compute floating ips will be associated at the centralized network node
+# For the record this is configured as follow in the original inventory:
+# inner-compute is the groups of compute nodes which do not have
+# external reachability
+# [inner-compute]
+
+# external-compute is the groups of compute nodes which can reach
+# outside
+# [external-compute]
+# compute01
+
+# [compute:children]
+# inner-compute
+# external-compute
+
+# In EnOS we consider for now that all the computes are external
+#
+[external-compute:children]
+compute
 [monitoring:children]
 control
 
 # When compute nodes and control nodes use different interfaces,
-# you can specify "api_interface" and other interfaces like below:
+# you need to comment out "api_interface" and other interfaces from the globals.yml
+# and specify like below:
 #compute01 neutron_external_interface=eth0 api_interface=em1 storage_interface=em1 tunnel_interface=em1
+
 [deployment]
 
 [baremetal:children]
@@ -218,6 +239,9 @@ control
 [vmtp:children]
 control
 
+[vitrage:children]
+control
+
 [watcher:children]
 control
 
@@ -244,6 +268,12 @@ control
 
 [skydive:children]
 monitoring
+
+[redis:children]
+control
+
+[blazar:children]
+control
 
 # Additional control implemented here. These groups allow you to control which
 # services run on which hosts at a per-service level.
@@ -307,6 +337,15 @@ neutron
 neutron
 
 # Ceph
+[ceph-mds:children]
+ceph
+
+[ceph-mgr:children]
+ceph
+
+[ceph-nfs:children]
+ceph
+
 [ceph-mon:children]
 ceph
 
@@ -344,7 +383,7 @@ freezer
 [iscsid:children]
 compute
 storage
-ironic-conductor
+ironic
 
 [tgtd:children]
 storage
@@ -463,16 +502,10 @@ mistral
 mistral
 
 # Ceilometer
-[ceilometer-api:children]
-ceilometer
-
 [ceilometer-central:children]
 ceilometer
 
 [ceilometer-notification:children]
-ceilometer
-
-[ceilometer-collector:children]
 ceilometer
 
 [ceilometer-compute:children]
@@ -573,6 +606,9 @@ designate
 [designate-central:children]
 designate
 
+[designate-producer:children]
+designate
+
 [designate-mdns:children]
 network
 
@@ -603,3 +639,33 @@ skydive
 [skydive-agent:children]
 compute
 network
+
+# Tacker
+[tacker-server:children]
+tacker
+
+[tacker-conductor:children]
+tacker
+
+# Vitrage
+[vitrage-api:children]
+vitrage
+
+[vitrage-notifier:children]
+vitrage
+
+[vitrage-graph:children]
+vitrage
+
+[vitrage-collector:children]
+vitrage
+
+[vitrage-ml:children]
+vitrage
+
+# Blazar
+[blazar-api:children]
+blazar
+
+[blazar-manager:children]
+blazar
