@@ -1,4 +1,11 @@
 ---
+# ---------------------------------------------- reset rally
+- name: Resetting the environment
+  file:
+    path: /root/rally_home
+    state: absent
+  when: bench.reset
+
 # ---------------------------------------------- Setup rally
 - name: Install rally result directory
   file: path=/root/rally_home state=directory owner=65500

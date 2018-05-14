@@ -1,4 +1,9 @@
 ---
+- name: Resetting the environment
+  file:
+    path: /root/shaker_home
+    state: absent
+
 # Launch a shaker benchmark
 # NOTE(msimonin): This is for currenly limited to benchmark aliases
 - name: debug
