@@ -154,7 +154,7 @@ enable_monitoring: no
 # ############################################### #
 # Repository
 kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
-kolla_ref: "master"
+kolla_ref: "stable/queens"
 
 # Vars : globals.yml
 kolla:

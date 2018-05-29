@@ -356,6 +356,7 @@ def init_os(env=None, **kwargs):
 
 @enostask("""
 usage: enos bench [-e ENV|--env=ENV] [-s|--silent|-vv] [--workload=WORKLOAD]
+    [--reset]
 
 Run rally on this OpenStack.
 
@@ -370,6 +371,7 @@ Options:
                        This directory must contain a run.yml file
                        that contains the description of the different
                        scenarios to launch [default: workload/].
+  --reset              Force the creation of benchmark environment.
 """ % SYMLINK_NAME)
 @check_env
 def bench(env=None, **kwargs):
@@ -395,7 +397,8 @@ def bench(env=None, **kwargs):
         workload = yaml.load(workload_f)
         for bench_type, desc in workload.items():
             scenarios = desc.get("scenarios", [])
-            for scenario in scenarios:
+            reset = kwargs.get("--reset")
+            for idx, scenario in enumerate(scenarios):
                 # merging args
                 top_args = desc.get("args", {})
                 args = scenario.get("args", {})
@@ -419,6 +422,9 @@ def bench(env=None, **kwargs):
                         'file': scenario["file"],
                         'args': a
                     }
+                    bench.update({'reset': False})
+                    if reset and idx == 0:
+                        bench.update({'reset': True})
 
                     if "plugin" in scenario:
                         plugin = os.path.join(workload_dir,

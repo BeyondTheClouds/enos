@@ -44,12 +44,11 @@ enable_monitoring: yes
 # ############################################### #
 # Repository
 kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
-kolla_ref: "master"
+kolla_ref: "stable/queens"
 
 # Vars : globals.yml
 kolla:
   kolla_base_distro: "centos"
   kolla_install_type: "source"
   docker_namespace: "beyondtheclouds"
-  openstack_release: "latest"
   enable_heat: "no"
