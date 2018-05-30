@@ -45,7 +45,9 @@ setup(
         'python-blazarclient==1.0.1',
         'python-neutronclient==6.3.0',
         # - ReadTheDocs
-        'GitPython>=2.1.5'
+        'GitPython>=2.1.5',
+        # force python 2.7
+        'cmd2<0.9.0'
     ],
     entry_points={'console_scripts': ['enos = enos.enos:main']},
     include_package_data=True
