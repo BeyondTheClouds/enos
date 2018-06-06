@@ -10,7 +10,7 @@
 - name: Start the grafana container
   docker_container:
     name: "grafana"
-    image: "grafana/grafana:3.1.0"
+    image: "{{ grafana_docker_image }}"
     detach: True
     ports:
       - "3000:3000"
@@ -43,7 +43,7 @@
     # by adding an empty space at the beginning of the json ...
     body: " { \"name\": \"{{ item.name }}\", \"type\": \"influxdb\", \"url\": \"http://{{ influx_vip }}:8086\", \"access\": \"proxy\", \"database\": \"{{ item.database }}\", \"user\": \"root\", \"password\": \"root\", \"isDefault\": true }"
     return_content: yes
-    status_code: 200,500 # already added
+    status_code: 200, 409 # already added
   with_items:
     - { name: influx-cadvisor, database: cadvisor }
     - { name: influx-collectd, database: collectd }
