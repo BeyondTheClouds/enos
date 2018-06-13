@@ -11,9 +11,12 @@
     name: pip
     state: latest
 
-- name: Install docker python binding
+- name: Install some python bindings
   pip:
-    name: docker
+    name: "{{ item }}"
+  with_items:
+    - docker
+    - influxdb
 
 - name: Mount /run
   command: mount --make-shared /run

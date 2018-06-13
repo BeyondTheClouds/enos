@@ -2,7 +2,7 @@
 - name: Start the cadvisor
   docker_container:
     name: "cadvisor"
-    image: "google/cadvisor:v0.23.2"
+    image: "{{ cadvisor_docker_image }}"
     command: "-storage_driver_db=cadvisor -storage_driver_host={{ influx_vip }}:8086 -storage_driver=influxdb --housekeeping_interval={{ cadvisor.housekeeping_interval }}"
     detach: True
     hostname: "{{ g5k_role }}-{{ ansible_hostname }}"

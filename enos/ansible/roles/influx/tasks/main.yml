@@ -10,10 +10,15 @@
 - name: Copying over the influx conf
   copy: src=config.toml dest=/config.toml
 
+- name: Copy types.db
+  copy:
+    src: types.db
+    dest: /types.db
+
 - name: Start the influx container
   docker_container:
     name: "influx"
-    image: "tutum/influxdb:0.13"
+    image: "{{ influxdb_docker_image }}"
     detach: True
     # putting in the host network
     # udp port binding seems to not work as expected
@@ -30,7 +35,8 @@
       - "8099"
     volumes:
       - "/influx-data:/data"
-      - "/config.toml:/config/config.toml"
+      - "/config.toml:/etc/influxdb/influxdb.conf"
+      - "/types.db:/usr/share/collectd/types.db"
 
 - name: Waiting for the influx service to become available
   wait_for:
@@ -41,23 +47,20 @@
     timeout: 120
 
 - name: Create the cadvisor database
-  shell: "curl -s -XPOST http://{{ influx_vip }}:8086/query --data-urlencode 'q=CREATE DATABASE cadvisor'"
-  register: result
-  until: result.stdout == '{"results":[{}]}'
-  retries: 10
-  delay: 2
+  influxdb_database:
+    hostname: "localhost"
+    database_name: "cadvisor"
+    state: present
 
-- name: Flush the annotation database if exists
-  shell: "curl -s -XPOST http://{{ influx_vip }}:8086/query --data-urlencode 'q=DROP DATABASE IF EXISTS events'"
-  register: result
-  until: result.stdout == '{"results":[{}]}'
-  retries: 10
-  delay: 2
+- name: Flush the annotation database (if exists)
+  influxdb_database:
+    hostname: "localhost"
+    database_name: "events"
+    state: absent
 
 - name: Create the annotation database
-  shell: "curl -s -XPOST http://{{ influx_vip }}:8086/query --data-urlencode 'q=CREATE DATABASE events'"
-  register: result
-  until: result.stdout == '{"results":[{}]}'
-  retries: 10
-  delay: 2
+  influxdb_database:
+    hostname: "localhost"
+    database_name: "events"
+    state: present
 
