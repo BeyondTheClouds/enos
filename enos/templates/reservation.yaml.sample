@@ -161,5 +161,4 @@ kolla:
   kolla_base_distro: "centos"
   kolla_install_type: "source"
   docker_namespace: "beyondtheclouds"
-  openstack_release: "latest"
   enable_heat: "no"

@@ -298,25 +298,25 @@ class G5k(Provider):
             "/sites/%s/clusters/%s/nodes" % (site, cluster)
             )['items'][0]['network_adapters']
 
-        interfaces = [nic['device'] for nic in nics
+        interfaces = [(nic['device'], nic['name']) for nic in nics
                                     if nic['mountable'] and
                                     nic['interface'] == 'Ethernet']
-
-        network_interface = str(interfaces[0])
+        _, network_interface = interfaces[0]
         external_interface = None
 
         if len(interfaces) > 1 and not provider_conf['single_interface']:
-            external_interface = str(interfaces[1])
+            ext_nic_legacy, ext_nic = interfaces[1]
+            external_interface = ext_nic
             _, vlan = self._get_primary_vlan(vlans)
             api.set_nodes_vlan(site,
                                map(lambda d: EX.Host(d), nodes),
-                               external_interface,
+                               ext_nic_legacy,
                                vlan)
 
             self._exec_command_on_nodes(
                 kavlan_nodes,
                 "ip link set dev %s up && dhclient -nw %s" % (
-                    external_interface, external_interface),
+                    ext_nic, ext_nic),
                 'mounting secondary interface')
         else:
             # TODO(msimonin) fix the network in this case as well.
