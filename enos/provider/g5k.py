@@ -54,8 +54,16 @@ class G5k(Provider):
         return (roles, network, (network_interface, external_interface))
 
     def destroy(self, env):
+
+        gridjob = None
         provider_conf = env['config']['provider']
-        gridjob, _ = EX5.planning.get_job_by_name(provider_conf['name'])
+
+        if 'jobid' in provider_conf:
+            gridjob = provider_conf['jobid']
+
+        if gridjob is None :
+            gridjob, _ = EX5.planning.get_job_by_name(provider_conf['name'])
+
         if gridjob is not None:
             EX5.oargriddel([gridjob])
             logging.info("Killing the job %s" % gridjob)
@@ -133,9 +141,14 @@ class G5k(Provider):
         """Get the hosts from an existing job (if any) or from a new job.
         This will perform a reservation if necessary."""
 
+        gridjob = None
         provider_conf = conf['provider']
+        
+        if 'jobid' in provider_conf:
+            gridjob = provider_conf['jobid']
         # Look if there is a running job or make a new reservation
-        gridjob, _ = EX5.planning.get_job_by_name(provider_conf['name'])
+        if gridjob is None :
+            gridjob, _ = EX5.planning.get_job_by_name(provider_conf['name'])
 
         if gridjob is None:
             gridjob = self._make_reservation(conf)
