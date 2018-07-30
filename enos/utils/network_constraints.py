@@ -1,5 +1,5 @@
 import copy
-from extra import expand_groups
+from .extra import expand_groups
 
 
 def expand_description(desc):

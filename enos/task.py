@@ -1,49 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Enos: Monitor and test your OpenStack.
+from enoslib.task import enostask
+from enoslib.api import run_ansible
 
-usage: enos <command> [<args> ...] [-e ENV|--env=ENV]
-            [-h|--help] [-v|--version] [-s|--silent|--vv]
-
-General options:
-  -e ENV --env=ENV  Path to the environment directory. You should
-                    use this option when you want to link to a specific
-                    experiment. Not specifying this value will
-                    discard the loading of the environment (it
-                    makes sense for `up`).
-  -h --help         Show this help message.
-  -s --silent       Quiet mode.
-  -v --version      Show version number.
-  -vv               Verbose mode.
-
-Commands:
-  new            Print a reservation.yaml example
-  up             Get resources and install the docker registry.
-  os             Run kolla and install OpenStack.
-  init           Initialise OpenStack with the bare necessities.
-  bench          Run rally on this OpenStack.
-  backup         Backup the environment
-  ssh-tunnel     Print configuration for port forwarding with horizon.
-  tc             Enforce network constraints
-  info           Show information of the actual deployment.
-  destroy        Destroy the deployment and optionally the related resources.
-  deploy         Shortcut for enos up, then enos os and enos config.
-  kolla          Runs arbitrary kolla command on nodes
-
-
-See 'enos <command> --help' for more information on a specific
-command.
-
-"""
-from utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
+from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
                              NETWORK_IFACE, EXTERNAL_IFACE, VERSION)
-from utils.errors import EnosFilePathError
-from utils.extra import (run_ansible, generate_inventory,
-                         bootstrap_kolla, pop_ip, make_provider,
-                         mk_enos_values, wait_ssh, load_config,
-                         seekpath)
-from utils.network_constraints import (build_grp_constraints,
+from enos.utils.errors import EnosFilePathError
+from enos.utils.extra import (bootstrap_kolla, generate_inventory, pop_ip, make_provider,
+                         mk_enos_values, load_config,
+                              seekpath, get_vip_pool)
+from enos.utils.network_constraints import (build_grp_constraints,
                                        build_ip_constraints)
-from utils.enostask import (enostask, check_env)
+from enos.utils.enostask import check_env
 
 from datetime import datetime
 import logging
@@ -87,31 +54,9 @@ def get_and_bootstrap_kolla(env, force=False):
     return kolla_path
 
 
-@enostask("""
-usage: enos up  [-e ENV|--env=ENV][-f CONFIG_PATH] [--force-deploy]
-                [-t TAGS|--tags=TAGS] [-s|--silent|-vv]
-
-Get resources and install the docker registry.
-
-Options:
-  -e ENV --env=ENV     Path to the environment directory. You should
-                       use this option when you want to link to a specific
-                       experiment. Do not specify it in other cases.
-  -f CONFIG_PATH       Path to the configuration file describing the
-                       deployment [default: ./reservation.yaml].
-  -h --help            Show this help message.
-  --force-deploy       Force deployment [default: False].
-  -s --silent          Quiet mode.
-  -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
-  -vv                  Verbose mode.
-
-""")
-def up(env=None, **kwargs):
+@enostask(new=True)
+def up(provider, env=None, **kwargs):
     logging.debug('phase[up]: args=%s' % kwargs)
-
-    # Generate or get the directory for results
-    env['resultdir'] = _set_resultdir(kwargs['--env'])
-    logging.info("Directory for experiment results is %s", env['resultdir'])
 
     # Loads the configuration file
     config_file = os.path.abspath(kwargs['-f'])
@@ -126,73 +71,58 @@ def up(env=None, **kwargs):
             config_file, "Configuration file %s does not exist" % config_file)
 
     # Calls the provider and initialise resources
-    provider = make_provider(env)
-    config = load_config(env['config'],
-                         provider.topology_to_resources,
-                         provider.default_config())
-    rsc, provider_net, eths = \
-        provider.init(config, kwargs['--force-deploy'])
+    provider = make_provider(provider, env)
+
+    #config = load_config(env['config'],
+    #                     provider.topology_to_resources,
+    #                     provider.default_config())
+    # done by enoslib ar init + provider.dfefault_config()
+    rsc, networks = \
+        provider.init(env['config'], kwargs['--force-deploy'])
 
     env['rsc'] = rsc
-    env['provider_net'] = provider_net
-    env['eths'] = eths
+    env['networks'] = networks
 
     logging.debug("Provider ressources: %s", env['rsc'])
-    logging.debug("Provider network information: %s", env['provider_net'])
-    logging.debug("Provider network interfaces: %s", env['eths'])
+    logging.debug("Provider network information: %s", env['networks'])
 
     # Generates inventory for ansible/kolla
+    inventory = os.path.join(env['resultdir'], 'multinode')
     inventory_conf = env['config'].get('inventory')
     if not inventory_conf:
         logging.debug("No inventory specified, using the sample.")
         base_inventory = os.path.join(INVENTORY_DIR, 'inventory.sample')
     else:
         base_inventory = seekpath(inventory_conf)
-    inventory = os.path.join(env['resultdir'], 'multinode')
-    generate_inventory(env['rsc'], base_inventory, inventory)
+
+    generate_inventory(env['rsc'], env['networks'], base_inventory, inventory)
     logging.info('Generates inventory %s' % inventory)
 
     env['inventory'] = inventory
 
-    # Wait for resources to be ssh reachable
-    wait_ssh(env)
 
     # Set variables required by playbooks of the application
+    # https://github.com/BeyondTheClouds/enos/pull/159/files#diff-15a7159acfc2c0c18193258af93ad086R135
+
+    vip_pool = get_vip_pool(networks)
     env['config'].update({
-       'vip':               pop_ip(env),
-       'registry_vip':      pop_ip(env),
-       'influx_vip':        pop_ip(env),
-       'grafana_vip':       pop_ip(env),
-       'network_interface': eths[NETWORK_IFACE],
+       'vip':               pop_ip(vip_pool),
+       'registry_vip':      pop_ip(vip_pool),
+       'influx_vip':        pop_ip(vip_pool),
+       'grafana_vip':       pop_ip(vip_pool),
        'resultdir':         env['resultdir'],
        'rabbitmq_password': "demo",
-       'database_password': "demo",
-       'external_vip':      pop_ip(env)
+       'database_password': "demo"
     })
 
     # Runs playbook that initializes resources (eg,
     # installs the registry, install monitoring tools, ...)
     up_playbook = os.path.join(ANSIBLE_DIR, 'up.yml')
     run_ansible([up_playbook], inventory, extra_vars=env['config'],
-        tags=kwargs['--tags'])
+                tags=kwargs['--tags'])
 
 
-@enostask("""
-usage: enos os [-e ENV|--env=ENV] [--reconfigure] [-t TAGS|--tags=TAGS]
-               [-s|--silent|-vv]
-
-Run kolla and install OpenStack.
-
-Options:
-  -e ENV --env=ENV     Path to the environment directory. You should
-                       use this option when you want to link a specific
-                       experiment [default: %s].
-  -h --help            Show this help message.
-  --reconfigure        Reconfigure the services after a deployment.
-  -s --silent          Quiet mode.
-  -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
-  -vv                  Verbose mode.
-""" % SYMLINK_NAME)
+@enostask()
 @check_env
 def install_os(env=None, **kwargs):
     logging.debug('phase[os]: args=%s' % kwargs)
@@ -217,23 +147,7 @@ def install_os(env=None, **kwargs):
     check_call(kolla_cmd)
 
 
-@enostask("""
-usage: enos init [-e ENV|--env=ENV] [-s|--silent|-vv]
-
-Initialise OpenStack with the bare necessities:
-- Install a 'member' role
-- Download and install a cirros image
-- Install default flavor (m1.tiny, ..., m1.xlarge)
-- Install default network
-
-Options:
-  -e ENV --env=ENV     Path to the environment directory. You should
-                       use this option when you want to link a specific
-                       experiment [default: %s].
-  -h --help            Show this help message.
-  -s --silent          Quiet mode.
-  -vv                  Verbose mode.
-""" % SYMLINK_NAME)
+@enostask()
 @check_env
 def init_os(env=None, **kwargs):
     logging.debug('phase[init]: args=%s' % kwargs)
@@ -354,25 +268,7 @@ def init_os(env=None, **kwargs):
     check_call(cmd, shell=True)
 
 
-@enostask("""
-usage: enos bench [-e ENV|--env=ENV] [-s|--silent|-vv] [--workload=WORKLOAD]
-    [--reset]
-
-Run rally on this OpenStack.
-
-Options:
-  -e ENV --env=ENV     Path to the environment directory. You should
-                       use this option when you want to link a specific
-                       experiment [default: %s].
-  -h --help            Show this help message.
-  -s --silent          Quiet mode.
-  -vv                  Verbose mode.
-  --workload=WORKLOAD  Path to the workload directory.
-                       This directory must contain a run.yml file
-                       that contains the description of the different
-                       scenarios to launch [default: workload/].
-  --reset              Force the creation of benchmark environment.
-""" % SYMLINK_NAME)
+@enostask()
 @check_env
 def bench(env=None, **kwargs):
     def cartesian(d):
@@ -439,21 +335,7 @@ def bench(env=None, **kwargs):
                                 extra_vars=playbook_values)
 
 
-@enostask("""
-usage: enos backup [--backup_dir=BACKUP_DIR] [-e ENV|--env=ENV]
-                   [-s|--silent|-vv]
-
-Backup the environment
-
-Options:
-  --backup_dir=BACKUP_DIR  Backup directory.
-  -e ENV --env=ENV     Path to the environment directory. You should
-                       use this option when you want to link a specific
-                       experiment [default: %s].
-  -h --help            Show this help message.
-  -s --silent          Quiet mode.
-  -vv                  Verbose mode.
-""" % SYMLINK_NAME)
+@enostask()
 @check_env
 def backup(env=None, **kwargs):
 
@@ -472,185 +354,57 @@ def backup(env=None, **kwargs):
     run_ansible([playbook_path], inventory_path, extra_vars=env['config'])
 
 
-@enostask("""
-usage: enos ssh-tunnel [-e ENV|--env=ENV] [-s|--silent|-vv]
-
-Options:
-  -e ENV --env=ENV     Path to the environment directory. You should
-                       use this option when you want to link a specific
-                       experiment [default: %s].
-  -h --help            Show this help message.
-  -s --silent          Quiet mode.
-  -vv                  Verbose mode.
-""" % SYMLINK_NAME)
-@check_env
-def ssh_tunnel(env=None, **kwargs):
-    user = env['user']
-    internal_vip_address = env['config']['vip']
-
-    logging.info("ssh tunnel informations:")
-    logging.info("___")
-
-    script = "cat > /tmp/openstack_ssh_config <<EOF\n"
-    script += "Host *.grid5000.fr\n"
-    script += "  User " + user + " \n"
-    script += "  ProxyCommand ssh -q " + user
-    script += "@194.254.60.4 nc -w1 %h %p # Access South\n"
-    script += "EOF\n"
-
-    port = 8080
-    script += "ssh -F /tmp/openstack_ssh_config -N -L " + \
-              str(port) + ":" + internal_vip_address + ":80 " + \
-              user + "@access.grid5000.fr &\n"
-
-    script += "echo 'http://localhost:8080'\n"
-
-    logging.info(script)
-    logging.info("___")
-
-
-@enostask("""
-usage: enos new [-e ENV|--env=ENV] [-s|--silent|-vv]
-
-Print reservation example, to be manually edited and customized:
-
-  enos new > reservation.yaml
-
-Options:
-  -h --help            Show this help message.
-  -s --silent          Quiet mode.
-  -vv                  Verbose mode.
-""")
+@enostask()
 def new(env=None, **kwargs):
     from utils.constants import TEMPLATE_DIR
     logging.debug('phase[new]: args=%s' % kwargs)
     with open(os.path.join(TEMPLATE_DIR, 'reservation.yaml.sample'),
               mode='r') as content:
-        print content.read()
+        print(content.read())
 
 
-@enostask("""
-usage: enos tc [-e ENV|--env=ENV] [--test] [-s|--silent|-vv]
-
-Enforce network constraints
-
-Options:
-  -e ENV --env=ENV     Path to the environment directory. You should
-                       use this option when you want to link a specific
-                       experiment [default: %s].
-  -h --help            Show this help message.
-  -s --silent          Quiet mode.
-  --test               Test the rules by generating various reports.
-  -vv                  Verbose mode.
-""" % SYMLINK_NAME)
+@enostask()
 @check_env
 def tc(env=None, **kwargs):
     """
+    Usage: enos tc [-e ENV|--env=ENV] [--test] [-s|--silent|-vv]
     Enforce network constraints
-    1) Retrieve the list of ips for all nodes (ansible)
-    2) Build all the constraints (python)
-        {source:src, target: ip_dest, device: if, rate:x,  delay:y}
-    3) Enforce those constraints (ansible)
+    Options:
+    -e ENV --env=ENV     Path to the environment directory. You should
+                        use this option when you want to link a specific
+                        experiment.
+    -h --help            Show this help message.
+    -s --silent          Quiet mode.
+    --test               Test the rules by generating various reports.
+    -vv                  Verbose mode.
     """
+
+    roles = env["rsc"]
+    inventory = env["inventory"]
     test = kwargs['--test']
     if test:
-        logging.info('Checking the constraints')
-        utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
-        # NOTE(msimonin): we retrieve eth name from the env instead
-        # of env['config'] in case os hasn't been called
-        options = {'action': 'test',
-                   'tc_output_dir': env['resultdir'],
-                   'network_interface': env['eths'][NETWORK_IFACE]}
-        run_ansible([utils_playbook], env['inventory'], extra_vars=options)
-        return
-
-    # 1. getting  ips/devices information
-    logging.info('Getting the ips of all nodes')
-    utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
-    ips_file = os.path.join(env['resultdir'], 'ips.txt')
-    # NOTE(msimonin): we retrieve eth name from the env instead
-    # of env['config'] in case os hasn't been called
-    options = {'action': 'ips',
-               'ips_file': ips_file,
-               'network_interface': env['eths'][NETWORK_IFACE],
-               'neutron_external_interface': env['eths'][EXTERNAL_IFACE]}
-    run_ansible([utils_playbook], env['inventory'], extra_vars=options)
-
-    # 2.a building the group constraints
-    logging.info('Building all the constraints')
-    topology = env['config']['topology']
-    network_constraints = env['config']['network_constraints']
-    constraints = build_grp_constraints(topology, network_constraints)
-    # 2.b Building the ip/device level constaints
-    with open(ips_file) as f:
-        ips = yaml.load(f)
-        # will hold every single constraint
-        ips_with_constraints = build_ip_constraints(env['rsc'],
-                                                    ips,
-                                                    constraints)
-        # dumping it for debugging purpose
-        ips_with_constraints_file = os.path.join(env['resultdir'],
-                                                 'ips_with_constraints.yml')
-        with open(ips_with_constraints_file, 'w') as g:
-            yaml.dump(ips_with_constraints, g)
-
-    # 3. Enforcing those constraints
-    logging.info('Enforcing the constraints')
-    # enabling/disabling network constraints
-    enable = network_constraints.setdefault('enable', True)
-    utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
-    options = {
-        'action': 'tc',
-        'ips_with_constraints': ips_with_constraints,
-        'tc_enable': enable,
-    }
-    run_ansible([utils_playbook], env['inventory'], extra_vars=options)
+        validate_network(roles, inventory)
+    else:
+        network_constraints = env["config"]["network_constraints"]
+        emulate_network(roles, inventory, network_constraints)
 
 
-@enostask("""
-usage: enos info [-e ENV|--env=ENV] [--out={json,pickle,yaml}]
-
-Show information of the `ENV` deployment.
-
-Options:
-
-  -e ENV --env=ENV         Path to the environment directory. You should use
-                           this option when you want to link a
-                           specific experiment [default: %s].
-
-  --out {json,pickle,yaml} Output the result in either json, pickle or
-                           yaml format.
-""" % SYMLINK_NAME)
+@enostask()
 def info(env=None, **kwargs):
     if not kwargs['--out']:
         pprint.pprint(env)
     elif kwargs['--out'] == 'json':
-        print json.dumps(env, default=operator.attrgetter('__dict__'))
+        print(json.dumps(env, default=operator.attrgetter('__dict__')))
     elif kwargs['--out'] == 'pickle':
-        print pickle.dumps(env)
+        print(pickle.dumps(env))
     elif kwargs['--out'] == 'yaml':
-        print yaml.dump(env)
+        print(yaml.dump(env))
     else:
         print("--out doesn't suppport %s output format" % kwargs['--out'])
         print(info.__doc__)
 
 
-@enostask("""
-usage: enos destroy [-e ENV|--env=ENV] [-s|--silent|-vv] [--hard]
-                    [--include-images]
-
-Destroy the deployment.
-
-Options:
-  -e ENV --env=ENV     Path to the environment directory. You should
-                       use this option when you want to link a specific
-                       experiment [default: %s].
-  -h --help            Show this help message.
-  --hard               Destroy the underlying resources as well.
-  --include-images     Remove also all the docker images.
-  -s --silent          Quiet mode.
-  -vv                  Verbose mode.
-""" % SYMLINK_NAME)
+@enostask()
 @check_env
 def destroy(env=None, **kwargs):
     hard = kwargs['--hard']
@@ -671,22 +425,6 @@ def destroy(env=None, **kwargs):
         kolla(env=env, **kolla_kwargs)
 
 
-@enostask("""
-usage: enos deploy [-e ENV|--env=ENV] [-f CONFIG_PATH] [--force-deploy]
-                   [-s|--silent|-vv]
-
-Shortcut for enos up, then enos os, and finally enos config.
-
-Options:
-  -e ENV --env=ENV     Path to the environment directory. You should
-                       use this option when you want to link a specific
-                       experiment.
-  -f CONFIG_PATH       Path to the configuration file describing the
-                       deployment [default: ./reservation.yaml].
-  --force-deploy       Force deployment [default: False].
-  -s --silent          Quiet mode.
-  -vv                  Verbose mode.
-""")
 def deploy(**kwargs):
     # --reconfigure and --tags can not be provided in 'deploy'
     # but they are required for 'up' and 'install_os'
@@ -704,20 +442,7 @@ def deploy(**kwargs):
     init_os(**kwargs)
 
 
-@enostask("""
-usage: enos kolla [-e ENV|--env=ENV] [-s|--silent|-vv] -- <command>...
-
-Run arbitrary Kolla command.
-
-Options:
-  -e ENV --env=ENV     Path to the environment directory. You should
-                       use this option when you want to link a specific
-                       experiment [default: %s].
-  -h --help            Show this help message.
-  -s --silent          Quiet mode.
-  -vv                  Verbose mode.
-  command              Kolla command (e.g prechecks, checks, pull)
-""" % SYMLINK_NAME)
+@enostask()
 @check_env
 def kolla(env=None, **kwargs):
     logging.info('Kolla command')
@@ -776,57 +501,3 @@ def _set_resultdir(name=None):
                         (resultdir_path, link_path))
 
     return resultdir_path
-
-
-def _configure_logging(args):
-    if '-vv' in args['<args>']:
-        logging.basicConfig(level=logging.DEBUG)
-        args['<args>'].remove('-vv')
-    elif '-s' in args['<args>']:
-        logging.basicConfig(level=logging.ERROR)
-        args['<args>'].remove('-s')
-    elif '--silent' in args['<args>']:
-        logging.basicConfig(level=logging.ERROR)
-        args['<args>'].remove('--silent')
-    else:
-        logging.basicConfig(level=logging.INFO)
-
-
-def main():
-    args = docopt(__doc__,
-                  version=VERSION,
-                  options_first=True)
-
-    _configure_logging(args)
-    argv = [args['<command>']] + args['<args>']
-
-    if args['<command>'] == 'deploy':
-        deploy(**docopt(deploy.__doc__, argv=argv))
-    elif args['<command>'] == 'up':
-        up(**docopt(up.__doc__, argv=argv))
-    elif args['<command>'] == 'os':
-        install_os(**docopt(install_os.__doc__, argv=argv))
-    elif args['<command>'] == 'init':
-        init_os(**docopt(init_os.__doc__, argv=argv))
-    elif args['<command>'] == 'bench':
-        bench(**docopt(bench.__doc__, argv=argv))
-    elif args['<command>'] == 'backup':
-        backup(**docopt(backup.__doc__, argv=argv))
-    elif args['<command>'] == 'ssh-tunnel':
-        ssh_tunnel(**docopt(ssh_tunnel.__doc__, argv=argv))
-    elif args['<command>'] == 'tc':
-        tc(**docopt(tc.__doc__, argv=argv))
-    elif args['<command>'] == 'info':
-        info(**docopt(info.__doc__, argv=argv))
-    elif args['<command>'] == 'destroy':
-        destroy(**docopt(destroy.__doc__, argv=argv))
-    elif args['<command>'] == 'kolla':
-        kolla(**docopt(kolla.__doc__, argv=argv))
-    elif args['<command>'] == 'new':
-        new(**docopt(new.__doc__, argv=argv))
-    else:
-        pass
-
-
-if __name__ == '__main__':
-    main()
