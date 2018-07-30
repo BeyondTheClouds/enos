@@ -54,10 +54,23 @@ class G5k(Provider):
         return (roles, network, (network_interface, external_interface))
 
     def destroy(self, env):
+
         provider_conf = env['config']['provider']
-        gridjob, _ = EX5.planning.get_job_by_name(provider_conf['name'])
+        gridjob = None
+
+        is_oargrid = False if 'oar_jobid' in provider_conf else True
+        if is_oargrid is True:
+            gridjob = provider_conf.get('oargrid_jobid',
+                    EX5.planning.get_job_by_name(provider_conf['name'])[0])
+        else:
+            gridjob = provider_conf.get('oar_jobid')
+        frontend = provider_conf.get('frontend', 'rennes')
+
         if gridjob is not None:
-            EX5.oargriddel([gridjob])
+            if is_oargrid:
+                EX5.oargriddel([gridjob])
+            else:
+                EX5.oardel([(gridjob, frontend)])
             logging.info("Killing the job %s" % gridjob)
 
     def default_config(self):
@@ -134,18 +147,37 @@ class G5k(Provider):
         This will perform a reservation if necessary."""
 
         provider_conf = conf['provider']
-        # Look if there is a running job or make a new reservation
-        gridjob, _ = EX5.planning.get_job_by_name(provider_conf['name'])
+        gridjob = None
 
+        is_oargrid = False if 'oar_jobid' in provider_conf else True
+        if is_oargrid is True:
+            gridjob = provider_conf.get('oargrid_jobid',
+                    EX5.planning.get_job_by_name(provider_conf['name'])[0])
+        else:
+            gridjob = provider_conf.get('oar_jobid')
+        frontend = provider_conf.get('frontend', 'rennes')
+
+        # Look if there is a running job or make a new reservation
         if gridjob is None:
             gridjob = self._make_reservation(conf)
         else:
-            logging.info("Using running oargrid job %s" % gridjob)
+            if is_oargrid is True:
+                logging.info("Using running oargrid job %s" % gridjob)
+            else:
+                logging.info("Using running oar job %s at %s" % (gridjob,
+                                                                frontend))
 
         # Wait for the job to start
-        EX5.wait_oargrid_job_start(gridjob)
+        if is_oargrid:
+            EX5.wait_oargrid_job_start(gridjob)
+        else:
+            EX5.wait_oar_job_start(gridjob, frontend)
 
-        nodes = sorted(EX5.get_oargrid_job_nodes(gridjob),
+        if is_oargrid:
+            nodes = sorted(EX5.get_oargrid_job_nodes(gridjob),
+                            key=lambda n: n.address)
+        else:
+            nodes = sorted(EX5.get_oar_job_nodes(gridjob, frontend),
                             key=lambda n: n.address)
 
         # Checking the number of nodes given
@@ -155,15 +187,18 @@ class G5k(Provider):
                           mode=provider_conf['role_distribution'])
 
         # vlans information
-        job_sites = EX5.get_oargrid_job_oar_jobs(gridjob)
+        job_sites = []
+        if is_oargrid:
+            job_sites = EX5.get_oargrid_job_oar_jobs(gridjob)
+        else:
+            job_sites = [(gridjob, frontend)]
         jobs = []
         vlans = []
         for (job_id, site) in job_sites:
             jobs.append((site, job_id))
             vlan_id = EX5.get_oar_job_kavlan(job_id, site)
             if vlan_id is not None:
-                vlans.append((site,
-                                   EX5.get_oar_job_kavlan(job_id, site)))
+                vlans.append((site, EX5.get_oar_job_kavlan(job_id, site)))
         return (jobs, vlans, nodes)
 
     def _translate_to_vlan(self, nodes, vlan_id):
