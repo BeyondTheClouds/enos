@@ -109,9 +109,7 @@ def init(**kwargs):
     -vv                  Verbose mode.
     """
     logger.debug(kwargs)
-    pass
-
-
+    t.init_os(**kwargs)
 
 
 def bench(**kwargs):
