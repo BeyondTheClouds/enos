@@ -7,11 +7,15 @@
     path: /srv/init_os
     state: directory
 
-
 - name: Generate init script
   template:
     src: init.sh.j2
     dest: /srv/init_os/init.sh
+
+- name: Make the init script executable
+  file:
+    path: /srv/init_os/init.sh
+    mode: 0755
 
 - name: Get the reference on the kolla-toolbox image
   shell: "{% raw %} docker images --format '{{ .Repository }}:{{ .Tag }}' | grep kolla-toolbox {% endraw %}"
@@ -25,5 +29,7 @@
   docker_container:
     name: kolla_toolbox
     env: "{{ os_env }}"
-    command: "sh -c 'echo $OS_AUTH_URL'"
+    command: "/srv/init_os/init.sh"
     image: "{{ kolla_toolbox_image.stdout }}"
+    volumes:
+      - /srv/init_os:/srv/init_os
