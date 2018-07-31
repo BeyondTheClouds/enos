@@ -62,7 +62,7 @@ The provider comes with the following default options :
         type: g5k
         name: Enos
         walltime: 02:00:00
-        env_name: jessie-x64-min
+        env_name: debian9-x64-min
         reservation: None
         vlans: '{rennes: "{type=kavlan}/vlan=1"}'
         role_distribution: strict
