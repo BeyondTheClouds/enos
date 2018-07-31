@@ -1,0 +1,81 @@
+---
+# ############################################### #
+# Grid'5000 reservation parameters                #
+# ############################################### #
+provider:
+  type: g5k
+  name: 'enos-jenkins'
+  walltime: '02:00:00'
+  # mandatory : you need to have exacly one vlan
+  vlans:
+     rennes: "{type='kavlan'}/vlan=1"
+  # Be less strict on node distribution especially
+  # when nodes are missing in the reservation
+  # or not deployed
+  role_distribution: debug
+  resources:
+    machines:
+      - role: control
+        nodes: 1
+        cluster: paravance
+        primary_network: int-net
+        secondary_networks: [ext-net]
+      - role: compute
+        nodes: 1
+        cluster: paravance
+        primary_network: int-net
+        secondary_networks: [ext-net]
+      - role: network
+        notes: 1
+        cluster: paravance
+        primary_network: int-net
+        secondary_networks: [ext-net]
+    networks:
+      - id: int-net
+        site: rennes
+        type: kavlan
+        role: [network_interface]
+      - id: ext-net
+        site: rennes
+        type: kavlan
+        role: [neutron_external_interface]
+        
+
+# Resources description
+resources:
+  parapluie:
+    compute: 1
+
+# ############################################### #
+# Inventory to use                                #
+# ############################################### #
+
+# This will describe the topology of your services
+inventory: allinone.inventory
+
+# ############################################### #
+# docker registry parameters
+# ############################################### #
+registry:
+  type: internal
+
+
+# ############################################### #
+# Enos Customizations                             #
+# ############################################### #
+enable_monitoring: yes
+
+
+# ############################################### #
+# Kolla parameters                                #
+# ############################################### #
+# Repository
+kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
+kolla_ref: "stable/queens"
+
+# Vars : globals.yml
+kolla:
+  kolla_base_distro: "centos"
+  kolla_install_type: "source"
+  docker_namespace: "beyondtheclouds"
+  enable_heat: "no"
