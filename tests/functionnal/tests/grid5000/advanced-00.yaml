@@ -1,0 +1,44 @@
+provider:
+  type: g5k
+  job_name: 'enos-jenkins'
+  walltime: '02:00:00'
+  role_distribution: debug
+  resources:
+    machines: 
+      - role: control
+        nodes: 1
+        cluster: paravance
+        primary_network: int-net
+        secondary_networks: [ext-net]
+      - role: compute
+        nodes: 1
+        cluster: paravance
+        primary_network: int-net
+        secondary_networks: [ext-net]
+      - role: network
+        nodes: 1
+        cluster: paravance
+        primary_network: int-net
+        secondary_networks: [ext-net]
+    networks:
+      - id: int-net
+        site: rennes
+        type: kavlan
+        role: network_interface
+      - id: ext-net
+        site: rennes
+        type: kavlan
+        role: neutron_external_interface
+        
+inventory: inventories/inventory.sample
+
+registry:
+  type: internal
+
+kolla_repo: https://git.openstack.org/openstack/kolla-ansible
+kolla_ref: stable/queens
+kolla:
+  kolla_base_distro: centos
+  kolla_install_type: source
+  docker_namespace: beyondtheclouds
+  enable_heat: no
