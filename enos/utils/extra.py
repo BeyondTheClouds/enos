@@ -164,6 +164,7 @@ def bootstrap_kolla(env):
     # password.yml in the result dir
     enos_values = mk_enos_values(env)
     playbook = os.path.join(ANSIBLE_DIR, 'bootstrap_kolla.yml')
+
     api.run_ansible([playbook], env['inventory'], extra_vars=enos_values)
 
 

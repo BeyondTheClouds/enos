@@ -6,8 +6,7 @@ from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
                              NETWORK_IFACE, EXTERNAL_IFACE, VERSION)
 from enos.utils.errors import EnosFilePathError
 from enos.utils.extra import (bootstrap_kolla, generate_inventory, pop_ip, make_provider,
-                         mk_enos_values, load_config,
-                              seekpath, get_vip_pool)
+                              mk_enos_values, load_config, seekpath, get_vip_pool, lookup_network)
 from enos.utils.network_constraints import (build_grp_constraints,
                                        build_ip_constraints)
 from enos.utils.enostask import check_env
@@ -151,121 +150,34 @@ def install_os(env=None, **kwargs):
 @check_env
 def init_os(env=None, **kwargs):
     logging.debug('phase[init]: args=%s' % kwargs)
-
-    cmd = []
-    cmd.append('. %s' % os.path.join(env['resultdir'], 'admin-openrc'))
-
     # Images
-    images = [{'name': 'debian-9',
-               'url':  ('https://cdimage.debian.org/cdimage/openstack/'
-                        'current-9/debian-9-openstack-amd64.qcow2')},
-              {'name': 'cirros.uec',
-               'url':  ('http://download.cirros-cloud.net/'
-                        '0.3.4/cirros-0.3.4-x86_64-disk.img')}]
-    for image in images:
-        cmd.append("ls -l /tmp/%(name)s.qcow2 || "
-                   "curl -L -o /tmp/%(name)s.qcow2 %(url)s" % image)
-        cmd.append("openstack image show %(name)s || "
-                   "openstack image create"
-                   " --disk-format=qcow2"
-                   " --container-format=bare"
-                   " --property architecture=x86_64"
-                   " --public"
-                   " --file /tmp/%(name)s.qcow2"
-                   " %(name)s" % image)
-
-    # Flavors
-    flavors = [{'name': 'm1.tiny',   'ram': 512,   'disk': 1,   'vcpus': 1},
-               {'name': 'm1.small',  'ram': 2048,  'disk': 20,  'vcpus': 1},
-               {'name': 'm1.medium', 'ram': 4096,  'disk': 40,  'vcpus': 2},
-               {'name': 'm1.large',  'ram': 8192,  'disk': 80,  'vcpus': 4},
-               {'name': 'm1.xlarge', 'ram': 16384, 'disk': 160, 'vcpus': 8}]
-    for flavor in flavors:
-        cmd.append("openstack flavor show %(name)s || "
-                   "openstack flavor create %(name)s"
-                   " --id auto"
-                   " --ram %(ram)s"
-                   " --disk %(disk)s"
-                   " --vcpus %(vcpus)s"
-                   " --public" % flavor)
-
-    # Default networks (one private/one public)
-    # - private net
-    cmd.append("openstack network show private || "
-               "openstack network create private"
-               " --provider-network-type vxlan")
-
-    # NOTE(rcherrueau): Do not use 192.168.0.0/18 that collides with
-    # the 192.168.143.0/24 of public IP provided by Vagrant. We have
-    # to use 10.0.0.0. Referring to g5k kavlan doc
-    # (see,https://www.grid5000.fr/mediawiki/index.php/KaVLAN#Reserving_a_VLAN)
-    # 10.0.0.0/24 may overlap with kavlan-4 of Bordeaux, but the
-    # Bordeaux cluster does not exist anymore.
-    cmd.append("openstack subnet show private-subnet || "
-               "openstack subnet create private-subnet"
-               " --network private"
-               " --subnet-range 10.0.0.0/24"
-               " --gateway 10.0.0.1"
-               " --dns-nameserver %(dns)s"
-               " --ip-version 4" % env["provider_net"])
-
-    # - public net
-    cmd.append("openstack network show public || "
-               "openstack network create public"
-               " --share"
-               " --provider-physical-network physnet1"
-               " --provider-network-type flat"
-               " --external")
-
-    cmd.append("openstack subnet show public-subnet || "
-               "openstack subnet create public-subnet"
-               " --network public"
-               " --subnet-range %(cidr)s"
-               " --no-dhcp"
-               " --allocation-pool start=%(start)s,end=%(end)s"
-               " --gateway %(gateway)s"
-               " --dns-nameserver %(dns)s"
-               " --ip-version 4" % env['provider_net'])
-
-    # Create a router between this two networks
-    cmd.append('openstack router show router || '
-               'openstack router create router')
-    cmd.append('openstack router show router'
-               ' -c external_gateway_info -f value | fgrep -v None || '
-               'openstack router set router --external-gateway public')
-    cmd.append('openstack router show router '
-               ' -c interfaces_info -f value|fgrep -v "[]" || '
-               'openstack router add subnet router private-subnet')
-
-    # Get admin security group id
-    cmd.append('ADMIN_PROJECT_ID=$(openstack project list'
-               ' --user admin -c ID -f value)')
-    cmd.append('ADMIN_SEC_GROUP=$(openstack security group list'
-               ' --project ${ADMIN_PROJECT_ID} -c ID -f value)')
-
-    # Security groups - allow everything
-    cmd.append('for i in $(openstack security group rule list -c ID -f value);'
-               'do openstack security group rule delete $i; done')
-    protos = ['icmp', 'tcp', 'udp']
-    directions = ['ingress', 'egress']
-    for proto in protos:
-        for direction in directions:
-            cmd.append("openstack security group rule create"
-                       " ${ADMIN_SEC_GROUP}"
-                       " --protocol %s"
-                       " --dst-port 1:65535"
-                       " --src-ip 0.0.0.0/0"
-                       " --%s" % (proto, direction))
-
-    # Quotas - set some unlimited for admin project
-    quotas = ['cores', 'ram', 'instances', 'fixed-ips', 'floating-ips']
-    for quota in quotas:
-        cmd.append('openstack quota set --%s -1 admin' % quota)
-
-    cmd = '\n'.join(cmd)
-
-    logging.info(cmd)
-    check_call(cmd, shell=True)
+    #images = [{'name': 'debian-9',
+    #           'url':  ('https://cdimage.debian.org/cdimage/openstack/'
+    #                    'current-9/debian-9-openstack-amd64.qcow2')},
+    #          {'name': 'cirros.uec',
+    #           'url':  ('http://download.cirros-cloud.net/'
+    #                    '0.3.4/cirros-0.3.4-x86_64-disk.img')}]
+    #for image in images:
+    #    cmd.append("ls -l /tmp/%(name)s.qcow2 || "
+    #               "curl -L -o /tmp/%(name)s.qcow2 %(url)s" % image)
+    #    cmd.append("openstack image show %(name)s || "
+    #               "openstack image create"
+    #               " --disk-format=qcow2"
+    #               " --container-format=bare"
+    #               " --property architecture=x86_64"
+    #               " --public"
+    #               " --file /tmp/%(name)s.qcow2"
+    #               " %(name)s" % image)
+    playbook_values = mk_enos_values(env)
+    playbook_path = os.path.join(ANSIBLE_DIR, 'init_os.yml')
+    inventory_path = os.path.join(
+        env['resultdir'], 'multinode')
+    provider_net = lookup_network(env['networks'],
+                                  'neutron_external_interface')
+    playbook_values.update({"provider_net": provider_net})
+    run_ansible([playbook_path],
+                inventory_path,
+                extra_vars=playbook_values)
 
 
 @enostask()

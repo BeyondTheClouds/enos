@@ -1,0 +1,3 @@
+---
+- debug: var=os_env
+- debug: var=provider_net
