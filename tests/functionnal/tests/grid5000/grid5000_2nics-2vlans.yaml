@@ -26,7 +26,7 @@ provider:
         primary_network: int-net
         secondary_networks: [ext-net]
       - role: network
-        notes: 1
+        nodes: 1
         cluster: paravance
         primary_network: int-net
         secondary_networks: [ext-net]
@@ -34,11 +34,11 @@ provider:
       - id: int-net
         site: rennes
         type: kavlan
-        role: [network_interface]
+        role: network_interface
       - id: ext-net
         site: rennes
         type: kavlan
-        role: [neutron_external_interface]
+        role: neutron_external_interface
         
 
 # Resources description
@@ -51,7 +51,7 @@ resources:
 # ############################################### #
 
 # This will describe the topology of your services
-inventory: allinone.inventory
+inventory: inventories/inventory.sample
 
 # ############################################### #
 # docker registry parameters
