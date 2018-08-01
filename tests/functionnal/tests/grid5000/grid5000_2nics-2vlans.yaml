@@ -36,6 +36,8 @@ provider:
 resources:
   parapluie:
     compute: 1
+    network: 1
+    control: 1
 
 # This will describe the topology of your services
 inventory: inventories/inventory.sample
