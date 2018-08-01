@@ -1,17 +1,9 @@
 ---
-# ############################################### #
-# Grid'5000 reservation parameters                #
-# ############################################### #
+# Grid'5000 reservation parameters
 provider:
   type: g5k
-  name: 'enos-jenkins'
+  job_name: 'enos-jenkins'
   walltime: '02:00:00'
-  # mandatory : you need to have exacly one vlan
-  vlans:
-     rennes: "{type='kavlan'}/vlan=1"
-  # Be less strict on node distribution especially
-  # when nodes are missing in the reservation
-  # or not deployed
   role_distribution: debug
   resources:
     machines:
@@ -40,36 +32,21 @@ provider:
         type: kavlan
         role: neutron_external_interface
         
-
-# Resources description
+# Legacy resources description
 resources:
   parapluie:
     compute: 1
 
-# ############################################### #
-# Inventory to use                                #
-# ############################################### #
-
 # This will describe the topology of your services
 inventory: inventories/inventory.sample
 
-# ############################################### #
-# docker registry parameters
-# ############################################### #
 registry:
   type: internal
 
-
-# ############################################### #
 # Enos Customizations                             #
-# ############################################### #
-enable_monitoring: yes
+enable_monitoring: no
 
-
-# ############################################### #
 # Kolla parameters                                #
-# ############################################### #
-# Repository
 kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
 kolla_ref: "stable/queens"
 
