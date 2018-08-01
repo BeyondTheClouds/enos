@@ -36,6 +36,6 @@ setup(
         # - ReadTheDocs
         'GitPython>=2.1.5',
     ],
-    entry_points={'console_scripts': ['en = enos.cli:main']},
+    entry_points={'console_scripts': ['enos = enos.cli:main']},
     include_package_data=True
 )

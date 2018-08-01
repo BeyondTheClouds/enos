@@ -2,11 +2,11 @@
 from enoslib.task import enostask
 from enoslib.api import run_ansible
 
-from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
-                             NETWORK_IFACE, EXTERNAL_IFACE, VERSION)
+from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR, VERSION)
 from enos.utils.errors import EnosFilePathError
 from enos.utils.extra import (bootstrap_kolla, generate_inventory, pop_ip, make_provider,
-                              mk_enos_values, load_config, seekpath, get_vip_pool, lookup_network)
+                              mk_enos_values, load_config, seekpath, get_vip_pool, lookup_network,
+                              in_kolla)
 from enos.utils.network_constraints import (build_grp_constraints,
                                        build_ip_constraints)
 from enos.utils.enostask import check_env
@@ -26,7 +26,6 @@ import yaml
 
 import itertools
 import operator
-
 
 def get_and_bootstrap_kolla(env, force=False):
     """This gets kolla in the current directory.
@@ -50,32 +49,30 @@ def get_and_bootstrap_kolla(env, force=False):
         # generating admin-openrc, globals.yml, passwords.yml
         bootstrap_kolla(env)
 
+        # Installing the kolla dependencies in the kolla venv
+        in_kolla('cd %s && pip install .' % kolla_path)
+        # Kolla recommends installing ansible manually.
+        # Currently anything over 2.3.0 is supported, not sure about the future
+        # So we hardcode the version to something reasonnable for now
+        in_kolla('cd %s && pip install ansible==2.5.7' % kolla_path)
+
     return kolla_path
 
 
 @enostask(new=True)
-def up(provider, env=None, **kwargs):
+def up(config, config_file=None, env=None, **kwargs):
     logging.debug('phase[up]: args=%s' % kwargs)
-
-    # Loads the configuration file
-    config_file = os.path.abspath(kwargs['-f'])
-    if os.path.isfile(config_file):
-        env['config_file'] = config_file
-        with open(config_file, 'r') as f:
-            env['config'].update(yaml.load(f))
-            logging.info("Reloaded configuration file %s", env['config_file'])
-            logging.debug("Configuration is %s", env['config'])
-    else:
-        raise EnosFilePathError(
-            config_file, "Configuration file %s does not exist" % config_file)
+    env['config'] = config
+    env['config_file'] = config_file
 
     # Calls the provider and initialise resources
-    provider = make_provider(provider, env)
+    provider = make_provider(env)
 
     #config = load_config(env['config'],
     #                     provider.topology_to_resources,
     #                     provider.default_config())
     # done by enoslib ar init + provider.dfefault_config()
+
     rsc, networks = \
         provider.init(env['config'], kwargs['--force-deploy'])
 
@@ -143,7 +140,8 @@ def install_os(env=None, **kwargs):
         kolla_cmd.extend(['--tags', kwargs['--tags']])
 
     logging.info("Calling Kolla...")
-    check_call(kolla_cmd)
+
+    in_kolla(kolla_cmd)
 
 
 @enostask()
