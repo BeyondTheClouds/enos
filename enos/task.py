@@ -2,7 +2,8 @@
 from enoslib.task import enostask
 from enoslib.api import run_ansible
 
-from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR, VERSION)
+from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
+                                  VERSION, NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE)
 from enos.utils.errors import EnosFilePathError
 from enos.utils.extra import (bootstrap_kolla, generate_inventory, pop_ip, make_provider,
                               mk_enos_values, load_config, seekpath, get_vip_pool, lookup_network,
@@ -170,8 +171,19 @@ def init_os(env=None, **kwargs):
     playbook_path = os.path.join(ANSIBLE_DIR, 'init_os.yml')
     inventory_path = os.path.join(
         env['resultdir'], 'multinode')
+
+    # Yes, if the external network isn't found we take the external ip in the
+    # pool used for OpenStack services (like the apis) This mimic what was done
+    # before the enoslib integration. An alternative solution would be to
+    # provision a external pool of ip regardless the number of nic available
+    # (in g5k this would be a kavlan) but in this case we'll need to know
+    # whether the network is physicaly attached (or no) to the physical nics
     provider_net = lookup_network(env['networks'],
-                                  'neutron_external_interface')
+                                  [NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE])
+    if not provider_net:
+        msg = "External network not found, you must define %s networks" % " or ".join([NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE])
+        raise Exception(msg)
+
     playbook_values.update({"provider_net": provider_net})
     run_ansible([playbook_path],
                 inventory_path,

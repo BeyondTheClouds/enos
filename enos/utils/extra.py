@@ -4,7 +4,9 @@ from .errors import (EnosFailedHostsError, EnosUnreachableHostsError,
                      EnosProviderMissingConfigurationKeys,
                      EnosFilePathError)
 from collections import namedtuple
-from .constants import (ENOS_PATH, ANSIBLE_DIR, VENV_KOLLA)
+from .constants import (ENOS_PATH, ANSIBLE_DIR, VENV_KOLLA,
+                        NEUTRON_EXTERNAL_INTERFACE, FAKE_NEUTRON_EXTERNAL_INTERFACE,
+                        NETWORK_INTERFACE, API_INTERFACE)
 from itertools import groupby
 from netaddr import IPRange
 
@@ -38,11 +40,23 @@ def generate_inventory(roles, networks, base_inventory, dest):
     """
     # NOTE(msimonin): if len(networks) is <= 1
     # provision a fake one that will map the external network
+
+    fake_interfaces = []
+    fake_networks = []
+    provider_net = lookup_network(networks, [NEUTRON_EXTERNAL_INTERFACE])
+    if not provider_net:
+        logging.error("The %s network is missing" % NEUTRON_EXTERNAL_INTERFACE)
+        logging.error("EnOS will try to fix that ....")
+        fake_interfaces = [FAKE_NEUTRON_EXTERNAL_INTERFACE]
+        fake_networks = [NEUTRON_EXTERNAL_INTERFACE]
+        
     api.generate_inventory(
         roles,
         networks,
         dest,
-        check_networks=True
+        check_networks=True,
+        fake_interfaces=fake_interfaces,
+        fake_networks=fake_networks
     )
 
     with open(dest, 'a') as f:
@@ -193,13 +207,14 @@ def expand_topology(topology):
             expanded[g] = desc
     return expanded
 
-def lookup_network(networks, role):
-    """Lookup a network by its role.
+def lookup_network(networks, roles):
+    """Lookup a network by its roles (in order).
     We assume that one role can't be found in two different networks
     """
-    for network in networks:
-        if role in network["roles"]:
-            return network
+    for role in roles:
+        for network in networks:
+            if role in network["roles"]:
+                return network
     return None
 
 
@@ -208,15 +223,12 @@ def get_vip_pool(networks):
     In kolla-ansible this is the network with the api_interface role.
     In kolla-ansible api_interface defaults to network_interface.
     """
-    provider_net = lookup_network(networks, "api_interface")
-    if provider_net:
-        return provider_net
-    provider_net = lookup_network(networks, "network_interface")
+    provider_net = lookup_network(networks, [API_INTERFACE, NETWORK_INTERFACE])
     if provider_net:
         return provider_net
 
-    raise Exception("You must declare network_interface or api_interface\
-                        network")
+    msg = "You must declare %s" % " or ".join([API_INTERFACE, NETWORK_INTERFACE])
+    raise Exception(msg)
 
 
 def pop_ip(provider_net):
