@@ -4,10 +4,10 @@ provider:
   walltime: '02:00:00'
         
 resources:
-  parapluie:
+  paravance:
     compute: 1
     network: 1
-  paravance:
+  parasilo:
     control: 1
 
 inventory: inventories/inventory.sample

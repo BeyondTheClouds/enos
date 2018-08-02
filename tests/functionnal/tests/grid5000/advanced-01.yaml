@@ -7,17 +7,17 @@ provider:
     machines: 
       - role: compute
         nodes: 1
-        cluster: parapluie
+        cluster: paravance
         primary_network: int-net
         secondary_networks: [ext-net]
       - role: network
         nodes: 1
-        cluster: parapluie
+        cluster: pararavance
         primary_network: int-net
         secondary_networks: [ext-net]
       - role: control
         nodes: 1
-        cluster: paravance
+        cluster: parasilo
         primary_network: int-net
         secondary_networks: [ext-net]
     networks:
