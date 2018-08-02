@@ -1,25 +1,23 @@
----
-# Grid'5000 reservation parameters
 provider:
   type: g5k
   job_name: 'enos-jenkins'
   walltime: '02:00:00'
   role_distribution: debug
   resources:
-    machines:
+    machines: 
       - role: control
         nodes: 1
-        cluster: paravance
+        cluster: parapluie
         primary_network: int-net
         secondary_networks: [ext-net]
       - role: compute
         nodes: 1
-        cluster: paravance
+        cluster: parapluie
         primary_network: int-net
         secondary_networks: [ext-net]
       - role: network
         nodes: 1
-        cluster: paravance
+        cluster: parapluie
         primary_network: int-net
         secondary_networks: [ext-net]
     networks:
@@ -32,29 +30,15 @@ provider:
         type: kavlan
         role: neutron_external_interface
         
-# Legacy resources description
-resources:
-  parapluie:
-    compute: 1
-    network: 1
-    control: 1
-
-# This will describe the topology of your services
 inventory: inventories/inventory.sample
 
 registry:
   type: internal
 
-# Enos Customizations                             #
-enable_monitoring: no
-
-# Kolla parameters                                #
-kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
-kolla_ref: "stable/queens"
-
-# Vars : globals.yml
+kolla_repo: https://git.openstack.org/openstack/kolla-ansible
+kolla_ref: stable/queens
 kolla:
-  kolla_base_distro: "centos"
-  kolla_install_type: "source"
-  docker_namespace: "beyondtheclouds"
-  enable_heat: "no"
+  kolla_base_distro: centos
+  kolla_install_type: source
+  docker_namespace: beyondtheclouds
+  enable_heat: no
