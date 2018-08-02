@@ -3,9 +3,9 @@ import logging
 
 import enoslib.infra.enos_g5k.provider as enoslib_g5k
 
+from enos.provider.provider import Provider
 from enos.utils.extra import gen_enoslib_roles
 from enoslib.api import expand_groups
-from provider import Provider
 
 import execo as EX
 
