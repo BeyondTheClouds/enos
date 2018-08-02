@@ -4,7 +4,7 @@
 # ############################################### #
 provider:
   type: vagrant
-  backend: vbox
+  backend: libvirt
   box: generic/debian9
 resources:
   extra-large:
