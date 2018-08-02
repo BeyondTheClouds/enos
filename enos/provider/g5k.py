@@ -150,7 +150,7 @@ class G5k(Provider):
         logging.debug("Building enoslib configuration")
         enoslib_conf = _build_enoslib_conf(conf)
         logging.debug("Creating G5K provider")
-        g5k = enoslib_g5k.Enos_g5k(enoslib_conf)
+        g5k = enoslib_g5k.G5k(enoslib_conf)
         logging.info("Destroying G5K deployment")
         g5k.destroy()
 
