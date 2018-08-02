@@ -332,7 +332,7 @@ def destroy(env=None, **kwargs):
                   '<command>': command,
                   '--silent': kwargs['--silent'],
                   'kolla': True}
-        kolla(env=env, **kolla_kwargs)
+        _kolla(env=env, **kolla_kwargs)
 
 
 def deploy(**kwargs):
@@ -355,6 +355,10 @@ def deploy(**kwargs):
 @enostask()
 @check_env
 def kolla(env=None, **kwargs):
+    _kolla(env=env, **kwargs)
+
+
+def _kolla(env=None, **kwargs):
     logging.info('Kolla command')
     logging.info(kwargs)
     kolla_path = get_and_bootstrap_kolla(env, force=False)
@@ -364,7 +368,7 @@ def kolla(env=None, **kwargs):
                       "--passwords", "%s/passwords.yml" % env['resultdir'],
                       "--configdir", "%s" % env['resultdir']])
     logging.info(kolla_cmd)
-    check_call(kolla_cmd)
+    in_kolla(kolla_cmd)
 
 
 def _set_resultdir(name=None):
