@@ -7,7 +7,6 @@ from enos.utils.extra import gen_enoslib_roles
 from enoslib.api import expand_groups
 from provider import Provider
 
-
 import execo as EX
 
 
@@ -82,55 +81,57 @@ def _build_enoslib_conf(conf):
     return enoslib_conf
 
 
-    def _exec_command_on_nodes(nodes, cmd, label, conn_params=None):
-        """Execute a command on a node (id or hostname) or on a set of nodes"""
-        if isinstance(nodes, basestring):
-            nodes = [nodes]
+def _exec_command_on_nodes(nodes, cmd, label, conn_params=None):
+    """Execute a command on a node (id or hostname) or on a set of nodes"""
+    if isinstance(nodes, basestring):
+        nodes = [nodes]
 
-        if conn_params is None:
-            conn_params = DEFAULT_CONN_PARAMS
+    if conn_params is None:
+        conn_params = DEFAULT_CONN_PARAMS
 
-        logging.info(label)
-        remote = EX.Remote(cmd, nodes, conn_params)
-        remote.run()
+    logging.info(label)
+    remote = EX.Remote(cmd, nodes, conn_params)
+    remote.run()
 
-        if not remote.finished_ok:
-            raise Exception('An error occcured during remote execution')
+    if not remote.finished_ok:
+        raise Exception('An error occcured during remote execution')
 
-    def _provision(roles):
-
-        nodes = set()
-        for value in roles.values():
-            nodes = nodes.union(set(value))
+def _provision(roles):
+    nodes = []
+    for value in roles.values():
+        nodes.extend(value)
         
-        # Provision nodes so we can run Ansible on it
-        _exec_command_on_nodes(
-            nodes,
-            'apt-get update && apt-get -y --force-yes install python',
-            'Installing python...')
+    # remove duplicate hosts
+    # Note(jrbalderrama) do we have to implement hash and equals in Host?
+    nodes = set([node.address for node in nodes])
+    
+    # Provision nodes so we can run Ansible on it
+    _exec_command_on_nodes(
+        nodes,
+        'apt-get update && apt-get -y --force-yes install python',
+        'Installing python...')
 
-        # Bind volumes of docker in /tmp (free storage location on G5k)
-        _exec_command_on_nodes(
-            nodes,
-            ('mkdir -p /tmp/docker/volumes; '
-             'mkdir -p /var/lib/docker/volumes'),
-            'Creating docker volumes directory in /tmp')
+    # Bind volumes of docker in /tmp (free storage location on G5k)
+    _exec_command_on_nodes(
+        nodes,
+        ('mkdir -p /tmp/docker/volumes; '
+         'mkdir -p /var/lib/docker/volumes'),
+        'Creating docker volumes directory in /tmp')
 
-        _exec_command_on_nodes(
-            nodes,
-            ('(mount | grep /tmp/docker/volumes) || '
-             'mount --bind /tmp/docker/volumes /var/lib/docker/volumes'),
-            'Bind mount')
+    _exec_command_on_nodes(
+        nodes,
+        ('(mount | grep /tmp/docker/volumes) || '
+         'mount --bind /tmp/docker/volumes /var/lib/docker/volumes'),
+        'Bind mount')
 
-        # Bind nova local storage in /tmp
-        _exec_command_on_nodes(
-            nodes,
-            'mkdir -p /tmp/nova ; mkdir -p /var/lib/nova',
-            'Creating nova directory in /tmp')
-        _exec_command_on_nodes(
-            nodes,
-            '(mount | grep /tmp/nova) || mount --bind /tmp/nova /var/lib/nova',
-'Bind mount')
+    # Bind nova local storage in /tmp
+    _exec_command_on_nodes(
+        nodes,
+        'mkdir -p /tmp/nova ; mkdir -p /var/lib/nova',
+        'Creating nova directory in /tmp')
+    _exec_command_on_nodes(
+        nodes,
+        '(mount | grep /tmp/nova) || mount --bind /tmp/nova /var/lib/nova', 'Bind mount')
 
 class G5k(Provider):
 
