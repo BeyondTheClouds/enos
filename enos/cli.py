@@ -248,7 +248,7 @@ def destroy(**kwargs):
     -vv                  Verbose mode.
     """
     logger.debug(kwargs)
-    pass
+    t.destroy(**kwargs)
 
 
 def deploy(**kwargs):
@@ -295,7 +295,7 @@ def kolla(**kwargs):
     command              Kolla command (e.g prechecks, checks, pull)
     """
     logger.debug(kwargs)
-    pass
+    t.kolla(**kwargs)
 
 
 def _configure_logging(args):
