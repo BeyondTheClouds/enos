@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 
+import enoslib.infra.enos_g5k.api as enoslib_gapi
 import enoslib.infra.enos_g5k.provider as enoslib_g5k
 
 from enos.provider.provider import Provider
@@ -17,31 +18,25 @@ DEFAULT_CONN_PARAMS = {'user': 'root'}
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_NETWORKS = [
-    {
-        "id": "int-net",
-        "site": "rennes",
-        "type": "kavlan",
-        "role": "network_interface"
-    },
-    {
-        "id": "ext-net",
-        "site": "rennes",
-        "type": "kavlan",
-        "role": "neutron_network_interface"
-    }]
+PRIMARY_NETWORK = {
+    "id": "int-net",
+    "site": "rennes",
+    "type": "kavlan",
+    "role": "network_interface"}
+
+SECONDARY_NETWORK =  {
+    "id": "ext-net",
+    "site": "rennes",
+    "type": "kavlan",
+    "role": "neutron_network_interface"}
+
+
+def _count_common_interfaces(clusters):
+    interfaces = enoslib_gapi.get_clusters_interfaces(clusters)
+    return min([len(x) for x in interfaces.values()])
 
 
 def _build_enoslib_conf(conf):
-    # """
-    # >>> config = { \
-    #         "resources": { \
-    #              "parapluie": { \
-    #                  "compute": 3, \
-    #                  "network": 1, \
-    #                  "control": 1  } } }
-    # >>> _build_enoslib_conf(config)
-    # """
     enoslib_conf = conf.get("provider", {})
     if enoslib_conf.get("resources") is not None:
 
@@ -52,31 +47,38 @@ def _build_enoslib_conf(conf):
     # EnOS legacy mode
     logging.debug("Getting generic resources from configuration")
     machines = []
+    networks = [PRIMARY_NETWORK]
+    clusters = set()
 
     # get a plain configuration of resources
     resources = conf.get("resources", {})
-    single_interface = conf.get("single_interface", "no")
 
     # when an advanced configuration is present (aka topology)
     # replace resources with that configuration
-    resources = conf.get("topology", resources)
+    resources = conf.get("topology", resources)    
     for desc in gen_enoslib_roles(resources):
         groups = expand_groups(desc["group"])
         for group in groups:
+            clusters.add(desc["flavor"])
             machine = {"roles": [group, desc["role"]],
                        "nodes": desc["number"],
                        "cluster": desc["flavor"],
-                       "primary_network": "int-net"}
-
-            # add secondary network only if single interface is not set
-            if single_interface == "no":
-                machine.update({"secondary_networks": ["ext-net"]})
-
+                       "primary_network": "int-net",
+                       "secondary_networks": []}
             machines.append(machine)
 
+    # check minimum available number of interfaces in each cluster
+    network_count = _count_common_interfaces(clusters)
+    if network_count > 1:        
+        networks.append(SECONDARY_NETWORK)
+
+        # add a secondary network
+        for machine in machines:            
+            machine["secondary_networks"] = ["ext-net"]
+                         
     enoslib_conf.update({"resources":
                          {"machines": machines,
-                          "networks": DEFAULT_NETWORKS}})
+                          "networks": networks}})
 
     return enoslib_conf
 
@@ -102,7 +104,7 @@ def _provision(roles):
         nodes.extend(value)
         
     # remove duplicate hosts
-    # Note(jrbalderrama) do we have to implement hash and equals in Host?
+    # Note(jrbalderrama): do we have to implement hash/equals in Host?
     nodes = set([node.address for node in nodes])
     
     # Provision nodes so we can run Ansible on it
