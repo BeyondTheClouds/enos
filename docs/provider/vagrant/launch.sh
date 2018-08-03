@@ -9,7 +9,7 @@ if [[ -z "$1" ]]; then
 fi
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-BASE_DIR="${SCRIPT_DIR}/../../../.."
+BASE_DIR="${SCRIPT_DIR}/../../.."
 
 cd $SCRIPT_DIR
 
@@ -25,7 +25,7 @@ pip install -U -e /home/msimonin/workspace/repos/enoslib
 pip install ipdb
 
 # some cleaning
-vagrant destroy -f || true
+# vagrant destroy -f || true
 enos deploy -f $1
 sanity_check "$BASE_DIR"
 enos destroy

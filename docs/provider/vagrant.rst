@@ -10,6 +10,9 @@ To get started with the vagrant provider, you need to install
 
 * `Vagrant <https://www.vagrantup.com/>`_
 
+You'll also need a virtualization backend. EnOS supports both Virtualbox and
+Libvirt as shown below.
+
 Then, refer to the :ref:`installation` section to install Enos.
 
 Basic Configuration
@@ -38,7 +41,6 @@ Note that `vagrant libvirt <https://github.com/vagrant-libvirt/vagrant-libvirt>`
    :language: yaml
    :linenos:
 
- 
 Use the advanced syntax
 ------------------------
 
@@ -49,3 +51,9 @@ grained definition of the resources and associated roles.
    :language: yaml
    :linenos:
 
+Default Configuration
+---------------------
+
+.. literalinclude:: ../../enos/provider/enos_vagrant.py
+   :start-after: #- SPHINX_DEFAULT_CONFIG
+   :end-before: #+ SPHINX_DEFAULT_CONFIG
