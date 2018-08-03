@@ -1,0 +1,35 @@
+---
+# NOTE(msimonin): We intialize openstack (flavor, networks, images ...) from
+# from the kolla_toolbox container. This ay we are "sure" that the openstack
+# client corresponds to the currently deployed openstack.
+- name: Create local working directory (/srv/init_os)
+  file:
+    path: /srv/init_os
+    state: directory
+
+- name: Generate init script
+  template:
+    src: init.sh.j2
+    dest: /srv/init_os/init.sh
+
+- name: Make the init script executable
+  file:
+    path: /srv/init_os/init.sh
+    mode: 0755
+
+- name: Get the reference on the kolla-toolbox image
+  shell: "{% raw %} docker images --format '{{ .Repository }}:{{ .Tag }}' | grep kolla-toolbox {% endraw %}"
+  register: kolla_toolbox_image
+
+- name: debug
+  debug: var=kolla_toolbox_image
+
+
+- name: Launch init in kolla_toolbox container
+  docker_container:
+    name: kolla_toolbox
+    env: "{{ os_env }}"
+    command: "/srv/init_os/init.sh"
+    image: "{{ kolla_toolbox_image.stdout }}"
+    volumes:
+      - /srv/init_os:/srv/init_os

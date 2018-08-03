@@ -1,0 +1,6 @@
+---
+- name: Bootstrap kolla-ansible running
+  hosts: network[0]
+  roles:
+    - { role: init_os,
+        tags: ['init_os'] }
