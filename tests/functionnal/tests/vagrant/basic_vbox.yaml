@@ -1,0 +1,23 @@
+---
+provider:
+  type: vagrant
+  backend: virtualbox
+  box: generic/debian9
+resources:
+  extra-large:
+    control: 1
+  medium:
+    network: 1
+    compute: 1
+inventory: inventories/inventory.sample
+registry:
+  type: internal
+enable_monitoring: no
+kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
+kolla_ref: "stable/queens"
+kolla:
+  kolla_base_distro: "centos"
+  kolla_install_type: "source"
+  docker_namespace: "beyondtheclouds"
+  enable_heat: "no"
+  nova_compute_virt_type: "qemu"
