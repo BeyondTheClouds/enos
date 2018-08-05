@@ -1,14 +1,4 @@
 ---
-- name: DEBUG
-  hosts: all
-  tasks:
-    - debug: var=my_var_is_here
-
-- name: DEBUG
-  hosts: 127.0.0.1
-  tasks:
-    - debug: var=my_var_is_here
-
 - name: Install common dependencies
   hosts: all
   roles:

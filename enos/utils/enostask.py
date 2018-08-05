@@ -15,7 +15,7 @@ def check_env(fn):
     """
     def decorator(*args, **kwargs):
         # If no directory is provided, set the default one
-        resultdir = kwargs.get('--env', SYMLINK_NAME)
+        resultdir = kwargs.get('--env', SYMLINK_NAME) or SYMLINK_NAME
         # Check if the env file exists
         env_path = os.path.join(resultdir, 'env')
         if not os.path.isfile(env_path):
