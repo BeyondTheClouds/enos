@@ -38,24 +38,42 @@ command.
 import logging
 from docopt import docopt
 import enos.task as t
+from os import path
+import yaml
+
 
 logger = logging.getLogger(__name__)
 VERSION = "__enoslib__"
 
 
+def load_config(config_file):
+    config = {}
+    if path.isfile(config_file):
+        # NOTE(msimonin): some time ago we saved the path to the config file
+        # I'm not sure it's mandatory (grepping on it doesn't give any result)
+        #env['config_file'] = config_file
+        with open(config_file, 'r') as f:
+            config = yaml.load(f)
+            logging.info("Reloaded configuration file %s", config_file)
+            logging.debug("Configuration is %s", config)
+    else:
+        raise EnosFilePathError(
+            config_file, "Configuration file %s does not exist" % config_file)
+
+    return config_file, config
+
 def up(**kwargs):
     """
-    usage: enos up  <provider> [-e ENV|--env=ENV][-f CONFIG_PATH] [--force-deploy]
+    usage: enos up  [-e ENV|--env=ENV][-f CONFIG_FILE] [--force-deploy]
                     [-t TAGS|--tags=TAGS] [-s|--silent|-vv]
 
     Get resources and install the docker registry.
 
     Options:
-    provider             Provider to use (e.g vagrant, g5k)
     -e ENV --env=ENV     Path to the environment directory. You should
                          use this option when you want to link to a specific
                          experiment. Do not specify it in other cases.
-    -f CONFIG_PATH       Path to the configuration file describing the
+    -f CONFIG_FILE       Path to the configuration file describing the
                          deployment [default: ./reservation.yaml].
     -h --help            Show this help message.
     --force-deploy       Force deployment [default: False].
@@ -65,8 +83,8 @@ def up(**kwargs):
 
     """
     logger.debug(kwargs)
-    provider = kwargs.pop('<provider>')
-    t.up(provider, **kwargs)
+    config_file, config = load_config(kwargs['-f'])
+    t.up(config, config_file=config_file, **kwargs)
 
 
 def os(**kwargs):
@@ -235,24 +253,30 @@ def destroy(**kwargs):
 
 def deploy(**kwargs):
     """
-    usage: enos deploy <provider> [-e ENV|--env=ENV] [-f CONFIG_PATH] [--force-deploy]
+    usage: enos deploy [-e ENV|--env=ENV] [-f CONFIG_FILE] [--force-deploy]
                     [-s|--silent|-vv]
 
     Shortcut for enos up, then enos os, and finally enos config.
 
     Options:
-    provider             Provider to use (e.g vagrant, g5k)
     -e ENV --env=ENV     Path to the environment directory. You should
                          use this option when you want to link a specific
                          experiment.
-    -f CONFIG_PATH       Path to the configuration file describing the
+    -f CONFIG_FILE       Path to the configuration file describing the
                          deployment [default: ./reservation.yaml].
     --force-deploy       Force deployment [default: False].
     -s --silent          Quiet mode.
     -vv                  Verbose mode.
     """
     logger.debug(kwargs)
-    pass
+    config_file, config = load_config(kwargs['-f'])
+    # --reconfigure and --tags can not be provided in 'deploy'
+    # but they are required for 'up' and 'install_os'
+    kwargs['--reconfigure'] = False
+    kwargs['--tags'] = None
+    t.up(config, config_file=config_file, **kwargs)
+    t.install_os(**kwargs)
+    t.init_os(**kwargs)
 
 
 def kolla(**kwargs):

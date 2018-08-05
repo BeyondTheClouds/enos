@@ -15,10 +15,8 @@ SYMLINK_NAME = os.path.abspath(os.path.join(os.getcwd(), 'current'))
 TEMPLATE_DIR = os.path.join(ENOS_PATH, 'templates')
 INVENTORY_DIR = os.path.join(ENOS_PATH, 'inventories')
 ANSIBLE_DIR = os.path.join(ENOS_PATH, 'ansible')
+VENV_KOLLA = 'venv_kolla'
 
-# NIC constants
-NETWORK_IFACE = 0
-EXTERNAL_IFACE = 1
 
 # ENOS Setup
-VERSION = '4.0.1'
+VERSION = '4.1.0'

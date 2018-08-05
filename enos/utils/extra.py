@@ -4,8 +4,7 @@ from .errors import (EnosFailedHostsError, EnosUnreachableHostsError,
                      EnosProviderMissingConfigurationKeys,
                      EnosFilePathError)
 from collections import namedtuple
-from .constants import (ENOS_PATH, ANSIBLE_DIR, NETWORK_IFACE,
-                       EXTERNAL_IFACE)
+from .constants import (ENOS_PATH, ANSIBLE_DIR, VENV_KOLLA)
 from itertools import groupby
 from netaddr import IPRange
 
@@ -13,12 +12,13 @@ import logging
 import operator
 import os
 import re
+from subprocess import check_call
 import time
 import yaml
 
 # These roles are mandatory for the
 # the original inventory to be valid
-# Note that they may be empy
+# Note that they may be empty
 # e.g. if cinder isn't installed storage may be a empty group
 # in the inventory
 KOLLA_MANDATORY_GROUPS = [
@@ -245,7 +245,7 @@ def pop_ip(provider_net):
     return ip
 
 
-def make_provider(provider, env):
+def make_provider(env):
     """Instantiates the provider.
 
     Seeks into the configuration for the `provider` value. The value
@@ -254,9 +254,14 @@ def make_provider(provider, env):
     and return the provider.
 
     """
-    provider_name = provider
-    if provider == "vagrant":
+    
+    provider_name = env['config']['provider']['type']\
+                    if 'type' in env['config']['provider']\
+                    else env['config']['provider']
+
+    if provider_name == "vagrant":
         provider_name = "enos_vagrant"
+
     package_name = '.'.join(['enos.provider', provider_name.lower()])
     class_name = provider_name.capitalize()
 
@@ -369,3 +374,27 @@ def seekpath(path):
     logging.debug("Seeking %s path resolves to %s", path, abspath)
 
     return abspath
+
+def check_call_in_venv(venv_dir, cmd):
+    """Calls command in kolla virtualenv."""
+    def check_venv(venv_path):
+
+        if not os.path.exists(venv_path):
+            check_call("virtualenv %s" % venv_path, shell=True)
+            check_call_in_venv(venv_dir, "pip install --upgrade pip")
+
+    cmd_in_venv = []
+    cmd_in_venv.append(". %s/bin/activate " % venv_dir)
+    cmd_in_venv.append('&&')
+    if isinstance(cmd, list):
+        cmd_in_venv.extend(cmd)
+    else:
+        cmd_in_venv.append(cmd)
+    check_venv(venv_dir)
+    _cmd = ' '.join(cmd_in_venv)
+    logging.debug(_cmd)
+    return check_call(_cmd, shell=True)
+
+
+def in_kolla(cmd):
+     check_call_in_venv(VENV_KOLLA, cmd)
