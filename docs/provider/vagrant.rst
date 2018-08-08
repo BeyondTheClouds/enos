@@ -55,5 +55,5 @@ Default Configuration
 ---------------------
 
 .. literalinclude:: ../../enos/provider/enos_vagrant.py
-   :start-after: #- SPHINX_DEFAULT_CONFIG
-   :end-before: #+ SPHINX_DEFAULT_CONFIG
+   :start-after: # - SPHINX_DEFAULT_CONFIG
+   :end-before: # + SPHINX_DEFAULT_CONFIG

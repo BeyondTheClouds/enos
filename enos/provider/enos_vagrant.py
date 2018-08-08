@@ -4,13 +4,14 @@ from enos.utils.extra import gen_enoslib_roles
 import enoslib.infra.enos_vagrant.provider as enoslib_vagrant
 from enoslib.api import expand_groups
 
-#- SPHINX_DEFAULT_CONFIG
-DEFAULT_CONFIG =  {
+# - SPHINX_DEFAULT_CONFIG
+DEFAULT_CONFIG = {
     'backend': 'virtualbox',
     'box': 'generic/debian9',
     'user': 'root',
 }
-#+ SPHINX_DEFAULT_CONFIG
+# + SPHINX_DEFAULT_CONFIG
+
 
 def _build_enoslib_conf(conf):
     # This is common to every provider
@@ -36,6 +37,7 @@ def _build_enoslib_conf(conf):
 
     enoslib_conf.update({"resources": {"machines": machines}})
     return enoslib_conf
+
 
 class Enos_vagrant(Provider):
 

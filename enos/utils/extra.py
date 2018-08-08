@@ -49,7 +49,7 @@ def generate_inventory(roles, networks, base_inventory, dest):
         logging.error("EnOS will try to fix that ....")
         fake_interfaces = [FAKE_NEUTRON_EXTERNAL_INTERFACE]
         fake_networks = [NEUTRON_EXTERNAL_INTERFACE]
-        
+
     api.generate_inventory(
         roles,
         networks,
@@ -266,7 +266,7 @@ def make_provider(env):
     and return the provider.
 
     """
-    
+
     provider_name = env['config']['provider']['type']\
                     if 'type' in env['config']['provider']\
                     else env['config']['provider']
