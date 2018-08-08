@@ -64,7 +64,9 @@ def _build_enoslib_conf(conf):
                        "nodes": desc["number"],
                        "cluster": desc["flavor"],
                        "primary_network": "int-net",
-                       "secondary_networks": []}
+                       "secondary_networks": [],
+                       # ensure at least one node
+                       "min": 1}
             machines.append(machine)
 
     # check minimum available number of interfaces in each cluster
