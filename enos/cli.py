@@ -151,7 +151,7 @@ def bench(**kwargs):
     --reset              Force the creation of benchmark environment.
     """
     logger.debug(kwargs)
-    pass
+    t.bench(**kwargs)
 
 
 def backup(**kwargs):
