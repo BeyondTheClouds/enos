@@ -171,7 +171,7 @@ def backup(**kwargs):
     -vv                  Verbose mode.
     """
     logger.debug(kwargs)
-    pass
+    t.backup(**kwargs)
 
 
 
