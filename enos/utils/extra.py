@@ -149,6 +149,12 @@ def mk_enos_values(env):
     # Add the Current Working Directory (cwd)
     enos_values.update(cwd=env['cwd'])
 
+    # Defer the following variables to the environment
+    # These two interfaces are set in the host vars
+    # We don't need them here since they will overwrite those in the inventory
+    enos_values.pop(NEUTRON_EXTERNAL_INTERFACE, None)
+    enos_values.pop(NETWORK_INTERFACE, None)
+
     return enos_values
 
 
@@ -157,10 +163,16 @@ def mk_enos_values(env):
 def bootstrap_kolla(env):
     """Setups all necessities for calling kolla-ansible.
 
-    - Patches kolla-ansible sources (if any).
-    - Builds globals.yml into result dir.
-    - Builds password.yml into result dir.
-    - Builds admin-openrc into result dir.
+    - On the local host
+      + Patches kolla+ansible sources (if any).
+      + Builds globals.yml into result dir.
+      + Builds password.yml into result dir.
+      + Builds admin+openrc into result dir.
+    - On all the hosts
+      + Remove the ip addresses on the
+        neutron_external_interface (set in the
+        inventory hostvars)
+
     """
     # Write the globals.yml file in the result dir.
     #

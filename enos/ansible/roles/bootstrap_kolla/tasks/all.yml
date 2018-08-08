@@ -1,0 +1,4 @@
+---
+- name: Remove ip on the external interface if any
+  shell: "ip addr flush {{ neutron_external_interface }}"
+  when: neutron_external_interface is defined
