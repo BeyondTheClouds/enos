@@ -46,6 +46,7 @@ def get_and_bootstrap_kolla(env, force=False):
                         env['config']['kolla_ref'],
                         kolla_path),
                    shell=True)
+
         # Bootstrap kolla running by patching kolla sources (if any) and
         # generating admin-openrc, globals.yml, passwords.yml
         bootstrap_kolla(env)
