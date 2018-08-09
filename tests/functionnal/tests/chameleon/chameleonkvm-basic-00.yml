@@ -1,0 +1,30 @@
+---
+provider:
+  type: chameleonkvm
+  key_name: enos_matt
+  gateway: true
+resources:
+  m1.medium:
+    compute: 1
+    network: 1
+    control: 1
+
+# This will describe the topology of your services
+inventory: inventories/inventory.sample
+
+registry:
+  type: internal
+
+# Enos Customizations
+enable_monitoring: no
+
+# Kolla parameters
+kolla_repo: https://git.openstack.org/openstack/kolla-ansible
+kolla_ref: stable/queens
+
+# Vars : globals.yml
+kolla:
+  kolla_base_distro: centos
+  kolla_install_type: source
+  docker_namespace: beyondtheclouds
+  enable_heat: no

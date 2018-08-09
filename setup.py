@@ -36,6 +36,13 @@ setup(
         # - ReadTheDocs
         'GitPython>=2.1.5',
     ],
+    extras_require={
+        'openstack': [
+            'python-openstackclient',
+            'python-neutronclient',
+            'python-blazarclient>=1.1.1'
+        ]
+    },
     entry_points={'console_scripts': ['enos = enos.cli:main']},
     include_package_data=True
 )
