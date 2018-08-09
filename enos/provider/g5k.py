@@ -2,11 +2,12 @@
 import logging
 
 from enoslib.api import expand_groups
-from enoslib.infra.enos_g5k import api
-from enoslib.infra.enos_g5k import provider
+from enoslib.infra.enos_g5k import (api, provider)
 
 from enos.provider.provider import Provider
 from enos.utils.extra import gen_enoslib_roles
+from enos.utils.constants import (NETWORK_INTERFACE,
+                                  NEUTRON_EXTERNAL_INTERFACE)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -17,13 +18,13 @@ PRIMARY_NETWORK = {
     "id": "int-net",
     "site": "rennes",
     "type": "kavlan",
-    "role": "network_interface"}
+    "role": NETWORK_INTERFACE}
 
 SECONDARY_NETWORK = {
     "id": "ext-net",
     "site": "rennes",
     "type": "kavlan",
-    "role": "neutron_network_interface"}
+    "role": NEUTRON_EXTERNAL_INTERFACE}
 
 
 def _count_common_interfaces(clusters):
