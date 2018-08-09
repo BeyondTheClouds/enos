@@ -1,196 +1,152 @@
-from enos.provider.g5k import G5k, ROLE_DISTRIBUTION_MODE_STRICT
-from execo_g5k import OarSubmission
-from execo_g5k import api_utils as api
-from enos.utils.extra import load_config
-import mock
+import operator
 import unittest
 
-class TestCheckNodes(unittest.TestCase):
+import mock
 
-    def setUp(self):
-        self.roles = {
-                "a": {
-                    "controller": 1,
-                    "compute": 1,
+from enos.provider.g5k import (_build_enoslib_conf, _count_common_interfaces)
+
+PROVIDER = {'type': 'g5k',
+            'job_name': 'enos-test'}
+
+INTERFACES = {"paravance": ["link01", "link02"],
+              "parapluie": ["link01"]}
+
+class TestGenEnoslibRoles(unittest.TestCase):
+
+    @mock.patch("enoslib.infra.enos_g5k.api.get_clusters_interfaces",
+                return_value=INTERFACES)
+    def test_count_common_interfaces(self, get_clusters_interfaces):
+        result = _count_common_interfaces(['paravance', 'parasilo'])
+        self.assertEqual(1, result)
+
+    @mock.patch("enos.provider.g5k._count_common_interfaces", return_value=2)
+    def test_with_resources(self, _count_common_interfaces):
+        resources = {
+            'paravance': {
+                'control': 1,
+                'compute': 1,
+                'network': 1,
+            }
+        }
+
+        conf = {
+            'resources': resources,
+            'provider': PROVIDER
+        }
+
+        enoslib_conf = _build_enoslib_conf(conf)
+        self.assertIsNotNone(enoslib_conf)
+
+        machines = sorted(enoslib_conf['resources']['machines'],
+                          key=operator.itemgetter('roles'))
+        self.assertEquals(3, len(machines))
+        self.assertEqual(['default_group', 'compute'], machines[0]['roles'])
+        self.assertEqual(['default_group', 'control'], machines[1]['roles'])
+        self.assertEqual(['default_group', 'network'], machines[2]['roles'])
+
+        networks = sorted(enoslib_conf['resources']['networks'],
+                          key=operator.itemgetter('id'))
+        self.assertEquals(2, len(networks))
+        self.assertEquals('network_interface', networks[1]['role'])
+        self.assertEquals('neutron_external_interface', networks[0]['role'])
+
+    @mock.patch("enos.provider.g5k._count_common_interfaces", return_value=1)
+    def test_with_resources_one_network(self, _count_common_interfaces):
+        resources = {
+            'parapluie': {
+                'control': 1,
+                'network': 1,
+            }
+        }
+
+        conf = {
+            'resources': resources,
+            'provider': PROVIDER
+        }
+
+        enoslib_conf = _build_enoslib_conf(conf)
+        self.assertIsNotNone(enoslib_conf)
+
+        machines = sorted(enoslib_conf['resources']['machines'],
+                          key=operator.itemgetter('roles'))
+        self.assertEquals(2, len(machines))
+        self.assertEqual([], machines[0]['secondary_networks'])
+
+        networks = sorted(enoslib_conf['resources']['networks'],
+                          key=operator.itemgetter('id'))
+        self.assertEquals(1, len(networks))
+        self.assertEquals('network_interface', networks[0]['role'])
+
+    @mock.patch("enos.provider.g5k._count_common_interfaces", return_value=2)
+    def test_with_topology(self, _count_common_interfaces):
+        topology = {
+            "group-0": {
+                "paravance": {
+                    "control": 1,
                     "network": 1,
                     "storage": 1,
-                    "util": 1
-                },
-                "b": {
-                    "compute": 2
-                }
-            }
-        self.provider = G5k()
-
-    def test_enough_nodes_strict(self):
-        nodes = [1, 2, 3, 4, 5, 6, 7]
-        self.assertTrue(self.provider._check_nodes(nodes, self.roles, ROLE_DISTRIBUTION_MODE_STRICT))
-
-    def test_enough_nodes_not_strict(self):
-        nodes = [1, 2, 3, 4, 5, 6, 7]
-        self.assertTrue(self.provider._check_nodes(nodes, self.roles, ""))
-
-    def test_not_enough_nodes_strict(self):
-        nodes = [1, 2, 3, 4, 5, 6]
-        with self.assertRaises(Exception):
-            self.provider._check_nodes(nodes, self.roles, ROLE_DISTRIBUTION_MODE_STRICT)
-
-    def test_not_enough_nodes_not_strict(self):
-        nodes = [1, 2, 3, 4, 5]
-        self.assertTrue(self.provider._check_nodes(nodes, self.roles, ""))
-
-
-class TestCreateReservation(unittest.TestCase):
-    def equalsJobSpecs(self, expected, actual):
-        # We only consider some attribute here, assuming it's enough
-        e = map(lambda (oar, site): (oar.resources, oar.name, site), expected)
-        a = map(lambda (oar, site): (oar.resources, oar.name, site), actual)
-        self.assertItemsEqual(e, a)
-
-    def test_create_reservation_no_vlan(self):
-        conf = {
-            'resources': {
-                'a': {
-                    'controller': 1,
-                    'compute': 1,
-                    'network': 1,
-                 }
-            },
-            'provider': {
-                'name': 'test',
-                'vlans': {}
-            }
-        }
-        api.get_cluster_site = mock.Mock(return_value="mysite")
-        provider = G5k()
-        jobs_specs = provider._create_reservation(conf)
-        expected = [(OarSubmission("{cluster='a'}/nodes=3", name='test'), 'mysite')]
-        self.equalsJobSpecs(expected, jobs_specs)
-
-    def test_create_reservation_vlan_same_site(self):
-        conf = {
-            'resources': {
-                'a': {
-                    'controller': 1,
-                    'compute': 1,
-                    'network': 1,
-                 }
-            },
-            'provider': {
-                'name': 'test',
-                'vlans': {'mysite': "{type='kavlan'}/vlan=1"},
-            }
-        }
-        api.get_cluster_site = mock.Mock(return_value='mysite')
-        provider = G5k()
-        jobs_specs = provider._create_reservation(conf)
-        expected = [(OarSubmission("{cluster='a'}/nodes=3+{type='kavlan'}/vlan=1", name='test'), 'mysite')]
-        self.equalsJobSpecs(expected, jobs_specs)
-
-    def test_create_reservation_vlan_different_site(self):
-        conf = {
-            'resources': {
-                'a': {
-                    'controller': 1,
-                    'compute': 1,
-                    'network': 1,
-                 }
-            },
-            'provider': {
-                'name': 'test',
-                'vlans': {'myothersite': "{type='kavlan'}/vlan=1"},
-            }
-        }
-        api.get_cluster_site = mock.Mock(return_value='mysite')
-        provider = G5k()
-        jobs_specs = provider._create_reservation(conf)
-        expected = [
-                (OarSubmission("{cluster='a'}/nodes=3", name='test'), 'mysite'),
-                (OarSubmission("{type='kavlan'}/vlan=1", name='test'), 'myothersite')]
-        self.equalsJobSpecs(expected, jobs_specs)
-
-    def test_create_reservation_different_site(self):
-        conf = {
-            'resources': {
-                'a': {
-                    'controller': 1,
-                    'compute': 1,
-                    'network': 1,
-                 },
-                'b' : {
-                    'compute': 10
                 }
             },
-            'provider': {
-                'name': 'test',
-                'vlans': {}
+            "group-1": {
+                "parasilo": {
+                    "compute": 10
+                }
+            },
+            "group-2": {
+                "parasilo": {
+                    "compute": 10
+                }
             }
         }
-        api.get_cluster_site = mock.Mock()
-        api.get_cluster_site.side_effect = ['mysite', 'myothersite']
-        provider = G5k()
-        jobs_specs = provider._create_reservation(conf)
-        expected = [
-                (OarSubmission("{cluster='a'}/nodes=3", name='test'), 'mysite'),
-                (OarSubmission("{cluster='b'}/nodes=10", name='test'), 'myothersite')]
-        self.equalsJobSpecs(expected, jobs_specs)
 
-class TestBuildResources(unittest.TestCase):
-    def test_build_resources(self):
+        conf = {
+            'topology': topology,
+            'provider': PROVIDER
+        }
+
+        enoslib_conf = _build_enoslib_conf(conf)
+        self.assertIsNotNone(enoslib_conf)
+
+        machines = sorted(enoslib_conf['resources']['machines'],
+                          key=operator.itemgetter('roles'))
+        self.assertEquals(5, len(machines))
+        self.assertEqual(['group-0', 'control'], machines[0]['roles'])
+        self.assertEqual(['group-0', 'network'], machines[1]['roles'])
+        self.assertEqual(['group-0', 'storage'], machines[2]['roles'])
+        self.assertEqual(['group-1', 'compute'], machines[3]['roles'])
+        self.assertEqual(['group-2', 'compute'], machines[4]['roles'])
+
+    @mock.patch("enos.provider.g5k._count_common_interfaces", return_value=1)
+    def test_with_topology_with_ranges(self, _count_common_interfaces):
+        """This is the doc.
+        """
         topology = {
-                "grp1": {
-                    "a":{
-                        "control": 1,
-                        }
+            'group-1': {
+                'parapluie': {
+                    'control': 2,
+                    'network': 1
                     },
-                "grp2": {
-                    "a":{
-                        "compute": 10,
-                        }
-                    },
-                "grp3": {
-                    "a":{
-                        "compute": 10,
-                        }
+                'parasilo': {
+                    'storage': 1
                     }
-                }
-
-        resources_expected = {
-                "a": {
-                    "control": 1,
-                    "compute": 20
-                    }
-                }
-        resources_actual = G5k().topology_to_resources(topology)
-        self.assertDictEqual(resources_expected, resources_actual)
-
-class TestLoadConfig(unittest.TestCase):
-    def test_load_config_with_topology(self):
-        config = {
-            'topology': {
-                'grp1': {
-                    'a': {
-                        'control': 1,
-                    }
-                },
-                'grp[2-6]': {
-                    'a': {
-                        'compute': 10,
-                    }
-                }
             },
-            'provider': 'test_provider'
-        }
-        expected_resources = {
-            'resources': {
-                "a": {
-                    "control": 1,
-                    "compute": 50
+            'group-[2-6]': {
+                'paravance': {
+                    'compute': 7
                 }
             }
         }
-        conf = load_config(config,
-                           G5k().topology_to_resources,
-                           default_provider_config={})
-        self.assertDictEqual(expected_resources['resources'],
-                             conf['resources'])
+
+        conf = {
+            'topology': topology,
+            'provider': PROVIDER
+        }
+
+        enoslib_conf = _build_enoslib_conf(conf)
+        self.assertIsNotNone(enoslib_conf)
+
+        machines = enoslib_conf['resources']['machines']
+        self.assertEquals(8, len(machines))
+
+        nodes = sum([x['nodes'] for x in machines])
+        self.assertEquals(39, nodes)
