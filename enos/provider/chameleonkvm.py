@@ -1,4 +1,15 @@
-import openstack
+import enos.provider.openstack as openstack
+
+# - SPHINX_DEFAULT_CONFIG
+DEFAULT_CONFIG = {
+    'type': 'chameleonkvm',
+    'image_name': 'CC-Ubuntu16.04',
+    'user': 'cc',
+    'dns_nameservers': ['129.114.97.1',
+                        '129.114.97.2',
+                        '129.116.84.203']
+}
+# + SPHINX_DEFAULT_CONFIG
 
 
 class Chameleonkvm(openstack.Openstack):
@@ -10,14 +21,5 @@ class Chameleonkvm(openstack.Openstack):
 
     def default_config(self):
         default_config = super(Chameleonkvm, self).default_config()
-        default_config.update({
-            'type': 'chameleonkvm',
-            'image_name': 'CC-Ubuntu16.04',
-            'user': 'cc',
-            'dns_nameservers': ['129.114.97.1',
-                                '129.114.97.2',
-                                '129.116.84.203'],
-            'network_interface': 'ens3'
-        })
-
+        default_config.update(DEFAULT_CONFIG)
         return default_config
