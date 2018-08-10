@@ -3,7 +3,7 @@ import enos.provider.openstack as openstack
 # - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {
     'type': 'chameleonkvm',
-    'image_name': 'CC-Ubuntu16.04',
+    'image': 'CC-Ubuntu16.04',
     'user': 'cc',
     'dns_nameservers': ['129.114.97.1',
                         '129.114.97.2',

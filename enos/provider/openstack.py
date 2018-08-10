@@ -37,7 +37,7 @@ DEFAULT_CONFIG = {
 
     # MANDATORY OPTIONS
     'key_name': None,
-    'image_name': None,
+    'image': None,
     'user': None
 }
 # + SPHINX_DEFAULT_CONFIG

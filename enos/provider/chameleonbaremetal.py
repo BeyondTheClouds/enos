@@ -11,7 +11,7 @@ DEFAULT_CONFIG = {
     # Name os the lease to use
     'lease_name': 'enos-lease',
     # Glance image to use
-    'image_name': 'CC-Ubuntu16.04',
+    'image': 'CC-Ubuntu16.04',
     # User to use to connect to the machines
     # (sudo will be used to configure them)
     'user': 'cc',
