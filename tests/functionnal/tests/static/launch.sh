@@ -21,6 +21,7 @@ virtualenv venv
 . venv/bin/activate
 
 pip install -e "$BASE_DIR"
+pip install ipdb
 pip install -U git+https://github.com/BeyondTheClouds/enoslib
 
 # some cleaning

@@ -31,12 +31,12 @@ class TestMakeProvider(unittest.TestCase):
     @staticmethod
     def __provider_env(provider_name):
         "Returns env with a provider key"
-        return {"config": {"provider": provider_name}}
+        return provider_name
 
     @staticmethod
     def __provider_env_ext(provider_name):
         "Returns env with an extended provider key that may include options"
-        return {"config": {"provider": {"type": provider_name}}}
+        return {"type": provider_name}
 
     def test_make_g5k(self):
         "Tests the creation of G5k provider"

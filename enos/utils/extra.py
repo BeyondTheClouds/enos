@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 import enoslib.api as api
 from .errors import (EnosFailedHostsError, EnosUnreachableHostsError,
                      EnosProviderMissingConfigurationKeys,
@@ -49,7 +50,7 @@ def generate_inventory(roles, networks, base_inventory, dest):
         logging.error("EnOS will try to fix that ....")
         fake_interfaces = [FAKE_NEUTRON_EXTERNAL_INTERFACE]
         fake_networks = [NEUTRON_EXTERNAL_INTERFACE]
-        
+
     api.generate_inventory(
         roles,
         networks,
@@ -269,7 +270,7 @@ def pop_ip(provider_net):
     return ip
 
 
-def make_provider(env):
+def make_provider(provider_conf):
     """Instantiates the provider.
 
     Seeks into the configuration for the `provider` value. The value
@@ -278,10 +279,9 @@ def make_provider(env):
     and return the provider.
 
     """
-    
-    provider_name = env['config']['provider']['type']\
-                    if 'type' in env['config']['provider']\
-                    else env['config']['provider']
+    provider_name = provider_conf['type']\
+                    if 'type' in provider_conf\
+                    else provider_conf
 
     if provider_name == "vagrant":
         provider_name = "enos_vagrant"
@@ -324,19 +324,12 @@ def gen_resources(resources):
             yield l1, l2, l3
 
 
-def load_config(config, provider_topo2rsc, default_provider_config):
+def load_config(config, default_provider_config):
     """Load and set default values to the configuration
 
         Groups syntax is expanded here.
     """
-    conf = config.copy()
-    if 'topology' in config:
-        # expand the groups first
-        conf['topology'] = expand_topology(config['topology'])
-        # We are here using a flat combination of the resource
-        # resulting in (probably) deploying one single region
-        conf['resources'] = provider_topo2rsc(conf['topology'])
-
+    conf = copy.deepcopy(config)
     conf['provider'] = load_provider_config(
         conf['provider'],
         default_provider_config=default_provider_config)

@@ -64,16 +64,17 @@ def get_and_bootstrap_kolla(env, force=False):
 @enostask(new=True)
 def up(config, config_file=None, env=None, **kwargs):
     logging.debug('phase[up]: args=%s' % kwargs)
+    # Calls the provider and initialise resources
+
+    provider_conf = config['provider']
+    provider = make_provider(provider_conf)
+
+    # Applying default configuration
+    config = load_config(config,
+                         provider.default_config())
     env['config'] = config
     env['config_file'] = config_file
-
-    # Calls the provider and initialise resources
-    provider = make_provider(env)
-
-    #config = load_config(env['config'],
-    #                     provider.topology_to_resources,
-    #                     provider.default_config())
-    # done by enoslib ar init + provider.dfefault_config()
+    logging.debug("Loaded config: %s", config)
 
     rsc, networks = \
         provider.init(env['config'], kwargs['--force-deploy'])
@@ -333,7 +334,8 @@ def destroy(env=None, **kwargs):
     hard = kwargs['--hard']
     if hard:
         logging.info('Destroying all the resources')
-        provider = make_provider(env)
+        provider_conf = env['config']['provider']
+        provider = make_provider(provider_conf)
         provider.destroy(env)
     else:
         command = ['destroy', '--yes-i-really-really-mean-it']
