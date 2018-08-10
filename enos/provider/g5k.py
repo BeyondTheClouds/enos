@@ -13,7 +13,18 @@ from enos.utils.constants import (NETWORK_INTERFACE,
 
 LOGGER = logging.getLogger(__name__)
 
+# - SPHINX_DEFAULT_CONFIG
+DEFAULT_CONFIG = {
+    'job_name': 'Enos',
+    'walltime': '02:00:00',
+    'env_name': 'debian9-x64-nfs',
+    'reservation': False,
+    'job_type': 'deploy'
+}
+# + SPHINX_DEFAULT_CONFIG
+
 DEFAULT_CONN_PARAMS = {'user': 'root'}
+
 
 PRIMARY_NETWORK = {
     "id": "int-net",
@@ -146,11 +157,7 @@ class G5k(Provider):
         g5k.destroy()
 
     def default_config(self):
-        return {'job_name': 'Enos',
-                'walltime': '02:00:00',
-                'env_name': 'debian9-x64-min',
-                'reservation': False,
-                'user': 'root'}
+        return DEFAULT_CONFIG
 
     def __str__(self):
         return 'G5k'
