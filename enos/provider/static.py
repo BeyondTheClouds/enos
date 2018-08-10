@@ -1,8 +1,17 @@
 # -*- coding: utf-8 -*-
+import copy
 from enos.utils.extra import expand_groups
 import enoslib.infra.enos_static.provider as enos_static
 from enos.provider.provider import Provider
 import logging
+
+
+# - SPHINX_DEFAULT_CONFIG
+DEFAULT_CONFIG = {
+}
+# + SPHINX_DEFAULT_CONFIG
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _gen_enoslib_roles(resources_or_topology):
@@ -36,7 +45,8 @@ def _gen_enoslib_roles(resources_or_topology):
                 yield m
 
 
-def _build_enoslib_conf(conf):
+def _build_enoslib_conf(config):
+    conf = copy.deepcopy(config)
     enoslib_conf = conf.get("provider")
     if enoslib_conf.get("resources") is not None:
         return enoslib_conf
@@ -68,7 +78,7 @@ def _build_enoslib_conf(conf):
 
 class Static(Provider):
     def init(self, conf, force_deploy=False):
-        logging.info("Vagrant provider")
+        LOGGER.info("Static provider")
         enoslib_conf = _build_enoslib_conf(conf)
         static = enos_static.Static(enoslib_conf)
         roles, networks = static.init(force_deploy)
@@ -78,4 +88,4 @@ class Static(Provider):
         raise Exception("TODO, not implemented yet")
 
     def default_config(self):
-        raise Exception("TODO, not implemented yet")
+        return DEFAULT_CONFIG
