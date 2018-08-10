@@ -37,6 +37,7 @@ command.
 
 import logging
 from docopt import docopt
+from enos.utils.errors import EnosFilePathError
 import enos.task as t
 from os import path
 import yaml
