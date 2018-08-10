@@ -3,7 +3,8 @@ from enoslib.task import enostask
 from enoslib.api import run_ansible
 
 from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
-                                  VERSION, NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE)
+                                  VERSION, NEUTRON_EXTERNAL_INTERFACE,
+                                  NETWORK_INTERFACE, TEMPLATE_DIR)
 from enos.utils.errors import EnosFilePathError
 from enos.utils.extra import (bootstrap_kolla, generate_inventory, pop_ip, make_provider,
                               mk_enos_values, load_config, seekpath, get_vip_pool, lookup_network,
@@ -280,7 +281,6 @@ def backup(env=None, **kwargs):
 
 @enostask()
 def new(env=None, **kwargs):
-    from utils.constants import TEMPLATE_DIR
     logging.debug('phase[new]: args=%s' % kwargs)
     with open(os.path.join(TEMPLATE_DIR, 'reservation.yaml.sample'),
               mode='r') as content:
