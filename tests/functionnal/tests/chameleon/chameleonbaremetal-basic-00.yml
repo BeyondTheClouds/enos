@@ -2,10 +2,7 @@
 provider:
   type: chameleonbaremetal
   key_name: enos_matt
-  image: CC-Ubuntu16.04
-  user: cc
   gateway: true
-  lease_name: enos3
 resources:
   compute_haswell:
     compute: 1
