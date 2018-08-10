@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import copy
 import logging
 
 from enoslib.api import expand_groups
@@ -32,7 +33,8 @@ def _count_common_interfaces(clusters):
     return min([len(x) for x in interfaces.values()])
 
 
-def _build_enoslib_conf(conf):
+def _build_enoslib_conf(config):
+    conf = copy.deepcopy(config)
     enoslib_conf = conf.get("provider", {})
     if enoslib_conf.get("resources") is not None:
 

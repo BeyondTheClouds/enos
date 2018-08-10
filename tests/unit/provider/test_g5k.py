@@ -11,6 +11,7 @@ PROVIDER = {'type': 'g5k',
 INTERFACES = {"paravance": ["link01", "link02"],
               "parapluie": ["link01"]}
 
+
 class TestGenEnoslibRoles(unittest.TestCase):
 
     @mock.patch("enoslib.infra.enos_g5k.api.get_clusters_interfaces",
@@ -118,8 +119,6 @@ class TestGenEnoslibRoles(unittest.TestCase):
 
     @mock.patch("enos.provider.g5k._count_common_interfaces", return_value=1)
     def test_with_topology_with_ranges(self, _count_common_interfaces):
-        """This is the doc.
-        """
         topology = {
             'group-1': {
                 'parapluie': {
