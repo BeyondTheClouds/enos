@@ -209,7 +209,7 @@ def tc(**kwargs):
     -vv                  Verbose mode.
     """
     logger.debug(kwargs)
-    pass
+    t.tc(**kwargs)
 
 
 def info(**kwargs):

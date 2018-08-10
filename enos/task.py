@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from enoslib.task import enostask
-from enoslib.api import run_ansible
+from enoslib.api import run_ansible, emulate_network, validate_network
 
 from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
                                   VERSION, NEUTRON_EXTERNAL_INTERFACE,
@@ -9,8 +9,6 @@ from enos.utils.errors import EnosFilePathError
 from enos.utils.extra import (bootstrap_kolla, generate_inventory, pop_ip, make_provider,
                               mk_enos_values, load_config, seekpath, get_vip_pool, lookup_network,
                               in_kolla)
-from enos.utils.network_constraints import (build_grp_constraints,
-                                       build_ip_constraints)
 from enos.utils.enostask import check_env
 
 from datetime import datetime
