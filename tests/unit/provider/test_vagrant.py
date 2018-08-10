@@ -46,7 +46,6 @@ class TestGenEnoslibRoles(unittest.TestCase):
         machines = sorted(enoslib_conf["resources"]["machines"],
                           key=operator.itemgetter("roles"))
 
-        print(enoslib_conf)
         self.assertEqual(3, len(machines))
         self.assertCountEqual(["grp1", "control"], machines[0]["roles"])
         self.assertCountEqual(["grp2", "compute"], machines[1]["roles"])
@@ -55,4 +54,18 @@ class TestGenEnoslibRoles(unittest.TestCase):
         self.assertEqual("flavor2", machines[1]["flavor"])
         self.assertEqual("flavor2", machines[2]["flavor"])
 
+
+    def test_with_expanded_topology(self):
+        resources_1 = { "flavor1": { "control": "1" } }
+        resources_2 = { "flavor2": { "compute": "1", "network": "1" } }
+        topology = {
+            "grp1": resources_2,
+            "grp[2-10]": resources_1,
+        }
+        enoslib_conf = _build_enoslib_conf({"topology": topology})
+
+        machines = sorted(enoslib_conf["resources"]["machines"],
+                          key=operator.itemgetter("roles"))
+
+        self.assertEqual(11, len(machines))
 

@@ -1,3 +1,4 @@
+import copy
 import logging
 from enos.provider.provider import Provider
 from enos.utils.extra import gen_enoslib_roles
@@ -12,9 +13,11 @@ DEFAULT_CONFIG = {
 }
 # + SPHINX_DEFAULT_CONFIG
 
+LOGGER = logging.getLogger(__name__)
 
-def _build_enoslib_conf(conf):
-    # This is common to every provider
+
+def _build_enoslib_conf(config):
+    conf = copy.deepcopy(config)
     enoslib_conf = conf.get("provider", {})
     if enoslib_conf.get("resources") is not None:
         return enoslib_conf
@@ -42,14 +45,14 @@ def _build_enoslib_conf(conf):
 class Enos_vagrant(Provider):
 
     def init(self, conf, force_deploy=False):
-        logging.info("Vagrant provider")
+        LOGGER.info("Vagrant provider")
         enoslib_conf = _build_enoslib_conf(conf)
         vagrant = enoslib_vagrant.Enos_vagrant(enoslib_conf)
         roles, networks = vagrant.init(force_deploy)
         return roles, networks
 
     def destroy(self, env):
-        logging.info("Destroying vagrant deployment")
+        LOGGER.info("Destroying vagrant deployment")
         enoslib_conf = _build_enoslib_conf(env['config'])
         vagrant = enoslib_vagrant.Enos_vagrant(enoslib_conf)
         vagrant.destroy()
