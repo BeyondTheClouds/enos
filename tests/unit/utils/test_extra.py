@@ -10,22 +10,6 @@ import tempfile
 import mock
 import ddt
 
-class TestExpandGroups(unittest.TestCase):
-    def test_expand_groups(self):
-        grps = "grp[1-3]"
-        expanded = expand_groups(grps)
-        self.assertEqual(3, len(expanded))
-
-    def test_expand_one_group(self):
-        grps = "grp"
-        expanded = expand_groups(grps)
-        self.assertEqual(1, len(expanded))
-
-    def test_expand_groups_with_weird_name(self):
-        grps = "a&![,[1-3]"
-        expanded = expand_groups(grps)
-        self.assertEqual(3, len(expanded))
-
 class TestMakeProvider(unittest.TestCase):
 
     @staticmethod
@@ -60,48 +44,6 @@ class TestMakeProvider(unittest.TestCase):
         "Tests the raise of error for unknown/unloaded provider"
         with self.assertRaises(ImportError):
             make_provider(self.__provider_env('unexist'))
-
-
-class TestGetTotalWantedMachines(unittest.TestCase):
-    def test_get_total_wanted_machines(self):
-        config = {
-            "resources": {
-                "a": {
-                    "controller": 1,
-                    "compute" : 2,
-                    "network" : 1,
-                    "storage" : 1,
-                    "util"    : 1
-                },
-                "b": {
-                    "compute": 2
-                 }
-            }
-        }
-        self.assertEqual(8, get_total_wanted_machines(config["resources"]))
-
-class TestResourcesIterator(unittest.TestCase):
-    def test_resources_iterator(self):
-        config = {
-            "resources": {
-                "a": {
-                    "controller": 1,
-                    "network" : 1,
-                    "storage" : 3,
-                },
-                "b": {
-                    "compute": 2
-                 }
-            }
-        }
-        actual = []
-        for l1, l2, l3 in gen_resources(config["resources"]):
-            actual.append((l1, l2, l3))
-        expected = [("a", "controller", 1),
-                    ("a", "network", 1),
-                    ("a", "storage", 3),
-                    ("b", "compute", 2)]
-        self.assertItemsEqual(expected, actual)
 
 
 class TestLoadProviderConfig(unittest.TestCase):

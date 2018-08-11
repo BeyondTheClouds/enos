@@ -50,9 +50,6 @@ VERSION = "__enoslib__"
 def load_config(config_file):
     config = {}
     if path.isfile(config_file):
-        # NOTE(msimonin): some time ago we saved the path to the config file
-        # I'm not sure it's mandatory (grepping on it doesn't give any result)
-        #env['config_file'] = config_file
         with open(config_file, 'r') as f:
             config = yaml.load(f)
             logging.info("Reloaded configuration file %s", config_file)
@@ -62,6 +59,7 @@ def load_config(config_file):
             config_file, "Configuration file %s does not exist" % config_file)
 
     return config_file, config
+
 
 def up(**kwargs):
     """
@@ -133,8 +131,8 @@ def init(**kwargs):
 
 def bench(**kwargs):
     """
-    usage: enos bench [-e ENV|--env=ENV] [-s|--silent|-vv] [--workload=WORKLOAD]
-        [--reset]
+    usage: enos bench [-e ENV|--env=ENV] [-s|--silent|-vv]
+        [--workload=WORKLOAD] [--reset]
 
     Run rally on this OpenStack.
 
@@ -173,7 +171,6 @@ def backup(**kwargs):
     """
     logger.debug(kwargs)
     t.backup(**kwargs)
-
 
 
 def new(**kwargs):
@@ -340,4 +337,3 @@ def main():
 
     task = enostasks[args['<command>']]
     task(**docopt(task.__doc__, argv=argv))
-

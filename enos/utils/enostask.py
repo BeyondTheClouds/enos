@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 from enos.utils.constants import SYMLINK_NAME
-from functools import wraps
-
 import os
-import yaml
-import logging
 
 
 def check_env(fn):

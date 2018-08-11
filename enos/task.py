@@ -3,18 +3,17 @@ from enoslib.task import enostask
 from enoslib.api import run_ansible, emulate_network, validate_network
 
 from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
-                                  VERSION, NEUTRON_EXTERNAL_INTERFACE,
+                                  NEUTRON_EXTERNAL_INTERFACE,
                                   NETWORK_INTERFACE, TEMPLATE_DIR)
 from enos.utils.errors import EnosFilePathError
-from enos.utils.extra import (bootstrap_kolla, generate_inventory, pop_ip, make_provider,
-                              mk_enos_values, load_config, seekpath, get_vip_pool, lookup_network,
-                              in_kolla)
+from enos.utils.extra import (bootstrap_kolla, generate_inventory, pop_ip,
+                              make_provider, mk_enos_values, load_config,
+                              seekpath, get_vip_pool, lookup_network, in_kolla)
 from enos.utils.enostask import check_env
 
 from datetime import datetime
 import logging
 
-from docopt import docopt
 import pprint
 
 import os
@@ -26,6 +25,7 @@ import yaml
 
 import itertools
 import operator
+
 
 def get_and_bootstrap_kolla(env, force=False):
     """This gets kolla in the current directory.
@@ -98,10 +98,7 @@ def up(config, config_file=None, env=None, **kwargs):
 
     env['inventory'] = inventory
 
-
     # Set variables required by playbooks of the application
-    # https://github.com/BeyondTheClouds/enos/pull/159/files#diff-15a7159acfc2c0c18193258af93ad086R135
-
     vip_pool = get_vip_pool(networks)
     env['config'].update({
        'vip':               pop_ip(vip_pool),
@@ -150,24 +147,6 @@ def install_os(env=None, **kwargs):
 @check_env
 def init_os(env=None, **kwargs):
     logging.debug('phase[init]: args=%s' % kwargs)
-    # Images
-    #images = [{'name': 'debian-9',
-    #           'url':  ('https://cdimage.debian.org/cdimage/openstack/'
-    #                    'current-9/debian-9-openstack-amd64.qcow2')},
-    #          {'name': 'cirros.uec',
-    #           'url':  ('http://download.cirros-cloud.net/'
-    #                    '0.3.4/cirros-0.3.4-x86_64-disk.img')}]
-    #for image in images:
-    #    cmd.append("ls -l /tmp/%(name)s.qcow2 || "
-    #               "curl -L -o /tmp/%(name)s.qcow2 %(url)s" % image)
-    #    cmd.append("openstack image show %(name)s || "
-    #               "openstack image create"
-    #               " --disk-format=qcow2"
-    #               " --container-format=bare"
-    #               " --property architecture=x86_64"
-    #               " --public"
-    #               " --file /tmp/%(name)s.qcow2"
-    #               " %(name)s" % image)
     playbook_values = mk_enos_values(env)
     playbook_path = os.path.join(ANSIBLE_DIR, 'init_os.yml')
     inventory_path = os.path.join(
@@ -179,10 +158,13 @@ def init_os(env=None, **kwargs):
     # provision a external pool of ip regardless the number of nic available
     # (in g5k this would be a kavlan) but in this case we'll need to know
     # whether the network is physicaly attached (or no) to the physical nics
-    provider_net = lookup_network(env['networks'],
-                                  [NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE])
+    provider_net = lookup_network(
+        env['networks'],
+        [NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE])
+
     if not provider_net:
-        msg = "External network not found, you must define %s networks" % " or ".join([NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE])
+        msg = "External network not found, define %s networks" % " or ".join(
+            [NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE])
         raise Exception(msg)
 
     playbook_values.update({"provider_net": provider_net})

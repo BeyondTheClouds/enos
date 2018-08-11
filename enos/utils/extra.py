@@ -1,22 +1,17 @@
 # -*- coding: utf-8 -*-
 import copy
 import enoslib.api as api
-from .errors import (EnosFailedHostsError, EnosUnreachableHostsError,
-                     EnosProviderMissingConfigurationKeys,
+from .errors import (EnosProviderMissingConfigurationKeys,
                      EnosFilePathError)
-from collections import namedtuple
 from .constants import (ENOS_PATH, ANSIBLE_DIR, VENV_KOLLA,
-                        NEUTRON_EXTERNAL_INTERFACE, FAKE_NEUTRON_EXTERNAL_INTERFACE,
-                        NETWORK_INTERFACE, API_INTERFACE)
-from itertools import groupby
+                        NEUTRON_EXTERNAL_INTERFACE,
+                        FAKE_NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE,
+                        API_INTERFACE)
 from netaddr import IPRange
 
 import logging
-import operator
 import os
-import re
 from subprocess import check_call
-import time
 import yaml
 
 # These roles are mandatory for the
@@ -73,7 +68,6 @@ def generate_inventory(roles, networks, base_inventory, dest):
                 f.write(line)
 
     logging.info("Inventory file written to " + dest)
-
 
 
 def get_kolla_required_values(env):
@@ -195,31 +189,6 @@ def bootstrap_kolla(env):
     api.run_ansible([playbook], env['inventory'], extra_vars=enos_values)
 
 
-def expand_groups(grp):
-    """Expand group names.
-    e.g:
-        * grp[1-3] -> [grp1, grp2, grp3]
-        * grp1 -> [grp1]
-    """
-    p = re.compile('(?P<name>.+)\[(?P<start>\d+)-(?P<end>\d+)\]')
-    m = p.match(grp)
-    if m is not None:
-        s = int(m.group('start'))
-        e = int(m.group('end'))
-        n = m.group('name')
-        return map(lambda x: n + str(x), range(s, e + 1))
-    else:
-        return [grp]
-
-
-def expand_topology(topology):
-    expanded = {}
-    for grp, desc in topology.items():
-        grps = expand_groups(grp)
-        for g in grps:
-            expanded[g] = desc
-    return expanded
-
 def lookup_network(networks, roles):
     """Lookup a network by its roles (in order).
     We assume that one role can't be found in two different networks
@@ -240,7 +209,8 @@ def get_vip_pool(networks):
     if provider_net:
         return provider_net
 
-    msg = "You must declare %s" % " or ".join([API_INTERFACE, NETWORK_INTERFACE])
+    msg = "You must declare %s" % " or ".join(
+        [API_INTERFACE, NETWORK_INTERFACE])
     raise Exception(msg)
 
 
@@ -297,14 +267,6 @@ def make_provider(provider_conf):
     return klass()
 
 
-def get_total_wanted_machines(resources):
-    """Get the total number of machines
-    wanted given ther resource description."""
-    return sum(reduce(operator.add,
-                      map(lambda r: r.values(), resources.values()),
-                      []))
-
-
 def gen_enoslib_roles(resources_or_topology):
     """Generator for the resources or topology."""
     for k1, v1 in resources_or_topology.items():
@@ -314,14 +276,10 @@ def gen_enoslib_roles(resources_or_topology):
                     yield {"group": k1, "role": k3, "flavor": k2, "number": v3}
             else:
                 # Puts the resources in a default topology group
-                yield {"group": "default_group", "role": k2, "flavor": k1, "number": v2}
-
-
-def gen_resources(resources):
-    """Generator for the resources in the config file."""
-    for l1, roles in resources.items():
-        for l2, l3 in roles.items():
-            yield l1, l2, l3
+                yield {"group": "default_group",
+                       "role": k2,
+                       "flavor": k1,
+                       "number": v2}
 
 
 def load_config(config, default_provider_config):
@@ -392,6 +350,7 @@ def seekpath(path):
 
     return abspath
 
+
 def check_call_in_venv(venv_dir, cmd):
     """Calls command in kolla virtualenv."""
     def check_venv(venv_path):
@@ -414,4 +373,4 @@ def check_call_in_venv(venv_dir, cmd):
 
 
 def in_kolla(cmd):
-     check_call_in_venv(VENV_KOLLA, cmd)
+    check_call_in_venv(VENV_KOLLA, cmd)
