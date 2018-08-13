@@ -36,15 +36,15 @@ command.
 """
 
 import logging
-from docopt import docopt
-from enos.utils.errors import EnosFilePathError
-import enos.task as t
 from os import path
+from docopt import docopt
 import yaml
 
+import enos.task as t
+from enos.utils.constants import VERSION
+from enos.utils.errors import EnosFilePathError
 
 logger = logging.getLogger(__name__)
-VERSION = "__enoslib__"
 
 
 def load_config(config_file):
