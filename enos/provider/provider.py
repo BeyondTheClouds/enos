@@ -37,24 +37,3 @@ class Provider:
 
         """
         pass
-
-    def topology_to_resources(self, topology):
-        """
-        Build the resource list
-        For now we are just aggregating all the resources
-        This could be part of a flat resource builder
-        """
-        def merge_add(cluster_roles, roles):
-            """Merge two dicts, sum the values"""
-            for role, nb in roles.items():
-                cluster_roles.setdefault(role, 0)
-                cluster_roles[role] = cluster_roles[role] + nb
-
-        resource = {}
-
-        for group, clusters in topology.items():
-            for cluster, roles in clusters.items():
-                resource.setdefault(cluster, {})
-                merge_add(resource[cluster], roles)
-
-        return resource

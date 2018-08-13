@@ -1,27 +1,22 @@
 # -*- coding: utf-8 -*-
-from .errors import (EnosFailedHostsError, EnosUnreachableHostsError,
-                     EnosProviderMissingConfigurationKeys,
+import copy
+import enoslib.api as api
+from .errors import (EnosProviderMissingConfigurationKeys,
                      EnosFilePathError)
-from ansible.executor.playbook_executor import PlaybookExecutor
-from ansible.inventory import Inventory
-from ansible.parsing.dataloader import DataLoader
-from ansible.vars import VariableManager
-from collections import namedtuple
-from constants import (ENOS_PATH, ANSIBLE_DIR, NETWORK_IFACE,
-                       EXTERNAL_IFACE)
-from itertools import groupby
+from .constants import (ENOS_PATH, ANSIBLE_DIR, VENV_KOLLA,
+                        NEUTRON_EXTERNAL_INTERFACE,
+                        FAKE_NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE,
+                        API_INTERFACE)
 from netaddr import IPRange
 
 import logging
-import operator
 import os
-import re
-import time
+from subprocess import check_call
 import yaml
 
 # These roles are mandatory for the
 # the original inventory to be valid
-# Note that they may be empy
+# Note that they may be empty
 # e.g. if cinder isn't installed storage may be a empty group
 # in the inventory
 KOLLA_MANDATORY_GROUPS = [
@@ -32,203 +27,47 @@ KOLLA_MANDATORY_GROUPS = [
 ]
 
 
-def run_ansible(playbooks, inventory_path, extra_vars={},
-        tags=None, on_error_continue=False):
-    extra_vars = extra_vars or {}
-    variable_manager = VariableManager()
-    loader = DataLoader()
-
-    inventory = Inventory(loader=loader,
-        variable_manager=variable_manager,
-        host_list=inventory_path)
-
-    variable_manager.set_inventory(inventory)
-
-    if extra_vars:
-        variable_manager.extra_vars = extra_vars
-
-    if tags is None:
-        tags = []
-
-    passwords = {}
-    # NOTE(msimonin): The ansible api is "low level" in the
-    # sense that we are redefining here all the default values
-    # that are usually enforce by ansible called from the cli
-    Options = namedtuple('Options', ['listtags', 'listtasks',
-                                     'listhosts', 'syntax',
-                                     'connection', 'module_path',
-                                     'forks', 'private_key_file',
-                                     'ssh_common_args',
-                                     'ssh_extra_args',
-                                     'sftp_extra_args',
-                                     'scp_extra_args', 'become',
-                                     'become_method', 'become_user',
-                                     'remote_user', 'verbosity',
-                                     'check', 'tags', 'pipelining'])
-
-    options = Options(listtags=False, listtasks=False,
-                      listhosts=False, syntax=False, connection='ssh',
-                      module_path=None, forks=100,
-                      private_key_file=None, ssh_common_args=None,
-                      ssh_extra_args=None, sftp_extra_args=None,
-                      scp_extra_args=None, become=None,
-                      become_method='sudo', become_user='root',
-                      remote_user=None, verbosity=2, check=False,
-                      tags=tags, pipelining=True)
-
-    for path in playbooks:
-        logging.info("Running playbook %s with vars:\n%s" % (path, extra_vars))
-
-        pbex = PlaybookExecutor(
-            playbooks=[path],
-            inventory=inventory,
-            variable_manager=variable_manager,
-            loader=loader,
-            options=options,
-            passwords=passwords
-        )
-
-        code = pbex.run()
-        stats = pbex._tqm._stats
-        hosts = stats.processed.keys()
-        result = [{h: stats.summarize(h)} for h in hosts]
-        results = {'code': code, 'result': result, 'playbook': path}
-        print(results)
-
-        failed_hosts = []
-        unreachable_hosts = []
-
-        for h in hosts:
-            t = stats.summarize(h)
-            if t['failures'] > 0:
-                failed_hosts.append(h)
-
-            if t['unreachable'] > 0:
-                unreachable_hosts.append(h)
-
-        if len(failed_hosts) > 0:
-            logging.error("Failed hosts: %s" % failed_hosts)
-            if not on_error_continue:
-                raise EnosFailedHostsError(failed_hosts)
-        if len(unreachable_hosts) > 0:
-            logging.error("Unreachable hosts: %s" % unreachable_hosts)
-            if not on_error_continue:
-                raise EnosUnreachableHostsError(unreachable_hosts)
-
-
-def wait_ssh(env, retries=100, interval=30):
-    """Wait for the resources to be ssh-reachable
-
-    Let ansible initiates a communication and retries if needed.
-
-    :param retries: Number of time we'll be retrying an SSH connection
-    :param interval: Interval to wait in seconds between two retries
-
-    """
-    utils_playbook = os.path.join(ANSIBLE_DIR, 'utils.yml')
-    options = {'action': 'ping', 'tc_output_dir': env['resultdir']}
-
-    for i in range(0, retries):
-        try:
-            run_ansible([utils_playbook],
-                        env['inventory'],
-                        extra_vars=options,
-                        on_error_continue=False)
-            break
-        except EnosUnreachableHostsError as e:
-            logging.info("Hosts unreachable: %s " % e.hosts)
-            logging.info("Retrying... %s/%s" % (i + 1, retries))
-            time.sleep(interval)
-    else:
-        raise Exception('Maximum retries reached')
-
-
-def generate_inventory(roles, base_inventory, dest):
+def generate_inventory(roles, networks, base_inventory, dest):
     """
     Generate the inventory.
     It will generate a group for each role in roles and
     concatenate them with the base_inventory file.
     The generated inventory is written in dest
     """
-    with open(dest, 'w') as f:
-        f.write(to_ansible_group_string(roles))
+    # NOTE(msimonin): if len(networks) is <= 1
+    # provision a fake one that will map the external network
+
+    fake_interfaces = []
+    fake_networks = []
+    provider_net = lookup_network(networks, [NEUTRON_EXTERNAL_INTERFACE])
+    if not provider_net:
+        logging.error("The %s network is missing" % NEUTRON_EXTERNAL_INTERFACE)
+        logging.error("EnOS will try to fix that ....")
+        fake_interfaces = [FAKE_NEUTRON_EXTERNAL_INTERFACE]
+        fake_networks = [NEUTRON_EXTERNAL_INTERFACE]
+
+    api.generate_inventory(
+        roles,
+        networks,
+        dest,
+        check_networks=True,
+        fake_interfaces=fake_interfaces,
+        fake_networks=fake_networks
+    )
+
+    with open(dest, 'a') as f:
+        f.write("\n")
+        # generate mandatory groups that are empty
+        mandatory = [group for group in KOLLA_MANDATORY_GROUPS
+                       if group not in roles.keys()]
+        for group in mandatory:
+            f.write("[%s]\n" % group)
+
         with open(base_inventory, 'r') as a:
             for line in a:
                 f.write(line)
 
     logging.info("Inventory file written to " + dest)
-
-
-def generate_inventory_string(n, role):
-    i = [n.alias, "ansible_host=%s" % n.address]
-    if n.user is not None:
-        i.append("ansible_ssh_user=%s" % n.user)
-    if n.port is not None:
-        i.append("ansible_port=%s" % n.port)
-    if n.keyfile is not None:
-        i.append("ansible_ssh_private_key_file=%s" % n.keyfile)
-    # Disabling hostkey ckecking
-    common_args = []
-    common_args.append("-o StrictHostKeyChecking=no")
-    common_args.append("-o UserKnownHostsFile=/dev/null")
-    forward_agent = n.extra.get('forward_agent', False)
-    if forward_agent:
-        common_args.append("-o ForwardAgent=yes")
-
-    gateway = n.extra.get('gateway', None)
-    if gateway is not None:
-        proxy_cmd = ["ssh -W %h:%p"]
-        # Disabling also hostkey checking for the gateway
-        proxy_cmd.append("-o StrictHostKeyChecking=no")
-        proxy_cmd.append("-o UserKnownHostsFile=/dev/null")
-        gateway_user = n.extra.get('gateway_user', n.user)
-        if gateway_user is not None:
-            proxy_cmd.append("-l %s" % gateway_user)
-
-        proxy_cmd.append(gateway)
-        proxy_cmd = " ".join(proxy_cmd)
-        common_args.append("-o ProxyCommand=\"%s\"" % proxy_cmd)
-
-    common_args = " ".join(common_args)
-    i.append("ansible_ssh_common_args='%s'" % common_args)
-    i.append("g5k_role=%s" % role)
-
-    # Add custom variables
-    for k, v in n.extra.items():
-        if k not in ["gateway", "gateway_user", "forward_agent"]:
-            i.append("%s=%s" % (k, v))
-    return " ".join(i)
-
-
-def to_ansible_group_string(roles):
-    """Transform a role list (oar) to an ansible list of groups (inventory)
-    Make sure the mandatory group are set as well
-    e.g
-    {
-    'role1': ['n1', 'n2', 'n3'],
-    'role12: ['n4']
-
-    }
-    ->
-    [role1]
-    n1
-    n2
-    n3
-    [role2]
-    n4
-    """
-    inventory = []
-    mandatory = [group for group in KOLLA_MANDATORY_GROUPS
-                       if group not in roles.keys()]
-    for group in mandatory:
-        inventory.append("[%s]" % (group))
-
-    for role, nodes in roles.items():
-        inventory.append("[%s]" % (role))
-        inventory.extend(map(lambda n: generate_inventory_string(n, role),
-                             nodes))
-    inventory.append("\n")
-    return "\n".join(inventory)
 
 
 def get_kolla_required_values(env):
@@ -237,10 +76,7 @@ based on the Enos environment.
 
     """
     values = {
-        'network_interface':          env['eths'][NETWORK_IFACE],
         'kolla_internal_vip_address': env['config']['vip'],
-        'neutron_external_interface': env['eths'][EXTERNAL_IFACE],
-        'neutron_external_address':   env['config']['external_vip'],
         'influx_vip':                 env['config']['influx_vip'],
         'kolla_ref':                  env['config']['kolla_ref'],
         'resultdir':                  env['resultdir']
@@ -308,6 +144,12 @@ def mk_enos_values(env):
     # Add the Current Working Directory (cwd)
     enos_values.update(cwd=env['cwd'])
 
+    # Defer the following variables to the environment
+    # These two interfaces are set in the host vars
+    # We don't need them here since they will overwrite those in the inventory
+    enos_values.pop(NEUTRON_EXTERNAL_INTERFACE, None)
+    enos_values.pop(NETWORK_INTERFACE, None)
+
     return enos_values
 
 
@@ -316,10 +158,16 @@ def mk_enos_values(env):
 def bootstrap_kolla(env):
     """Setups all necessities for calling kolla-ansible.
 
-    - Patches kolla-ansible sources (if any).
-    - Builds globals.yml into result dir.
-    - Builds password.yml into result dir.
-    - Builds admin-openrc into result dir.
+    - On the local host
+      + Patches kolla+ansible sources (if any).
+      + Builds globals.yml into result dir.
+      + Builds password.yml into result dir.
+      + Builds admin+openrc into result dir.
+    - On all the hosts
+      + Remove the ip addresses on the
+        neutron_external_interface (set in the
+        inventory hostvars)
+
     """
     # Write the globals.yml file in the result dir.
     #
@@ -337,179 +185,62 @@ def bootstrap_kolla(env):
     # password.yml in the result dir
     enos_values = mk_enos_values(env)
     playbook = os.path.join(ANSIBLE_DIR, 'bootstrap_kolla.yml')
-    run_ansible([playbook], env['inventory'], extra_vars=enos_values)
+
+    api.run_ansible([playbook], env['inventory'], extra_vars=enos_values)
 
 
-def expand_groups(grp):
-    """Expand group names.
-    e.g:
-        * grp[1-3] -> [grp1, grp2, grp3]
-        * grp1 -> [grp1]
+def lookup_network(networks, roles):
+    """Lookup a network by its roles (in order).
+    We assume that one role can't be found in two different networks
     """
-    p = re.compile('(?P<name>.+)\[(?P<start>\d+)-(?P<end>\d+)\]')
-    m = p.match(grp)
-    if m is not None:
-        s = int(m.group('start'))
-        e = int(m.group('end'))
-        n = m.group('name')
-        return map(lambda x: n + str(x), range(s, e + 1))
-    else:
-        return [grp]
+    for role in roles:
+        for network in networks:
+            if role in network["roles"]:
+                return network
+    return None
 
 
-def expand_topology(topology):
-    expanded = {}
-    for grp, desc in topology.items():
-        grps = expand_groups(grp)
-        for g in grps:
-            expanded[g] = desc
-    return expanded
+def get_vip_pool(networks):
+    """Get the provider net where vip can be taken.
+    In kolla-ansible this is the network with the api_interface role.
+    In kolla-ansible api_interface defaults to network_interface.
+    """
+    provider_net = lookup_network(networks, [API_INTERFACE, NETWORK_INTERFACE])
+    if provider_net:
+        return provider_net
+
+    msg = "You must declare %s" % " or ".join(
+        [API_INTERFACE, NETWORK_INTERFACE])
+    raise Exception(msg)
 
 
-def pop_ip(env=None):
-    """Picks an ip from env['provider_net'].
-
+def pop_ip(provider_net):
+    """Picks an ip from the provider_net
     It will first take ips in the extra_ips if possible.
     extra_ips is a list of isolated ips whereas ips described
     by the [provider_net.start, provider.end] range is a continuous
     list of ips.
     """
     # Construct the pool of ips
-    extra_ips = env['provider_net'].get('extra_ips', [])
+    extra_ips = provider_net.get('extra_ips', [])
     if len(extra_ips) > 0:
         ip = extra_ips.pop()
-        env['provider_net']['extra_ips'] = extra_ips
+        provider_net['extra_ips'] = extra_ips
         return ip
 
-    ips = list(IPRange(env['provider_net']['start'],
-                       env['provider_net']['end']))
+    ips = list(IPRange(provider_net['start'],
+                       provider_net['end']))
 
     # Get the next ip
     ip = str(ips.pop())
 
     # Remove this ip from the env
-    env['provider_net']['end'] = str(ips.pop())
+    provider_net['end'] = str(ips.pop())
 
     return ip
 
 
-def build_roles(config, deployed_nodes, keyfnc):
-    """Returns a dict that maps each role to a list of G5k nodes::
-
-    :param config: the configuration (usually read from the yaml configuration
-        file)
-
-    :param deployed_nodes: the deployed nodes to distribute accros roles.
-        Must contains all the information needed for keyfnc to group nodes.
-
-    :param keyfnc: lambda used to group nodes by cluster (g5k), size
-        (vagrant)... take an element of deployed_nodes and returns a value to
-        group on
-
-    example:
-    config:
-       resources:
-            paravance:
-                controller: 2
-            econome:
-                compute: 1
-
-    deployed_nodes = ['paravance-1', 'paravance-5', 'econome-1']
-
-    returns
-        { 'controller': ['paravance-1', 'paravance-5'],
-          'compute': ['econome-1'] }
-    """
-    def mk_pools():
-        "Indexes a node by the keyfnc to construct pools of nodes."
-        pools = {}
-        for cluster, nodes in groupby(deployed_nodes, keyfnc):
-            pools.setdefault(cluster, []).extend(list(nodes))
-        return pools
-
-    def pick_nodes(pool, n):
-        "Picks a maximum of n nodes in a pool of nodes."
-        nodes = pool[:n]
-        del pool[:n]
-        return nodes
-
-    cluster_idx = -3
-    role_idx = -2
-    nb_idx = -1
-
-    resources = config.setdefault('topology', config['resources'])
-    rindexes = _build_indexes(resources)
-    # rindexes = [['resources', 'paravance', 'controller', 2],
-    #            ['resource', 'econome', 'compute', 1]]
-    # Thus we need to pick 2 nodes belonging to paravance cluster
-    # and assign them to the controller role.
-    # then 1 node belonging to econome
-
-    pools = mk_pools()
-    roles = {}
-    # distribute the nodes "compute" role is assumed to be the less important
-    # to fill
-    # NOTE(msimonin): The above assumption is questionnable but
-    # corresponds to the case where compute nodes number >> other services
-    # number and some missing compute nodes isn't catastrophic
-    rindexes = sorted(rindexes,
-        key=lambda indexes: len(indexes)
-                      if indexes[role_idx] != "compute" else -1,
-        reverse=True)
-    for indexes in rindexes:
-        cluster = indexes[cluster_idx]
-        role = indexes[role_idx]
-        nb = indexes[nb_idx]
-        nodes = pick_nodes(pools[cluster], nb)
-        # putting those nodes in all super groups
-        for role in indexes[0:nb_idx]:
-            roles.setdefault(role, []).extend(nodes)
-        indexes[nb_idx] = indexes[nb_idx] - nb
-
-    logging.info(roles)
-    return roles
-
-
-def _build_indexes(resources):
-    """Recursively build all the paths in a dict where final values
-    are int.
-
-    :param resources: the dict of resources to explore
-
-    example:
-
-    a:
-        1:
-            z:1
-            t:2
-        2:
-            u:3
-            v:4
-    b:
-        4:
-            x:5
-            y:6
-        5:
-            w:7
-
-    returns [[a,1,z,1],[a,1,t,2],[a,2,u,3]...]
-    """
-    # concatenate the current keys with the already built indexes
-    if type(resources) == int:
-        return [[resources]]
-    all_indexes = []
-    # NOTE(msimonin): we sort to ensure the order will remain the same
-    # on subsequent calls
-    for key, value in sorted(resources.items(), key=lambda x: x[0]):
-        rindexes = _build_indexes(value)
-        for indexes in rindexes:
-            s = [key]
-            s.extend(list(indexes))
-            all_indexes.append(s)
-    return all_indexes
-
-
-def make_provider(env):
+def make_provider(provider_conf):
     """Instantiates the provider.
 
     Seeks into the configuration for the `provider` value. The value
@@ -518,11 +249,13 @@ def make_provider(env):
     and return the provider.
 
     """
-    provider_name = env['config']['provider']['type']\
-                    if 'type' in env['config']['provider']\
-                    else env['config']['provider']
+    provider_name = provider_conf['type']\
+                    if 'type' in provider_conf\
+                    else provider_conf
+
     if provider_name == "vagrant":
         provider_name = "enos_vagrant"
+
     package_name = '.'.join(['enos.provider', provider_name.lower()])
     class_name = provider_name.capitalize()
 
@@ -534,34 +267,27 @@ def make_provider(env):
     return klass()
 
 
-def get_total_wanted_machines(resources):
-    """Get the total number of machines
-    wanted given ther resource description."""
-    return sum(reduce(operator.add,
-                      map(lambda r: r.values(), resources.values()),
-                      []))
+def gen_enoslib_roles(resources_or_topology):
+    """Generator for the resources or topology."""
+    for k1, v1 in resources_or_topology.items():
+        for k2, v2 in v1.items():
+            if isinstance(v2, dict):
+                for k3, v3 in v2.items():
+                    yield {"group": k1, "role": k3, "flavor": k2, "number": v3}
+            else:
+                # Puts the resources in a default topology group
+                yield {"group": "default_group",
+                       "role": k2,
+                       "flavor": k1,
+                       "number": v2}
 
 
-def gen_resources(resources):
-    """Generator for the resources in the config file."""
-    for l1, roles in resources.items():
-        for l2, l3 in roles.items():
-            yield l1, l2, l3
-
-
-def load_config(config, provider_topo2rsc, default_provider_config):
+def load_config(config, default_provider_config):
     """Load and set default values to the configuration
 
         Groups syntax is expanded here.
     """
-    conf = config.copy()
-    if 'topology' in config:
-        # expand the groups first
-        conf['topology'] = expand_topology(config['topology'])
-        # We are here using a flat combination of the resource
-        # resulting in (probably) deploying one single region
-        conf['resources'] = provider_topo2rsc(conf['topology'])
-
+    conf = copy.deepcopy(config)
     conf['provider'] = load_provider_config(
         conf['provider'],
         default_provider_config=default_provider_config)
@@ -623,3 +349,28 @@ def seekpath(path):
     logging.debug("Seeking %s path resolves to %s", path, abspath)
 
     return abspath
+
+
+def check_call_in_venv(venv_dir, cmd):
+    """Calls command in kolla virtualenv."""
+    def check_venv(venv_path):
+
+        if not os.path.exists(venv_path):
+            check_call("virtualenv %s" % venv_path, shell=True)
+            check_call_in_venv(venv_dir, "pip install --upgrade pip")
+
+    cmd_in_venv = []
+    cmd_in_venv.append(". %s/bin/activate " % venv_dir)
+    cmd_in_venv.append('&&')
+    if isinstance(cmd, list):
+        cmd_in_venv.extend(cmd)
+    else:
+        cmd_in_venv.append(cmd)
+    check_venv(venv_dir)
+    _cmd = ' '.join(cmd_in_venv)
+    logging.debug(_cmd)
+    return check_call(_cmd, shell=True)
+
+
+def in_kolla(cmd):
+    check_call_in_venv(VENV_KOLLA, cmd)

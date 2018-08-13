@@ -1,140 +1,61 @@
-from .host import Host
-from ipaddress import IPv4Network
-from jinja2 import Environment, FileSystemLoader
-from provider import Provider
-from ..utils.constants import TEMPLATE_DIR
-from ..utils.extra import build_roles, gen_resources
-
+import copy
 import logging
-import os
-import vagrant
+from enos.provider.provider import Provider
+from enos.utils.extra import gen_enoslib_roles
+import enoslib.infra.enos_vagrant.provider as enoslib_vagrant
+from enoslib.api import expand_groups
 
-SIZES = {
-    'tiny': {
-        'cpu': 1,
-        'mem': 512
-    },
-    'small': {
-        'cpu': 1,
-        'mem': 1024
-    },
-    'medium': {
-        'cpu': 2,
-        'mem': 2048
-    },
-    'big': {
-        'cpu': 3,
-        'mem': 3072,
-    },
-    'large': {
-        'cpu': 4,
-        'mem': 4096
-    },
-    'extra-large': {
-        'cpu': 6,
-        'mem': 6144
-    }
+# - SPHINX_DEFAULT_CONFIG
+DEFAULT_CONFIG = {
+    'backend': 'virtualbox',
+    'box': 'generic/debian9',
+    'user': 'root',
 }
+# + SPHINX_DEFAULT_CONFIG
+
+LOGGER = logging.getLogger(__name__)
+
+
+def _build_enoslib_conf(config):
+    conf = copy.deepcopy(config)
+    enoslib_conf = conf.get("provider", {})
+    if enoslib_conf.get("resources") is not None:
+        return enoslib_conf
+
+    # This coould be common to everyone
+    # Enoslib needs to be patched here
+    resources = conf.get("topology", conf.get("resources", {}))
+    machines = []
+    for desc in gen_enoslib_roles(resources):
+        # NOTE(msimonin): in the basic definition, we consider only
+        # two networks
+        grps = expand_groups(desc["group"])
+        for grp in grps:
+            machines.append({
+                "flavor": desc["flavor"],
+                "roles": [grp, desc["role"]],
+                "number": desc["number"],
+                "networks": ["network_interface", "neutron_external_interface"]
+            })
+
+    enoslib_conf.update({"resources": {"machines": machines}})
+    return enoslib_conf
 
 
 class Enos_vagrant(Provider):
+
     def init(self, conf, force_deploy=False):
-        """enos up
-        Read the resources in the configuration files. Resource claims must be
-        grouped by sizes according to the predefined SIZES map.
-        """
-        provider_conf = conf['provider']
-
-        net_pools = {
-            'ip1': list(IPv4Network(u'192.168.142.0/25')),
-            'ip2': list(IPv4Network(u'192.168.143.0/25')),
-            'ip3': list(IPv4Network(u'192.168.144.0/25')),
-        }
-
-        # Build a list of machines that will be used to generate the
-        # Vagrantfile
-        machines = []
-        for size, role, nb in gen_resources(conf['resources']):
-            for i in range(nb):
-                ip1 = str(net_pools['ip1'].pop())
-                _, _, _, name = ip1.split('.')
-                machines.append({
-                    'role': role,
-                    # NOTE(matrohon): don't base the name of the VM on its
-                    # role, build_roles will then set the final role of
-                    # each VM
-                    'name': "enos-%s" % name,
-                    'size': size,
-                    'cpu': SIZES[size]['cpu'],
-                    'mem': SIZES[size]['mem'],
-                    'ip1': ip1,
-                    'ip2': str(net_pools['ip2'].pop()),
-                    'ip3': str(net_pools['ip3'].pop()),
-                    })
-        loader = FileSystemLoader(searchpath=TEMPLATE_DIR)
-        env = Environment(loader=loader)
-        template = env.get_template('Vagrantfile.j2')
-
-        vagrantfile = template.render(machines=machines,
-                provider_conf=provider_conf)
-        vagrantfile_path = os.path.join(os.getcwd(), "Vagrantfile")
-        with open(vagrantfile_path, 'w') as f:
-            f.write(vagrantfile)
-
-        # Build env for Vagrant with a copy of env variables (needed by
-        # subprocess opened by vagrant
-        v_env = dict(os.environ)
-        v_env['VAGRANT_DEFAULT_PROVIDER'] = provider_conf['backend']
-
-        v = vagrant.Vagrant(root=os.getcwd(),
-                            quiet_stdout=False,
-                            quiet_stderr=False,
-                            env=v_env)
-        if force_deploy:
-            v.destroy()
-        v.up()
-        v.provision()
-        # Distribute the machines according to the resource/topology
-        # specifications
-        r = build_roles(conf,
-                        machines,
-                        lambda m: m['size'])
-        roles = {}
-
-        for role, machines in r.items():
-            roles.setdefault(role, [])
-            for machine in machines:
-                keyfile = v.keyfile(vm_name=machine['name'])
-                port = v.port(vm_name=machine['name'])
-                address = v.hostname(vm_name=machine['name'])
-                roles[role].append(Host(address,
-                                        alias=machine['name'],
-                                        user=provider_conf['user'],
-                                        port=port,
-                                        keyfile=keyfile))
-        logging.info(roles)
-        network = {'cidr': '192.168.142.0/24',
-                   'start': str(net_pools['ip1'][3]),
-                   'end': str(net_pools['ip1'][-1]),
-                   'dns': '8.8.8.8',
-                   'gateway': '192.168.142.1'}
-        network_interface = provider_conf['interfaces'][0]
-        external_interface = provider_conf['interfaces'][1]
-        return (roles, network, (network_interface, external_interface))
+        LOGGER.info("Vagrant provider")
+        enoslib_conf = _build_enoslib_conf(conf)
+        vagrant = enoslib_vagrant.Enos_vagrant(enoslib_conf)
+        roles, networks = vagrant.init(force_deploy)
+        return roles, networks
 
     def destroy(self, env):
-        v = vagrant.Vagrant(root=os.getcwd(),
-                            quiet_stdout=False,
-                            quiet_stderr=True)
-        v.destroy()
+        LOGGER.info("Destroying vagrant deployment")
+        enoslib_conf = _build_enoslib_conf(env['config'])
+        vagrant = enoslib_vagrant.Enos_vagrant(enoslib_conf)
+        vagrant.destroy()
 
     def default_config(self):
-        return {
-            'backend': 'virtualbox',
-            'box': 'bento/debian-9',
-            'user': 'root',
-            # NOTE(msimonin) bento enforce old interface naming
-            # eth0 is the default nat-ed interface 10.0.2.15
-            # we don't use it
-            'interfaces': ('eth1', 'eth2')
-        }
+        return DEFAULT_CONFIG

@@ -1,10 +1,5 @@
-
 ---
-# ############################################### #
-# Enos Configuration File                         #
-# ############################################### #
-
-# Resources description : this is provider specific
+# Example of using yaml anchors
 hosts:
   1: &h1
     address: 127.0.0.1
@@ -19,52 +14,30 @@ resources:
   compute:
     - *h1
 
-# Provider description and its options
 provider:
   type: static
-  network:
-    start: 192.168.143.3
-    end:  192.168.143.119
-    cidr: 192.168.143.0/24
-    gateway: 192.168.143.1
-    dns: 8.8.8.8
-    extra_ips:
-      - 192.168.142.100
-      - 192.168.142.101
-      - 192.168.142.102
-      - 192.168.142.103
-      - 192.168.142.104
-  eths:
-    - eth0
-    - eth1
+  networks:
+    - start: 192.168.143.3
+      end:  192.168.143.119
+      cidr: 192.168.143.0/24
+      gateway: 192.168.143.1
+      dns: 8.8.8.8
+      roles: ["network_interface"]
+    - start: 192.168.142.3
+      end:  192.168.142.119
+      cidr: 192.168.142.0/24
+      gateway: 192.168.142.1
+      dns: 8.8.8.8
+      roles: ["neutron_external_interface"]
 
-# ############################################### #
-# Inventory to use                                #
-# ############################################### #
-
-# This will describe the topology of your services
 inventory: inventories/inventory.sample
-
-# true iff a monitoring stack should be deployed
-# cadvisor/collectd - influxdb - grafana
-enable_monitoring: true
-
+enable_monitoring: no
 registry:
   type: none
-
-# ############################################### #
-# Kolla parameters                                #
-# ############################################### #
-# Repository
 kolla_repo: https://git.openstack.org/openstack/kolla-ansible
 kolla_ref: stable/queens
-
-# globals.yml
 kolla:
   kolla_base_distro: centos
   kolla_install_type: source
   docker_namespace: beyondtheclouds
-  # openstack_logging_debug: True
-  enable_heat: "no"
-
-  node_custom_config: patch/
+  nova_compute_virt_type: "qemu"

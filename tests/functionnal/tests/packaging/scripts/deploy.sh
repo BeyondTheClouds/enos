@@ -21,6 +21,7 @@ cat << EOF >> ~/.profile
 EOF
 
 pip install -e "$BASE_DIR"
+pip install git+https://github.com/beyondtheclouds/enoslib
 
 enos deploy -f reservation.yaml
 sanity_check "$BASE_DIR"
