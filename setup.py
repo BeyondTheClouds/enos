@@ -29,10 +29,11 @@ setup(
     long_description=read('README.rst'),
     packages=find_packages(),
     install_requires=[
-        'enoslib',
-        'influxdb==4.0.0',
+        'enoslib>=1.8.2',
         'docopt>=0.6.2,<0.7.0',
-        'httplib2==0.9.2',
+        # All kolla commands will run inside a dedicated venv. The version is
+        # unspecified since the use of virtualenv is very basic.
+        'virtualenv',
         # - ReadTheDocs
         'GitPython>=2.1.5',
     ],
@@ -41,6 +42,9 @@ setup(
             'python-openstackclient',
             'python-neutronclient',
             'python-blazarclient>=1.1.1'
+        ],
+        'annotations': [
+            'influxdb==4.0.0'
         ]
     },
     entry_points={'console_scripts': ['enos = enos.cli:main']},
