@@ -49,12 +49,12 @@ do
     openstack security group rule delete $i
 done
 
-openstack security group rule create ${ADMIN_SEC_GROUP} --protocol icmp --dst-port 1:65535 --remote-ip 0.0.0.0/0 ingress
-openstack security group rule create ${ADMIN_SEC_GROUP} --protocol icmp --dst-port 1:65535 --remote-ip 0.0.0.0/0 egress
-openstack security group rule create ${ADMIN_SEC_GROUP} --protocol tcp --dst-port 1:65535 --remote-ip 0.0.0.0/0 ingress
-openstack security group rule create ${ADMIN_SEC_GROUP} --protocol tcp --dst-port 1:65535 --remote-ip 0.0.0.0/0 egress
-openstack security group rule create ${ADMIN_SEC_GROUP} --protocol udp --dst-port 1:65535 --remote-ip 0.0.0.0/0 ingress
-openstack security group rule create ${ADMIN_SEC_GROUP} --protocol udp --dst-port 1:65535 --remote-ip 0.0.0.0/0 egress
+openstack security group rule create ${ADMIN_SEC_GROUP} --protocol icmp --dst-port 1:65535 --remote-ip 0.0.0.0/0 --ingress
+openstack security group rule create ${ADMIN_SEC_GROUP} --protocol icmp --dst-port 1:65535 --remote-ip 0.0.0.0/0 --egress
+openstack security group rule create ${ADMIN_SEC_GROUP} --protocol tcp --dst-port 1:65535 --remote-ip 0.0.0.0/0 --ingress
+openstack security group rule create ${ADMIN_SEC_GROUP} --protocol tcp --dst-port 1:65535 --remote-ip 0.0.0.0/0 --egress
+openstack security group rule create ${ADMIN_SEC_GROUP} --protocol udp --dst-port 1:65535 --remote-ip 0.0.0.0/0 --ingress
+openstack security group rule create ${ADMIN_SEC_GROUP} --protocol udp --dst-port 1:65535 --remote-ip 0.0.0.0/0 --egress
 
 
 #Quota
