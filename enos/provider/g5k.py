@@ -47,6 +47,15 @@ def _count_common_interfaces(clusters):
 def _build_enoslib_conf(config):
     conf = copy.deepcopy(config)
     enoslib_conf = conf.get("provider", {})
+
+    # NOTE(msimonin): Force some enoslib/g5k parameters here.
+    # * dhcp: True means that network card will be brought up and the dhcp
+    #   client will be called. As for now (2018-08-16) this is disabled by
+    #   default in EnOSlib.
+    enoslib_conf.update({
+        "dhcp": True
+    })
+
     if enoslib_conf.get("resources") is not None:
 
         # enoslib mode
