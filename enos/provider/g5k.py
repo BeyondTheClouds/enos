@@ -44,6 +44,11 @@ def _count_common_interfaces(clusters):
     return min([len(x) for x in interfaces.values()])
 
 
+def _get_sites(clusters):
+    clusters_sites = api.get_clusters_sites(clusters)
+    return set(clusters_sites.values())
+
+
 def _build_enoslib_conf(config):
     conf = copy.deepcopy(config)
     enoslib_conf = conf.get("provider", {})
@@ -65,13 +70,12 @@ def _build_enoslib_conf(config):
     # EnOS legacy mode
     LOGGER.debug("Getting generic resources from configuration")
     machines = []
-    networks = [PRIMARY_NETWORK]
     clusters = set()
 
     # get a plain configuration of resources
     resources = conf.get("resources", {})
 
-    # when an advanced configuration is present (aka topology)
+    # when a topology configuration is present
     # replace resources with that configuration
     resources = conf.get("topology", resources)
     for desc in gen_enoslib_roles(resources):
@@ -86,6 +90,16 @@ def _build_enoslib_conf(config):
                        # ensure at least one node
                        "min": 1}
             machines.append(machine)
+
+    # check the location of the clusters
+    sites = _get_sites(clusters)
+    if len(sites) > 1:
+        raise Exception("Multisite deployment isn't supported yet")
+
+    site = sites.pop()
+    PRIMARY_NETWORK["site"] = site
+    SECONDARY_NETWORK["site"] = site
+    networks = [PRIMARY_NETWORK]
 
     # check minimum available number of interfaces in each cluster
     network_count = _count_common_interfaces(clusters)
