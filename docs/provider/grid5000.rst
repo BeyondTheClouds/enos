@@ -18,8 +18,8 @@ If the `virtualenv` module is missing:
     $ export PATH=~/.local/bin/:${PATH} # Put it into your path
 
 
-Configuration
--------------
+Basic configuration
+-------------------
 
 The provider relies on cluster names to group the wanted resources. For example
 the following is a valid resources description:
@@ -54,7 +54,15 @@ The provider comes with the following default options:
    :start-after: # - SPHINX_DEFAULT_CONFIG
    :end-before: # + SPHINX_DEFAULT_CONFIG
 
-
-
-
 They can be overriden in the configuration file.
+
+
+Advanced Configuration
+----------------------
+
+The following is equivalent to the basic configuration but allows for a finer
+grained definition of the resources and associated roles.
+
+.. literalinclude:: ../../tests/functionnal/tests/grid5000/advanced-00.yaml
+   :language: yaml
+   :linenos:
