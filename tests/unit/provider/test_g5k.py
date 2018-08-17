@@ -3,7 +3,7 @@ import unittest
 
 import mock
 
-from enos.provider.g5k import (_build_enoslib_conf, _count_common_interfaces)
+from enos.provider.g5k import (_build_enoslib_conf, _count_common_interfaces, _get_sites)
 
 PROVIDER = {'type': 'g5k',
             'job_name': 'enos-test'}
@@ -11,17 +11,26 @@ PROVIDER = {'type': 'g5k',
 INTERFACES = {"paravance": ["link01", "link02"],
               "parapluie": ["link01"]}
 
+CLUSTERS_SITES = { "paravance": "rennes", "grisou": "nancy" }
+
 
 class TestGenEnoslibRoles(unittest.TestCase):
 
     @mock.patch("enoslib.infra.enos_g5k.api.get_clusters_interfaces",
                 return_value=INTERFACES)
-    def test_count_common_interfaces(self, get_clusters_interfaces):
+    def test_count_common_interfaces(self, mock_get_clusters_interfaces):
         result = _count_common_interfaces(['paravance', 'parasilo'])
         self.assertEqual(1, result)
 
+    @mock.patch("enoslib.infra.enos_g5k.api.get_clusters_sites",
+                return_value=CLUSTERS_SITES)
+    def test_get_sites(self, mock_get_clusters_sites):
+        result = _get_sites(["paravance", "grisou"])
+        self.assertEqual(2, len(result))
+
+    @mock.patch("enos.provider.g5k._get_sites", return_value={"site1"})
     @mock.patch("enos.provider.g5k._count_common_interfaces", return_value=2)
-    def test_with_resources(self, _count_common_interfaces):
+    def test_with_resources(self, mock_count_common_interfaces, mock_get_sites):
         resources = {
             'paravance': {
                 'control': 1,
@@ -51,8 +60,12 @@ class TestGenEnoslibRoles(unittest.TestCase):
         self.assertEquals('network_interface', networks[1]['role'])
         self.assertEquals('neutron_external_interface', networks[0]['role'])
 
+        self.assertEquals('site1', networks[1]['site'])
+        self.assertEquals('site1', networks[0]['site'])
+
+    @mock.patch("enos.provider.g5k._get_sites", return_value={"site1"})
     @mock.patch("enos.provider.g5k._count_common_interfaces", return_value=1)
-    def test_with_resources_one_network(self, _count_common_interfaces):
+    def test_with_resources_one_network(self, mock_count_common_interfaces, mock_get_sites):
         resources = {
             'parapluie': {
                 'control': 1,
@@ -77,9 +90,11 @@ class TestGenEnoslibRoles(unittest.TestCase):
                           key=operator.itemgetter('id'))
         self.assertEquals(1, len(networks))
         self.assertEquals('network_interface', networks[0]['role'])
+        self.assertEquals('site1', networks[0]['site'])
 
+    @mock.patch("enos.provider.g5k._get_sites", return_value={"site1"})
     @mock.patch("enos.provider.g5k._count_common_interfaces", return_value=2)
-    def test_with_topology(self, _count_common_interfaces):
+    def test_with_topology(self, _count_common_interfaces, mock_get_sites):
         topology = {
             "group-0": {
                 "paravance": {
@@ -117,8 +132,15 @@ class TestGenEnoslibRoles(unittest.TestCase):
         self.assertEqual(['group-1', 'compute'], machines[3]['roles'])
         self.assertEqual(['group-2', 'compute'], machines[4]['roles'])
 
+        networks = sorted(enoslib_conf['resources']['networks'],
+                          key=operator.itemgetter('id'))
+        self.assertEquals(2, len(networks))
+        self.assertEquals('site1', networks[1]['site'])
+        self.assertEquals('site1', networks[0]['site'])
+
+    @mock.patch("enos.provider.g5k._get_sites", return_value={"site1"})
     @mock.patch("enos.provider.g5k._count_common_interfaces", return_value=1)
-    def test_with_topology_with_ranges(self, _count_common_interfaces):
+    def test_with_topology_with_ranges(self, _count_common_interfaces, mock_get_sites):
         topology = {
             'group-1': {
                 'parapluie': {
