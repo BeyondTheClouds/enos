@@ -43,6 +43,19 @@ of your reservation. In the case of an interactive deployment:
     node$ <edit configuration>
     node$ enos deploy
 
+.. note::
+
+   You'll need to configure the access to the Grid'5000 API by setting the following
+   in your ``~/.execo.conf.py`` :
+
+  .. code-block:: python
+
+      # ~/.execo.conf.py
+      g5k_configuration = {
+          'api_username': "your username",
+          'api_verify_ssl_cert': False
+      }
+
 
 Default provider configuration
 -------------------------------
