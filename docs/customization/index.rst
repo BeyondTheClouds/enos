@@ -133,26 +133,26 @@ Further information can be found : `see here
 <http://docs.ansible.com/ansible/intro_configuration.html>`_.
 
 
-Docker registry configuration
------------------------------
+Docker registry mirror configuration
+------------------------------------
 
-EnOS can deploy a docker registry in different ways. This is controlled by the
-configuration file.
+EnOS can deploy a docker registry mirror in different ways. This is controlled
+by the configuration file.
 
-No registry
-~~~~~~~~~~~
+No Registry mirror
+~~~~~~~~~~~~~~~~~~
 
 .. code-block:: yaml
 
     registry:
       type: none
 
-With the above configuration, EnOS won't deploy any registry. Any docker agent
-in the deployment will use Docker Hub.
+With the above configuration, EnOS won't deploy any registry mirror. Any docker
+agent in the deployment will use Docker Hub.
 
 
-Internal Registry
-~~~~~~~~~~~~~~~~~
+Internal Registry mirror
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: yaml
 
@@ -186,8 +186,8 @@ following:
    guide you to create your own Rados Block Device.
 
 
-External Registry
-~~~~~~~~~~~~~~~~~
+External Registry mirror
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 .. code-block:: yaml
@@ -203,11 +203,12 @@ an insecure registry.
 
 .. note ::
 
-  If you deploy the external registry on the controller node of OpenStack, make
-  sure the port 5000 don't collide with the port of Keystone.
+  If you deploy the external registry mirror on the controller node of
+  OpenStack, make sure the port 5000 don't collide with the port of Keystone.
 
   When using EnOS locally, it's a good idea to keep a separated external registry to
   speed up the deployment.
+
 
 Single interface deployment
 ---------------------------
