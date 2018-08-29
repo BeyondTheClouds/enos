@@ -82,19 +82,27 @@ based on the Enos environment.
         'resultdir':                  env['resultdir']
     }
 
+    # NOTE(msimonin): This seems unused by kola-ansible.  In any case we don't
+    # rely on kolla-ansible to provide the monitoring stack
+    #
     # Manage monitoring stack
-    if 'enable_monitoring' in env['config']:
-        values['enable_monitoring'] = env['config']['enable_monitoring']
+    # if 'enable_monitoring' in env['config']:
+    #    values['enable_monitoring'] = env['config']['enable_monitoring']
 
+    # NOTE(msimonin): I think there was a confusion some time ago. What EnOS
+    # provide is a transparent registry mirror not a registry  in itself. User
+    # that want to use a registry need to specify manually in the kolla section
+    # the corresponding values.  For this reason I'm commenting the following
+    #
     # Manage docker registry
-    registry_type = env['config']['registry']['type']
-    if registry_type == 'internal':
-        values['docker_registry'] = \
-            "%s:4000" % env['config']['registry_vip']
-    elif registry_type == 'external':
-        values['docker_registry'] = \
-            "%s:%s" % (env['config']['registry']['ip'],
-                       env['config']['registry']['port'])
+    # registry_type = env['config']['registry']['type']
+    # if registry_type == 'internal':
+    #    values['docker_registry'] = \
+    #        "%s:4000" % env['config']['registry_vip']
+    # elif registry_type == 'external':
+    #    values['docker_registry'] = \
+    #        "%s:%s" % (env['config']['registry']['ip'],
+    #                   env['config']['registry']['port'])
 
     return values
 
