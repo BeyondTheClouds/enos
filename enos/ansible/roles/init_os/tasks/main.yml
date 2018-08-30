@@ -1,6 +1,6 @@
 ---
-# NOTE(msimonin): We intialize openstack (flavor, networks, images ...) from
-# from the kolla_toolbox container. This ay we are "sure" that the openstack
+# NOTE(msimonin): We initialize openstack (flavor, networks, images ...) from
+# from the kolla_toolbox container. This way we are "sure" that the openstack
 # client corresponds to the currently deployed openstack.
 - name: Create local working directory (/srv/init_os)
   file:
@@ -20,9 +20,6 @@
 - name: Get the reference on the kolla-toolbox image
   shell: "{% raw %} docker images --format '{{ .Repository }}:{{ .Tag }}' | grep kolla-toolbox {% endraw %}"
   register: kolla_toolbox_image
-
-- name: debug
-  debug: var=kolla_toolbox_image
 
 - name: Download reference images
   vars:
@@ -44,3 +41,18 @@
     image: "{{ kolla_toolbox_image.stdout }}"
     volumes:
       - /srv/init_os:/srv/init_os
+  register: docker_output
+
+- name: Wait for the end of the init...
+  command: "docker ps -q --filter id={{ docker_output.ansible_facts.docker_container.Id }}"
+  register: finished
+  until: finished.stdout == ""
+  delay: 5
+  retries:  100
+
+- name: Init report
+  command: "docker logs {{ docker_output.ansible_facts.docker_container.Id }}"
+  register: init_output
+
+- name: Init report
+  debug: var=init_output
