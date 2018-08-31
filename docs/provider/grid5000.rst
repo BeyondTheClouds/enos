@@ -5,12 +5,12 @@ Grid'5000
 
 
 Installation
--------------
+------------
 
-Connect to the frontend of your choice.
-Then, refer to the :ref:`installation` section to install Enos.
+Connect to a Grid'5000 frontend of your choice. Then, refer to the
+:ref:`installation` section to install Enos.
 
-If virtualenv is missing:
+If the `virtualenv` module is missing:
 
 .. code-block:: bash
 
@@ -18,22 +18,15 @@ If virtualenv is missing:
     $ export PATH=~/.local/bin/:${PATH} # Put it into your path
 
 
-Configuration
--------------
+Basic configuration
+-------------------
 
 The provider relies on cluster names to group the wanted resources. For example
-the following is a valid resources description :
+the following is a valid resources description:
 
-.. code-block:: yaml
-
-    provider: g5k
-
-    resources:
-      paravance:
-        control: 1
-        network: 1
-      parsilo:
-        compute: 10
+.. literalinclude:: ../../tests/functionnal/tests/grid5000/basic-00.yaml
+   :language: yaml
+   :linenos:
 
 
 Deployment
@@ -45,28 +38,44 @@ of your reservation. In the case of an interactive deployment:
 
 .. code-block:: bash
 
-    frontend) oarsub -I -l 'walltime=2:00:00'
-    node) source venv/bin/activate
-    node) <edit configuration>
-    node) enos deploy
+    frontend$ oarsub -I -l 'walltime=2:00:00'
+    node$ source venv/bin/activate
+    node$ <edit configuration>
+    node$ enos deploy
+
+.. note::
+
+   You'll need to configure the access to the Grid'5000 API by setting the following
+   in your ``~/.execo.conf.py`` :
+
+  .. code-block:: python
+
+      # ~/.execo.conf.py
+      g5k_configuration = {
+          'api_username': "your username",
+          'api_verify_ssl_cert': False
+      }
 
 
 Default provider configuration
 -------------------------------
 
-The provider comes with the following default options :
+The provider comes with the following default options:
 
-.. code-block:: yaml
-
-      provider:
-        type: g5k
-        name: Enos
-        walltime: 02:00:00
-        env_name: debian9-x64-min
-        reservation: None
-        vlans: '{rennes: "{type=kavlan}/vlan=1"}'
-        role_distribution: strict
-        single_interface: false
-        user: root
+.. literalinclude:: ../../enos/provider/g5k.py
+   :language: python
+   :start-after: # - SPHINX_DEFAULT_CONFIG
+   :end-before: # + SPHINX_DEFAULT_CONFIG
 
 They can be overriden in the configuration file.
+
+
+Advanced Configuration
+----------------------
+
+The following is equivalent to the basic configuration but allows for a finer
+grained definition of the resources and associated roles.
+
+.. literalinclude:: ../../tests/functionnal/tests/grid5000/advanced-00.yaml
+   :language: yaml
+   :linenos:

@@ -1,65 +1,91 @@
 # -*- coding: utf-8 -*-
-from provider import Provider
-from host import Host
-
+import copy
+from enoslib.api import expand_groups
+import enoslib.infra.enos_static.provider as enos_static
+from enos.provider.provider import Provider
 import logging
 
 
+# - SPHINX_DEFAULT_CONFIG
+DEFAULT_CONFIG = {
+}
+# + SPHINX_DEFAULT_CONFIG
+
+LOGGER = logging.getLogger(__name__)
+
+
+def _gen_enoslib_roles(resources_or_topology):
+    """
+    Generator for the resources or topology.
+
+    NOTE(msimonin): static provider resources description is slightly different
+    from the other providers
+    """
+    def _gen_machines(machine_or_list, default):
+        machine = default
+        if isinstance(machine_or_list, list):
+            for m in machine_or_list:
+                machine.update(m)
+                yield machine
+        else:
+            print(machine)
+            print(machine_or_list)
+            machine.update(machine_or_list)
+            yield machine
+
+    for k1, v1 in resources_or_topology.items():
+        if isinstance(v1, dict):
+            for k2, v2 in v1.items():
+                machine = {"group": k1, "role": k2}
+                for m in _gen_machines(v2, machine):
+                    yield m
+        else:
+            machine = {"group": "default_group", "role": k1}
+            for m in _gen_machines(v1, machine):
+                yield m
+
+
+def _build_enoslib_conf(config):
+    conf = copy.deepcopy(config)
+    enoslib_conf = conf.get("provider")
+    if enoslib_conf.get("resources") is not None:
+        return enoslib_conf
+
+    # We fall here in the legacy mode but a bit modified
+    # for the networks description
+    networks = enoslib_conf["networks"]
+
+    resources = conf.get("topology", conf.get("resources", {}))
+    machines = []
+    for desc in _gen_enoslib_roles(resources):
+        grps = expand_groups(desc["group"])
+        for grp in grps:
+            machine = {
+                "roles": [grp, desc.pop("role")]
+            }
+            machine.update(desc)
+            machines.append(machine)
+
+    enoslib_conf = {
+        "resources": {
+            "machines": machines,
+            "networks": networks
+        }
+    }
+
+    return enoslib_conf
+
+
 class Static(Provider):
-    def init(self, config, force=False):
-        def _make_hosts(resource):
-            """Builds Host objects for `resource`.
-
-            A `resource` can be either (i) a dict with Host entries,
-            or (ii) a list of Host entries.
-            """
-            if isinstance(resource, list):
-                return sum(map(_make_hosts, resource), [])
-            else:
-                return [Host(address=resource['address'],
-                             alias=resource.get('alias', None),
-                             user=resource.get('user', None),
-                             keyfile=resource.get('keyfile', None),
-                             port=resource.get('port', None),
-                             extra=resource.get('extra', {}))]
-
-        network = config['provider']['network']
-        eths = config['provider']['eths']
-        roles = {r: _make_hosts(vs) for (r, vs) in config['resources'].items()}
-
-        return (roles, network, eths)
+    def init(self, conf, force_deploy=False):
+        LOGGER.info("Static provider")
+        enoslib_conf = _build_enoslib_conf(conf)
+        static = enos_static.Static(enoslib_conf)
+        roles, networks = static.init(force_deploy)
+        return roles, networks
 
     def destroy(self, env):
-        logging.warning('Resource destruction is not implemented '
-                        'for the static provider. Call `enos destroy` '
-                        '(without --hard) to delete OpenStack containers.')
+        raise Exception("TODO, not implemented yet")
 
     def default_config(self):
-        return {
-            'network': None,  # A dict to configure the network with
-                              # `start` the first available ip, `end`
-                              # the last available ip, `cidr` the
-                              # network of available ips, the ip
-                              # address of the `gateway` and the ip
-                              # address of the `dns`,
-                              # `extra_ips` is an array of vips to be asssigned
-                              # during the deployment
-
-            'eths':    None   # A pair that contains the name of
-                              # network and external interfaces
-        }
-
-    def topology_to_resources(self, topology):
-        resources = {}
-
-        for grp, rsc in topology.items():
-            self._update(resources, rsc)
-            resources.update({grp: rsc.values()})
-
-        return resources
-
-    def _update(self, rsc1, rsc2):
-        "Update `rsc1` by pushing element from `rsc2`"
-        for k, v in rsc2.items():
-            values = rsc1.setdefault(k, [])
-            values.append(v)
+        return DEFAULT_CONFIG

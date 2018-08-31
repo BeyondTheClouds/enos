@@ -1,0 +1,4 @@
+.vagrant/
+venv*
+current/
+/enos-*

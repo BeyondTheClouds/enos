@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+set -x
+
+DNS_NAMESERVER={{ provider_net.dns }}
+SUBNET_RANGE={{ provider_net.cidr }}
+ALLOCATION_POOL_START={{ provider_net.start }}
+ALLOCATION_POOL_END={{ provider_net.end }}
+GATEWAY={{ provider_net.gateway }}
+
+## Images
+openstack image show debian-9 || openstack image create --disk-format=qcow2 --container-format=bare --property architecture=x86_64 --public --file /srv/init_os/debian-9.qcow2 debian-9
+openstack image show cirros.uec || openstack image create --disk-format=qcow2 --container-format=bare --property architecture=x86_64 --public --file /srv/init_os/cirros.uec.qcow2 cirros.uec
+
+
+## Flavors
+openstack flavor show m1.tiny || openstack flavor create m1.tiny --id auto --ram 512 --disk 1 --vcpus 1 --public
+openstack flavor show m1.small || openstack flavor create m1.small --id auto --ram 2014 --disk 20 --vcpus 1 --public
+openstack flavor show m1.medium || openstack flavor create m1.medium --id auto --ram 4096 --disk 40 --vcpus 2 --public
+openstack flavor show m1.large || openstack flavor create m1.large --id auto --ram 8192 --disk 80 --vcpus 4 --public
+openstack flavor show m1.xlarge || openstack flavor create m1.xlarge --id auto --ram 16384 --disk 160 --vcpus 8 --public
+
+
+## Networks
+## private
+openstack network show private || openstack network create private --provider-network-type vxlan
+
+### private-subnet
+openstack subnet show private-subnet || openstack subnet create private-subnet --network private --subnet-range 10.0.0.0/24 --gateway 10.0.0.1 --dns-nameserver $DNS_NAMESERVER --ip-version 4
+
+### public
+openstack network show public || openstack network create public --share --provider-physical-network physnet1 --provider-network-type flat --external
+
+### public-subnet
+openstack subnet show public-subnet || openstack subnet create public-subnet --network public --subnet-range $SUBNET_RANGE --no-dhcp --allocation-pool start=$ALLOCATION_POOL_START,end=$ALLOCATION_POOL_END --gateway $GATEWAY --dns-nameserver $DNS_NAMESERVER --ip-version 4
+
+
+# Router
+openstack router show router || openstack router create router
+openstack router show router -c external_gateway_info -f value | fgrep -v None || openstack router set router --external-gateway public
+openstack router show router -c interfaces_info -f value|fgrep -v "[]" || openstack router add subnet router private-subnet
+
+
+# Security 
+ADMIN_PROJECT_ID=$(openstack project list --user admin -c ID -f value)
+ADMIN_SEC_GROUP=$(openstack security group list --project ${ADMIN_PROJECT_ID} -c ID -f value)
+for i in $(openstack security group rule list -c ID -f value)
+do
+    openstack security group rule delete $i
+done
+
+openstack security group rule create ${ADMIN_SEC_GROUP} --protocol icmp --dst-port 1:65535 --remote-ip 0.0.0.0/0 --ingress
+openstack security group rule create ${ADMIN_SEC_GROUP} --protocol icmp --dst-port 1:65535 --remote-ip 0.0.0.0/0 --egress
+openstack security group rule create ${ADMIN_SEC_GROUP} --protocol tcp --dst-port 1:65535 --remote-ip 0.0.0.0/0 --ingress
+openstack security group rule create ${ADMIN_SEC_GROUP} --protocol tcp --dst-port 1:65535 --remote-ip 0.0.0.0/0 --egress
+openstack security group rule create ${ADMIN_SEC_GROUP} --protocol udp --dst-port 1:65535 --remote-ip 0.0.0.0/0 --ingress
+openstack security group rule create ${ADMIN_SEC_GROUP} --protocol udp --dst-port 1:65535 --remote-ip 0.0.0.0/0 --egress
+
+
+#Quota
+openstack quota set --cores -1 admin
+openstack quota set --ram -1 admin
+openstack quota set --instances -1 admin
+openstack quota set --fixed-ips -1 admin
+openstack quota set --floating-ips -1 admin

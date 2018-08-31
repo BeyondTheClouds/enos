@@ -29,24 +29,24 @@ setup(
     long_description=read('README.rst'),
     packages=find_packages(),
     install_requires=[
-        'Jinja2==2.9',
-        'execo==2.6.1',
-        'ansible>=2.3.0,<2.4.0',
-        'influxdb==4.0.0',
+        'enoslib>=1.11.0',
         'docopt>=0.6.2,<0.7.0',
-        'httplib2==0.9.2',
-        'python-dateutil>=2.2',
-        'python-openstackclient>=3.0.0,<=4.0.0',
-        'python-vagrant>=0.5.14,<0.6.0',
-        # - Chameleon
-        # NOTE(msimonin): chameleon provider is using
-        # a deprecated API (add_floating_ip).
-        'python-novaclient<10',
-        'python-blazarclient==1.0.1',
-        'python-neutronclient==6.3.0',
+        # All kolla commands will run inside a dedicated venv. The version is
+        # unspecified since the use of virtualenv is very basic.
+        'virtualenv',
         # - ReadTheDocs
         'GitPython>=2.1.5',
     ],
-    entry_points={'console_scripts': ['enos = enos.enos:main']},
+    extras_require={
+        'openstack': [
+            'python-openstackclient',
+            'python-neutronclient',
+            'python-blazarclient>=1.1.1'
+        ],
+        'annotations': [
+            'influxdb==4.0.0'
+        ]
+    },
+    entry_points={'console_scripts': ['enos = enos.cli:main']},
     include_package_data=True
 )
