@@ -21,7 +21,6 @@ virtualenv venv
 . venv/bin/activate
 
 pip install -e "$BASE_DIR"
-pip install -U git+https://github.com/BeyondTheClouds/enoslib
 
 # some cleaning
 # vagrant destroy -f || true
