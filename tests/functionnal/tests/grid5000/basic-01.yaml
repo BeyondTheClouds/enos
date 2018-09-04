@@ -1,26 +1,22 @@
+enable_monitoring: true
+inventory: inventories/inventory.sample
+kolla:
+  docker_namespace: beyondtheclouds
+  enable_heat: false
+  kolla_base_distro: centos
+  kolla_install_type: source
+  openstack_release: latest
+kolla_ref: master
+kolla_repo: https://git.openstack.org/openstack/kolla-ansible
 provider:
+  job_name: enos-jenkins
   type: g5k
-  job_name: 'enos-jenkins'
-  walltime: '02:00:00'
-        
+  walltime: 02:00:00
+registry:
+  type: internal
 resources:
+  parasilo:
+    control: 1
   paravance:
     compute: 1
     network: 1
-  parasilo:
-    control: 1
-
-inventory: inventories/inventory.sample
-
-registry:
-  type: internal
-
-enable_monitoring: yes
-
-kolla_repo: https://git.openstack.org/openstack/kolla-ansible
-kolla_ref: stable/queens
-kolla:
-  kolla_base_distro: centos
-  kolla_install_type: source
-  docker_namespace: beyondtheclouds
-  enable_heat: no

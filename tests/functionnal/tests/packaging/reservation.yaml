@@ -1,43 +1,41 @@
----
-# Example of using yaml anchors
+enable_monitoring: false
 hosts:
-  1: &h1
+  1: &id001
     address: 127.0.0.1
     alias: enos-node
     user: root
-
-resources:
-  control:
-    - *h1
-  network:
-    - *h1
-  compute:
-    - *h1
-
-provider:
-  type: static
-  networks:
-    - start: 192.168.143.3
-      end:  192.168.143.119
-      cidr: 192.168.143.0/24
-      gateway: 192.168.143.1
-      dns: 8.8.8.8
-      roles: ["network_interface"]
-    - start: 192.168.142.3
-      end:  192.168.142.119
-      cidr: 192.168.142.0/24
-      gateway: 192.168.142.1
-      dns: 8.8.8.8
-      roles: ["neutron_external_interface"]
-
 inventory: inventories/inventory.sample
-enable_monitoring: no
-registry:
-  type: none
-kolla_repo: https://git.openstack.org/openstack/kolla-ansible
-kolla_ref: stable/queens
 kolla:
+  docker_namespace: beyondtheclouds
   kolla_base_distro: centos
   kolla_install_type: source
-  docker_namespace: beyondtheclouds
-  nova_compute_virt_type: "qemu"
+  nova_compute_virt_type: qemu
+  openstack_release: latest
+kolla_ref: master
+kolla_repo: https://git.openstack.org/openstack/kolla-ansible
+provider:
+  networks:
+  - cidr: 192.168.143.0/24
+    dns: 8.8.8.8
+    end: 192.168.143.119
+    gateway: 192.168.143.1
+    roles:
+    - network_interface
+    start: 192.168.143.3
+  - cidr: 192.168.142.0/24
+    dns: 8.8.8.8
+    end: 192.168.142.119
+    gateway: 192.168.142.1
+    roles:
+    - neutron_external_interface
+    start: 192.168.142.3
+  type: static
+registry:
+  type: none
+resources:
+  compute:
+  - *id001
+  control:
+  - *id001
+  network:
+  - *id001
