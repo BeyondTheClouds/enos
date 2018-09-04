@@ -6,6 +6,15 @@ BASE_DIR=$1
 
 # shellcheck disable=SC1091
 . current/admin-openrc
+# The openstack client aren't pulled by EnOS anymore.
+# A good practice is to use them inside the generated venv_kolla even if that's
+# possible to use them from the main venv
+
+. venv_kolla/bin/activate
+
+pip install python-openstackclient \
+    python-neutronclient \
+    python-glanceclient
 
 echo "-OPENSTACK VALIDATION-"
 sleep 15
