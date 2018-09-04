@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import copy
-from enoslib.api import expand_groups
-import enoslib.infra.enos_static.provider as enos_static
-from enos.provider.provider import Provider
 import logging
 
+from enoslib.api import expand_groups
+import enoslib.infra.enos_static.provider as enos_static
+
+from enos.provider.provider import Provider
 
 # - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {
@@ -28,8 +29,6 @@ def _gen_enoslib_roles(resources_or_topology):
                 machine.update(m)
                 yield machine
         else:
-            print(machine)
-            print(machine_or_list)
             machine.update(machine_or_list)
             yield machine
 
@@ -58,10 +57,12 @@ def _build_enoslib_conf(config):
     resources = conf.get("topology", conf.get("resources", {}))
     machines = []
     for desc in _gen_enoslib_roles(resources):
+
         grps = expand_groups(desc["group"])
+        role = desc["role"]
         for grp in grps:
             machine = {
-                "roles": [grp, desc.pop("role")]
+                "roles": [grp, role]
             }
             machine.update(desc)
             machines.append(machine)
