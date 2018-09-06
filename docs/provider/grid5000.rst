@@ -79,3 +79,28 @@ grained definition of the resources and associated roles.
 .. literalinclude:: ../../tests/functionnal/tests/grid5000/advanced-00.yaml
    :language: yaml
    :linenos:
+
+
+Reservation
+-----------
+
+In order to reserve in advance the ressources needed by your deployment you can
+set the ``reservation`` key to the desired sart date. And launch ``enos
+deploy``.
+
+.. code-block:: yaml
+
+    # Reserve the 29. February 2020 at 19:00:00 for 14 hours
+    provider:
+      type: g5k
+      ...
+      reservation: 2020-02-29 19:00:00
+      walltime: 14:00:00
+      ...
+
+EnOS will wait for the job to start. You can keep the process running in the
+background (e.g using a screen). Alternatively you can stop it (once the
+reservation is done) and relaunch it later with the exact same configuration
+file. For this purpose you can leverage the ``-f`` options of EnOS.
+
+
