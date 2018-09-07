@@ -1,6 +1,0 @@
----
-- name: Backup environment
-  hosts: all
-  roles:
-    - { role: backup,
-        tags: ['backup']}

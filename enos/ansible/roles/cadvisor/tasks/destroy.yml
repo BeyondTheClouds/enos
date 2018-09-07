@@ -1,0 +1,15 @@
+---
+- name: Stop cadvisor
+  docker_container:
+    name: "cadvisor"
+    state: absent
+    force_kill: yes
+  when: inventory_hostname not in groups['compute']
+
+- name: Stop cadvisor
+  docker_container:
+    name: "cadvisor"
+    state: absent
+    force_kill: yes
+  when: inventory_hostname == groups['compute'][0]
+

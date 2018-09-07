@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from enoslib.task import enostask
 from enoslib.api import run_ansible, emulate_network, validate_network
 
@@ -110,10 +111,13 @@ def up(config, config_file=None, env=None, **kwargs):
        'database_password': "demo"
     })
 
+    options = {}
+    options.update(env['config'])
+    options.update({"enos_action": "deploy"})
     # Runs playbook that initializes resources (eg,
     # installs the registry, install monitoring tools, ...)
-    up_playbook = os.path.join(ANSIBLE_DIR, 'up.yml')
-    run_ansible([up_playbook], inventory, extra_vars=env['config'],
+    up_playbook = os.path.join(ANSIBLE_DIR, 'enos.yml')
+    run_ansible([up_playbook], env['inventory'], extra_vars=options,
                 tags=kwargs['--tags'])
 
 
@@ -210,7 +214,7 @@ def bench(env=None, **kwargs):
                 if not (top_enabled and enabled):
                     continue
                 for a in cartesian(top_args):
-                    playbook_path = os.path.join(ANSIBLE_DIR, 'run-bench.yml')
+                    playbook_path = os.path.join(ANSIBLE_DIR, 'enos.yml')
                     inventory_path = os.path.join(
                         env['resultdir'], 'multinode')
                     # NOTE(msimonin) all the scenarios and plugins
@@ -234,6 +238,7 @@ def bench(env=None, **kwargs):
                             plugin = plugin + "/"
                         bench['plugin_location'] = plugin
                     playbook_values.update(bench=bench)
+                    playbook_values.update(enos_action="bench")
 
                     run_ansible([playbook_path],
                                 inventory_path,
@@ -254,9 +259,12 @@ def backup(env=None, **kwargs):
         os.mkdir(backup_dir)
     # update the env
     env['config']['backup_dir'] = backup_dir
-    playbook_path = os.path.join(ANSIBLE_DIR, 'backup.yml')
+    options = {}
+    options.update(env['config'])
+    options.update({'enos_action': 'backup'})
+    playbook_path = os.path.join(ANSIBLE_DIR, 'enos.yml')
     inventory_path = os.path.join(env['resultdir'], 'multinode')
-    run_ansible([playbook_path], inventory_path, extra_vars=env['config'])
+    run_ansible([playbook_path], inventory_path, extra_vars=options)
 
 
 @enostask()
@@ -327,6 +335,15 @@ def destroy(env=None, **kwargs):
                   '<command>': command,
                   '--silent': kwargs['--silent'],
                   'kolla': True}
+        options = {
+            "enos_action": "destroy"
+        }
+        up_playbook = os.path.join(ANSIBLE_DIR, 'enos.yml')
+
+        inventory_path = os.path.join(env['resultdir'], 'multinode')
+        # Destroying enos resources
+        run_ansible([up_playbook], inventory_path, extra_vars=options)
+        # Destroying kolla resources
         _kolla(env=env, **kolla_kwargs)
 
 

@@ -1,5 +1,5 @@
 ---
-- name: Install common dependencies
+- name: Common tasks
   hosts: all
   roles:
     - { role: common,
@@ -7,7 +7,7 @@
     - { role: registry,
         tags: ['registry'] }
 
-- name: Configure the influx database
+- name: Influx tasks
   hosts: disco/influx
   roles:
     - { role: influx,
@@ -15,7 +15,7 @@
         when: enable_monitoring | bool }
 
 
-- name: Install monitoring agent
+- name: Monitoring agent tasks
   hosts: all
   roles:
     - { role: cadvisor,
@@ -25,9 +25,16 @@
         tags: ['collectd'],
         when: enable_monitoring | bool }
 
-- name: Configure grafana
+- name: Grafana tasks
   hosts: disco/grafana
   roles:
     - { role: grafana,
         tags: ['grafana'],
         when: enable_monitoring | bool }
+
+- name: Rally tasks
+  hosts: disco/bench
+  roles:
+    - { role: rally,
+        tags: ['rally'] }
+        

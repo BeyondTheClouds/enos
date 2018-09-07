@@ -1,0 +1,6 @@
+---
+- name: Destroy the docker registry container
+  docker_container:
+    name: registry
+    state: absent
+    force_kill: yes
