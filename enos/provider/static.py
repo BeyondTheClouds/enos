@@ -86,7 +86,9 @@ class Static(Provider):
         return roles, networks
 
     def destroy(self, env):
-        raise Exception("TODO, not implemented yet")
+        # NOTE(msimonin): We can't destroy static resources
+        # This would be mean
+        pass
 
     def default_config(self):
         return DEFAULT_CONFIG
