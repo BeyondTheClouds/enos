@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+from subprocess import check_call
+import itertools
+import operator
+import os
+import pprint
+import logging
+import json
+import pickle
+import yaml
+
 from enoslib.task import enostask
 from enoslib.api import run_ansible, emulate_network, validate_network
 
@@ -10,21 +21,6 @@ from enos.utils.extra import (bootstrap_kolla, generate_inventory, pop_ip,
                               make_provider, mk_enos_values, load_config,
                               seekpath, get_vip_pool, lookup_network, in_kolla)
 from enos.utils.enostask import check_env
-
-from datetime import datetime
-import logging
-
-import pprint
-
-import os
-from subprocess import check_call
-
-import json
-import pickle
-import yaml
-
-import itertools
-import operator
 
 
 def get_and_bootstrap_kolla(env, force=False):
@@ -41,9 +37,9 @@ def get_and_bootstrap_kolla(env, force=False):
     if not os.path.isdir(kolla_path):
         logging.info("Cloning Kolla repository...")
         check_call("git clone %s --branch %s --single-branch --quiet %s" %
-                       (env['config']['kolla_repo'],
-                        env['config']['kolla_ref'],
-                        kolla_path),
+                   (env['config']['kolla_repo'],
+                    env['config']['kolla_ref'],
+                    kolla_path),
                    shell=True)
 
         # Bootstrap kolla running by patching kolla sources (if any) and
@@ -75,8 +71,9 @@ def up(config, config_file=None, env=None, **kwargs):
     env['config_file'] = config_file
     logging.debug("Loaded config: %s", config)
 
+    force_deploy = kwargs.get('--force-deploy', False)
     rsc, networks = \
-        provider.init(env['config'], kwargs['--force-deploy'])
+        provider.init(env['config'], force_deploy)
 
     env['rsc'] = rsc
     env['networks'] = networks
@@ -101,20 +98,20 @@ def up(config, config_file=None, env=None, **kwargs):
     # Set variables required by playbooks of the application
     vip_pool = get_vip_pool(networks)
     env['config'].update({
-       'vip':               pop_ip(vip_pool),
-       'registry_vip':      pop_ip(vip_pool),
-       'influx_vip':        pop_ip(vip_pool),
-       'grafana_vip':       pop_ip(vip_pool),
-       'resultdir':         env['resultdir'],
-       'rabbitmq_password': "demo",
-       'database_password': "demo"
+        'vip': pop_ip(vip_pool),
+        'registry_vip': pop_ip(vip_pool),
+        'influx_vip': pop_ip(vip_pool),
+        'grafana_vip': pop_ip(vip_pool),
+        'resultdir': env['resultdir'],
+        'rabbitmq_password': "demo",
+        'database_password': "demo"
     })
 
     # Runs playbook that initializes resources (eg,
     # installs the registry, install monitoring tools, ...)
     up_playbook = os.path.join(ANSIBLE_DIR, 'up.yml')
-    run_ansible([up_playbook], inventory, extra_vars=env['config'],
-                tags=kwargs['--tags'])
+    tags = kwargs.get('--tags', None)
+    run_ansible([up_playbook], inventory, extra_vars=env['config'], tags=tags)
 
 
 @enostask()
@@ -126,7 +123,8 @@ def install_os(env=None, **kwargs):
     # Construct kolla-ansible command...
     kolla_cmd = [os.path.join(kolla_path, "tools", "kolla-ansible")]
 
-    if kwargs['--reconfigure']:
+    reconfigure = kwargs.get('--reconfigure', False)
+    if reconfigure:
         kolla_cmd.append('reconfigure')
     else:
         kolla_cmd.append('deploy')
@@ -135,8 +133,9 @@ def install_os(env=None, **kwargs):
                       "--passwords", "%s/passwords.yml" % env['resultdir'],
                       "--configdir", "%s" % env['resultdir']])
 
-    if kwargs['--tags']:
-        kolla_cmd.extend(['--tags', kwargs['--tags']])
+    tags = kwargs.get('--tags', None)
+    if tags:
+        kolla_cmd.extend(['--tags', tags])
 
     logging.info("Calling Kolla...")
 
@@ -193,7 +192,8 @@ def bench(env=None, **kwargs):
 
     logging.debug('phase[bench]: args=%s' % kwargs)
     playbook_values = mk_enos_values(env)
-    workload_dir = seekpath(kwargs["--workload"])
+    workload_name = kwargs.get('--workload', 'workload')
+    workload_dir = seekpath(workload_name)
     with open(os.path.join(workload_dir, "run.yml")) as workload_f:
         workload = yaml.load(workload_f)
         for bench_type, desc in workload.items():
@@ -229,7 +229,7 @@ def bench(env=None, **kwargs):
 
                     if "plugin" in scenario:
                         plugin = os.path.join(workload_dir,
-                                           scenario["plugin"])
+                                              scenario["plugin"])
                         if os.path.isdir(plugin):
                             plugin = plugin + "/"
                         bench['plugin_location'] = plugin
@@ -244,9 +244,9 @@ def bench(env=None, **kwargs):
 @check_env
 def backup(env=None, **kwargs):
 
-    backup_dir = kwargs['--backup_dir'] \
-        or kwargs['--env'] \
-        or SYMLINK_NAME
+    backup_dir = kwargs.get('--backup_dir',
+                            kwargs.get('--env',
+                                       SYMLINK_NAME))
 
     backup_dir = os.path.abspath(backup_dir)
     # create if necessary
@@ -285,7 +285,7 @@ def tc(env=None, **kwargs):
 
     roles = env["rsc"]
     inventory = env["inventory"]
-    test = kwargs['--test']
+    test = kwargs.get('--test', False)
     if test:
         validate_network(roles, inventory)
     else:
@@ -311,7 +311,7 @@ def info(env=None, **kwargs):
 @enostask()
 @check_env
 def destroy(env=None, **kwargs):
-    hard = kwargs['--hard']
+    hard = kwargs.get('--hard', True)
     if hard:
         logging.info('Destroying all the resources')
         provider_conf = env['config']['provider']
@@ -319,14 +319,15 @@ def destroy(env=None, **kwargs):
         provider.destroy(env)
     else:
         command = ['destroy', '--yes-i-really-really-mean-it']
-        if kwargs['--include-images']:
+        include_images = kwargs.get('--include-images', False)
+        if include_images:
             command.append('--include-images')
         kolla_kwargs = {'--': True,
-                  '--env': kwargs['--env'],
-                  '-v': kwargs['-v'],
-                  '<command>': command,
-                  '--silent': kwargs['--silent'],
-                  'kolla': True}
+                        '--env': kwargs['--env'],
+                        '-v': kwargs['-v'],
+                        '<command>': command,
+                        '--silent': kwargs['--silent'],
+                        'kolla': True}
         _kolla(env=env, **kolla_kwargs)
 
 
