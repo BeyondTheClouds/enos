@@ -1,0 +1,5 @@
+---
+- include: "{{ registry.type }}/agent.yml"
+
+- include: "{{ registry.type }}/registry.yml"
+  when: inventory_hostname in groups['disco/registry']

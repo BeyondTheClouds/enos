@@ -1,0 +1,21 @@
+---
+- name: Testing if they are some rally logs to collect
+  stat: path=/root/rally_home
+  register: conf
+
+#- name: Make a tar of the rally execution environment
+#  archive:
+#    path: /root/rally_home
+#    dest: /root/rally.tar.gz
+# NOTE(msimonin): There are symlink in RALLY_HOME which
+# cause some trouble to ansible archive module
+# https://github.com/ansible/ansible/issues/24427
+- name: Make a tar of the rally execution environment
+  command: tar -czf /root/rally.tar.gz /root/rally_home
+  when: conf.stat.exists and conf.stat.isdir
+
+- name: Pull back the rally execution environment
+  fetch: src=/root/rally.tar.gz
+         dest={{ backup_dir }}/{{ inventory_hostname }}-rally.tar.gz
+         flat=yes
+  when: conf.stat.exists and conf.stat.isdir

@@ -1,0 +1,39 @@
+---
+- name: Start the cadvisor
+  docker_container:
+    name: "cadvisor"
+    image: "{{ cadvisor_docker_image }}"
+    command: "-storage_driver_db=cadvisor -storage_driver_host={{ influx_vip }}:8086 -storage_driver=influxdb --housekeeping_interval={{ cadvisor.housekeeping_interval }}"
+    detach: True
+    hostname: "{{ g5k_role }}-{{ ansible_hostname }}"
+    ports:
+      # don't bind to the host port 8080 since swift is using it by default
+      - "8888:8080"
+    state: started
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:rw"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/etc/hostname:/etc/machine-id"
+  when: inventory_hostname not in groups['compute']
+
+- name: Start the cadvisor
+  docker_container:
+    name: "cadvisor"
+    image: "{{ cadvisor_docker_image }}"
+    command: "-storage_driver_db=cadvisor -storage_driver_host={{ influx_vip }}:8086 -storage_driver=influxdb --housekeeping_interval={{ cadvisor.housekeeping_interval }}"
+    detach: True
+    hostname: "{{ g5k_role }}-{{ ansible_hostname }}"
+    ports:
+      # don't bind to the host port 8080 since swift is using it by default
+      - "8888:8080"
+    state: started
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:rw"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/etc/hostname:/etc/machine-id"
+  when: inventory_hostname == groups['compute'][0]
+
