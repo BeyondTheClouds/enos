@@ -1,6 +1,5 @@
 ---
-- name: Install collectd agent
-  apt: name=collectd state=present
+- include: pull.yml
 
 - name: Install the influxdb connector
   template: src=influx.conf.j2 dest=/etc/collectd/collectd.conf.d/influx.conf

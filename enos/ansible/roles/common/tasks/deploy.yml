@@ -1,22 +1,5 @@
 ---
-- name: Installing dependencies
-  apt:
-    name: "{{ item }}"
-    state: present
-    update_cache: yes
-  with_items:
-    - python-setuptools
-
-- easy_install:
-    name: pip
-    state: latest
-
-- name: Install some python bindings
-  pip:
-    name: "{{ item }}"
-  with_items:
-    - docker
-    - influxdb
+- include: pull.yml
 
 - name: Mount /run
   command: mount --make-shared /run
