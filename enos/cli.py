@@ -268,13 +268,7 @@ def deploy(**kwargs):
     """
     logger.debug(kwargs)
     config_file, config = load_config(kwargs['-f'])
-    # --reconfigure and --tags can not be provided in 'deploy'
-    # but they are required for 'up' and 'install_os'
-    kwargs['--reconfigure'] = False
-    kwargs['--tags'] = None
-    t.up(config, config_file=config_file, **kwargs)
-    t.install_os(**kwargs)
-    t.init_os(**kwargs)
+    t.deploy(config, config_file=config_file, **kwargs)
 
 
 def kolla(**kwargs):

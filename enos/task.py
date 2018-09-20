@@ -330,13 +330,13 @@ def destroy(env=None, **kwargs):
         _kolla(env=env, **kolla_kwargs)
 
 
-def deploy(**kwargs):
+def deploy(config, config_file=None, **kwargs):
     # --reconfigure and --tags can not be provided in 'deploy'
     # but they are required for 'up' and 'install_os'
     kwargs['--reconfigure'] = False
     kwargs['--tags'] = None
 
-    up(**kwargs)
+    up(config, config_file=config_file, **kwargs)
 
     # If the user doesn't specify an experiment, then set the ENV directory to
     # the default one.
