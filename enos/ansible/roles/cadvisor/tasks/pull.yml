@@ -1,5 +1,5 @@
 ---
-- name: Pull the cadvisor
+- name: Pull the cadvisor container
   docker_image:
     name : "{{ cadvisor_docker_image }}"
     state: present

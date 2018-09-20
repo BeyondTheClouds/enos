@@ -76,7 +76,7 @@ def up(**kwargs):
                          deployment [default: ./reservation.yaml].
     -h --help            Show this help message.
     --force-deploy       Force deployment [default: False].
-    --pull               Preinstall software (e.g pull docker images)
+    --pull               Only preinstall software (e.g pull docker images)
                          [default: False].
     -s --silent          Quiet mode.
     -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
@@ -101,7 +101,7 @@ def os(**kwargs):
                          experiment [default: current].
     -h --help            Show this help message.
     --reconfigure        Reconfigure the services after a deployment.
-    --pull               Preinstall software (e.g pull docker images)
+    --pull               Only preinstall software (e.g pull docker images)
                          [default: False].
     -s --silent          Quiet mode.
     -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
@@ -125,7 +125,7 @@ def init(**kwargs):
     -e ENV --env=ENV     Path to the environment directory. You should
                          use this option when you want to link a specific
                          experiment [default: current].
-    --pull               Preinstall software (e.g pull docker images)
+    --pull               Only preinstall software (e.g pull docker images)
                          [default: False].
     -h --help            Show this help message.
     -s --silent          Quiet mode.
@@ -155,7 +155,7 @@ def bench(**kwargs):
                          scenarios to launch [default: workload/].
     --reset              Force the creation of benchmark environment.
 
-    --pull               Preinstall software (e.g pull docker images)
+    --pull               Only preinstall software (e.g pull docker images)
                          [default: False].
     """
     logger.debug(kwargs)
@@ -272,7 +272,7 @@ def deploy(**kwargs):
     -f CONFIG_FILE       Path to the configuration file describing the
                          deployment [default: ./reservation.yaml].
     --force-deploy       Force deployment [default: False].
-    --pull               Preinstall software (e.g pull docker images)
+    --pull               Only preinstall software (e.g pull docker images)
                          [default: False].
     -s --silent          Quiet mode.
     -vv                  Verbose mode.

@@ -1,7 +1,7 @@
 ---
 # NOTE(msimonin): We initialize openstack (flavor, networks, images ...) from
-# from the kolla_toolbox container. This way we are "sure" that the openstack
-# client corresponds to the currently deployed openstack.
+# the kolla_toolbox container. This way we are "sure" that the openstack client
+# corresponds to the currently deployed openstack.
 - name: Create local working directory (/srv/init_os)
   file:
     path: /srv/init_os
