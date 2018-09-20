@@ -1,0 +1,5 @@
+---
+- name: Pull the influx container
+  docker_image:
+    name: "{{ influxdb_docker_image }}"
+    state: present

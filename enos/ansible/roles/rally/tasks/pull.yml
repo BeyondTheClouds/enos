@@ -1,0 +1,5 @@
+---
+- name: Pull the Rally container
+  docker_image:
+    name: "{{ rally_container_image }}"
+    state: present

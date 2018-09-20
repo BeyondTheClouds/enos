@@ -1,0 +1,12 @@
+---
+# NOTE(msimonin): We initialize openstack (flavor, networks, images ...) from
+# the kolla_toolbox container. This way we are "sure" that the openstack client
+# corresponds to the currently deployed openstack.
+- name: Create local working directory (/srv/init_os)
+  file:
+    path: /srv/init_os
+    state: directory
+
+- name: Download reference images
+  shell: "ls -l /srv/init_os/{{ item.name }}.qcow2 || curl -L -o /srv/init_os/{{ item.name }}.qcow2 {{ item.url }}"
+  loop: "{{ images }}"

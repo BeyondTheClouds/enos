@@ -1,0 +1,5 @@
+---
+- name: Pull the grafana container
+  docker_image:
+    name: "{{ grafana_docker_image }}"
+    state: present

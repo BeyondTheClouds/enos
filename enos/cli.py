@@ -76,6 +76,8 @@ def up(**kwargs):
                          deployment [default: ./reservation.yaml].
     -h --help            Show this help message.
     --force-deploy       Force deployment [default: False].
+    --pull               Only preinstall software (e.g pull docker images)
+                         [default: False].
     -s --silent          Quiet mode.
     -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
     -vv                  Verbose mode.
@@ -99,6 +101,8 @@ def os(**kwargs):
                          experiment [default: current].
     -h --help            Show this help message.
     --reconfigure        Reconfigure the services after a deployment.
+    --pull               Only preinstall software (e.g pull docker images)
+                         [default: False].
     -s --silent          Quiet mode.
     -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
     -vv                  Verbose mode.
@@ -109,7 +113,7 @@ def os(**kwargs):
 
 def init(**kwargs):
     """
-    usage: enos init [-e ENV|--env=ENV] [-s|--silent|-vv]
+    usage: enos init [-e ENV|--env=ENV] [-s|--silent|-vv] [--pull]
 
     Initialise OpenStack with the bare necessities:
     - Install a 'member' role
@@ -121,6 +125,8 @@ def init(**kwargs):
     -e ENV --env=ENV     Path to the environment directory. You should
                          use this option when you want to link a specific
                          experiment [default: current].
+    --pull               Only preinstall software (e.g pull docker images)
+                         [default: False].
     -h --help            Show this help message.
     -s --silent          Quiet mode.
     -vv                  Verbose mode.
@@ -148,6 +154,9 @@ def bench(**kwargs):
                          that contains the description of the different
                          scenarios to launch [default: workload/].
     --reset              Force the creation of benchmark environment.
+
+    --pull               Only preinstall software (e.g pull docker images)
+                         [default: False].
     """
     logger.debug(kwargs)
     t.bench(**kwargs)
@@ -252,7 +261,7 @@ def destroy(**kwargs):
 def deploy(**kwargs):
     """
     usage: enos deploy [-e ENV|--env=ENV] [-f CONFIG_FILE] [--force-deploy]
-                    [-s|--silent|-vv]
+                    [--pull] [-s|--silent|-vv]
 
     Shortcut for enos up, then enos os, and finally enos config.
 
@@ -263,6 +272,8 @@ def deploy(**kwargs):
     -f CONFIG_FILE       Path to the configuration file describing the
                          deployment [default: ./reservation.yaml].
     --force-deploy       Force deployment [default: False].
+    --pull               Only preinstall software (e.g pull docker images)
+                         [default: False].
     -s --silent          Quiet mode.
     -vv                  Verbose mode.
     """

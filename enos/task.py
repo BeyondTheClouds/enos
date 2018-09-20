@@ -93,7 +93,6 @@ def up(config, config_file=None, env=None, **kwargs):
         base_inventory = os.path.join(INVENTORY_DIR, 'inventory.sample')
     else:
         base_inventory = seekpath(inventory_conf)
-
     generate_inventory(env['rsc'], env['networks'], base_inventory, inventory)
     logging.info('Generates inventory %s' % inventory)
 
@@ -113,7 +112,8 @@ def up(config, config_file=None, env=None, **kwargs):
 
     options = {}
     options.update(env['config'])
-    options.update({"enos_action": "deploy"})
+    enos_action = "pull" if kwargs.get("--pull") else "deploy"
+    options.update(enos_action=enos_action)
     # Runs playbook that initializes resources (eg,
     # installs the registry, install monitoring tools, ...)
     up_playbook = os.path.join(ANSIBLE_DIR, 'enos.yml')
@@ -130,8 +130,10 @@ def install_os(env=None, **kwargs):
     # Construct kolla-ansible command...
     kolla_cmd = [os.path.join(kolla_path, "tools", "kolla-ansible")]
 
-    if kwargs['--reconfigure']:
+    if kwargs.get('--reconfigure'):
         kolla_cmd.append('reconfigure')
+    elif kwargs.get('--pull'):
+        kolla_cmd.append('pull')
     else:
         kolla_cmd.append('deploy')
 
@@ -170,8 +172,10 @@ def init_os(env=None, **kwargs):
         msg = "External network not found, define %s networks" % " or ".join(
             [NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE])
         raise Exception(msg)
-
-    playbook_values.update({"provider_net": provider_net})
+    enos_action = 'pull' if kwargs.get('--pull') else 'deploy'
+    playbook_values.update(
+        provider_net=provider_net,
+        enos_action=enos_action)
     run_ansible([playbook_path],
                 inventory_path,
                 extra_vars=playbook_values)
