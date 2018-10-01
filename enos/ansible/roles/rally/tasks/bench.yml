@@ -69,7 +69,8 @@
            task start /home/rally/data/{{ bench.scenario_location | basename }}
            --task-args-file /home/rally/data/rally-args.json
            --deployment discovery
-           
+  ignore_errors: yes
+
 # -------------------------------- Download results (if any)
 - name: Find report identifier
   shell: > 
@@ -78,6 +79,7 @@
            --deployment discovery\
           | tail -n 1
   register: task_uuid
+  ignore_errors: yes
 
 - name: Generating rally reports (html) for {{ task_uuid.stdout }}
   when: task_uuid.stdout != ""
@@ -86,6 +88,7 @@
            task report --uuid {{ task_uuid.stdout }} 
            --html-static --out 
            /home/rally/data/report-{{ bench.scenario_location | basename }}-{{ task_uuid.stdout }}.html
+  ignore_errors: yes
 
 - name: Generating rally reports (json) for {{ task_uuid.stdout }}
   when: task_uuid.stdout != ""
@@ -94,3 +97,4 @@
            task report --uuid {{ task_uuid.stdout }} 
            --json --out 
            /home/rally/data/report-{{ bench.scenario_location | basename }}-{{ task_uuid.stdout }}.json
+  ignore_errors: yes
