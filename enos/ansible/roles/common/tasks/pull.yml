@@ -6,6 +6,7 @@
     update_cache: yes
   with_items:
     - python-setuptools
+    - kvm
 
 - easy_install:
     name: pip
