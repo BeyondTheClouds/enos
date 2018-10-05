@@ -9,15 +9,15 @@
   Import rabbitmq
 
   <Module rabbitmq>
-    Username "openstack"     # From kolla configuration
+    Username "{{ collectd_rabbitmq_username }}"     # From kolla configuration
     Host "{{ hostvars[inventory_hostname]['ansible_' + network_interface]['ipv4']['address'] }}"
-    Password "{{ rabbitmq_password }}"
+    Password "{{ collectd_rabbitmq_password }}"
     Port "15672"
     CollectChannels false    # Collection of channel statistics
     CollectConnections false # Collection of connection statistics
     CollectExchanges false    # Collection of exchange statistics
     CollectNodes true       # Collection of node statistics (cluster stuff)
-    CollectQueues false       # Collection of queue statistics
+    CollectQueues {{ collectd_rabbitmq_collectqueues }}       # Collection of queue statistics
     HTTPTimeout 60
     # VerbosityLevel:
     # - "info" :: Only the most commonly-used metrics are reported
