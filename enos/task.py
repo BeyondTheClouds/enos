@@ -56,7 +56,12 @@ def get_and_bootstrap_kolla(env, force=False):
         # Kolla recommends installing ansible manually.
         # Currently anything over 2.3.0 is supported, not sure about the future
         # So we hardcode the version to something reasonnable for now
-        in_kolla('cd %s && pip install ansible==2.5.7' % kolla_path)
+        in_kolla('pip install ansible==2.5.7')
+
+        # Installation influxdb client, used by the annotations
+        enable_monitoring = env['config'].get('enable_monitoring')
+        if enable_monitoring:
+            in_kolla('pip install influxdb')
 
     return kolla_path
 
