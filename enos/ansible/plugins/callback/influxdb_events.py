@@ -4,13 +4,14 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 from datetime import datetime
-import os
 import pwd
-
-from influxdb import InfluxDBClient
+import os
+from requests import exceptions 
 
 from ansible.plugins.callback import CallbackBase
 
+from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBServerError
 
 class CallbackModule(CallbackBase):
     """
@@ -94,7 +95,7 @@ class CallbackModule(CallbackBase):
             'tags': 'task {} {} {}'.format(
                self.playbook_name,
                self.play.name,
-               task.get_name),
+               task.get_name()),
             'text': task.get_name(),
             'type': 'task',
             'title': task.get_name()
@@ -133,16 +134,18 @@ class CallbackModule(CallbackBase):
 
     def v2_playbook_on_stats(self, stats):
         """Connect to InfluxDB and commit events"""
-        # Set InfluxDB host from an environment variable if provided
+        # Get external tags if any
+        enos_tags = self.vm.get_vars().get('enos_tags', '')
         fields = {
-            'tags': 'playbook {}'.format(
-               self.playbook_name),
+            'tags': 'playbook {} {}'.format(
+               self.playbook_name, enos_tags),
             'text': 'playbook finished',
             'type': 'playbook',
             'title': self.playbook_name
         }
         self.report_event(fields)
 
+        # Set InfluxDB host from an environment variable if provided
         _host = os.getenv('INFLUX_VIP') or self.vm.get_vars().get('influx_vip')
         if not _host:
             return
@@ -151,6 +154,15 @@ class CallbackModule(CallbackBase):
         _pass = "None"
         _dbname = "events"
         influxdb = InfluxDBClient(_host, _port, _user, _pass, _dbname)
+        try:
+            version = influxdb.ping()                        
+        except (InfluxDBServerError,
+                exceptions.HTTPError,
+                exceptions.ConnectionError,
+                exceptions.Timeout,
+                exceptions.RequestException) as error:
+
+                return
 
         try:
             influxdb.write_points(self.events, time_precision='u')
