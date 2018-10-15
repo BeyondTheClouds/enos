@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from enoslib.task import enostask
-from enoslib.api import run_ansible, emulate_network, validate_network
+from enoslib.api import (run_ansible, emulate_network, validate_network,
+                        reset_network)
 
 from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
                                   NEUTRON_EXTERNAL_INTERFACE,
@@ -286,7 +287,7 @@ def new(env=None, **kwargs):
 
 @enostask()
 @check_env
-def tc(env=None, **kwargs):
+def tc(env=None, network_constraints=None, extra_vars=None, **kwargs):
     """
     Usage: enos tc [-e ENV|--env=ENV] [--test] [-s|--silent|-vv]
     Enforce network constraints
@@ -302,12 +303,24 @@ def tc(env=None, **kwargs):
 
     roles = env["rsc"]
     inventory = env["inventory"]
+    # We inject the influx_vip for annotation purpose
+    influx_vip = env["config"].get("influx_vip")
     test = kwargs['--test']
+    reset = kwargs['--reset']
+    if not extra_vars:
+        extra_vars = {}
+    extra_vars.update(influx_vip=influx_vip)
+
     if test:
-        validate_network(roles, inventory)
+        validate_network(roles, inventory, extra_vars=extra_vars)
+    elif reset:
+        reset_network(roles, inventory, extra_vars=extra_vars)
     else:
-        network_constraints = env["config"]["network_constraints"]
-        emulate_network(roles, inventory, network_constraints)
+        if not network_constraints:
+            network_constraints = env["config"].get("network_constraints", {})
+
+        emulate_network(roles, inventory, network_constraints,
+                        extra_vars=extra_vars)
 
 
 @enostask()
