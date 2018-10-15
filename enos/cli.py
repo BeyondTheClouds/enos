@@ -201,7 +201,7 @@ def new(**kwargs):
 
 def tc(**kwargs):
     """
-    usage: enos tc [-e ENV|--env=ENV] [--test] [-s|--silent|-vv]
+    usage: enos tc [-e ENV|--env=ENV] [--test] [--reset] [-s|--silent|-vv]
 
     Enforce network constraints
 
@@ -212,6 +212,7 @@ def tc(**kwargs):
     -h --help            Show this help message.
     -s --silent          Quiet mode.
     --test               Test the rules by generating various reports.
+    --reset              Reset the constraints.
     -vv                  Verbose mode.
     """
     logger.debug(kwargs)
