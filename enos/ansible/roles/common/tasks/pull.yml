@@ -7,6 +7,7 @@
   with_items:
     - python-setuptools
     - kvm
+    - fping
 
 - easy_install:
     name: pip
