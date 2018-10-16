@@ -298,7 +298,7 @@ Then, install EnOS in your working directory:
     # (venv) enos:~/enos-myxp$
     . venv/bin/activate
     # (venv) enos:~/enos-myxp$
-    pip install "enos[openstack]==4.2.0"
+    pip install "enos[openstack]==4.2.1"
 
 .. note::
 
