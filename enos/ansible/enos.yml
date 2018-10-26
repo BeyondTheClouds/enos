@@ -32,9 +32,8 @@
         tags: ['grafana'],
         when: enable_monitoring | bool }
 
-- name: Rally tasks
+- name: "{{ bench.type }} tasks"
   hosts: disco/bench
   roles:
-    - { role: rally,
-        tags: ['rally'] }
-        
+    - { role: "{{ bench.type }}",
+        tags: ['bench'] }
