@@ -15,11 +15,12 @@ LOGGER = logging.getLogger(__name__)
 
 # - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {
-    'job_name': 'Enos',
-    'walltime': '02:00:00',
-    'env_name': 'debian9-x64-nfs',
-    'reservation': False,
-    'job_type': 'deploy'
+    'job_name': 'Enos',             # Job name in oarstat/gant
+    'walltime': '02:00:00',         # Reservation duration time
+    'env_name': 'debian9-x64-nfs',  # Environment to deploy
+    'reservation': False,           # Reservation date
+    'job_type': 'deploy',           # deploy, besteffort, ...
+    'queue': None                   # default, production, testing
 }
 # + SPHINX_DEFAULT_CONFIG
 
