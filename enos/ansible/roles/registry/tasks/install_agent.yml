@@ -7,14 +7,10 @@
     - apt-transport-https
     - ca-certificates
 
-- name: Adding Docker apt key
-  apt_key: keyserver=hkp://p80.pool.sks-keyservers.net:80 id=58118E89F3A912897C070ADBF76221572C52609D
-
-- name: Adding Docker apt repository
-  apt_repository: repo='deb https://apt.dockerproject.org/repo debian-jessie main' state=present
+- name: Installing docker
+  shell: (curl -sSL https://get.docker.com/ | sh)
 
 - name: Installing dependencies
   apt: name={{ item }} state=present update_cache=yes
   with_items:
-    - docker-engine
     - curl

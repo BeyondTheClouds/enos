@@ -1,5 +1,5 @@
 [Service]
 ExecStart=
-ExecStart=/usr/bin/dockerd -H fd:// --registry-mirror=http://{{ registry_ip }}:{{ registry_port }}
+ExecStart=/usr/bin/dockerd --registry-mirror=http://{{ registry_ip }}:{{ registry_port }}
 LimitMEMLOCK=infinity
 LimitNOFILE=16384
