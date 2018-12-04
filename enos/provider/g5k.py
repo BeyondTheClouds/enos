@@ -20,7 +20,7 @@ DEFAULT_CONFIG = {
     'env_name': 'debian9-x64-nfs',  # Environment to deploy
     'reservation': False,           # Reservation date
     'job_type': 'deploy',           # deploy, besteffort, ...
-    'queue': None                   # default, production, testing
+    'queue': 'default'              # default, production, testing
 }
 # + SPHINX_DEFAULT_CONFIG
 
