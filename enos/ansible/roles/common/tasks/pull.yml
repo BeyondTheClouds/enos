@@ -5,6 +5,7 @@
     state: present
     update_cache: yes
   with_items:
+    - git
     - python-setuptools
     - kvm
     - fping

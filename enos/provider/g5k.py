@@ -4,6 +4,7 @@ import logging
 
 from enoslib.api import expand_groups
 from enoslib.infra.enos_g5k import (api, provider)
+from enoslib.infra.enos_g5k.configuration import Configuration
 
 from enos.provider.provider import Provider
 from enos.utils.extra import gen_enoslib_roles
@@ -18,7 +19,7 @@ DEFAULT_CONFIG = {
     'job_name': 'Enos',             # Job name in oarstat/gant
     'walltime': '02:00:00',         # Reservation duration time
     'env_name': 'debian9-x64-nfs',  # Environment to deploy
-    'reservation': False,           # Reservation date
+    'reservation': '',           # Reservation date
     'job_type': 'deploy',           # deploy, besteffort, ...
     'queue': 'default'              # default, production, testing
 }
@@ -31,13 +32,13 @@ PRIMARY_NETWORK = {
     "id": "int-net",
     "site": "rennes",
     "type": "kavlan",
-    "role": NETWORK_INTERFACE}
+    "roles": [NETWORK_INTERFACE]}
 
 SECONDARY_NETWORK = {
     "id": "ext-net",
     "site": "rennes",
     "type": "kavlan",
-    "role": NEUTRON_EXTERNAL_INTERFACE}
+    "roles": [NEUTRON_EXTERNAL_INTERFACE]}
 
 
 def _count_common_interfaces(clusters):
@@ -53,7 +54,7 @@ def _get_sites(clusters):
 def _build_enoslib_conf(config):
     conf = copy.deepcopy(config)
     enoslib_conf = conf.get("provider", {})
-
+    enoslib_conf.pop("type", None)
     # NOTE(msimonin): Force some enoslib/g5k parameters here.
     # * dhcp: True means that network card will be brought up and the dhcp
     #   client will be called. As for now (2018-08-16) this is disabled by
@@ -164,8 +165,9 @@ class G5k(Provider):
     def init(self, config, force=False):
         LOGGER.debug("Building enoslib configuration")
         enoslib_conf = _build_enoslib_conf(config)
+        conf = Configuration.from_dictionnary(enoslib_conf)
         LOGGER.debug("Creating G5K provider")
-        g5k = provider.G5k(enoslib_conf)
+        g5k = provider.G5k(conf)
         LOGGER.info("Initializing G5K provider")
         roles, networks = g5k.init(force)
         _provision(roles)
