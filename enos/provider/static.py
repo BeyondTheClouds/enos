@@ -4,6 +4,7 @@ import logging
 
 from enoslib.api import expand_groups
 import enoslib.infra.enos_static.provider as enos_static
+from enoslib.infra.enos_static.configuration import Configuration
 
 from enos.provider.provider import Provider
 
@@ -47,6 +48,7 @@ def _gen_enoslib_roles(resources_or_topology):
 def _build_enoslib_conf(config):
     conf = copy.deepcopy(config)
     enoslib_conf = conf.get("provider")
+    enoslib_conf.pop("type", None)
     if enoslib_conf.get("resources") is not None:
         return enoslib_conf
 
@@ -81,7 +83,8 @@ class Static(Provider):
     def init(self, conf, force_deploy=False):
         LOGGER.info("Static provider")
         enoslib_conf = _build_enoslib_conf(conf)
-        static = enos_static.Static(enoslib_conf)
+        _conf = Configuration.from_dictionnary(enoslib_conf)
+        static = enos_static.Static(_conf)
         roles, networks = static.init(force_deploy)
         return roles, networks
 

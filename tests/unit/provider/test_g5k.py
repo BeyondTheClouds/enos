@@ -57,8 +57,8 @@ class TestGenEnoslibRoles(unittest.TestCase):
         networks = sorted(enoslib_conf['resources']['networks'],
                           key=operator.itemgetter('id'))
         self.assertEquals(2, len(networks))
-        self.assertEquals('network_interface', networks[1]['role'])
-        self.assertEquals('neutron_external_interface', networks[0]['role'])
+        self.assertCountEqual(['network_interface'], networks[1]['roles'])
+        self.assertCountEqual(['neutron_external_interface'], networks[0]['roles'])
 
         self.assertEquals('site1', networks[1]['site'])
         self.assertEquals('site1', networks[0]['site'])
@@ -89,7 +89,7 @@ class TestGenEnoslibRoles(unittest.TestCase):
         networks = sorted(enoslib_conf['resources']['networks'],
                           key=operator.itemgetter('id'))
         self.assertEquals(1, len(networks))
-        self.assertEquals('network_interface', networks[0]['role'])
+        self.assertCountEqual(['network_interface'], networks[0]['roles'])
         self.assertEquals('site1', networks[0]['site'])
 
     @mock.patch("enos.provider.g5k._get_sites", return_value={"site1"})

@@ -3,6 +3,7 @@ import logging
 from enos.provider.provider import Provider
 from enos.utils.extra import gen_enoslib_roles
 import enoslib.infra.enos_vagrant.provider as enoslib_vagrant
+from enoslib.infra.enos_vagrant.configuration import Configuration
 from enoslib.api import expand_groups
 
 # - SPHINX_DEFAULT_CONFIG
@@ -19,6 +20,7 @@ LOGGER = logging.getLogger(__name__)
 def _build_enoslib_conf(config):
     conf = copy.deepcopy(config)
     enoslib_conf = conf.get("provider", {})
+    enoslib_conf.pop("type", None)
     if enoslib_conf.get("resources") is not None:
         return enoslib_conf
 
@@ -35,10 +37,14 @@ def _build_enoslib_conf(config):
                 "flavor": desc["flavor"],
                 "roles": [grp, desc["role"]],
                 "number": desc["number"],
-                "networks": ["network_interface", "neutron_external_interface"]
             })
 
-    enoslib_conf.update({"resources": {"machines": machines}})
+    networks = [
+        {"roles": ["network_interface"], "cidr": "192.168.42.0/24"},
+        {"roles": ["neutron_external_interface"], "cidr": "192.168.43.0/24"}
+    ]
+    enoslib_conf.update({"resources": {"machines": machines,
+                                       "networks": networks}})
     return enoslib_conf
 
 
@@ -47,7 +53,8 @@ class Enos_vagrant(Provider):
     def init(self, conf, force_deploy=False):
         LOGGER.info("Vagrant provider")
         enoslib_conf = _build_enoslib_conf(conf)
-        vagrant = enoslib_vagrant.Enos_vagrant(enoslib_conf)
+        _conf = Configuration.from_dictionnary(enoslib_conf)
+        vagrant = enoslib_vagrant.Enos_vagrant(_conf)
         roles, networks = vagrant.init(force_deploy)
         return roles, networks
 

@@ -278,15 +278,15 @@ mkdir -p ~/enos-myxp
 cd ~/enos-myxp
 #+END_SRC
 
-Then, install EnOS in your working directory:
+Then, install EnOS in your working directory (python3.5+ is required):
 
 #+BEGIN_SRC sh :tangle ../../tests/functionnal/tests/tutorial/enos-node.sh
 # enos:~/enos-myxp$
-virtualenv --python=python2.7 venv
+virtualenv --python=python3 venv
 # (venv) enos:~/enos-myxp$
 . venv/bin/activate
 # (venv) enos:~/enos-myxp$
-pip install "enos[openstack]==4.2.1"
+pip install "enos[openstack]==4.3.0"
 #+END_SRC
 
 #+BEGIN_note

@@ -1,4 +1,8 @@
 import enos.provider.openstack as openstack
+from enoslib.infra.enos_chameleonkvm.provider import Chameleonkvm as Eckvm
+from enoslib.infra.enos_chameleonkvm.configuration import Configuration
+
+import logging
 
 # - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {
@@ -14,7 +18,12 @@ DEFAULT_CONFIG = {
 
 class Chameleonkvm(openstack.Openstack):
     def init(self, conf, force_deploy=False):
-        return super(Chameleonkvm, self).init(conf, force_deploy)
+        logging.info("Chameleonkvm provider")
+        enoslib_conf = self.build_config(conf)
+        _conf = Configuration.from_dictionnary(enoslib_conf)
+        eckvm = Eckvm(_conf)
+        roles, networks = eckvm.init(force_deploy=force_deploy)
+        return roles, networks
 
     def destroy(self, env):
         super(Chameleonkvm, self).destroy(env)
