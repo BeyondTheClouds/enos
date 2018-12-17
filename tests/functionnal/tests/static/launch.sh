@@ -16,13 +16,11 @@ cd $SCRIPT_DIR
 # shellcheck disable=SC1091
 . ../utils.sh
 
-virtualenv venv
+virtualenv -p python3 venv
 # shellcheck disable=SC1091
 . venv/bin/activate
 
 pip install -e "$BASE_DIR"
-pip install ipdb
-pip install -U git+https://github.com/BeyondTheClouds/enoslib
 
 # some cleaning
 # vagrant destroy -f || true
