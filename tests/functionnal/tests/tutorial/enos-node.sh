@@ -1,14 +1,30 @@
+#!/usr/bin/env bash
+# Setup of Functional Test
+#    :PROPERTIES:
+#    :header-args: :tangle ../../tests/functionnal/tests/tutorial/enos-node.sh :noweb yes
+#    :END:
+
+# Every source blocks of this section are going be tangled at the top of
+# the functional test file.
+
+# Set the Shebang, tells to exit immediately if a command exits with a
+# non-zero status, and tells to print commands and their arguments as
+# they are executed.
+
+set -o errexit
+set -o xtrace
 
 
-# Then, install EnOS in your working directory:
+
+# Then, install EnOS in your working directory (python3.5+ is required):
 
 
 # enos:~/enos-myxp$
-virtualenv --python=python2.7 venv
+virtualenv --python=python3 venv
 # (venv) enos:~/enos-myxp$
 . venv/bin/activate
 # (venv) enos:~/enos-myxp$
-pip install "enos[openstack]==4.2.1"
+pip install "enos[openstack]==4.3.0"
 
 # Deploy OpenStack
 # EnOS manages all the aspects of an OpenStack deployment by calling

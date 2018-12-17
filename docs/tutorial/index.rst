@@ -235,7 +235,7 @@ The first step is to determine on which cluster you will deploy
 OpenStack. To that end, you can run ``funk`` (Find yoUr Nodes on g5K)
 from any frontend to see the availability on G5K:
 
-.. code:: sh
+.. code-block:: sh
 
     # laptop:~$
     ssh nantes.g5k
@@ -251,7 +251,7 @@ cluster’s site first, and then, get a new machine which we will use as
 our *enos* node. In this document, we target the parapide cluster,
 located in the Rennes site:
 
-.. code:: sh
+.. code-block:: sh
 
     # fnantes:~$
     ssh rennes
@@ -272,7 +272,7 @@ prompt).
     this session, you can connect to the frontend and attach to your tmux
     session, as follows:
 
-    .. code:: sh
+    .. code-block:: sh
 
         # laptop:~$
         ssh rennes.g5k
@@ -282,23 +282,23 @@ prompt).
 Make a directory from where you will install EnOS and run your
 experiments:
 
-.. code:: sh
+.. code-block:: sh
 
     # enos:~$
     mkdir -p ~/enos-myxp
     # enos:~$
     cd ~/enos-myxp
 
-Then, install EnOS in your working directory:
+Then, install EnOS in your working directory (python3.5+ is required):
 
-.. code:: sh
+.. code-block:: sh
 
     # enos:~/enos-myxp$
-    virtualenv --python=python2.7 venv
+    virtualenv --python=python3 venv
     # (venv) enos:~/enos-myxp$
     . venv/bin/activate
     # (venv) enos:~/enos-myxp$
-    pip install "enos[openstack]==4.2.1"
+    pip install "enos[openstack]==4.3.0"
 
 .. note::
 
@@ -310,7 +310,7 @@ Then, install EnOS in your working directory:
     that if you open a new terminal, you need to re-enter the venv. For
     instance, now that EnOS is installed, you can come back as follow:
 
-    .. code:: sh
+    .. code-block:: sh
 
         # laptop:~$
         ssh rennes.g5k
@@ -394,8 +394,8 @@ this configuration file are interested for a simple use of EnOS:
 
   - Which OpenStack project to enable/disable (*e.g.*, ``enable_heat: "no"``).
 
-.. code:: yaml
-    :number-lines: 1
+.. code-block:: yaml
+    :lineno-start: 1
     :name: lst:reservation.yaml
 
     ---
@@ -477,7 +477,7 @@ Docker container.
 
 Launch the deployment with:
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     enos deploy -f reservation.yaml
@@ -487,7 +487,7 @@ EnOS is now provisioning three machines on the cluster targeted by the
 OpenStack services on them, and you can display information regarding
 your deployment by typing:
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     enos info
@@ -499,7 +499,7 @@ way to speed up your deployment [11]_ ), you can
 observe EnOS running containers on the control node. For that, you can
 access to the control node by typing:
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     ssh -l root $(enos info --out json | jq -r '.rsc.control[0].address')
@@ -515,7 +515,7 @@ access to the control node by typing:
     Note that at the end of your session, you can release your reservation
     by typing:
 
-    .. code:: sh
+    .. code-block:: sh
 
         # (venv) enos:~/enos-myxp$
         enos destroy --hard
@@ -536,7 +536,7 @@ new terminal and type the following:
 
 1. Find the control node address using EnOS:
 
-   .. code:: sh
+   .. code-block:: sh
 
        # (venv) enos:~/enos-myxp$
        enos info
@@ -545,7 +545,7 @@ new terminal and type the following:
 
 2. Create the tunnel from your laptop:
 
-   .. code:: sh
+   .. code-block:: sh
 
        # laptop:~$ -- `ssh -NL 8000:<g5k-control>:80 <g5k-site>.g5k`, e.g.,
        ssh -NL 8000:paravance-14-kavlan-4.nantes.grid5000.fr:80 rennes.g5k
@@ -556,14 +556,14 @@ new terminal and type the following:
     associated to a cluster by consulting the `G5k Cheatsheet <https://www.grid5000.fr/mediawiki/images/G5k_cheat_sheet.pdf>`_. If you are
     concerned, connect to the network node as root with:
 
-    .. code:: sh
+    .. code-block:: sh
 
         # (venv) enos:~/enos-myxp$
         ssh -l root $(enos info --out json | jq -r '.rsc.network[0].address')
 
     And execute the following script:
 
-    .. code:: sh
+    .. code-block:: sh
 
         #!/usr/bin/env bash
 
@@ -630,7 +630,7 @@ credentials each time.
 
 Load the OpenStack credentials:
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     . current/admin-openrc
@@ -639,12 +639,12 @@ You can then check that your environment is correctly set executing
 the following command that should output something similar to the
 listing `lst:env-os`_:
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     env|fgrep OS_|sort
 
-.. code:: sh
+.. code-block:: sh
     :name: lst:env-os
 
     OS_AUTH_URL=http://10.24.61.255:35357/v3
@@ -695,7 +695,7 @@ View VMs logs
 Based on these commands, you can use the CLI to start a new tiny
 cirros VM called ``cli-vm``:
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     openstack server create --image cirros.uec\
@@ -705,7 +705,7 @@ cirros VM called ``cli-vm``:
 
 Then, display the information about your VM with the following command:
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     openstack server show cli-vm
@@ -722,7 +722,7 @@ will find a challenge here: try to ping the VM from the lab machine.
 For the others, you have to manually affect a floating IP to your
 machine if you want it pingable from the enos node.
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     openstack server add floating ip\
@@ -731,7 +731,7 @@ machine if you want it pingable from the enos node.
 
 You can ask for the status of your VM and its IPs with:
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     openstack server show cli-vm -c status -c addresses
@@ -739,7 +739,7 @@ You can ask for the status of your VM and its IPs with:
 Wait one minute or two the time for the VM to boot, and when the state
 is ``ACTIVE``, you can ping it on its floating IP and SSH on it:
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     ping <floating-ip>
@@ -751,7 +751,7 @@ is ``ACTIVE``, you can ping it on its floating IP and SSH on it:
     Waiting for the IP to appear and then ping it could be done with a
     bunch of bash commands, such as in listing `lst:query-ip`_.
 
-    .. code:: sh
+    .. code-block:: sh
         :name: lst:query-ip
 
 
@@ -797,28 +797,28 @@ and Horizon. For instance, list all the features offered by Nova with
 
 1. SSH on ``cli-vm`` using its name rather than its private IP.
 
-   .. code:: sh
+   .. code-block:: sh
 
        # (venv) enos:~/enos-myxp$
        openstack server ssh cli-vm --public --login cirros
 
 2. Create a snapshot of ``cli-vm``.
 
-   .. code:: sh
+   .. code-block:: sh
 
        # (venv) enos:~/enos-myxp$
        nova image-create cli-vm cli-vm-snapshot --poll
 
 3. Delete the ``cli-vm``.
 
-   .. code:: sh
+   .. code-block:: sh
 
        # (venv) enos:~/enos-myxp$
        openstack server delete cli-vm --wait
 
 4. Boot a new machine ``cli-vm-clone`` from the snapshot.
 
-   .. code:: sh
+   .. code-block:: sh
 
        # (venv) enos:~/enos-myxp$
        openstack server create --image cli-vm-snapshot\
@@ -860,7 +860,7 @@ node. As a consequence, prior being able to be reachable from your
 browser, you need to set a tunnel to this service, by typing on your
 laptop:
 
-.. code:: sh
+.. code-block:: sh
 
     # laptop:~$ -- `ssh -NL 3000:<g5k-control>:3000 <g5k-site>.g5k`, e.g.,
     ssh -NL 3000:paravance-14-kavlan-4.nantes.grid5000.fr:3000 nantes.g5k
@@ -876,7 +876,7 @@ The Grafana dashboard is highly customizable. For the sake of
 simplicity, we propose to use our configuration file that you can get
 with:
 
-.. code:: sh
+.. code-block:: sh
 
     # laptop:~$
     curl -O http://enos.irisa.fr/tp-g5k/grafana_dashboard.json
@@ -908,7 +908,7 @@ Shaker [16]_ . And these two are well integrated into EnOS.
 
 EnOS looks inside the ``workload`` directory for a file named ``run.yml``.
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     mkdir -p workload
@@ -931,8 +931,8 @@ with the dedicated ``args`` (l. 12), and thus could be only
 applies to the specific scenario. For instance here, the ``30`` value
 overrides the ``sla_max_avg_duration`` default value solely in the ``boot and list servers`` scenario.
 
-.. code:: yaml
-    :number-lines: 1
+.. code-block:: yaml
+    :lineno-start: 1
     :name: lst:run.yml
 
     ---
@@ -956,7 +956,7 @@ overrides the ``sla_max_avg_duration`` default value solely in the ``boot and li
 
 Calling Rally and Shaker from EnOS is done with:
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     enos bench --workload=workload
@@ -987,7 +987,7 @@ number of iteration and percent of failures, per scenario. These
 reports, plus data measured by cAdvisor and Collectd, plus logs of
 every OpenStack services can be backup by EnOS with:
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     enos backup --backup_dir=benchresults
@@ -1000,7 +1000,7 @@ can extract the Rally report of the *Nova boot and list servers*
 scenario with the following command and then open it in your favorite
 browser:
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     tar --file benchresults/*-rally.tar.gz\
@@ -1025,7 +1025,7 @@ use of groups of nodes. Resources must be described using a ``topology``
 description instead of a ``resources`` description. For instance,
 listings `lst:topos-g5k`_ defines two groups named ``grp1`` and ``grp2``.
 
-.. code:: yaml
+.. code-block:: yaml
     :name: lst:topos-g5k
 
     topology:
@@ -1040,7 +1040,7 @@ listings `lst:topos-g5k`_ defines two groups named ``grp1`` and ``grp2``.
 Constraints are then described under the ``network_constraints`` key in
 the ``reservation.yaml`` file:
 
-.. code:: yaml
+.. code-block:: yaml
     :name: lst:net-constraints
 
     network_constraints:
@@ -1090,7 +1090,7 @@ results in:
 
 Run the Shaker ``dense_l3_east_west`` scenario with
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     enos bench --workload=workload
@@ -1116,14 +1116,14 @@ by updating the ``reservation.yaml`` and add ``enable_neutron_dvr: "yes"``
 under the ``kolla`` key.
 Then, tell EnOS to reconfigure Neutron.
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     enos os --tags=neutron --reconfigure
 
 And finally, re-execute the ``dense_l3_east_west`` scenario.
 
-.. code:: sh
+.. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
     enos bench --workload=workload
@@ -1142,7 +1142,7 @@ GitHub [18]_  and continue to have fun with EnOS.
 8.1 Nova scenario for Rally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: yaml
+.. code-block:: yaml
 
     {% set image_name = image_name or "cirros.uec" %}
     {% set flavor_name = flavor_name or "m1.tiny" %}
@@ -1187,7 +1187,7 @@ GitHub [18]_  and continue to have fun with EnOS.
 8.2 Configuration file with a topology and network constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: yaml
+.. code-block:: yaml
 
     ---
     # ############################################### #
