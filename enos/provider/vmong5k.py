@@ -68,7 +68,7 @@ class Vmong5k(Provider):
 
     def destroy(self, env):
         LOGGER.info("Destroying VMonG5K deployment")
-        enoslib_configuration = _bulid_enoslib_configuration(env['config'])
+        enoslib_configuration = _build_enoslib_configuration(env['config'])
         configuration = Configuration.from_dictionnary(enoslib_configuration)
         vmong5k = VMonG5K(configuration)
         vmong5k.destroy()
