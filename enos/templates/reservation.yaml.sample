@@ -1,12 +1,29 @@
 ---
 # ############################################### #
+# VMonG5K reservation parameters                  #
+# ############################################### #
+provider:
+  type: vmong5k
+  job_name: 'enos'
+  walltime: '02:00:00'
+
+resources:
+  paravance:
+    network: 1
+    control: 1
+  parasilo:
+    compute: 1
+
+virt_image: /grid5000/virt-images/debian9-x64-base.qcow2
+
+# ############################################### #
 # Grid'5000 reservation parameters                #
 # ############################################### #
 provider:
   type: g5k
   job_name: 'enos'
   walltime: '02:00:00'
-        
+
 resources:
   paravance:
     compute: 1
@@ -147,7 +164,7 @@ kolla_ref: "stable/queens"
 
 # Vars : globals.yml
 kolla:
+  openstack_release: queens
   kolla_base_distro: "centos"
   kolla_install_type: "source"
-  docker_namespace: "beyondtheclouds"
   enable_heat: "no"
