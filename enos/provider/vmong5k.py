@@ -45,11 +45,10 @@ def _build_enoslib_configuration(configuration):
     if len(sites) > 1:
         raise Exception("Multi-site deployment is not supported yet")
 
-    networks = [constants.NETWORK_INTERFACE]
     enoslib_configuration.update({
         "resources": {
             "machines": machines,
-            "networks": networks
+            "networks": [constants.NETWORK_INTERFACE]
         }
     })
 
@@ -58,19 +57,19 @@ def _build_enoslib_configuration(configuration):
 
 class Vmong5k(Provider):
 
-    def init(self, configuration, force_deploy=False):
-        LOGGER.info("VMonG5K provider")
+    def _get_provider_instance(configuration):
         enoslib_configuration = _build_enoslib_configuration(configuration)
         _configuration = Configuration.from_dictionnary(enoslib_configuration)
-        vmong5k = VMonG5K(_configuration)
-        roles, networks = vmong5k.init(force_deploy)
-        return roles, networks
+        return VMonG5K(_configuration)
+
+    def init(self, configuration, force_deploy=False):
+        LOGGER.info("Initializing VMonG5K provider")
+        vmong5k = _get_provider_instance(configuration)
+        return vmong5k.init(force_deploy)  # roles, networks
 
     def destroy(self, env):
         LOGGER.info("Destroying VMonG5K deployment")
-        enoslib_configuration = _build_enoslib_configuration(env['config'])
-        configuration = Configuration.from_dictionnary(enoslib_configuration)
-        vmong5k = VMonG5K(configuration)
+        vmong5k = _get_provider_instance(env['config'])
         vmong5k.destroy()
 
     def default_config(self):
