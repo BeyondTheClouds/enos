@@ -164,7 +164,7 @@ kolla_ref: "stable/queens"
 
 # Vars : globals.yml
 kolla:
-  openstack_release: queens
   kolla_base_distro: "centos"
   kolla_install_type: "source"
+  docker_namespace: "beyondtheclouds"
   enable_heat: "no"
