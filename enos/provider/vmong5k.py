@@ -10,11 +10,18 @@ from .provider import Provider
 from ..utils import constants
 from ..utils import extra
 
+
 LOGGER = logging.getLogger(__name__)
 
 DEFAULT_CONFIG = {
     'job_name': 'enos-vmong5k',
     'walltime': '02:00:00'
+}
+
+DEFAULT_FLAVOUR_BY_ROLE = {
+    'control': 'extra-large',
+    'network': 'large',
+    'compute': 'medium'
 }
 
 
@@ -32,11 +39,13 @@ def _build_enoslib_configuration(configuration):
     for description in extra.gen_enoslib_roles(resources):
         for group in api.expand_groups(description["group"]):
             clusters.add(description["flavor"])
+            role = description["role"]
             machine = {
-                "roles": [group, description["role"]],
-                "nodes": description["number"],
+                "roles": [group, role],
+                "number": description["number"],
                 "cluster": description["flavor"],
-                "min": 1
+                # set default to 'medium' from enoslib FLAVOURS
+                "flavour": DEFAULT_FLAVOUR_BY_ROLE.get(role, 'medium')
             }
 
             machines.append(machine)
@@ -55,12 +64,13 @@ def _build_enoslib_configuration(configuration):
     return enoslib_configuration
 
 
-class Vmong5k(Provider):
+def _get_provider_instance(configuration):
+    enoslib_configuration = _build_enoslib_configuration(configuration)
+    _configuration = Configuration.from_dictionnary(enoslib_configuration)
+    return VMonG5K(_configuration)
 
-    def _get_provider_instance(configuration):
-        enoslib_configuration = _build_enoslib_configuration(configuration)
-        _configuration = Configuration.from_dictionnary(enoslib_configuration)
-        return VMonG5K(_configuration)
+
+class Vmong5k(Provider):
 
     def init(self, configuration, force_deploy=False):
         LOGGER.info("Initializing VMonG5K provider")
