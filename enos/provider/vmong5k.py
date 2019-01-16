@@ -7,6 +7,7 @@ from enoslib.infra.enos_vmong5k.provider import VMonG5k as VMonG5K
 
 from . import g5k
 from .provider import Provider
+from ..utils import constants
 from ..utils import extra
 
 LOGGER = logging.getLogger(__name__)
@@ -44,8 +45,7 @@ def _build_enoslib_configuration(configuration):
     if len(sites) > 1:
         raise Exception("Multi-site deployment is not supported yet")
 
-    # name of the network is hard-coded!
-    networks = ["network_interface"]
+    networks = [constants.NETWORK_INTERFACE]
     enoslib_configuration.update({
         "resources": {
             "machines": machines,
