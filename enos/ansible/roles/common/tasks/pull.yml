@@ -1,0 +1,23 @@
+---
+- name: Installing dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - git
+    - python-setuptools
+    - kvm
+    - fping
+
+- easy_install:
+    name: pip
+    state: latest
+
+- name: Install some python bindings
+  pip:
+    name: "{{ item }}"
+  with_items:
+    - docker
+    - influxdb
+

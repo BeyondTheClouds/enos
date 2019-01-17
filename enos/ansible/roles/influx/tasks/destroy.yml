@@ -1,0 +1,12 @@
+---
+- name: Destroying the influx container
+  docker_container:
+    name: "influx"
+    state: absent
+    force_kill: yes
+
+- name: Destroying the influx data
+  file:
+    path: /influx-data
+    state: absent
+

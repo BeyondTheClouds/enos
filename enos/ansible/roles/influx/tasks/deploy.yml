@@ -1,0 +1,66 @@
+---
+- name: Checking that the vip is free on this host
+  command: "ip addr show {{ network_interface }}"
+  register: result
+
+- name: Add a vip address for influx db
+  command: "ip addr add {{ influx_vip }} dev {{ network_interface }}"
+  when: result.stdout.find(influx_vip) == -1
+
+- name: Copying over the influx conf
+  copy: src=config.toml dest=/config.toml
+
+- name: Copy types.db
+  copy:
+    src: types.db
+    dest: /types.db
+
+- name: Start the influx container
+  docker_container:
+    name: "influx"
+    image: "{{ influxdb_docker_image }}"
+    detach: True
+    # putting in the host network
+    # udp port binding seems to not work as expected
+    network_mode: host
+    # for the record
+    # ports:
+    #  - "8083:8083"
+    #  - "8086:8086"
+    #  # collectd metrics
+    #  - "25826:25826/udp"
+    state: started
+    expose:
+      - "8090"
+      - "8099"
+    volumes:
+      - "/influx-data:/data"
+      - "/config.toml:/etc/influxdb/influxdb.conf"
+      - "/types.db:/usr/share/collectd/types.db"
+
+- name: Waiting for the influx service to become available
+  wait_for:
+    host: "{{ influx_vip }}"
+    port: 8086
+    state: started
+    delay: 2
+    timeout: 120
+
+- name: Create the cadvisor database
+  influxdb_database:
+    hostname: "localhost"
+    database_name: "cadvisor"
+    state: present
+
+- name: Flush the annotation database (if exists)
+  influxdb_database:
+    hostname: "localhost"
+    database_name: "events"
+    state: absent
+
+- name: Create the annotation database
+  influxdb_database:
+    hostname: "localhost"
+    database_name: "events"
+    state: present
+

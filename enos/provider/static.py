@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import copy
-from enoslib.api import expand_groups
-import enoslib.infra.enos_static.provider as enos_static
-from enos.provider.provider import Provider
 import logging
 
+from enoslib.api import expand_groups
+import enoslib.infra.enos_static.provider as enos_static
+from enoslib.infra.enos_static.configuration import Configuration
+
+from enos.provider.provider import Provider
 
 # - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {
@@ -28,8 +30,6 @@ def _gen_enoslib_roles(resources_or_topology):
                 machine.update(m)
                 yield machine
         else:
-            print(machine)
-            print(machine_or_list)
             machine.update(machine_or_list)
             yield machine
 
@@ -48,6 +48,7 @@ def _gen_enoslib_roles(resources_or_topology):
 def _build_enoslib_conf(config):
     conf = copy.deepcopy(config)
     enoslib_conf = conf.get("provider")
+    enoslib_conf.pop("type", None)
     if enoslib_conf.get("resources") is not None:
         return enoslib_conf
 
@@ -58,10 +59,12 @@ def _build_enoslib_conf(config):
     resources = conf.get("topology", conf.get("resources", {}))
     machines = []
     for desc in _gen_enoslib_roles(resources):
+
         grps = expand_groups(desc["group"])
+        role = desc["role"]
         for grp in grps:
             machine = {
-                "roles": [grp, desc.pop("role")]
+                "roles": [grp, role]
             }
             machine.update(desc)
             machines.append(machine)
@@ -80,12 +83,15 @@ class Static(Provider):
     def init(self, conf, force_deploy=False):
         LOGGER.info("Static provider")
         enoslib_conf = _build_enoslib_conf(conf)
-        static = enos_static.Static(enoslib_conf)
+        _conf = Configuration.from_dictionnary(enoslib_conf)
+        static = enos_static.Static(_conf)
         roles, networks = static.init(force_deploy)
         return roles, networks
 
     def destroy(self, env):
-        raise Exception("TODO, not implemented yet")
+        # NOTE(msimonin): We can't destroy static resources
+        # This would be mean
+        pass
 
     def default_config(self):
         return DEFAULT_CONFIG

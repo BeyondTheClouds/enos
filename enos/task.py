@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+
 from enoslib.task import enostask
-from enoslib.api import run_ansible, emulate_network, validate_network
+from enoslib.api import (run_ansible, emulate_network, validate_network,
+                        reset_network)
 
 from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
                                   NEUTRON_EXTERNAL_INTERFACE,
@@ -55,7 +57,12 @@ def get_and_bootstrap_kolla(env, force=False):
         # Kolla recommends installing ansible manually.
         # Currently anything over 2.3.0 is supported, not sure about the future
         # So we hardcode the version to something reasonnable for now
-        in_kolla('cd %s && pip install ansible==2.5.7' % kolla_path)
+        in_kolla('pip install ansible==2.5.7')
+
+        # Installation influxdb client, used by the annotations
+        enable_monitoring = env['config'].get('enable_monitoring')
+        if enable_monitoring:
+            in_kolla('pip install influxdb')
 
     return kolla_path
 
@@ -92,7 +99,6 @@ def up(config, config_file=None, env=None, **kwargs):
         base_inventory = os.path.join(INVENTORY_DIR, 'inventory.sample')
     else:
         base_inventory = seekpath(inventory_conf)
-
     generate_inventory(env['rsc'], env['networks'], base_inventory, inventory)
     logging.info('Generates inventory %s' % inventory)
 
@@ -110,10 +116,14 @@ def up(config, config_file=None, env=None, **kwargs):
        'database_password': "demo"
     })
 
+    options = {}
+    options.update(env['config'])
+    enos_action = "pull" if kwargs.get("--pull") else "deploy"
+    options.update(enos_action=enos_action)
     # Runs playbook that initializes resources (eg,
     # installs the registry, install monitoring tools, ...)
-    up_playbook = os.path.join(ANSIBLE_DIR, 'up.yml')
-    run_ansible([up_playbook], inventory, extra_vars=env['config'],
+    up_playbook = os.path.join(ANSIBLE_DIR, 'enos.yml')
+    run_ansible([up_playbook], env['inventory'], extra_vars=options,
                 tags=kwargs['--tags'])
 
 
@@ -126,8 +136,10 @@ def install_os(env=None, **kwargs):
     # Construct kolla-ansible command...
     kolla_cmd = [os.path.join(kolla_path, "tools", "kolla-ansible")]
 
-    if kwargs['--reconfigure']:
+    if kwargs.get('--reconfigure'):
         kolla_cmd.append('reconfigure')
+    elif kwargs.get('--pull'):
+        kolla_cmd.append('pull')
     else:
         kolla_cmd.append('deploy')
 
@@ -166,8 +178,10 @@ def init_os(env=None, **kwargs):
         msg = "External network not found, define %s networks" % " or ".join(
             [NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE])
         raise Exception(msg)
-
-    playbook_values.update({"provider_net": provider_net})
+    enos_action = 'pull' if kwargs.get('--pull') else 'deploy'
+    playbook_values.update(
+        provider_net=provider_net,
+        enos_action=enos_action)
     run_ansible([playbook_path],
                 inventory_path,
                 extra_vars=playbook_values)
@@ -210,7 +224,7 @@ def bench(env=None, **kwargs):
                 if not (top_enabled and enabled):
                     continue
                 for a in cartesian(top_args):
-                    playbook_path = os.path.join(ANSIBLE_DIR, 'run-bench.yml')
+                    playbook_path = os.path.join(ANSIBLE_DIR, 'enos.yml')
                     inventory_path = os.path.join(
                         env['resultdir'], 'multinode')
                     # NOTE(msimonin) all the scenarios and plugins
@@ -234,6 +248,7 @@ def bench(env=None, **kwargs):
                             plugin = plugin + "/"
                         bench['plugin_location'] = plugin
                     playbook_values.update(bench=bench)
+                    playbook_values.update(enos_action="bench")
 
                     run_ansible([playbook_path],
                                 inventory_path,
@@ -254,9 +269,12 @@ def backup(env=None, **kwargs):
         os.mkdir(backup_dir)
     # update the env
     env['config']['backup_dir'] = backup_dir
-    playbook_path = os.path.join(ANSIBLE_DIR, 'backup.yml')
+    options = {}
+    options.update(env['config'])
+    options.update({'enos_action': 'backup'})
+    playbook_path = os.path.join(ANSIBLE_DIR, 'enos.yml')
     inventory_path = os.path.join(env['resultdir'], 'multinode')
-    run_ansible([playbook_path], inventory_path, extra_vars=env['config'])
+    run_ansible([playbook_path], inventory_path, extra_vars=options)
 
 
 @enostask()
@@ -269,7 +287,7 @@ def new(env=None, **kwargs):
 
 @enostask()
 @check_env
-def tc(env=None, **kwargs):
+def tc(env=None, network_constraints=None, extra_vars=None, **kwargs):
     """
     Usage: enos tc [-e ENV|--env=ENV] [--test] [-s|--silent|-vv]
     Enforce network constraints
@@ -285,12 +303,24 @@ def tc(env=None, **kwargs):
 
     roles = env["rsc"]
     inventory = env["inventory"]
+    # We inject the influx_vip for annotation purpose
+    influx_vip = env["config"].get("influx_vip")
     test = kwargs['--test']
+    reset = kwargs['--reset']
+    if not extra_vars:
+        extra_vars = {}
+    extra_vars.update(influx_vip=influx_vip)
+
     if test:
-        validate_network(roles, inventory)
+        validate_network(roles, inventory, extra_vars=extra_vars)
+    elif reset:
+        reset_network(roles, inventory, extra_vars=extra_vars)
     else:
-        network_constraints = env["config"]["network_constraints"]
-        emulate_network(roles, inventory, network_constraints)
+        if not network_constraints:
+            network_constraints = env["config"].get("network_constraints", {})
+
+        emulate_network(roles, inventory, network_constraints,
+                        extra_vars=extra_vars)
 
 
 @enostask()
@@ -327,16 +357,25 @@ def destroy(env=None, **kwargs):
                   '<command>': command,
                   '--silent': kwargs['--silent'],
                   'kolla': True}
+        options = {
+            "enos_action": "destroy"
+        }
+        up_playbook = os.path.join(ANSIBLE_DIR, 'enos.yml')
+
+        inventory_path = os.path.join(env['resultdir'], 'multinode')
+        # Destroying enos resources
+        run_ansible([up_playbook], inventory_path, extra_vars=options)
+        # Destroying kolla resources
         _kolla(env=env, **kolla_kwargs)
 
 
-def deploy(**kwargs):
+def deploy(config, config_file=None, **kwargs):
     # --reconfigure and --tags can not be provided in 'deploy'
     # but they are required for 'up' and 'install_os'
     kwargs['--reconfigure'] = False
     kwargs['--tags'] = None
 
-    up(**kwargs)
+    up(config, config_file=config_file, **kwargs)
 
     # If the user doesn't specify an experiment, then set the ENV directory to
     # the default one.

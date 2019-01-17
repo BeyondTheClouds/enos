@@ -1,0 +1,8 @@
+---
+# We put some kolla default here
+# But this allows customisation 
+# for instance when deploying an external bus
+# without the same credentials
+collectd_rabbitmq_username: openstack
+collectd_rabbitmq_password: "{{ rabbitmq_password }}"
+collectd_rabbitmq_collectqueues: "false"

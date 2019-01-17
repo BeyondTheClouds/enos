@@ -61,8 +61,7 @@ the latest built kolla images.
     kolla_ref: "master"
 
     kolla:
-      docker_namespace: "beyondtheclouds"
-      openstack_release: "latest"
+      openstack_release: "master"
 
 
 Changing the topology
