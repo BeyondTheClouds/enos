@@ -440,7 +440,6 @@ this configuration file are interested for a simple use of EnOS:
     kolla:
       kolla_base_distro: "centos"
       kolla_install_type: "source"
-      docker_namespace: "beyondtheclouds"
       enable_heat: "yes"
 
 The ``provider`` section tells on which testbed to deploy OpenStack plus
@@ -1254,7 +1253,6 @@ GitHub [18]_  and continue to have fun with EnOS.
     kolla:
       kolla_base_distro: "centos"
       kolla_install_type: "source"
-      docker_namespace: "beyondtheclouds"
       enable_heat: "yes"
 
 
