@@ -286,7 +286,7 @@ virtualenv --python=python3 venv
 # (venv) enos:~/enos-myxp$
 . venv/bin/activate
 # (venv) enos:~/enos-myxp$
-pip install "enos[openstack]==4.4.0"
+pip install "enos[openstack]==5.0.0"
 #+END_SRC
 
 #+BEGIN_note

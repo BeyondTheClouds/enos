@@ -366,7 +366,7 @@ def check_call_in_venv(venv_dir, cmd):
     def check_venv(venv_path):
 
         if not os.path.exists(venv_path):
-            check_call("virtualenv %s" % venv_path, shell=True)
+            check_call("virtualenv -p python2 %s" % venv_path, shell=True)
             check_call_in_venv(venv_dir, "pip install --upgrade pip")
 
     cmd_in_venv = []

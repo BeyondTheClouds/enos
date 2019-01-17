@@ -26,15 +26,23 @@ monitoring
 # inner-compute is the groups of compute nodes which do not have
 # external reachability
 # [inner-compute]
+# inner-compute is the groups of compute nodes which do not have
+# external reachability.
+# DEPRECATED, the group will be removed in S release of OpenStack,
+# use variable neutron_compute_dvr_mode instead.
+[inner-compute]
 
 # external-compute is the groups of compute nodes which can reach
-# outside
+# outside.
+# DEPRECATED, the group will be removed in S release of OpenStack,
+# use variable neutron_compute_dvr_mode instead.
 # [external-compute]
 # compute01
 
 # [compute:children]
 # inner-compute
 # external-compute
+
 
 # In EnOS we consider for now that all the computes are external
 #
@@ -43,10 +51,12 @@ compute
 [monitoring:children]
 control
 
+
 # When compute nodes and control nodes use different interfaces,
 # you need to comment out "api_interface" and other interfaces from the globals.yml
 # and specify like below:
 #compute01 neutron_external_interface=eth0 api_interface=em1 storage_interface=em1 tunnel_interface=em1
+
 
 [deployment]
 
@@ -81,6 +91,12 @@ compute
 
 [influxdb:children]
 monitoring
+
+[prometheus:children]
+monitoring
+
+[kafka:children]
+control
 
 [karbor:children]
 control
@@ -122,6 +138,9 @@ control
 
 [qdrouterd:children]
 control
+
+[monasca:children]
+monitoring
 
 [mongodb:children]
 control
@@ -249,6 +268,9 @@ control
 [bifrost:children]
 deployment
 
+[zookeeper:children]
+control
+
 [zun:children]
 control
 
@@ -316,10 +338,13 @@ neutron
 [neutron-metadata-agent:children]
 neutron
 
-[neutron-vpnaas-agent:children]
+[neutron-bgp-dragent:children]
 neutron
 
-[neutron-bgp-dragent:children]
+[neutron-infoblox-ipam-agent:children]
+neutron
+
+[ironic-neutron-agent:children]
 neutron
 
 # Ceph
@@ -363,6 +388,9 @@ cloudkitty
 
 # Freezer
 [freezer-api:children]
+freezer
+
+[freezer-scheduler:children]
 freezer
 
 # iSCSI
@@ -437,6 +465,19 @@ murano
 [murano-engine:children]
 murano
 
+# Monasca
+[monasca-api:children]
+monasca
+
+[monasca-log-api:children]
+monasca
+
+[monasca-log-transformer:children]
+monasca
+
+[monasca-log-persister:children]
+monasca
+
 # Ironic
 [ironic-api:children]
 ironic
@@ -448,6 +489,9 @@ ironic
 ironic
 
 [ironic-pxe:children]
+ironic
+
+[ironic-ipxe:children]
 ironic
 
 # Magnum
@@ -547,6 +591,7 @@ trove
 # Multipathd
 [multipathd:children]
 compute
+storage
 
 # Watcher
 [watcher-api:children]
@@ -615,6 +660,9 @@ placement
 [zun-api:children]
 zun
 
+[zun-wsproxy:children]
+zun
+
 [zun-compute:children]
 compute
 
@@ -655,3 +703,30 @@ blazar
 
 [blazar-manager:children]
 blazar
+
+# Prometheus
+[prometheus-node-exporter:children]
+monitoring
+control
+compute
+network
+storage
+
+[prometheus-mysqld-exporter:children]
+mariadb
+
+[prometheus-haproxy-exporter:children]
+haproxy
+
+[prometheus-memcached-exporter:children]
+memcached
+
+[prometheus-cadvisor:children]
+monitoring
+control
+compute
+network
+storage
+
+[prometheus-alertmanager:children]
+monitoring

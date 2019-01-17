@@ -1,29 +1,34 @@
----
+enable_monitoring: false
+inventory: inventories/inventory.sample
+kolla:
+  enable_heat: 'no'
+  kolla_base_distro: centos
+  kolla_install_type: source
+kolla_ref: stable/rocky
+kolla_repo: https://git.openstack.org/openstack/kolla-ansible
 provider:
-  type: vagrant
   backend: libvirt
   box: generic/debian9
   resources:
     machines:
-      - role: control
-        flavor: extra-large
-        number: 1
-        networks: ['network_interface', 'neutron_external_interface']
-      - role: compute
-        flavor: medium
-        number: 1
-        networks: ['network_interface', 'neutron_external_interface']
-      - role: network
-        flavor: medium
-        number: 1
-        networks: ['network_interface', 'neutron_external_interface']
-inventory: inventories/inventory.sample
+    - flavor: extra-large
+      networks:
+      - network_interface
+      - neutron_external_interface
+      number: 1
+      role: control
+    - flavor: medium
+      networks:
+      - network_interface
+      - neutron_external_interface
+      number: 1
+      role: compute
+    - flavor: medium
+      networks:
+      - network_interface
+      - neutron_external_interface
+      number: 1
+      role: network
+  type: vagrant
 registry:
   type: internal
-enable_monitoring: no
-kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
-kolla_ref: "stable/queens"
-kolla:
-  kolla_base_distro: "centos"
-  kolla_install_type: "source"
-  enable_heat: "no"

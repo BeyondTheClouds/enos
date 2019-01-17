@@ -1,21 +1,19 @@
 enable_monitoring: false
 inventory: inventories/inventory.sample
 kolla:
-  enable_heat: 'no'
+  enable_heat: false
   kolla_base_distro: centos
   kolla_install_type: source
-  nova_compute_virt_type: qemu
 kolla_ref: stable/rocky
 kolla_repo: https://git.openstack.org/openstack/kolla-ansible
 provider:
-  backend: virtualbox
-  box: generic/debian9
-  type: vagrant
+  gateway: true
+  key_name: enos_matt
+  type: chameleonbaremetal
 registry:
   type: internal
 resources:
-  extra-large:
-    control: 1
-  medium:
+  compute_haswell:
     compute: 1
+    control: 1
     network: 1

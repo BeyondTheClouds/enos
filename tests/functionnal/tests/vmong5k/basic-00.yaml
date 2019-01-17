@@ -1,30 +1,19 @@
----
+enable_monitoring: false
+inventory: inventories/inventory.sample
+kolla:
+  enable_heat: false
+  kolla_base_distro: centos
+  kolla_install_type: source
+kolla_ref: stable/rocky
+kolla_repo: https://git.openstack.org/openstack/kolla-ansible
 provider:
+  job_name: enos-jenkins
   type: vmong5k
-  job_name: 'enos-jenkins'
-  walltime: '01:00:00'
-        
+  walltime: 01:00:00
+registry:
+  type: internal
 resources:
   parapluie:
     compute: 1
-    network: 1
     control: 1
-
-# This will describe the topology of your services
-inventory: inventories/inventory.sample
-
-registry:
-  type: internal
-
-# Enos Customizations
-enable_monitoring: no
-
-# Kolla parameters
-kolla_repo: https://git.openstack.org/openstack/kolla-ansible
-kolla_ref: stable/queens
-
-# Vars : globals.yml
-kolla:
-  kolla_base_distro: centos
-  kolla_install_type: source
-  enable_heat: no
+    network: 1
