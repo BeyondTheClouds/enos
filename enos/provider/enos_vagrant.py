@@ -34,7 +34,7 @@ def _build_enoslib_conf(config):
         grps = expand_groups(desc["group"])
         for grp in grps:
             machines.append({
-                "flavor": desc["flavor"],
+                "flavour": desc["flavor"],
                 "roles": [grp, desc["role"]],
                 "number": desc["number"],
             })
