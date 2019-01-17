@@ -38,5 +38,4 @@ kolla_ref: stable/queens
 kolla:
   kolla_base_distro: centos
   kolla_install_type: source
-  docker_namespace: beyondtheclouds
   enable_heat: no

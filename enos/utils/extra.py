@@ -6,7 +6,7 @@ from .errors import (EnosProviderMissingConfigurationKeys,
 from .constants import (ENOS_PATH, ANSIBLE_DIR, VENV_KOLLA,
                         NEUTRON_EXTERNAL_INTERFACE,
                         FAKE_NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE,
-                        API_INTERFACE)
+                        API_INTERFACE, OPENSTACK_RELEASE)
 from netaddr import IPRange
 
 import logging
@@ -103,6 +103,8 @@ based on the Enos environment.
     #    values['docker_registry'] = \
     #        "%s:%s" % (env['config']['registry']['ip'],
     #                   env['config']['registry']['port'])
+
+    values['openstack_release'] = OPENSTACK_RELEASE
 
     return values
 
