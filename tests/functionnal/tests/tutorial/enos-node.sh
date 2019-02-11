@@ -24,7 +24,7 @@ virtualenv --python=python3 venv
 # (venv) enos:~/enos-myxp$
 . venv/bin/activate
 # (venv) enos:~/enos-myxp$
-pip install "enos[openstack]==5.0.0"
+pip install "enos[openstack]==5.0.1"
 
 # Deploy OpenStack
 # EnOS manages all the aspects of an OpenStack deployment by calling
