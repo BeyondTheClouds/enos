@@ -372,7 +372,7 @@ this configuration file are interested for a simple use of EnOS:
 - ~kolla~ section (l. [[(kolla-sec)]]): Defines the OpenStack
   configuration, for instance:
   + Which OpenStack version to deploy ({{{eg}}} ~kolla-ref:
-    "stable/queens"~).
+    "stable/rocky"~).
   + Which OpenStack project to enable/disable ({{{eg}}} ~enable_heat:
     "no"~).
 
@@ -399,7 +399,7 @@ ceph_mon_host:
 #+CAPTION: Sample of ~reservation.yaml~ that books on G5k during
 #+CAPTION: 4 hours, 3 machines on the ~paravance~ cluster: a
 #+CAPTION: ~control~, a ~network~ and a ~compute~ node on which
-#+CAPTION: will be deployed the requested OpenStack stable/queens
+#+CAPTION: will be deployed the requested OpenStack stable/rocky
 #+CAPTION: services.
 #+NAME: lst:reservation.yaml
 #+BEGIN_SRC yaml -r -n :noweb strip-export :tangle ../../tests/functionnal/tests/tutorial/reservation.yaml
@@ -439,7 +439,7 @@ enable_monitoring: yes
 # Kolla parameters                                #
 # ############################################### #
 kolla_repo: "https://git.openstack.org/openstack/kolla-ansible" (ref:kolla-sec)
-kolla_ref: "stable/queens"
+kolla_ref: "stable/rocky"
 
 # Vars : kolla_repo/ansible/group_vars/all.yml
 kolla:
@@ -1230,7 +1230,7 @@ enable_monitoring: yes
 # Kolla parameters                                #
 # ############################################### #
 kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
-kolla_ref: "stable/queens"
+kolla_ref: "stable/rocky"
 
 # Vars : kolla_repo/ansible/group_vars/all.yml
 kolla:

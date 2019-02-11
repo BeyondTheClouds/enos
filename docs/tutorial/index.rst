@@ -390,7 +390,7 @@ this configuration file are interested for a simple use of EnOS:
 - ``kolla`` section (l. 36): Defines the OpenStack
   configuration, for instance:
 
-  - Which OpenStack version to deploy (*e.g.*, ``kolla-ref: "stable/queens"``).
+  - Which OpenStack version to deploy (*e.g.*, ``kolla-ref: "stable/rocky"``).
 
   - Which OpenStack project to enable/disable (*e.g.*, ``enable_heat: "no"``).
 
@@ -434,7 +434,7 @@ this configuration file are interested for a simple use of EnOS:
     # Kolla parameters                                #
     # ############################################### #
     kolla_repo: "https://git.openstack.org/openstack/kolla-ansible" 
-    kolla_ref: "stable/queens"
+    kolla_ref: "stable/rocky"
 
     # Vars : kolla_repo/ansible/group_vars/all.yml
     kolla:
@@ -1247,7 +1247,7 @@ GitHub [18]_  and continue to have fun with EnOS.
     # Kolla parameters                                #
     # ############################################### #
     kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
-    kolla_ref: "stable/queens"
+    kolla_ref: "stable/rocky"
 
     # Vars : kolla_repo/ansible/group_vars/all.yml
     kolla:
