@@ -1,0 +1,12 @@
+---
+- include: pull.yml
+
+- name: Mount /run
+  command: mount --make-shared /run
+
+# Note: nscd prevents kolla-toolbox to start
+# See, https://bugs.launchpad.net/kolla-ansible/+bug/1680139
+- name: Stop nscd service (prevents kolla-toolbox to start)
+  systemd: state=stopped name=nscd
+  ignore_errors: yes
+

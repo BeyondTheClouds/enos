@@ -1,0 +1,61 @@
+---
+- include: pull.yml
+
+- name: Install the influxdb connector
+  template: src=influx.conf.j2 dest=/etc/collectd/collectd.conf.d/influx.conf
+
+- name: Install the configuration file
+  copy: src=collectd.conf dest=/etc/collectd/
+
+- name: Install the protocols plugin
+  copy: src=protocols.conf dest=/etc/collectd/collectd.conf.d/
+
+- name: Install the tcpconns plugin
+  copy: src="tcpconns-{{ item }}.conf"
+        dest="/etc/collectd/collectd.conf.d/tcpconns-{{ item }}.conf"
+  when: inventory_hostname in groups[item]
+  with_items:
+    - mariadb
+    - keystone
+    - rabbitmq
+    - compute
+    - haproxy
+    - network
+    - memcached
+
+- name: Install the contextswitch plugin
+  copy: src=contextswitch.conf dest=/etc/collectd/collectd.conf.d/
+
+- name: Install the memcached plugin
+  template: src=memcached.conf.j2 dest=/etc/collectd/collectd.conf.d/memcached.conf
+  when: inventory_hostname in groups['memcached']
+
+- name: Install the mysql plugin
+  template: src=mysql.conf.j2 dest=/etc/collectd/collectd.conf.d/mysql.conf
+  when: inventory_hostname in groups['mariadb']
+
+- name: Download the rabbitmq plugin
+  git: repo=https://github.com/signalfx/collectd-rabbitmq.git
+       dest=/opt/collectd-rabbitmq
+  when: inventory_hostname in groups['rabbitmq']
+
+- name: Install the rabbitmq plugin
+  template: src=rabbitmq.conf.j2 dest=/etc/collectd/collectd.conf.d/rabbitmq.conf
+  when: inventory_hostname in groups['rabbitmq']
+
+
+- name: Create haproxy plugin directory
+  file: path=/opt/collectd/haproxy state=directory
+
+- name: Install the haproxy plugin
+  copy: src={{ item.src }} dest={{ item.dst }}
+  when: inventory_hostname in groups['haproxy']
+  with_items:
+    - { src: haproxy.conf, dst: /etc/collectd/collectd.conf.d/haproxy.conf}
+    - { src: haproxy.py, dst: /opt/collectd/haproxy/haproxy.py}
+
+- name: Restart collectd
+  service:
+    name: collectd
+    state: restarted
+

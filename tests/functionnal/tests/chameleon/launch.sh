@@ -16,15 +16,12 @@ cd $SCRIPT_DIR
 # shellcheck disable=SC1091
 . ../utils.sh
 
-virtualenv venv
+virtualenv -p python3 venv
 # shellcheck disable=SC1091
 . venv/bin/activate
 
 pip install -e "$BASE_DIR"
 pip install -e "$BASE_DIR"[openstack]
-#pip install -U git+https://github.com/BeyondTheClouds/enoslib
-pip install -U -e /home/msimonin/workspace/repos/enoslib
-pip install ipdb
 
 # some cleaning
 enos deploy -f $1 # --force-deploy

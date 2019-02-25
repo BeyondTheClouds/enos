@@ -16,7 +16,7 @@ cd $SCRIPT_DIR
 # shellcheck disable=SC1091
 . ../utils.sh
 
-virtualenv venv
+virtualenv -p python3 venv
 # shellcheck disable=SC1091
 . venv/bin/activate
 

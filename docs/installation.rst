@@ -15,12 +15,12 @@ You may prefer to go with a virtualenv. Please refer to the
 and the rest of this section for further information.
 
 
-Then install enos inside a virtualenv:
+Then install enos inside a virtualenv (python3.5+ required):
 
 .. code-block:: bash
 
     $ mkdir my-experiment && cd my-experiment
-    $ virtualenv venv
+    $ virtualenv -p python3 venv
     $ source venv/bin/activate
     (venv) $ pip install -U pip
     (venv) $ pip install enos

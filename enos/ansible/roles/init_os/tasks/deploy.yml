@@ -1,0 +1,41 @@
+---
+# This will pull the images and create /srv
+- include: pull.yml
+
+- name: Generate init script
+  template:
+    src: init.sh.j2
+    dest: /srv/init_os/init.sh
+
+- name: Make the init script executable
+  file:
+    path: /srv/init_os/init.sh
+    mode: 0755
+
+- name: Get the reference on the kolla-toolbox image
+  shell: "{% raw %} docker images --format '{{ .Repository }}:{{ .Tag }}' | grep kolla-toolbox {% endraw %}"
+  register: kolla_toolbox_image
+
+- name: Launch init in kolla_toolbox container
+  docker_container:
+    name: kolla_toolbox
+    env: "{{ os_env }}"
+    command: "/srv/init_os/init.sh"
+    image: "{{ kolla_toolbox_image.stdout }}"
+    volumes:
+      - /srv/init_os:/srv/init_os
+  register: docker_output
+
+- name: Wait for the end of the init...
+  command: "docker ps -q --filter id={{ docker_output.ansible_facts.docker_container.Id }}"
+  register: finished
+  until: finished.stdout == ""
+  delay: 5
+  retries:  100
+
+- name: Init report
+  command: "docker logs {{ docker_output.ansible_facts.docker_container.Id }}"
+  register: init_output
+
+- name: Init report
+  debug: var=init_output

@@ -1,0 +1,18 @@
+---
+- name: Testing if they are some kolla confs to collect
+  stat: path=/etc/kolla
+  register: conf
+
+- name: Making a tar of the conf files
+  archive:
+    path: /etc/kolla
+    dest: /kolla-conf.tar.gz
+  when: conf.stat.exists and conf.stat.isdir
+
+- name: Pull back kolla conf
+  fetch:
+    src: /kolla-conf.tar.gz
+    dest: "{{ backup_dir }}/{{ inventory_hostname }}-kolla-conf.tar.gz"
+    flat: yes
+  when: conf.stat.exists and conf.stat.isdir
+

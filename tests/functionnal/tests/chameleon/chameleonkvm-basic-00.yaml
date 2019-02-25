@@ -1,0 +1,19 @@
+enable_monitoring: false
+inventory: inventories/inventory.sample
+kolla:
+  enable_heat: false
+  kolla_base_distro: centos
+  kolla_install_type: source
+kolla_ref: stable/rocky
+kolla_repo: https://git.openstack.org/openstack/kolla-ansible
+provider:
+  gateway: true
+  key_name: enos_matt
+  type: chameleonkvm
+registry:
+  type: internal
+resources:
+  m1.medium:
+    compute: 1
+    control: 1
+    network: 1

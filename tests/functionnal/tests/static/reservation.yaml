@@ -21,8 +21,7 @@ kolla:
   kolla_base_distro: centos
   kolla_install_type: source
   nova_compute_virt_type: qemu
-  openstack_release: latest
-kolla_ref: master
+kolla_ref: stable/rocky
 kolla_repo: https://git.openstack.org/openstack/kolla-ansible
 provider:
   networks:

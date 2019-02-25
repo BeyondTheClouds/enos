@@ -278,15 +278,15 @@ mkdir -p ~/enos-myxp
 cd ~/enos-myxp
 #+END_SRC
 
-Then, install EnOS in your working directory:
+Then, install EnOS in your working directory (python3.5+ is required):
 
 #+BEGIN_SRC sh :tangle ../../tests/functionnal/tests/tutorial/enos-node.sh
 # enos:~/enos-myxp$
-virtualenv --python=python2.7 venv
+virtualenv --python=python3 venv
 # (venv) enos:~/enos-myxp$
 . venv/bin/activate
 # (venv) enos:~/enos-myxp$
-pip install "enos[openstack]==5.0.0"
+pip install "enos[openstack]==5.0.1"
 #+END_SRC
 
 #+BEGIN_note
@@ -445,7 +445,6 @@ kolla_ref: "stable/rocky"
 kolla:
   kolla_base_distro: "centos"
   kolla_install_type: "source"
-  docker_namespace: "beyondtheclouds"
   enable_heat: "yes"
 #+END_SRC
 
@@ -1237,7 +1236,6 @@ kolla_ref: "stable/rocky"
 kolla:
   kolla_base_distro: "centos"
   kolla_install_type: "source"
-  docker_namespace: "beyondtheclouds"
   enable_heat: "yes"
 #+END_SRC
 
@@ -1275,26 +1273,6 @@ elisp code.
 (require 'ox-rst)
 (org-rst-export-to-rst nil)
 <<lst:remove-line-ref-src-block>>
-#+END_SRC
-
-** Update with a new version of EnOS                               :noexport:
-To update this when a new version of EnOS appears change in the
-following the values of ~new-os-version~ and ~new-enos-install~ with
-the value of the next release. Then executes the code with ~C-c C-c~.
-
-#+BEGIN_SRC elisp :results none
-(let ((cur-os-version "stable/rocky")
-      (new-os-version "stable/rocky")
-      (cur-enos-install "pip install \"enos[openstack]==5.0.0\"")
-      (new-enos-install "pip install \"enos[openstack]==5.0.0\""))
-  (defun enos/update-tuto (cur-version new-version)
-    (with-current-buffer (current-buffer)
-      (goto-char (point-min))
-      (while (search-forward cur-version nil t)
-        (replace-match new-version))
-      (save-buffer)))
-  (enos/update-tuto cur-os-version new-os-version)
-  (enos/update-tuto cur-enos-install new-enos-install))
 #+END_SRC
 
 * Footnotes

@@ -1,6 +1,8 @@
 import enos.provider.chameleonkvm as cc
 from enoslib.infra.enos_chameleonbaremetal.provider\
     import Chameleonbaremetal as Ecb
+from enoslib.infra.enos_chameleonbaremetal.configuration\
+    import Configuration
 
 import logging
 
@@ -36,7 +38,8 @@ class Chameleonbaremetal(cc.Chameleonkvm):
     def init(self, conf, force_deploy=False):
         logging.info("Chameleon baremetal provider")
         enoslib_conf = self.build_config(conf)
-        ecb = Ecb(enoslib_conf)
+        _conf = Configuration.from_dictionnary(enoslib_conf)
+        ecb = Ecb(_conf)
         roles, networks = ecb.init(force_deploy=force_deploy)
         return roles, networks
 

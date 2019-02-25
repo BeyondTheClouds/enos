@@ -3,6 +3,7 @@ from enos.utils.constants import NETWORK_INTERFACE
 from enos.utils.extra import gen_enoslib_roles
 from enoslib.api import expand_groups
 from enoslib.infra.enos_openstack.provider import Openstack as Enos_Openstack
+from enoslib.infra.enos_openstack.configuration import Configuration
 
 import logging
 
@@ -46,6 +47,7 @@ DEFAULT_CONFIG = {
 
 def _build_enoslib_conf(conf):
     enoslib_conf = conf.get("provider", {})
+    enoslib_conf.pop("type", None)
     if enoslib_conf.get("resources") is not None:
         return enoslib_conf
 
@@ -55,7 +57,7 @@ def _build_enoslib_conf(conf):
         grps = expand_groups(desc["group"])
         for grp in grps:
             machines.append({
-                "flavor": desc["flavor"],
+                "flavour": desc["flavor"],
                 "roles": [grp, desc["role"]],
                 "number": desc["number"],
             })
@@ -72,7 +74,8 @@ class Openstack(Provider):
     def init(self, conf, force_deploy=False):
         logging.info("Openstack provider")
         enoslib_conf = self.build_config(conf)
-        openstack = Enos_Openstack(enoslib_conf)
+        _conf = Configuration.from_dictionnary(enoslib_conf)
+        openstack = Enos_Openstack(_conf)
         roles, networks = openstack.init(force_deploy=force_deploy)
         return roles, networks
 

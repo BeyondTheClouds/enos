@@ -1,0 +1,5 @@
+---
+- name: Pull the Shaker container
+  docker_image:
+    name: beyondtheclouds/shaker
+    state: present

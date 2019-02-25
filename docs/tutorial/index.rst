@@ -83,14 +83,14 @@ infrastructure management. Among the various projects (30+), here is a
 selection corresponding to the bare necessities to operate
 infrastructure:
 
-Nova
+Nova    
     the compute resource manager (*i.e.*,
     virtual/bare-metal machines and containers)
 
-Glance
+Glance  
     the image store
 
-Neutron
+Neutron 
     the network manager for compute resources
     interconnection
 
@@ -118,13 +118,13 @@ interfaces are configured by neutron, supposing keystone authorized
 the operation. Such cooperation is possible through three
 communication channels:
 
-REST APIs
+REST APIs               
     used for inter-project communications
 
 Message queue (RabbitMQ)
     used for intra-project communications
 
-Database (MariaDB)
+Database (MariaDB)      
     used to store project states
 
 From the user viewpoint, OpenStack can be operated by three ways:
@@ -289,16 +289,16 @@ experiments:
     # enos:~$
     cd ~/enos-myxp
 
-Then, install EnOS in your working directory:
+Then, install EnOS in your working directory (python3.5+ is required):
 
 .. code-block:: sh
 
     # enos:~/enos-myxp$
-    virtualenv --python=python2.7 venv
+    virtualenv --python=python3 venv
     # (venv) enos:~/enos-myxp$
     . venv/bin/activate
     # (venv) enos:~/enos-myxp$
-    pip install "enos[openstack]==5.0.0"
+    pip install "enos[openstack]==5.0.1"
 
 .. note::
 
@@ -402,12 +402,12 @@ this configuration file are interested for a simple use of EnOS:
     # ############################################### #
     # Grid'5000 reservation parameters                #
     # ############################################### #
-    provider:
+    provider:                     
       type: g5k
       job_name: 'enos'
       walltime: '04:00:00'
 
-    resources:
+    resources:                    
       paravance:
         compute: 1
         network: 1
@@ -433,14 +433,13 @@ this configuration file are interested for a simple use of EnOS:
     # ############################################### #
     # Kolla parameters                                #
     # ############################################### #
-    kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
+    kolla_repo: "https://git.openstack.org/openstack/kolla-ansible" 
     kolla_ref: "stable/rocky"
 
     # Vars : kolla_repo/ansible/group_vars/all.yml
     kolla:
       kolla_base_distro: "centos"
       kolla_install_type: "source"
-      docker_namespace: "beyondtheclouds"
       enable_heat: "yes"
 
 The ``provider`` section tells on which testbed to deploy OpenStack plus
@@ -936,20 +935,20 @@ overrides the ``sla_max_avg_duration`` default value solely in the ``boot and li
     :name: lst:run.yml
 
     ---
-    rally:
+    rally:                                   
         enabled: yes
-        args:
-          concurrency:
+        args:                                
+          concurrency:                       
             - 5
-          times:
+          times:                             
             - 10
-        scenarios:
+        scenarios:                           
           - name: boot and list servers
             file: nova-boot-list-cc.yml
-            args:
+            args:                            
               sla_max_avg_duration: 30
     shaker:
-      enabled: yes
+      enabled: yes                           
       scenarios:
         - name: OpenStack L3 East-West Dense
           file: openstack/dense_l3_east_west
@@ -1254,7 +1253,6 @@ GitHub [18]_  and continue to have fun with EnOS.
     kolla:
       kolla_base_distro: "centos"
       kolla_install_type: "source"
-      docker_namespace: "beyondtheclouds"
       enable_heat: "yes"
 
 

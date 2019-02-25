@@ -16,15 +16,15 @@ set -o xtrace
 
 
 
-# Then, install EnOS in your working directory:
+# Then, install EnOS in your working directory (python3.5+ is required):
 
 
 # enos:~/enos-myxp$
-virtualenv --python=python2.7 venv
+virtualenv --python=python3 venv
 # (venv) enos:~/enos-myxp$
 . venv/bin/activate
 # (venv) enos:~/enos-myxp$
-pip install "enos[openstack]==5.0.0"
+pip install "enos[openstack]==5.0.1"
 
 # Deploy OpenStack
 # EnOS manages all the aspects of an OpenStack deployment by calling
@@ -50,10 +50,10 @@ enos deploy -f reservation.yaml
 # new terminal and type the following:
 # 1. Find the control node address using EnOS:
 
-   # (venv) enos:~/enos-myxp$
-   enos info
-   # (venv) enos:~/enos-myxp$
-   enos info --out json | jq -r '.rsc.control[0].address'
+# (venv) enos:~/enos-myxp$
+enos info
+# (venv) enos:~/enos-myxp$
+enos info --out json | jq -r '.rsc.control[0].address'
 
 # Unleash the Operator in You
 # OpenStack provides a command line interface to operate your Cloud. But
@@ -208,30 +208,30 @@ fi
 # ~openstack server --help~. Here are some commands:
 # 1. SSH on ~cli-vm~ using its name rather than its private IP.
 
-   # (venv) enos:~/enos-myxp$
-   openstack server ssh cli-vm --public --login cirros --option 'BatchMode=yes' --identity ./donatello.pem < ./test-donatello.sh
+# (venv) enos:~/enos-myxp$
+openstack server ssh cli-vm --public --login cirros --option 'BatchMode=yes' --identity ./donatello.pem < ./test-donatello.sh
 
 
 # 2. Create a snapshot of ~cli-vm~.
 
-   # (venv) enos:~/enos-myxp$
-   nova image-create cli-vm cli-vm-snapshot --poll
+# (venv) enos:~/enos-myxp$
+nova image-create cli-vm cli-vm-snapshot --poll
 
 
 # 3. Delete the ~cli-vm~.
 
-   # (venv) enos:~/enos-myxp$
-   openstack server delete cli-vm --wait
+# (venv) enos:~/enos-myxp$
+openstack server delete cli-vm --wait
 
 
 # 4. Boot a new machine ~cli-vm-clone~ from the snapshot.
 
-   # (venv) enos:~/enos-myxp$
-   openstack server create --image cli-vm-snapshot\
-                           --flavor m1.tiny\
-                           --network private\
-                           --wait\
-                           cli-vm-clone
+# (venv) enos:~/enos-myxp$
+openstack server create --image cli-vm-snapshot\
+                        --flavor m1.tiny\
+                        --network private\
+                        --wait\
+                        cli-vm-clone
 
 # Benchmark OpenStack
 # Stressing a Cloud manager can be done at two levels: at the /control

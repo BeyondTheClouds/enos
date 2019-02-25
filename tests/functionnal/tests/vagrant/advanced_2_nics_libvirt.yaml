@@ -1,12 +1,10 @@
 enable_monitoring: false
 inventory: inventories/inventory.sample
 kolla:
-  docker_namespace: beyondtheclouds
   enable_heat: 'no'
   kolla_base_distro: centos
   kolla_install_type: source
-  openstack_release: latest
-kolla_ref: master
+kolla_ref: stable/rocky
 kolla_repo: https://git.openstack.org/openstack/kolla-ansible
 provider:
   backend: libvirt

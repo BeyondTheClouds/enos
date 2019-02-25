@@ -28,9 +28,9 @@ class TestGenEnoslibRoles(unittest.TestCase):
         self.assertEqual(["default_group", "compute"], machines[0]["roles"])
         self.assertEqual(["default_group", "control"], machines[1]["roles"])
         self.assertEqual(["default_group", "network"], machines[2]["roles"])
-        self.assertEqual("flavor2", machines[0]["flavor"])
-        self.assertEqual("flavor1", machines[1]["flavor"])
-        self.assertEqual("flavor2", machines[2]["flavor"])
+        self.assertEqual("flavor2", machines[0]["flavour"])
+        self.assertEqual("flavor1", machines[1]["flavour"])
+        self.assertEqual("flavor2", machines[2]["flavour"])
 
 
 
@@ -50,9 +50,9 @@ class TestGenEnoslibRoles(unittest.TestCase):
         self.assertCountEqual(["grp1", "control"], machines[0]["roles"])
         self.assertCountEqual(["grp2", "compute"], machines[1]["roles"])
         self.assertCountEqual(["grp2", "network"], machines[2]["roles"])
-        self.assertEqual("flavor1", machines[0]["flavor"])
-        self.assertEqual("flavor2", machines[1]["flavor"])
-        self.assertEqual("flavor2", machines[2]["flavor"])
+        self.assertEqual("flavor1", machines[0]["flavour"])
+        self.assertEqual("flavor2", machines[1]["flavour"])
+        self.assertEqual("flavor2", machines[2]["flavour"])
 
 
     def test_with_expanded_topology(self):
