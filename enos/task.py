@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
 
+from datetime import datetime
+from subprocess import check_call
+
+import itertools
+import json
+import logging
+import operator
+import os
+import pickle
+import pprint
+import yaml
+
 from enoslib.task import enostask
 from enoslib.api import (run_ansible, emulate_network, validate_network,
                         reset_network)
@@ -7,26 +19,12 @@ from enoslib.api import (run_ansible, emulate_network, validate_network,
 from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
                                   NEUTRON_EXTERNAL_INTERFACE,
                                   NETWORK_INTERFACE, TEMPLATE_DIR)
+from enos.utils.build import create_configuration
+from enos.utils.enostask import check_env
 from enos.utils.errors import EnosFilePathError
 from enos.utils.extra import (bootstrap_kolla, generate_inventory, pop_ip,
                               make_provider, mk_enos_values, load_config,
                               seekpath, get_vip_pool, lookup_network, in_kolla)
-from enos.utils.enostask import check_env
-
-from datetime import datetime
-import logging
-
-import pprint
-
-import os
-from subprocess import check_call
-
-import json
-import pickle
-import yaml
-
-import itertools
-import operator
 
 
 def get_and_bootstrap_kolla(env, force=False):
@@ -384,6 +382,17 @@ def deploy(config, config_file=None, **kwargs):
 
     install_os(**kwargs)
     init_os(**kwargs)
+
+
+def build(provider, **kwargs):
+    configuration = create_configuration(provider, **kwargs)
+    arguments = {
+        '--force-deploy': True,
+        '--pull': True,
+        '--env': None
+    }
+
+    deploy(configuration, **arguments)
 
 
 @enostask()
