@@ -54,6 +54,32 @@ VAGRANT_TEMPLATE = {
 }
 
 
+G5K_TEMPLATE = {
+    'provider': {
+        'job_name': 'enos-build-g5k',
+        'type': 'g5k',
+        'walltime': '01:00:00',
+        'resources': {
+            'machines': [
+                {
+                    'cluster': '{{ cluster }}',
+                    'nodes': 1,
+                    'roles': ['control', 'compute', 'network'],
+                    'primary_network': 'int-net',
+                    'secondary_networks': []
+                }],
+            'networks': [
+                {
+                    'id': 'int-net',
+                    'roles': ['network_interface'],
+                    'site': 'rennes',
+                    'type': 'kavlan'
+                }]
+        }
+    }
+}
+
+
 VMONG5K_TEMPLATE = {
     'provider': {
         'job_name': 'enos-build-vmong5k',
@@ -65,7 +91,7 @@ VMONG5K_TEMPLATE = {
                 {
                     'cluster': '{{ cluster }}',
                     'nodes': 1,
-                    'roles': ['control', 'compute', 'network'],
+                    'roles': ['control', 'compute', 'network']
                 }],
             'networks': ['network_interface']
         }
@@ -83,7 +109,7 @@ def _instantiate_template(template, **kwargs):
 def create_configuration(provider, **kwargs):
     template = {
         'vagrant': VAGRANT_TEMPLATE,
-        'g5k': VAGRANT_TEMPLATE,
+        'g5k': G5K_TEMPLATE,
         'vmong5k': VMONG5K_TEMPLATE
     }[provider]  # raise exception for unknown providers
 
