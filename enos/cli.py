@@ -302,6 +302,54 @@ def kolla(**kwargs):
     t.kolla(**kwargs)
 
 
+def build(**kwargs):
+    """
+    usage: enos build <provider> [options]
+
+    Build a reference image for later deployment.
+
+    The built is done for a given <provider> (vagrant, g5k or vmong5k). Some
+    options apply only to some providers, see below.
+
+    Options:
+
+    --backend BACKEND  Virtualization backend (vagrant).
+                       [default: libvirt].
+    --base BASE        Base distribution for deployed virtual machines.
+                       [default: centos].
+    --box BOX          Box for the host virtual machines (vagrant).
+                       [default: generic/debian9].
+    --cluster CLUSTER  Cluster where the image is built (g5k and vmong5k).
+                       [default: parasilo].
+    --type TYPE        Installation type of the BASE distribution.
+                       [default: binary].
+    --image IMAGE      Reference image path to bake on top of it (vmong5k).
+                       [default: /grid5000/virt-images/debian9-x64-base.qcow2].
+
+    -h --help          Show this help message.
+    -s --silent        Quiet mode.
+    -vv                Verbose mode.
+
+    """
+
+    logger.debug(kwargs)
+    provider = kwargs.pop('<provider>')
+    arguments = {}
+    if '--backend' in kwargs:
+        arguments['backend'] = kwargs['--backend']
+    if '--base' in kwargs:
+        arguments['base'] = kwargs['--base']
+    if '--box' in kwargs:
+        arguments['box'] = kwargs['--box']
+    if '--cluster' in kwargs:
+        arguments['cluster'] = kwargs['--cluster']
+    if '--type' in kwargs:
+        arguments['distribution'] = kwargs['--type']
+    if '--image' in kwargs:
+        arguments['image'] = kwargs['--image']
+    t.build(provider, **arguments)
+
+
 def _configure_logging(args):
     if '-vv' in args['<args>']:
         logging.basicConfig(level=logging.DEBUG)
@@ -340,6 +388,7 @@ def main():
     pushtask(enostasks, new)
     pushtask(enostasks, tc)
     pushtask(enostasks, up)
+    pushtask(enostasks, build)
 
     task = enostasks[args['<command>']]
     task(**docopt(task.__doc__, argv=argv))

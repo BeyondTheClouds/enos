@@ -29,7 +29,7 @@ def _build_enoslib_configuration(configuration):
     _configuration = copy.deepcopy(configuration)
     enoslib_configuration = _configuration.get("provider", {})
     enoslib_configuration.pop("type", None)
-    if enoslib_configuration.get("resources") is not None:
+    if "resources" in enoslib_configuration:
         return enoslib_configuration
 
     machines = []
