@@ -27,7 +27,8 @@ Commands:
   info           Show information of the actual deployment.
   destroy        Destroy the deployment and optionally the related resources.
   deploy         Shortcut for enos up, then enos os and enos config.
-  kolla          Runs arbitrary kolla command on nodes
+  kolla          Runs arbitrary kolla command on nodes.
+  build          Build a reference image for later deployment.
 
 
 See 'enos <command> --help' for more information on a specific
@@ -321,10 +322,12 @@ def build(**kwargs):
                        [default: generic/debian9].
     --cluster CLUSTER  Cluster where the image is built (g5k and vmong5k).
                        [default: parasilo].
-    --type TYPE        Installation type of the BASE distribution.
-                       [default: binary].
+    --directory DIR    Directory in which the image will be baked.
+                       [default: ~/.enos].
     --image IMAGE      Reference image path to bake on top of it (vmong5k).
                        [default: /grid5000/virt-images/debian9-x64-base.qcow2].
+    --type TYPE        Installation type of the BASE distribution.
+                       [default: binary].
 
     -h --help          Show this help message.
     -s --silent        Quiet mode.
@@ -343,10 +346,12 @@ def build(**kwargs):
         arguments['box'] = kwargs['--box']
     if '--cluster' in kwargs:
         arguments['cluster'] = kwargs['--cluster']
-    if '--type' in kwargs:
-        arguments['distribution'] = kwargs['--type']
+    if '--directory' in kwargs:
+        arguments['directory'] = kwargs['--directory']
     if '--image' in kwargs:
         arguments['image'] = kwargs['--image']
+    if '--type' in kwargs:
+        arguments['distribution'] = kwargs['--type']
     t.build(provider, **arguments)
 
 

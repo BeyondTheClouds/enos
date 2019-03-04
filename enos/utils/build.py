@@ -1,15 +1,7 @@
-from enoslib.infra.enos_vagrant.constants import (DEFAULT_BOX,
-                                                  DEFAULT_BACKEND)
-from enoslib.infra.enos_vmong5k.constants import (DEFAULT_IMAGE)
-#                                                  DEFAULT_WORKING_DIR)
-
 from jinja2 import Template
 
 import json
 
-DEFAULT_TYPE = 'binary'
-
-DEFAULT_BASE = 'centos'
 
 BASE_TEMPLATE = {
     'enable_monitoring': True,
@@ -24,8 +16,9 @@ BASE_TEMPLATE = {
     'kolla_repo': 'https://git.openstack.org/openstack/kolla-ansible',
     'registry': {
         'type': 'internal'
-    }
-
+    },
+    'working_dir': '{{ directory }}',
+    'strategy': 'copy'
 }
 
 VAGRANT_TEMPLATE = {
@@ -120,38 +113,3 @@ def create_configuration(provider, **kwargs):
     base_config = _instantiate_template(BASE_TEMPLATE, **kwargs)
     provider_config = _instantiate_template(template, **kwargs)
     return {**base_config, **provider_config}
-
-
-# filter empty arguments from cli
-# arguments = {k: v for k, v in kwargs.items() if v is not None}
-
-# def create_configuration(provider, **kwargs):
-#     return {
-#         'vagrant': _create_config_for_vagrant,
-#         'g5k': _create_config_for_g5k,
-#         'vmong5k': _create_config_for_vmong5k
-#     }.get(provider, lambda **_: None)(**kwargs)
-#
-#
-# def _create_base_config(base=DEFAULT_BASE, distribution=DEFAULT_TYPE):
-#     return _instantiate_template(BASE_TEMPLATE, base=base,
-#                                  distribution=distribution)
-#
-#
-# def _create_config_for_vagrant(*, base, distribution,
-#                                backend=DEFAULT_BACKEND, box=DEFAULT_BOX):
-#     base_config = _create_base_config(base=base, distribution=distribution)
-#     vagrant_config = _instantiate_template(VAGRANT_TEMPLATE,
-#                                            backend=backend, box=box)
-#
-#     # return merge configurations
-#     return {**base_config, **vagrant_config}
-#
-#
-# def _create_config_for_g5k(*, base, distribution, cluster=None):
-#     pass
-#
-#
-# def _create_config_for_vmong5k(*, base, distribution, box=DEFAULT_BOX,
-#                                cluster=None, image=None):
-#     pass
