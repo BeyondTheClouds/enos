@@ -315,14 +315,14 @@ def build(**kwargs):
     Options:
 
     --backend BACKEND  Virtualization backend (vagrant).
-                       [default: libvirt].
+                       [default: virtualbox].
     --base BASE        Base distribution for deployed virtual machines.
                        [default: centos].
     --box BOX          Box for the host virtual machines (vagrant).
                        [default: generic/debian9].
     --cluster CLUSTER  Cluster where the image is built (g5k and vmong5k).
                        [default: parasilo].
-    --directory DIR    Directory in which the image will be baked.
+    --directory DIR    Directory in which the image will be baked (vmong5k).
                        [default: ~/.enos].
     --image IMAGE      Reference image path to bake on top of it (vmong5k).
                        [default: /grid5000/virt-images/debian9-x64-base.qcow2].
