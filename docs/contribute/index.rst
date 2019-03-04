@@ -17,7 +17,7 @@ Install from sources and make them editable
 
     $ git clone https://github.com/BeyondTheClouds/enos.git
     $ cd enos
-    $ virtualenv venv
+    $ virtualenv --python=python3 venv
     $ source venv/bin/activate
     (venv) $ pip install -e .
 
