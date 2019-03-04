@@ -1245,15 +1245,15 @@ This is an org mode file written to:
   generate the rst file, load the ~ox-rst.el~ file from
   https://github.com/msnoigrs/ox-rst into emacs. Then do, ~C-c C-e r
   r~ or ~M-x org-rst-export-to-rst~. The rst file will be available
-  under ~enos/docs/tutorial/index.rst~. Caution: the remove of [[info:org#Literal%20examples][line
+  under ~enos/docs/tutorial/grid5000-tuto.rst~. Caution: the remove of [[info:org#Literal%20examples][line
   references in source blocks (i.e., ~-r~)]] doesn't work with
-  ~ox-rst.el~. We have to remove them manually in the ~index.rst~. The
+  ~ox-rst.el~. We have to remove them manually in the ~grid5000-tuto.rst~. The
   following emacs-lisp command does the job. Executes it with ~C-c
   C-c~.
   #+NAME: lst:remove-line-ref-src-block
   #+BEGIN_SRC elisp :results none
-  (find-file "index.rst")
-  (with-current-buffer "index.rst"
+  (find-file "grid5000-tuto.rst")
+  (with-current-buffer "grid5000-tuto.rst"
     (goto-char (point-min))
     (while (re-search-forward "(ref:.+?)" nil t)
       (replace-match ""))
