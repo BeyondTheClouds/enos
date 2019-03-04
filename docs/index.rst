@@ -51,7 +51,7 @@ A typical experiment using Enos is the sequence of several phases:
     analysis/index
     contribute/index
     jenkins/index
-    tutorial/index.rst
+    tutorial/index
 
 Why Enos ?
 -----------
