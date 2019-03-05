@@ -57,3 +57,32 @@ Default Configuration
 .. literalinclude:: ../../enos/provider/enos_vagrant.py
    :start-after: # - SPHINX_DEFAULT_CONFIG
    :end-before: # + SPHINX_DEFAULT_CONFIG
+
+Build an Image
+--------------
+
+A reference image for Vagrant, containing all the dependencies to install
+OpenStack in subsequent deployments, may be built directly from command line
+on-the-fly without an intermediary deploy execution. Run the `enos build`
+command accordingly changing the default values if required.
+
+In order to complete the image construction, after the execution of EnOS execute
+the following commands:
+
+```
+> vagrant package
+> vagrant box add package.box --name <personalised/enos-box>
+```
+
+Once the box is registed in the vagrant catalog, the name of the box can be used
+in the EnOS configuration replacing the default one. For example:
+
+```
+...
+  provider:
+    backend: virtualbox
+    box: personalised/enos-box
+    type: vagrant
+...
+
+```
