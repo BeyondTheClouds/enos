@@ -51,6 +51,7 @@ G5K_TEMPLATE = {
     'provider': {
         'job_name': 'enos-build-g5k',
         'type': 'g5k',
+        'env_name': '{{ environment }}',
         'walltime': '01:00:00',
         'resources': {
             'machines': [
