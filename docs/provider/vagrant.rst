@@ -26,7 +26,7 @@ example the following is a valid configuration
    :linenos:
 
 The list of the sizes may be found :enos_src:`here
-<enos/provider/enos_vagrant.py#L12>`.
+<https://gitlab.inria.fr/discovery/enoslib/blob/master/enoslib/infra/enos_vagrant/constants.py#L23-48>`.
 
 By default virtualbox will be used. See below to learn how to change the default
 virtualbox backend.
