@@ -104,3 +104,29 @@ reservation is done) and relaunch it later with the exact same configuration
 file. For this purpose you can leverage the ``-f`` options of EnOS.
 
 
+Building an Personalised Environment
+------------------------------------
+
+A personalised environment stored in Grid5000, containing all the dependencies
+to install OpenStack in subsequent deployments, may be built directly from
+command line on-the-fly without and intermediary deploy execution. Run the
+``enos build`` command, changing the default values accordingly (specially the
+``--cluster`` one).
+
+In order to complete the environment construction, after the execution of EnOS
+on the frontend execute the ``tgz-g5k`` command following the instructions of
+the `Grid5000 documentation
+<https://www.grid5000.fr/w/Advanced_Kadeploy#Create_a_new_environment_from_a_customized_environment>`_
+to finish the registration of the new environment.
+
+Once the environment is registered in the database, the name of this environment
+can be used in the EnOS configuration replacing the default one. For example,
+let's suppose we want to use a personalised environment named
+``enos-debian9-x64-openstack``, then the configuration can be set as follows:
+
+.. code-block:: yaml
+
+   provider:
+     type: g5k
+     env_name: enos-debian9-x64-openstack
+     ...

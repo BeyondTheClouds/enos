@@ -63,26 +63,25 @@ Build an Image
 
 A reference image for Vagrant, containing all the dependencies to install
 OpenStack in subsequent deployments, may be built directly from command line
-on-the-fly without an intermediary deploy execution. Run the `enos build`
-command accordingly changing the default values if required.
+on-the-fly without an intermediary deploy execution. Run the ``enos build``
+command, changing the default values accordingly.
 
 In order to complete the image construction, after the execution of EnOS execute
-the following commands:
+the following commands to register a box named ``personal/enos-box-openstack``:
 
-```
-> vagrant package
-> vagrant box add package.box --name <personalised/enos-box>
-```
+.. code-block:: bash
 
-Once the box is registed in the vagrant catalog, the name of the box can be used
-in the EnOS configuration replacing the default one. For example:
+   > vagrant package
+   > vagrant box add package.box --name personal/enos-box-openstack
 
-```
-...
-  provider:
-    backend: virtualbox
-    box: personalised/enos-box
-    type: vagrant
-...
 
-```
+Once the box is registed in the vagrant catalog, the name of this box can be
+used in the EnOS configuration replacing the default one. For example:
+
+.. code-block:: yaml
+
+   provider:
+     type: vagrant
+     backend: virtualbox
+     box: personal/enos-box-openstack
+     ...
