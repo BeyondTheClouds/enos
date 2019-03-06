@@ -104,8 +104,8 @@ reservation is done) and relaunch it later with the exact same configuration
 file. For this purpose you can leverage the ``-f`` options of EnOS.
 
 
-Building an Personalised Environment
-------------------------------------
+Building a Personalised Environment
+-----------------------------------
 
 A personalised environment stored in Grid5000, containing all the dependencies
 to install OpenStack in subsequent deployments, may be built directly from
