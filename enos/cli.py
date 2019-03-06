@@ -316,17 +316,19 @@ def build(**kwargs):
 
     --backend BACKEND  Virtualization backend (vagrant).
                        [default: virtualbox].
-    --base BASE        Base distribution for deployed virtual machines.
+    --base BASE        Base distribution for deployed virtual machines
                        [default: centos].
-    --box BOX          Box for the host virtual machines (vagrant).
+    --box BOX          Reference box for host virtual machines (vagrant)
                        [default: generic/debian9].
-    --cluster CLUSTER  Cluster where the image is built (g5k and vmong5k).
+    --cluster CLUSTER  Cluster where the image is built (g5k and vmong5k)
                        [default: parasilo].
-    --directory DIR    Directory in which the image will be baked (vmong5k).
+    --directory DIR    Directory in which the image will be baked (vmong5k)
                        [default: ~/.enos].
-    --image IMAGE      Reference image path to bake on top of it (vmong5k).
+    --environment ENV  Reference environment for deployment (g5k)
+                       [default: debian9-x64-nfs].
+    --image IMAGE      Reference image path to bake on top of it (vmong5k)
                        [default: /grid5000/virt-images/debian9-x64-base.qcow2].
-    --type TYPE        Installation type of the BASE distribution.
+    --type TYPE        Installation type of the BASE distribution
                        [default: binary].
 
     -h --help          Show this help message.
@@ -348,6 +350,8 @@ def build(**kwargs):
         arguments['cluster'] = kwargs['--cluster']
     if '--directory' in kwargs:
         arguments['directory'] = kwargs['--directory']
+    if '--environment' in kwargs:
+        arguments['environment'] = kwargs['--environment']
     if '--image' in kwargs:
         arguments['image'] = kwargs['--image']
     if '--type' in kwargs:
