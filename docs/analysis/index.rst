@@ -13,7 +13,7 @@ Setting ``enable_monitoring: true`` in the configuration file will deploy a moni
 All these services are accessible on their default ports.
 For instance you'll be able to access grafana dashboards on port ``3000`` of the node hosting grafana.
 
-Some dashboards are available `here <https://github.com/BeyondTheClouds/kolla-g5k-results/tree/master/files/grafana>`_.
+Some dashboards are available in this `grafana directory <https://github.com/BeyondTheClouds/kolla-g5k-results/tree/master/files/grafana>`_.
 
 Post-mortem
 -----------
@@ -35,4 +35,3 @@ is set in the configuration file).
 Once the deployment is finished, a compatible dashboard must be used in Grafana
 to display annotations. An example of such dashboard is available `here
 <https://github.com/BeyondTheClouds/kolla-g5k-results/blob/master/files/grafana/dashboard_annotations.json>`_.
-

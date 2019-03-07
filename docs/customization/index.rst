@@ -1,3 +1,5 @@
+.. _customizations:
+
 Customizations
 ==============
 
@@ -213,4 +215,3 @@ Single interface deployment
 ---------------------------
 
 Please refer to this discussion :  https://github.com/BeyondTheClouds/enos/issues/227
-

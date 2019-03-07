@@ -58,15 +58,15 @@ Default Configuration
    :start-after: # - SPHINX_DEFAULT_CONFIG
    :end-before: # + SPHINX_DEFAULT_CONFIG
 
-Build an Image
---------------
+Build a Box
+-----------
 
-A reference image for Vagrant, containing all the dependencies to install
+A reference box for Vagrant, containing all the dependencies to install
 OpenStack in subsequent deployments, may be built directly from command line
-on-the-fly without an intermediary deploy execution. Run the ``enos build``
-command, changing the default values accordingly.
+on-the-fly without an intermediary deploy execution. Run the command ``enos
+build vagrant``, changing the default values accordingly.
 
-In order to complete the image construction, after the execution of EnOS execute
+In order to complete the box construction, after the execution of EnOS execute
 the following commands to register a box named ``personal/enos-box-openstack``:
 
 .. code-block:: bash

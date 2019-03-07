@@ -1,3 +1,5 @@
+.. _network-emulation:
+
 Network Emulation
 =================
 

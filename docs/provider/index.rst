@@ -17,5 +17,6 @@ the followings:
    static
    grid5000
    vagrant
+   vmong5k
    openstack
    custom

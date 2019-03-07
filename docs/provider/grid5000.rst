@@ -104,14 +104,14 @@ reservation is done) and relaunch it later with the exact same configuration
 file. For this purpose you can leverage the ``-f`` options of EnOS.
 
 
-Building a Personalised Environment
------------------------------------
+Building an Environment
+-----------------------
 
-A personalised environment stored in Grid5000, containing all the dependencies
+A personalised environment stored in Grid'5000, containing all the dependencies
 to install OpenStack in subsequent deployments, may be built directly from
 command line on-the-fly without and intermediary deploy execution. Run the
-``enos build`` command, changing the default values accordingly (specially the
-``--cluster`` one).
+command ``enos build g5k``, changing the default values accordingly (specially
+the ``--cluster`` one).
 
 In order to complete the environment construction, after the execution of EnOS
 on the frontend execute the ``tgz-g5k`` command following the instructions of
