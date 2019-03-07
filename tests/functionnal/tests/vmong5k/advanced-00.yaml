@@ -1,0 +1,32 @@
+provider:
+  job_name: enos-jenkins
+  type: vmong5k
+  walltime: 01:00:00
+  image: /grid5000/virt-images/debian9-x64-base.qcow2
+  resources:
+    machines:
+      - cluster: parapluie
+        nodes: 1
+        roles: [compute]
+        flavour: medium
+      - cluster: parapluie
+        nodes: 1
+        roles: [control]
+        flavour: extra-large
+      - cluster: paravance
+        nodes: 1
+        roles: [network]
+        flavour_desc:
+          core: 4
+          mem: 4096
+    networks: ['network_interface']
+registry:
+  type: internal
+enable_monitoring: false
+inventory: inventories/inventory.sample
+kolla_ref: stable/rocky
+kolla_repo: https://git.openstack.org/openstack/kolla-ansible
+kolla:
+  enable_heat: false
+  kolla_base_distro: centos
+  kolla_install_type: source

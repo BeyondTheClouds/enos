@@ -13,6 +13,7 @@ from ..utils import extra
 
 LOGGER = logging.getLogger(__name__)
 
+# - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {
     'job_name': 'enos-vmong5k',
     'walltime': '02:00:00'
@@ -23,6 +24,7 @@ DEFAULT_FLAVOUR_BY_ROLE = {
     'network': 'large',
     'compute': 'medium'
 }
+# + SPHINX_DEFAULT_CONFIG
 
 
 def _build_enoslib_configuration(configuration):
