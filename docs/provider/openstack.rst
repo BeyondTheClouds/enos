@@ -96,7 +96,7 @@ Basic Configuration
 As more default values can be enforced automatically, the following is a valid
 resources description.
 
-.. literalinclude:: ../../tests/functionnal/tests/chameleon/chameleonkvm-basic-00.yml
+.. literalinclude:: ../../tests/functionnal/tests/chameleon/chameleonkvm-basic-00.yaml
    :language: yaml
    :linenos:
 
@@ -126,7 +126,7 @@ The provider interacts with blazar to claim automatically a lease.
 Basic Configuration
 -------------------
 
-.. literalinclude:: ../../tests/functionnal/tests/chameleon/chameleonbaremetal-basic-00.yml
+.. literalinclude:: ../../tests/functionnal/tests/chameleon/chameleonbaremetal-basic-00.yaml
    :language: yaml
    :linenos:
 

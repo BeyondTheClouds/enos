@@ -7,7 +7,7 @@ Workflow:
 * Check if a server can be booted and if Rally can be launched.
 
 
-.. literalinclude:: ../../tests/functionnal/tests/grid5000/grid5000.yaml
+.. literalinclude:: ../../tests/functionnal/tests/grid5000/basic-01.yaml
     :language: yaml
-    :name: grid5000.yaml
+    :name: basic-01.yaml
     :caption: Configuration
