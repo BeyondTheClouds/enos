@@ -1,0 +1,62 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Allow connections as root
+$script = <<SCRIPT
+cp -r /home/vagrant/.ssh /root/.
+SCRIPT
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "generic/debian9"
+  config.vm.box_version = "<=1.8.14"
+
+  config.vm.provision "shell", inline: $script
+
+  config.vm.define "enos-0" do |my|
+    my.vm.hostname = "enos-0"
+    my.vm.network :private_network, ip: "192.168.142.245", auto_config: true
+    my.vm.network :private_network, ip: "192.168.143.245", auto_config: true
+    my.vm.provider :virtualbox do |vb|
+      vb.cpus=6
+      vb.memory=6144
+    end
+    my.vm.provider :libvirt do |lv|
+      lv.cpus=6
+      lv.memory=6144
+      lv.nested = true
+    end
+  end
+
+  config.vm.define "enos-1" do |my|
+    my.vm.hostname = "enos-1"
+    my.vm.network :private_network, ip: "192.168.142.244", auto_config: true
+    my.vm.network :private_network, ip: "192.168.143.244", auto_config: true
+
+    my.vm.provider :virtualbox do |vb|
+      vb.cpus=2
+      vb.memory=2048
+    end
+    my.vm.provider :libvirt do |lv|
+      lv.cpus=2
+      lv.memory=2048
+      lv.nested = true
+    end
+  end
+
+  config.vm.define "enos-2" do |my|
+    my.vm.hostname = "enos-2"
+    my.vm.network :private_network, ip: "192.168.142.243", auto_config: true
+    my.vm.network :private_network, ip: "192.168.143.243", auto_config: true
+
+    my.vm.provider :virtualbox do |vb|
+      vb.cpus=1
+      vb.memory=512
+    end
+    my.vm.provider :libvirt do |lv|
+      lv.cpus=2
+      lv.memory=1024
+      lv.nested = true
+    end
+  end
+
+end
