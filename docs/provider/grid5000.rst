@@ -10,6 +10,10 @@ Installation
 Connect to a Grid'5000 frontend of your choice. Then, refer to the
 :ref:`installation` section to install Enos.
 
+To access the Grid'5000 API, you must configure
+`python-grid5000 <https://pypi.org/project/python-grid5000/>`_. Please refer to
+the corresponding documentation
+
 If the `virtualenv` module is missing:
 
 .. code-block:: bash

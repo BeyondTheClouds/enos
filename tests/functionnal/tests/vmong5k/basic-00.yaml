@@ -1,20 +1,20 @@
+enable_monitoring: false
+inventory: inventories/inventory.sample
+kolla:
+  enable_heat: false
+  kolla_base_distro: centos
+  kolla_install_type: source
+kolla_ref: stable/stein
+kolla_repo: https://git.openstack.org/openstack/kolla-ansible
 provider:
   job_name: enos-jenkins
   type: vmong5k
   walltime: 01:00:00
+registry:
+  type: internal
 resources:
   parapluie:
     compute: 1
     control: 1
   paravance:
     network: 1
-registry:
-  type: internal
-enable_monitoring: false
-inventory: inventories/inventory.sample
-kolla_ref: stable/rocky
-kolla_repo: https://git.openstack.org/openstack/kolla-ansible
-kolla:
-  enable_heat: false
-  kolla_base_distro: centos
-  kolla_install_type: source

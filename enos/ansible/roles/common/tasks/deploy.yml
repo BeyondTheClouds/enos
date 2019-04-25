@@ -10,3 +10,6 @@
   systemd: state=stopped name=nscd
   ignore_errors: yes
 
+
+- name: Include context specific tasks
+  include: "context/{{ context }}.yml"

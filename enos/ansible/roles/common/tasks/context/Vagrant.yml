@@ -1,0 +1,13 @@
+---
+- name: Enable ipv6 (RabbitMQ/epmd won't start otherwise)
+  sysctl:
+    name: net.ipv6.conf.all.disable_ipv6
+    value: 0
+    state: present
+
+- name: Make sure the ansible_hostname is resolvable (otherwise RabbitMQ/epmd won't start)
+  lineinfile:
+    path: /etc/hosts
+    insertbefore: BOF
+    line: "{{ hostvars[inventory_hostname]['ansible_' + network_interface].ipv4.address }}    {{ansible_hostname}}"
+    regex: "^{{ hostvars[inventory_hostname]['ansible_' + network_interface].ipv4.address }}    {{ansible_hostname}}.*"

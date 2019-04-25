@@ -66,3 +66,6 @@ class Enos_vagrant(Provider):
 
     def default_config(self):
         return DEFAULT_CONFIG
+
+    def __str__(self):
+        return 'Vagrant'

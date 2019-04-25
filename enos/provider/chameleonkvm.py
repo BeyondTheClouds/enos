@@ -32,3 +32,6 @@ class Chameleonkvm(openstack.Openstack):
         default_config = super(Chameleonkvm, self).default_config()
         default_config.update(DEFAULT_CONFIG)
         return default_config
+
+    def __str__(self):
+        return "Chameleonkvm"

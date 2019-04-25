@@ -16,13 +16,13 @@ CLUSTERS_SITES = { "paravance": "rennes", "grisou": "nancy" }
 
 class TestGenEnoslibRoles(unittest.TestCase):
 
-    @mock.patch("enoslib.infra.enos_g5k.api.get_clusters_interfaces",
+    @mock.patch("enoslib.infra.enos_g5k.g5k_api_utils.get_clusters_interfaces",
                 return_value=INTERFACES)
     def test_count_common_interfaces(self, mock_get_clusters_interfaces):
         result = _count_common_interfaces(['paravance', 'parasilo'])
         self.assertEqual(1, result)
 
-    @mock.patch("enoslib.infra.enos_g5k.api.get_clusters_sites",
+    @mock.patch("enoslib.infra.enos_g5k.g5k_api_utils.get_clusters_sites",
                 return_value=CLUSTERS_SITES)
     def test_get_sites(self, mock_get_clusters_sites):
         result = _get_sites(["paravance", "grisou"])
