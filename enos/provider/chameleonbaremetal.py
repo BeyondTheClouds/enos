@@ -54,3 +54,6 @@ class Chameleonbaremetal(cc.Chameleonkvm):
         default_config.update(DEFAULT_CONFIG)
 
         return default_config
+
+    def __str__(self):
+        return "Chameleonbaremetal"

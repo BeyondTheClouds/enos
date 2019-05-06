@@ -4,7 +4,7 @@ kolla:
   enable_heat: false
   kolla_base_distro: centos
   kolla_install_type: source
-kolla_ref: stable/rocky
+kolla_ref: stable/stein
 kolla_repo: https://git.openstack.org/openstack/kolla-ansible
 provider:
   gateway: true

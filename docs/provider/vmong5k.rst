@@ -22,6 +22,12 @@ machine sizes of the Vagrant provider to describe resources.
 
 Refer to the :ref:`installation` section to install EnOS.
 
+
+To access the Grid'5000 API, you must configure
+`python-grid5000 <https://pypi.org/project/python-grid5000/>`_. Please refer to
+the corresponding documentation
+
+
 The following is a valid resource description:
 
 .. literalinclude:: ../../tests/functionnal/tests/vmong5k/basic-00.yaml

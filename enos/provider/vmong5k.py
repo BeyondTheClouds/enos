@@ -88,4 +88,4 @@ class Vmong5k(Provider):
         return DEFAULT_CONFIG
 
     def __str__(self):
-        return 'VMonG5K'
+        return 'Vmong5k'

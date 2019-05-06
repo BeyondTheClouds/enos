@@ -3,7 +3,7 @@ import copy
 import logging
 
 from enoslib.api import expand_groups
-from enoslib.infra.enos_g5k import (api, provider)
+from enoslib.infra.enos_g5k import (provider, g5k_api_utils, remote)
 from enoslib.infra.enos_g5k.configuration import Configuration
 
 from enos.provider.provider import Provider
@@ -42,12 +42,12 @@ SECONDARY_NETWORK = {
 
 
 def _count_common_interfaces(clusters):
-    interfaces = api.get_clusters_interfaces(clusters)
+    interfaces = g5k_api_utils.get_clusters_interfaces(clusters)
     return min([len(x) for x in interfaces.values()])
 
 
 def _get_sites(clusters):
-    clusters_sites = api.get_clusters_sites(clusters)
+    clusters_sites = g5k_api_utils.get_clusters_sites(clusters)
     return set(clusters_sites.values())
 
 
@@ -129,29 +129,29 @@ def _provision(roles):
     nodes = set([node.address for node in nodes])
 
     # Provision nodes so we can run Ansible on it
-    api.exec_command_on_nodes(
+    remote.exec_command_on_nodes(
         nodes,
         'apt-get update && apt-get -y --force-yes install python',
         'Installing python...')
 
     # Bind volumes of docker in /tmp (free storage location on G5k)
-    api.exec_command_on_nodes(
+    remote.exec_command_on_nodes(
         nodes,
         ('mkdir -p /tmp/docker/volumes; '
          'mkdir -p /var/lib/docker/volumes'),
         'Creating docker volumes directory in /tmp')
-    api.exec_command_on_nodes(
+    remote.exec_command_on_nodes(
         nodes,
         ('(mount | grep /tmp/docker/volumes) || '
          'mount --bind /tmp/docker/volumes /var/lib/docker/volumes'),
         'Bind mount')
 
     # Bind nova local storage in /tmp
-    api.exec_command_on_nodes(
+    remote.exec_command_on_nodes(
         nodes,
         'mkdir -p /tmp/nova ; mkdir -p /var/lib/nova',
         'Creating nova directory in /tmp')
-    api.exec_command_on_nodes(
+    remote.exec_command_on_nodes(
         nodes,
         ('(mount | grep /tmp/nova) || '
          'mount --bind /tmp/nova /var/lib/nova'),
@@ -177,8 +177,9 @@ class G5k(Provider):
         conf = env.get('config')
         LOGGER.debug("Building enoslib configuration")
         enoslib_conf = _build_enoslib_conf(conf)
+        conf = Configuration.from_dictionnary(enoslib_conf)
         LOGGER.debug("Creating G5K provider")
-        g5k = provider.G5k(enoslib_conf)
+        g5k = provider.G5k(conf)
         LOGGER.info("Destroying G5K deployment")
         g5k.destroy()
 

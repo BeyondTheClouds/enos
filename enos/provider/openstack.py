@@ -90,3 +90,6 @@ class Openstack(Provider):
 
     def build_config(self, conf):
         return _build_enoslib_conf(conf)
+
+    def __str__(self):
+        return "Openstack"

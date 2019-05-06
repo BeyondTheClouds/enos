@@ -118,6 +118,7 @@ def up(config, config_file=None, env=None, **kwargs):
     options.update(env['config'])
     enos_action = "pull" if kwargs.get("--pull") else "deploy"
     options.update(enos_action=enos_action)
+    options.update(context=str(provider))
     # Runs playbook that initializes resources (eg,
     # installs the registry, install monitoring tools, ...)
     up_playbook = os.path.join(ANSIBLE_DIR, 'enos.yml')
