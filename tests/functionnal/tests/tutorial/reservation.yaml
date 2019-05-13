@@ -1,27 +1,50 @@
-enable_monitoring: true
-inventory: inventories/inventory.sample
-kolla:
-  enable_heat: 'yes'
-  kolla_base_distro: centos
-  kolla_install_type: source
-kolla_ref: stable/stein
-kolla_repo: https://git.openstack.org/openstack/kolla-ansible
-provider:
-  job_name: enos
+---
+# ############################################### #
+# Grid'5000 reservation parameters                #
+# ############################################### #
+provider:                     
   type: g5k
-  walltime: 04:00:00
-registry:
-  ceph: true
-  ceph_id: discovery
-  ceph_keyring: /home/discovery/.ceph/ceph.client.discovery.keyring
-  ceph_mon_host:
-  - ceph0.rennes.grid5000.fr
-  - ceph1.rennes.grid5000.fr
-  - ceph2.rennes.grid5000.fr
-  ceph_rbd: discovery_kolla_registry/datas
-  type: internal
-resources:
+  job_name: 'enos'
+  walltime: '04:00:00'
+
+resources:                    
   paravance:
     compute: 1
-    control: 1
     network: 1
+    control: 1
+
+# ############################################### #
+# Inventory to use                                #
+# ############################################### #
+inventory: inventories/inventory.sample
+
+# ############################################### #
+# docker registry parameters
+# ############################################### #
+registry:
+  type: internal
+  ceph: true
+  ceph_keyring: /home/discovery/.ceph/ceph.client.discovery.keyring
+  ceph_id: discovery
+  ceph_rbd: discovery_kolla_registry/datas
+  ceph_mon_host:
+    - ceph0.rennes.grid5000.fr
+    - ceph1.rennes.grid5000.fr
+    - ceph2.rennes.grid5000.fr
+
+# ############################################### #
+# Enos Customizations                             #
+# ############################################### #
+enable_monitoring: yes
+
+# ############################################### #
+# Kolla parameters                                #
+# ############################################### #
+kolla_repo: "https://git.openstack.org/openstack/kolla-ansible" 
+kolla_ref: "stable/stein"
+
+# Vars : kolla_repo/ansible/group_vars/all.yml
+kolla:
+  kolla_base_distro: "centos"
+  kolla_install_type: "source"
+  enable_heat: "yes"
