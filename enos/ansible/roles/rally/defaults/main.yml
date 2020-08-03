@@ -1,2 +1,2 @@
 ---
-rally_container_image: xrally/xrally-openstack:latest
+rally_container_image: xrally/xrally-openstack:1.7.0
