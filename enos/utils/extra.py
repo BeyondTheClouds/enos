@@ -79,7 +79,7 @@ based on the Enos environment.
         'kolla_internal_vip_address': env['config']['vip'],
         'influx_vip':                 env['config']['influx_vip'],
         'kolla_ref':                  env['config']['kolla_ref'],
-        'resultdir':                  env['resultdir']
+        'resultdir':                  str(env['resultdir'])
     }
 
     # NOTE(msimonin): This seems unused by kola-ansible.  In any case we don't
@@ -143,7 +143,7 @@ def mk_enos_values(env):
 
     # Get all kolla values
     enos_values.update(mk_kolla_values(
-        os.path.join(env['resultdir'], 'kolla'),
+        os.path.join(str(env['resultdir']), 'kolla'),
         get_kolla_required_values(env),
         env['config']['kolla']))
 
@@ -152,7 +152,8 @@ def mk_enos_values(env):
         {k: v for k, v in env['config'].items() if k != "kolla"})
 
     # Add the Current Working Directory (cwd)
-    enos_values.update(cwd=env['cwd'])
+    #enos_values.update(cwd=env['cwd'])
+    enos_values.update(cwd=os.getcwd())
 
     # Defer the following variables to the environment
     # These two interfaces are set in the host vars
@@ -184,10 +185,11 @@ def bootstrap_kolla(env):
     # FIXME: Find a neat way to put this into the next bootsrap_kolla
     # playbook. Then, remove this util function and call directly the
     # playbook from `enos os`.
-    globals_path = os.path.join(env['resultdir'], 'globals.yml')
+    globals_path = os.path.join(str(env['resultdir']), 'globals.yml')
     globals_values = get_kolla_required_values(env)
     globals_values.update(env['config']['kolla'])
-    globals_values.update(cwd=env['cwd'])
+    # NOTE(msimonin): we don't store the cwd in the env byt default
+    globals_values.update(cwd=os.getcwd())
     with open(globals_path, 'w') as f:
         yaml.dump(globals_values, f, default_flow_style=False)
 

@@ -13,8 +13,7 @@ import pprint
 import yaml
 
 from enoslib.task import enostask
-from enoslib.api import (run_ansible, emulate_network, validate_network,
-                        reset_network)
+from enoslib.api import run_ansible
 
 from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
                                   NEUTRON_EXTERNAL_INTERFACE,
@@ -33,7 +32,7 @@ def get_and_bootstrap_kolla(env, force=False):
     force iff a potential previous installation must be overwritten.
     """
 
-    kolla_path = os.path.join(env['resultdir'], 'kolla')
+    kolla_path = os.path.join(str(env['resultdir']), 'kolla')
 
     if force and os.path.isdir(kolla_path):
         logging.info("Remove previous Kolla installation")
@@ -90,7 +89,7 @@ def up(config, config_file=None, env=None, **kwargs):
     logging.debug("Provider network information: %s", env['networks'])
 
     # Generates inventory for ansible/kolla
-    inventory = os.path.join(env['resultdir'], 'multinode')
+    inventory = os.path.join(str(env['resultdir']), 'multinode')
     inventory_conf = env['config'].get('inventory')
     if not inventory_conf:
         logging.debug("No inventory specified, using the sample.")
@@ -109,7 +108,7 @@ def up(config, config_file=None, env=None, **kwargs):
        'registry_vip':      pop_ip(vip_pool),
        'influx_vip':        pop_ip(vip_pool),
        'grafana_vip':       pop_ip(vip_pool),
-       'resultdir':         env['resultdir'],
+       'resultdir':         str(env['resultdir']),
        'rabbitmq_password': "demo",
        'database_password': "demo"
     })
@@ -142,9 +141,9 @@ def install_os(env=None, **kwargs):
     else:
         kolla_cmd.append('deploy')
 
-    kolla_cmd.extend(["-i", "%s/multinode" % env['resultdir'],
-                      "--passwords", "%s/passwords.yml" % env['resultdir'],
-                      "--configdir", "%s" % env['resultdir']])
+    kolla_cmd.extend(["-i", "%s/multinode" % str(env['resultdir']),
+                      "--passwords", "%s/passwords.yml" % str(env['resultdir']),
+                      "--configdir", "%s" % str(env['resultdir'])])
 
     if kwargs['--tags']:
         kolla_cmd.extend(['--tags', kwargs['--tags']])
@@ -161,7 +160,7 @@ def init_os(env=None, **kwargs):
     playbook_values = mk_enos_values(env)
     playbook_path = os.path.join(ANSIBLE_DIR, 'init_os.yml')
     inventory_path = os.path.join(
-        env['resultdir'], 'multinode')
+        str(env['resultdir']), 'multinode')
 
     # Yes, if the external network isn't found we take the external ip in the
     # pool used for OpenStack services (like the apis) This mimic what was done
@@ -225,7 +224,7 @@ def bench(env=None, **kwargs):
                 for a in cartesian(top_args):
                     playbook_path = os.path.join(ANSIBLE_DIR, 'enos.yml')
                     inventory_path = os.path.join(
-                        env['resultdir'], 'multinode')
+                        str(env['resultdir']), 'multinode')
                     # NOTE(msimonin) all the scenarios and plugins
                     # must reside on the workload directory
                     scenario_location = os.path.join(
@@ -272,7 +271,7 @@ def backup(env=None, **kwargs):
     options.update(env['config'])
     options.update({'enos_action': 'backup'})
     playbook_path = os.path.join(ANSIBLE_DIR, 'enos.yml')
-    inventory_path = os.path.join(env['resultdir'], 'multinode')
+    inventory_path = os.path.join(str(env['resultdir']), 'multinode')
     run_ansible([playbook_path], inventory_path, extra_vars=options)
 
 
@@ -361,7 +360,7 @@ def destroy(env=None, **kwargs):
         }
         up_playbook = os.path.join(ANSIBLE_DIR, 'enos.yml')
 
-        inventory_path = os.path.join(env['resultdir'], 'multinode')
+        inventory_path = os.path.join(str(env['resultdir']), 'multinode')
         # Destroying enos resources
         run_ansible([up_playbook], inventory_path, extra_vars=options)
         # Destroying kolla resources
@@ -408,9 +407,9 @@ def _kolla(env=None, **kwargs):
     kolla_path = get_and_bootstrap_kolla(env, force=False)
     kolla_cmd = [os.path.join(kolla_path, "tools", "kolla-ansible")]
     kolla_cmd.extend(kwargs['<command>'])
-    kolla_cmd.extend(["-i", "%s/multinode" % env['resultdir'],
-                      "--passwords", "%s/passwords.yml" % env['resultdir'],
-                      "--configdir", "%s" % env['resultdir']])
+    kolla_cmd.extend(["-i", "%s/multinode" % str(env['resultdir']),
+                      "--passwords", "%s/passwords.yml" % str(env['resultdir']),
+                      "--configdir", "%s" % str(env['resultdir'])])
     logging.info(kolla_cmd)
     in_kolla(kolla_cmd)
 

@@ -2,7 +2,7 @@
 import copy
 import logging
 
-from enoslib.api import expand_groups
+from enoslib.service.netem.netem import expand_groups
 from enoslib.infra.enos_g5k import (provider, g5k_api_utils, remote)
 from enoslib.infra.enos_g5k.configuration import Configuration
 
@@ -170,6 +170,7 @@ class G5k(Provider):
         g5k = provider.G5k(conf)
         LOGGER.info("Initializing G5K provider")
         roles, networks = g5k.init(force)
+        import ipdb; ipdb.set_trace()
         _provision(roles)
         return roles, networks
 
