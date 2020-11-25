@@ -30,7 +30,7 @@ setup(
     long_description=read('README.rst'),
     packages=find_packages(),
     install_requires=[
-        'enoslib>=5.4.2',
+        'enoslib>=5.4.4',
         'docopt>=0.6.2,<0.7.0',
         # All kolla commands will run inside a dedicated venv. The version is
         # unspecified since the use of virtualenv is very basic.
