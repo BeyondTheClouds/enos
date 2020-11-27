@@ -309,17 +309,18 @@ def tc(env=None, network_constraints=None, extra_vars=None, **kwargs):
         extra_vars = {}
     extra_vars.update(influx_vip=influx_vip)
 
+    from enoslib.service import Netem
+
+    if not network_constraints:
+        network_constraints = env["config"].get("network_constraints", {})
+
+    netem = Netem(network_constraints, roles=roles, extra_vars=extra_vars)
     if test:
-        validate_network(roles, inventory, extra_vars=extra_vars)
+        netem.validate()
     elif reset:
-        reset_network(roles, inventory, extra_vars=extra_vars)
+        netem.destroy()
     else:
-        if not network_constraints:
-            network_constraints = env["config"].get("network_constraints", {})
-
-        emulate_network(roles, inventory, network_constraints,
-                        extra_vars=extra_vars)
-
+        netem.deploy()
 
 @enostask()
 def info(env=None, **kwargs):
