@@ -170,7 +170,6 @@ class G5k(Provider):
         g5k = provider.G5k(conf)
         LOGGER.info("Initializing G5K provider")
         roles, networks = g5k.init(force)
-        import ipdb; ipdb.set_trace()
         _provision(roles)
         return roles, networks
 
