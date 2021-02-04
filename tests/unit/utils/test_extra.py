@@ -1,7 +1,6 @@
 import unittest
 from enos.utils.extra import *
 from enos.utils.errors import *
-from enos.provider.host import Host
 import enos.utils.constants as const
 import copy
 import contextlib

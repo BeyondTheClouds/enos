@@ -12,8 +12,7 @@ import pickle
 import pprint
 import yaml
 
-from enoslib.task import enostask
-from enoslib.api import run_ansible
+from enoslib import *
 
 from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
                                   NEUTRON_EXTERNAL_INTERFACE,
@@ -81,6 +80,12 @@ def up(config, config_file=None, env=None, **kwargs):
 
     rsc, networks = \
         provider.init(env['config'], kwargs['--force-deploy'])
+    # force python2 on remote target (kolla requirement)
+    for hosts in rsc.values():
+        for h in hosts:
+           h.extra.update(ansible_python_interpreter="python")
+    with play_on(roles=rsc) as p:
+        p.raw("apt update && apt install -y python python-pip")
 
     env['rsc'] = rsc
     env['networks'] = networks
@@ -110,7 +115,7 @@ def up(config, config_file=None, env=None, **kwargs):
        'grafana_vip':       pop_ip(vip_pool),
        'resultdir':         str(env['resultdir']),
        'rabbitmq_password': "demo",
-       'database_password': "demo"
+       'database_password': "demo",
     })
 
     options = {}

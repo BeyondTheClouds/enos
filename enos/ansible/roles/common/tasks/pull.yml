@@ -10,10 +10,6 @@
     - kvm
     - fping
 
-- easy_install:
-    name: pip
-    state: latest
-
 - name: Install some python bindings
   pip:
     name: "{{ item }}"
