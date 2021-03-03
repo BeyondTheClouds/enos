@@ -280,7 +280,6 @@ def backup(env=None, **kwargs):
     run_ansible([playbook_path], inventory_path, extra_vars=options)
 
 
-@enostask()
 def new(env=None, **kwargs):
     logging.debug('phase[new]: args=%s' % kwargs)
     with open(os.path.join(TEMPLATE_DIR, 'reservation.yaml.sample'),
