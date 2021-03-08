@@ -1,3 +1,0 @@
----
-- include: "destroy/registry.yml"
-  when: inventory_hostname in groups['disco/registry']

@@ -13,6 +13,7 @@ import pprint
 import yaml
 
 from enoslib import *
+from enoslib.enos_inventory import EnosInventory
 
 from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
                                   NEUTRON_EXTERNAL_INTERFACE,
@@ -22,7 +23,8 @@ from enos.utils.enostask import check_env
 from enos.utils.errors import EnosFilePathError
 from enos.utils.extra import (bootstrap_kolla, generate_inventory, pop_ip,
                               make_provider, mk_enos_values, load_config,
-                              seekpath, get_vip_pool, lookup_network, in_kolla)
+                              seekpath, get_vip_pool, lookup_network, in_kolla,
+                              build_rsc_with_inventory)
 
 
 def get_and_bootstrap_kolla(env, force=False):
@@ -66,26 +68,20 @@ def get_and_bootstrap_kolla(env, force=False):
 @enostask(new=True)
 def up(config, config_file=None, env=None, **kwargs):
     logging.debug('phase[up]: args=%s' % kwargs)
-    # Calls the provider and initialise resources
 
+    # Get the provider
     provider_conf = config['provider']
     provider = make_provider(provider_conf)
 
-    # Applying default configuration
-    config = load_config(config,
-                         provider.default_config())
+    # Get the configuration
+    config = load_config(config, provider.default_config())
     env['config'] = config
     env['config_file'] = config_file
     logging.debug("Loaded config: %s", config)
 
+    # Call the provider and initialize resources
     rsc, networks = \
         provider.init(env['config'], kwargs['--force-deploy'])
-    # force python2 on remote target (kolla requirement)
-    for hosts in rsc.values():
-        for h in hosts:
-           h.extra.update(ansible_python_interpreter="python")
-    with play_on(roles=rsc) as p:
-        p.raw("apt update && apt install -y python python-pip")
 
     env['rsc'] = rsc
     env['networks'] = networks
@@ -106,11 +102,29 @@ def up(config, config_file=None, env=None, **kwargs):
 
     env['inventory'] = inventory
 
-    # Set variables required by playbooks of the application
+    # Fills rsc with information such as network_interface and then
+    # ensures rsc contains all groups defined by the inventory (e.g.,
+    # 'disco/registry', 'disco/influx', 'haproxy', ...).
+    #
+    # Note(rcherrueau): I keep track of this extra information for a
+    # futur migration to enoslib-v6:
+    # > enos-0 ansible_host=192.168.121.128 ansible_port='22'
+    # > ansible_ssh_common_args='-o StrictHostKeyChecking=no -o
+    # > UserKnownHostsFile=/dev/null'
+    # > ansible_ssh_private_key_file='/home/rfish/prog/enos/.vagrant/machines/enos-0/libvirt/private_key'
+    # > ansible_ssh_user='root' enos_devices="['eth1','eth2']"
+    # > network_interface='eth1' network_interface_dev='eth1'
+    # > network_interface_ip='192.168.42.245'
+    # > neutron_external_interface='eth2'
+    # > neutron_external_interface_dev='eth2'
+    # > neutron_external_interface_ip='192.168.43.245'
+    rsc = discover_networks(rsc, networks)
+    rsc = build_rsc_with_inventory(rsc, env['inventory'])
+
+    # Get variables required by the application
     vip_pool = get_vip_pool(networks)
     env['config'].update({
        'vip':               pop_ip(vip_pool),
-       'registry_vip':      pop_ip(vip_pool),
        'influx_vip':        pop_ip(vip_pool),
        'grafana_vip':       pop_ip(vip_pool),
        'resultdir':         str(env['resultdir']),
@@ -118,13 +132,73 @@ def up(config, config_file=None, env=None, **kwargs):
        'database_password': "demo",
     })
 
+    # Ensure python3 is on remote targets (kolla requirement)
+    ensure_python3(make_default=True, roles=rsc)
+
+    # Ensure python3 is on remote targets (kolla requirement)
+    ensure_python3(make_default=True, roles=rsc)
+
+    # Set up machines with bare dependencies
+    with play_on(roles=rsc, inventory_path=env['inventory']) as yml:
+        # XXX 'qemu-kvm' required?
+        yml.apt(name=['git', 'python-setuptools', 'fping'], update_cache=True)
+        yml.pip(name=['docker', 'influxdb'], executable='pip3')
+
+        # XXX not needed anymore
+        # yml.command('mount --make-shared /run')
+
+        # nscd prevents kolla-toolbox to start See,
+        # https://bugs.launchpad.net/kolla-ansible/+bug/1680139
+        yml.systemd(name='nscd', state='stopped', ignore_errors=True)
+
+        # Provider specific provisioning
+        if str(provider) == 'Vagrant':
+            # Enable IPv6 (RabbitMQ/epmd won't start otherwise)
+            yml.sysctl(name='net.ipv6.conf.all.disable_ipv6',
+                       value=0,
+                       state='present')
+            # Make sure the ansible_hostname is resolvable (otherwise
+            # RabbitMQ/epmd won't start)
+            yml.lineinfile(
+                path='/etc/hosts',
+                insertbefore='BOF',
+                regex=("^{{ hostvars[inventory_hostname]['ansible_' + network_interface].ipv4.address }}"
+                       "    {{ansible_hostname}}.*"),
+                line=("{{ hostvars[inventory_hostname]['ansible_' + network_interface].ipv4.address }}"
+                      "    {{ansible_hostname}}"))
+
+    # Install the Docker registry
+    docker_type = env['config']['registry'].get('type', "internal")
+    docker_port = env['config']['registry'].get('port', 5000)
+    docker = None
+
+    if docker_type == 'none':
+        docker = Docker(agent=rsc['all'],
+                             registry_opts={'type': 'none'})
+    elif docker_type == 'external':
+        docker = Docker(agent=rsc['all'],
+                             registry_opts={
+                                 'type': 'external',
+                                 'ip': env['config']['registry']['ip'],
+                                 'port': docker_port})
+    elif docker_type == 'internal':
+        docker = Docker(agent=rsc['all'],
+                             registry=rsc['enos/registry'],
+                             registry_opts={
+                                 'type': 'internal',
+                                 'port': docker_port})
+
+    logging.info(f'Deploying docker service as {docker.registry_opts}')
+    docker.deploy()
+
+    env['docker'] = docker
+
+    # Runs playbook that initializes resources (eg,
+    # install monitoring tools, Rally ...)
     options = {}
     options.update(env['config'])
     enos_action = "pull" if kwargs.get("--pull") else "deploy"
     options.update(enos_action=enos_action)
-    options.update(context=str(provider))
-    # Runs playbook that initializes resources (eg,
-    # installs the registry, install monitoring tools, ...)
     up_playbook = os.path.join(ANSIBLE_DIR, 'enos.yml')
     run_ansible([up_playbook], env['inventory'], extra_vars=options,
                 tags=kwargs['--tags'])
@@ -267,6 +341,10 @@ def backup(env=None, **kwargs):
         or SYMLINK_NAME
 
     backup_dir = os.path.abspath(backup_dir)
+
+    if 'docker' in env:
+        env['docker'].backup()
+
     # create if necessary
     if not os.path.isdir(backup_dir):
         os.mkdir(backup_dir)
@@ -367,6 +445,7 @@ def destroy(env=None, **kwargs):
 
         inventory_path = os.path.join(str(env['resultdir']), 'multinode')
         # Destroying enos resources
+        if env['docker']: env['docker'].destroy()
         run_ansible([up_playbook], inventory_path, extra_vars=options)
         # Destroying kolla resources
         _kolla(env=env, **kolla_kwargs)

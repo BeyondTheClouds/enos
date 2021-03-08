@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import copy
 import enoslib.api as api
+from enoslib.enos_inventory import EnosInventory
 from .errors import (EnosProviderMissingConfigurationKeys,
                      EnosFilePathError)
 from .constants import (ENOS_PATH, ANSIBLE_DIR, VENV_KOLLA,
@@ -12,7 +13,10 @@ from netaddr import IPRange
 import logging
 import os
 from subprocess import check_call
+from operator import methodcaller
 import yaml
+
+from enoslib.types import Roles
 
 # These roles are mandatory for the
 # the original inventory to be valid
@@ -88,21 +92,6 @@ based on the Enos environment.
     # Manage monitoring stack
     # if 'enable_monitoring' in env['config']:
     #    values['enable_monitoring'] = env['config']['enable_monitoring']
-
-    # NOTE(msimonin): I think there was a confusion some time ago. What EnOS
-    # provide is a transparent registry mirror not a registry  in itself. User
-    # that want to use a registry need to specify manually in the kolla section
-    # the corresponding values.  For this reason I'm commenting the following
-    #
-    # Manage docker registry
-    # registry_type = env['config']['registry']['type']
-    # if registry_type == 'internal':
-    #    values['docker_registry'] = \
-    #        "%s:4000" % env['config']['registry_vip']
-    # elif registry_type == 'external':
-    #    values['docker_registry'] = \
-    #        "%s:%s" % (env['config']['registry']['ip'],
-    #                   env['config']['registry']['port'])
 
     values['openstack_release'] = OPENSTACK_RELEASE
 
@@ -386,3 +375,25 @@ def check_call_in_venv(venv_dir, cmd):
 
 def in_kolla(cmd):
     check_call_in_venv(VENV_KOLLA, cmd)
+
+def build_rsc_with_inventory(rsc: Roles, inventory_path: str) -> Roles:
+    '''Return a new `rsc` with roles from the inventory.
+
+    In enos, we have a strong binding between enoslib roles and
+    kolla-ansible groups.  We need for instance to know hosts of the
+    disco/registry group.  This method takes an enoslib Roles object
+    and an inventory_path and returns a new Roles object that contains
+    all groups (as in ansible) with their hosts (as in enoslib).
+    '''
+    inv = EnosInventory(sources=inventory_path)
+    rsc_by_name = { h.alias : h for h in api.get_hosts(rsc, 'all') }
+
+    # Build a new rsc with all groups in it
+    new_rsc = rsc.copy()
+    for grp in inv.list_groups():
+        hostnames_in_grp = map(methodcaller('get_name'), inv.get_hosts(grp))
+        rsc_in_grp = [ rsc_by_name[h_name] for h_name in hostnames_in_grp
+                                           if h_name in rsc_by_name ]
+        new_rsc.update({ grp: rsc_in_grp })
+
+    return new_rsc

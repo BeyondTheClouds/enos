@@ -1,19 +1,10 @@
 ---
-- name: Common tasks
-  hosts: all
-  roles:
-    - { role: common,
-        tags: ['common'] }
-    - { role: registry,
-        tags: ['registry'] }
-
 - name: Influx tasks
   hosts: disco/influx
   roles:
     - { role: influx,
         tags: ['influx'],
         when: enable_monitoring | bool }
-
 
 - name: Monitoring agent tasks
   hosts: all
@@ -37,4 +28,3 @@
   roles:
     - { role: rally,
         tags: ['rally'] }
-        
