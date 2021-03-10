@@ -11,7 +11,9 @@ provider:
   type: g5k
   walltime: 02:00:00
 registry:
-  type: internal
+  type: external
+  ip: docker-cache.grid5000.fr
+  port: 80
 resources:
   gros:
     compute: 1

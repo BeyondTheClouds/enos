@@ -1,7 +1,7 @@
 ---
-# ############################################### #
-# VMonG5K reservation parameters                  #
-# ############################################### #
+# ########################################################### #
+# VMonG5K reservation parameters                              #
+# ########################################################### #
 provider:
   type: vmong5k
   job_name: 'enos'
@@ -16,9 +16,9 @@ resources:
 
 virt_image: /grid5000/virt-images/debian9-x64-base.qcow2
 
-# ############################################### #
-# Grid'5000 reservation parameters                #
-# ############################################### #
+# ########################################################### #
+# Grid'5000 reservation parameters                            #
+# ########################################################### #
 provider:
   type: g5k
   job_name: 'enos'
@@ -31,9 +31,9 @@ resources:
     control: 1
 
 
-# ############################################### #
-# Chameleon reservation parameters                #
-# ############################################### #
+# ########################################################### #
+# Chameleon reservation parameters                            #
+# ########################################################### #
 provider:
   type: chameleonkvm
   key_name: enos_key
@@ -55,9 +55,9 @@ resources:
     network: 1
     compute: 1
 
-# ############################################### #
-# Vagrant reservation parameters                  #
-# ############################################### #
+# ########################################################### #
+# Vagrant reservation parameters                              #
+# ########################################################### #
 provider:
   type: vagrant
   backend: libvirt
@@ -69,9 +69,9 @@ resources:
     network: 1
     compute: 1
 
-# ############################################### #
-# Static provider parameter                       #
-# ############################################### #
+# ########################################################### #
+# Static provider parameter                                   #
+# ########################################################### #
 # Example of using yaml anchors
 hosts:
   1: &h1
@@ -115,16 +115,16 @@ provider:
       roles: ["neutron_external_interface"]
 
 
-# ############################################### #
-# Inventory to use                                #
-# ############################################### #
+# ########################################################### #
+# Inventory to use                                            #
+# ########################################################### #
 
 # This will describe the topology of your services
 inventory: inventories/inventory.sample
 
-# ############################################### #
-# docker registry parameters
-# ############################################### #
+# ########################################################### #
+# Docker registry parameters (choose *one* in the following)  #
+# ########################################################### #
 
 # A registry will be deployed and used during the deployment
 registry:
@@ -138,26 +138,38 @@ registry:
   #  - ceph1.rennes.grid5000.fr
   #  - ceph2.rennes.grid5000.fr
 
-# No registry will be used
-# registry:
-#	  type: none
-
 # Use a registry already deployed
 # registry:
 #   type: external
 #   ip: 192.168.142.253
 #   port: 5000
+#
+# *On Grid'5000*, we recommend to use the following one.  This
+# configuration uses a cache set by the Grid'5000 community.  It
+# speeds up the deployment and helps in circumventing the rate limit
+# on the pull of images [0].
+#
+# [0] https://docs.docker.com/docker-hub/download-rate-limit/
+#
+# registry:
+#   type: external
+#   ip: docker-cache.grid5000.fr
+#   port: 80
+
+# No registry will be used
+# registry:
+#	  type: none
 
 
-# ############################################### #
-# Enos Customizations                             #
-# ############################################### #
+# ########################################################### #
+# Enos Customizations                                         #
+# ########################################################### #
 enable_monitoring: no
 
 
-# ############################################### #
-# Kolla parameters                                #
-# ############################################### #
+# ########################################################### #
+# Kolla parameters                                            #
+# ########################################################### #
 # Repository
 kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
 kolla_ref: "stable/stein"

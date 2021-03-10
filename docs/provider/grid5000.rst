@@ -89,7 +89,7 @@ Reservation
 -----------
 
 In order to reserve in advance the ressources needed by your deployment you can
-set the ``reservation`` key to the desired sart date. And launch ``enos
+set the ``reservation`` key to the desired start date. And launch ``enos
 deploy``.
 
 .. code-block:: yaml
