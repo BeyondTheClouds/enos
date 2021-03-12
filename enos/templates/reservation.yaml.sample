@@ -14,7 +14,7 @@ resources:
   parasilo:
     compute: 1
 
-virt_image: /grid5000/virt-images/debian9-x64-base.qcow2
+virt_image: /grid5000/virt-images/debian10-x64-base.qcow2
 
 # ########################################################### #
 # Grid'5000 reservation parameters                            #
@@ -61,7 +61,7 @@ resources:
 provider:
   type: vagrant
   backend: libvirt
-  box: generic/debian9
+  box: generic/debian10
 resources:
   extra-large:
     control: 1

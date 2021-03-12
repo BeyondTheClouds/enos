@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-
 from datetime import datetime
-from subprocess import check_call
-
 import itertools
 import json
 import logging
@@ -11,61 +8,22 @@ import os
 import pickle
 import pprint
 import yaml
+import enoslib as elib
 
-from enoslib import *
-from enoslib.enos_inventory import EnosInventory
-
-from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, INVENTORY_DIR,
+from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, RSCS_DIR,
                                   NEUTRON_EXTERNAL_INTERFACE,
                                   NETWORK_INTERFACE, TEMPLATE_DIR)
+from enos.utils.kolla import KollaAnsible
 from enos.utils.build import create_configuration
 from enos.utils.enostask import check_env
 from enos.utils.errors import EnosFilePathError
-from enos.utils.extra import (bootstrap_kolla, generate_inventory, pop_ip,
-                              make_provider, mk_enos_values, load_config,
-                              seekpath, get_vip_pool, lookup_network, in_kolla,
-                              build_rsc_with_inventory)
+from enos.utils.extra import (generate_inventory, pop_ip, make_provider,
+                              load_config, seekpath, get_vip_pool,
+                              lookup_network, build_rsc_with_inventory,
+                              setdefault_lazy)
 
 
-def get_and_bootstrap_kolla(env, force=False):
-    """This gets kolla in the current directory.
-
-    force iff a potential previous installation must be overwritten.
-    """
-
-    kolla_path = os.path.join(str(env['resultdir']), 'kolla')
-
-    if force and os.path.isdir(kolla_path):
-        logging.info("Remove previous Kolla installation")
-        check_call("rm -rf %s" % kolla_path, shell=True)
-    if not os.path.isdir(kolla_path):
-        logging.info("Cloning Kolla repository...")
-        check_call("git clone %s --branch %s --single-branch --quiet %s" %
-                       (env['config']['kolla_repo'],
-                        env['config']['kolla_ref'],
-                        kolla_path),
-                   shell=True)
-
-        # Bootstrap kolla running by patching kolla sources (if any) and
-        # generating admin-openrc, globals.yml, passwords.yml
-        bootstrap_kolla(env)
-
-        # Installing the kolla dependencies in the kolla venv
-        in_kolla('cd %s && pip install .' % kolla_path)
-        # Kolla recommends installing ansible manually.
-        # Currently anything over 2.3.0 is supported, not sure about the future
-        # So we hardcode the version to something reasonnable for now
-        in_kolla('pip install ansible==2.5.7')
-
-        # Installation influxdb client, used by the annotations
-        enable_monitoring = env['config'].get('enable_monitoring')
-        if enable_monitoring:
-            in_kolla('pip install influxdb')
-
-    return kolla_path
-
-
-@enostask(new=True)
+@elib.enostask(new=True)
 def up(config, config_file=None, env=None, **kwargs):
     logging.debug('phase[up]: args=%s' % kwargs)
 
@@ -86,15 +44,15 @@ def up(config, config_file=None, env=None, **kwargs):
     env['rsc'] = rsc
     env['networks'] = networks
 
-    logging.debug("Provider ressources: %s", env['rsc'])
-    logging.debug("Provider network information: %s", env['networks'])
+    logging.debug(f"Provider ressources: {env['rsc']}")
+    logging.debug(f"Provider network information: {env['networks']}")
 
     # Generates inventory for ansible/kolla
     inventory = os.path.join(str(env['resultdir']), 'multinode')
     inventory_conf = env['config'].get('inventory')
     if not inventory_conf:
         logging.debug("No inventory specified, using the sample.")
-        base_inventory = os.path.join(INVENTORY_DIR, 'inventory.sample')
+        base_inventory = os.path.join(RSCS_DIR, 'inventory.sample')
     else:
         base_inventory = seekpath(inventory_conf)
     generate_inventory(env['rsc'], env['networks'], base_inventory, inventory)
@@ -104,7 +62,7 @@ def up(config, config_file=None, env=None, **kwargs):
 
     # Fills rsc with information such as network_interface and then
     # ensures rsc contains all groups defined by the inventory (e.g.,
-    # 'disco/registry', 'disco/influx', 'haproxy', ...).
+    # 'enos/registry', 'enos/influx', 'haproxy', ...).
     #
     # Note(rcherrueau): I keep track of this extra information for a
     # futur migration to enoslib-v6:
@@ -118,54 +76,23 @@ def up(config, config_file=None, env=None, **kwargs):
     # > neutron_external_interface='eth2'
     # > neutron_external_interface_dev='eth2'
     # > neutron_external_interface_ip='192.168.43.245'
-    rsc = discover_networks(rsc, networks)
+    rsc = elib.discover_networks(rsc, networks)
     rsc = build_rsc_with_inventory(rsc, env['inventory'])
 
     # Get variables required by the application
     vip_pool = get_vip_pool(networks)
     env['config'].update({
-       'vip':               pop_ip(vip_pool),
-       'influx_vip':        pop_ip(vip_pool),
-       'grafana_vip':       pop_ip(vip_pool),
-       'resultdir':         str(env['resultdir']),
-       'rabbitmq_password': "demo",
-       'database_password': "demo",
+        'vip':               pop_ip(vip_pool),
+        'influx_vip':        pop_ip(vip_pool),
+        'grafana_vip':       pop_ip(vip_pool),
+        'resultdir':         str(env['resultdir']),
+        'rabbitmq_password': "demo",
+        'database_password': "demo",
+        'cwd':               str(pathlib.Path.cwd()),
     })
 
-    # Ensure python3 is on remote targets (kolla requirement)
-    ensure_python3(make_default=True, roles=rsc)
-
-    # Ensure python3 is on remote targets (kolla requirement)
-    ensure_python3(make_default=True, roles=rsc)
-
-    # Set up machines with bare dependencies
-    with play_on(roles=rsc, inventory_path=env['inventory']) as yml:
-        # XXX 'qemu-kvm' required?
-        yml.apt(name=['git', 'python-setuptools', 'fping'], update_cache=True)
-        yml.pip(name=['docker', 'influxdb'], executable='pip3')
-
-        # XXX not needed anymore
-        # yml.command('mount --make-shared /run')
-
-        # nscd prevents kolla-toolbox to start See,
-        # https://bugs.launchpad.net/kolla-ansible/+bug/1680139
-        yml.systemd(name='nscd', state='stopped', ignore_errors=True)
-
-        # Provider specific provisioning
-        if str(provider) == 'Vagrant':
-            # Enable IPv6 (RabbitMQ/epmd won't start otherwise)
-            yml.sysctl(name='net.ipv6.conf.all.disable_ipv6',
-                       value=0,
-                       state='present')
-            # Make sure the ansible_hostname is resolvable (otherwise
-            # RabbitMQ/epmd won't start)
-            yml.lineinfile(
-                path='/etc/hosts',
-                insertbefore='BOF',
-                regex=("^{{ hostvars[inventory_hostname]['ansible_' + network_interface].ipv4.address }}"
-                       "    {{ansible_hostname}}.*"),
-                line=("{{ hostvars[inventory_hostname]['ansible_' + network_interface].ipv4.address }}"
-                      "    {{ansible_hostname}}"))
+    # Ensure python3 is on remote target (kolla requirement)
+    elib.ensure_python3(make_default=True, roles=rsc)
 
     # Install the Docker registry
     docker_type = env['config']['registry'].get('type', "internal")
@@ -173,16 +100,16 @@ def up(config, config_file=None, env=None, **kwargs):
     docker = None
 
     if docker_type == 'none':
-        docker = Docker(agent=rsc['all'],
+        docker = elib.Docker(agent=rsc['all'],
                              registry_opts={'type': 'none'})
     elif docker_type == 'external':
-        docker = Docker(agent=rsc['all'],
+        docker = elib.Docker(agent=rsc['all'],
                              registry_opts={
                                  'type': 'external',
                                  'ip': env['config']['registry']['ip'],
                                  'port': docker_port})
     elif docker_type == 'internal':
-        docker = Docker(agent=rsc['all'],
+        docker = elib.Docker(agent=rsc['all'],
                              registry=rsc['enos/registry'],
                              registry_opts={
                                  'type': 'internal',
@@ -193,6 +120,69 @@ def up(config, config_file=None, env=None, **kwargs):
 
     env['docker'] = docker
 
+    # Install kolla-ansible and run bootstrap-servers
+    env['config']['kolla'].update({
+        'kolla_internal_vip_address': env['config']['vip'],
+        'influx_vip': env['config']['influx_vip'],
+        'resultdir': str(env['resultdir']),
+        'cwd':  os.getcwd()
+    })
+    kolla_ansible = KollaAnsible(
+        pip_package=env['config']['kolla-ansible'],
+        inventory_path=inventory,
+        config_dir=str(env['resultdir']),
+        globals_values=env['config']['kolla'])
+
+    kolla_ansible.execute(['bootstrap-servers'])
+
+    env['kolla-ansible'] = kolla_ansible
+
+    # Generates the admin-openrc, see
+    # https://github.com/openstack/kolla-ansible/blob/stable/ussuri/ansible/roles/common/templates/admin-openrc.sh.j2
+    admin_openrc_path = os.path.join(str(env['resultdir']), 'admin-openrc')
+    os_auth_rc = kolla_ansible.get_admin_openrc_env_values()
+
+    with open(admin_openrc_path, mode='w') as admin_openrc:
+        for k, v in os_auth_rc.items():
+            admin_openrc.write(f'export {k}="{v}"\n')
+
+    logging.debug(f"{admin_openrc_path} generated with {os_auth_rc}")
+
+    # Set up machines with bare dependencies
+    with elib.play_on(inventory_path=inventory, pattern_hosts='baremetal',
+                      extra_vars=kolla_ansible.globals_values) as yml:
+        # Remove IP on the external interface if any
+        yml.shell("ip addr flush {{ neutron_external_interface }}",
+                  when="neutron_external_interface is defined")
+
+        # sudo required by `kolla-ansible destroy`.  See
+        # https://github.com/openstack/kolla-ansible/blob/stable/ussuri/tools/validate-docker-execute.sh#L7
+        yml.apt(name=['sudo', 'git', 'fping', 'qemu-kvm'], update_cache=True)
+        yml.pip(name=['docker', 'influxdb'], executable='pip3')
+
+        # nscd prevents kolla-toolbox to start. See,
+        # https://bugs.launchpad.net/kolla-ansible/+bug/1680139
+        yml.systemd(name='nscd', state='stopped', ignore_errors=True)
+
+        # Break RabbitMQ, which expects the hostname to resolve to the
+        # API network address.  Remove the troublesome entry.  See
+        # https://bugs.launchpad.net/kolla-ansible/+bug/1837699 and
+        # https://bugs.launchpad.net/kolla-ansible/+bug/1862739
+        for banned_ip in ['127.0.1.1', '127.0.2.1']:
+            yml.lineinfile(
+                display_name='Ensure hostname does not point to {banned_ip}',
+                dest='/etc/hosts',
+                regexp='^' + banned_ip + '\\b.*\\s{{ ansible_hostname }}\\b.*',
+                state='absent')
+
+        # Provider specific provisioning
+        if str(provider) == 'Vagrant':
+            yml.sysctl(
+                display_name="RabbitMQ/epmd won't start without IPv6 enabled",
+                name='net.ipv6.conf.all.disable_ipv6',
+                value=0,
+                state='present')
+
     # Runs playbook that initializes resources (eg,
     # install monitoring tools, Rally ...)
     options = {}
@@ -200,43 +190,40 @@ def up(config, config_file=None, env=None, **kwargs):
     enos_action = "pull" if kwargs.get("--pull") else "deploy"
     options.update(enos_action=enos_action)
     up_playbook = os.path.join(ANSIBLE_DIR, 'enos.yml')
-    run_ansible([up_playbook], env['inventory'], extra_vars=options,
-                tags=kwargs['--tags'])
+    elib.run_ansible([up_playbook], env['inventory'], extra_vars=options,
+                     tags=kwargs['--tags'])
 
 
-@enostask()
+@elib.enostask()
 @check_env
 def install_os(env=None, **kwargs):
     logging.debug('phase[os]: args=%s' % kwargs)
 
-    kolla_path = get_and_bootstrap_kolla(env, force=True)
-    # Construct kolla-ansible command...
-    kolla_cmd = [os.path.join(kolla_path, "tools", "kolla-ansible")]
-
-    if kwargs.get('--reconfigure'):
+    kolla_cmd = []
+    if kwargs.get('--'):
+        kolla_cmd.extend(kwargs.get('<kolla-cmd>', []))
+    elif kwargs.get('--reconfigure'):
         kolla_cmd.append('reconfigure')
     elif kwargs.get('--pull'):
         kolla_cmd.append('pull')
     else:
         kolla_cmd.append('deploy')
 
-    kolla_cmd.extend(["-i", "%s/multinode" % str(env['resultdir']),
-                      "--passwords", "%s/passwords.yml" % str(env['resultdir']),
-                      "--configdir", "%s" % str(env['resultdir'])])
-
     if kwargs['--tags']:
         kolla_cmd.extend(['--tags', kwargs['--tags']])
 
+    if kwargs['-v']:
+        kolla_cmd.append('--verbose')
+
     logging.info("Calling Kolla...")
+    env['kolla-ansible'].execute(kolla_cmd)
 
-    in_kolla(kolla_cmd)
 
-
-@enostask()
+@elib.enostask()
 @check_env
 def init_os(env=None, **kwargs):
     logging.debug('phase[init]: args=%s' % kwargs)
-    playbook_values = mk_enos_values(env)
+
     playbook_path = os.path.join(ANSIBLE_DIR, 'init_os.yml')
     inventory_path = os.path.join(
         str(env['resultdir']), 'multinode')
@@ -255,16 +242,18 @@ def init_os(env=None, **kwargs):
         msg = "External network not found, define %s networks" % " or ".join(
             [NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE])
         raise Exception(msg)
-    enos_action = 'pull' if kwargs.get('--pull') else 'deploy'
-    playbook_values.update(
-        provider_net=provider_net,
-        enos_action=enos_action)
-    run_ansible([playbook_path],
-                inventory_path,
-                extra_vars=playbook_values)
+
+    options = {
+        'provider_net': provider_net,
+        'os_env': env['kolla-ansible'].get_admin_openrc_env_values(),
+        'enos_action': 'pull' if kwargs.get('--pull') else 'deploy'
+    }
+    elib.run_ansible([playbook_path],
+                     inventory_path,
+                     extra_vars=options)
 
 
-@enostask()
+@elib.enostask()
 @check_env
 def bench(env=None, **kwargs):
     def cartesian(d):
@@ -320,19 +309,19 @@ def bench(env=None, **kwargs):
 
                     if "plugin" in scenario:
                         plugin = os.path.join(workload_dir,
-                                           scenario["plugin"])
+                                              scenario["plugin"])
                         if os.path.isdir(plugin):
                             plugin = plugin + "/"
                         bench['plugin_location'] = plugin
                     playbook_values.update(bench=bench)
                     playbook_values.update(enos_action="bench")
 
-                    run_ansible([playbook_path],
-                                inventory_path,
-                                extra_vars=playbook_values)
+                    elib.run_ansible([playbook_path],
+                                     inventory_path,
+                                     extra_vars=playbook_values)
 
 
-@enostask()
+@elib.enostask()
 @check_env
 def backup(env=None, **kwargs):
 
@@ -355,7 +344,7 @@ def backup(env=None, **kwargs):
     options.update({'enos_action': 'backup'})
     playbook_path = os.path.join(ANSIBLE_DIR, 'enos.yml')
     inventory_path = os.path.join(str(env['resultdir']), 'multinode')
-    run_ansible([playbook_path], inventory_path, extra_vars=options)
+    elib.run_ansible([playbook_path], inventory_path, extra_vars=options)
 
 
 def new(env=None, **kwargs):
@@ -365,7 +354,7 @@ def new(env=None, **kwargs):
         print(content.read())
 
 
-@enostask()
+@elib.enostask()
 @check_env
 def tc(env=None, network_constraints=None, extra_vars=None, **kwargs):
     """
@@ -382,7 +371,6 @@ def tc(env=None, network_constraints=None, extra_vars=None, **kwargs):
     """
 
     roles = env["rsc"]
-    inventory = env["inventory"]
     # We inject the influx_vip for annotation purpose
     influx_vip = env["config"].get("influx_vip")
     test = kwargs['--test']
@@ -404,7 +392,8 @@ def tc(env=None, network_constraints=None, extra_vars=None, **kwargs):
     else:
         netem.deploy()
 
-@enostask()
+
+@elib.enostask()
 def info(env=None, **kwargs):
     if not kwargs['--out']:
         pprint.pprint(env)
@@ -419,36 +408,33 @@ def info(env=None, **kwargs):
         print(info.__doc__)
 
 
-@enostask()
+@elib.enostask()
 @check_env
 def destroy(env=None, **kwargs):
-    hard = kwargs['--hard']
-    if hard:
+    # Destroy machine/network resources
+    if kwargs['--hard']:
         logging.info('Destroying all the resources')
         provider_conf = env['config']['provider']
         provider = make_provider(provider_conf)
         provider.destroy(env)
-    else:
-        command = ['destroy', '--yes-i-really-really-mean-it']
-        if kwargs['--include-images']:
-            command.append('--include-images')
-        kolla_kwargs = {'--': True,
-                  '--env': kwargs['--env'],
-                  '-v': kwargs['-v'],
-                  '<command>': command,
-                  '--silent': kwargs['--silent'],
-                  'kolla': True}
-        options = {
-            "enos_action": "destroy"
-        }
-        up_playbook = os.path.join(ANSIBLE_DIR, 'enos.yml')
+        return
 
-        inventory_path = os.path.join(str(env['resultdir']), 'multinode')
-        # Destroying enos resources
-        if env['docker']: env['docker'].destroy()
-        run_ansible([up_playbook], inventory_path, extra_vars=options)
-        # Destroying kolla resources
-        _kolla(env=env, **kolla_kwargs)
+    # Destroy OpenStack (kolla-ansible destroy) + monitoring + rally
+    # Destroying kolla resources
+    kolla_cmd = ['destroy', '--yes-i-really-really-mean-it']
+    if kwargs['--include-images']:
+        kolla_cmd.append('--include-images')
+    if kwargs['-v']:
+        kolla_cmd.append('--verbose')
+    env['kolla-ansible'].execute(kolla_cmd)
+
+    # Destroy enos resources
+    options = {
+        "enos_action": "destroy"
+    }
+    up_playbook = os.path.join(ANSIBLE_DIR, 'enos.yml')
+    inventory_path = os.path.join(str(env['resultdir']), 'multinode')
+    elib.run_ansible([up_playbook], inventory_path, extra_vars=options)
 
 
 def deploy(config, config_file=None, **kwargs):
@@ -477,25 +463,6 @@ def build(provider, **kwargs):
     }
 
     deploy(configuration, **arguments)
-
-
-@enostask()
-@check_env
-def kolla(env=None, **kwargs):
-    _kolla(env=env, **kwargs)
-
-
-def _kolla(env=None, **kwargs):
-    logging.info('Kolla command')
-    logging.info(kwargs)
-    kolla_path = get_and_bootstrap_kolla(env, force=False)
-    kolla_cmd = [os.path.join(kolla_path, "tools", "kolla-ansible")]
-    kolla_cmd.extend(kwargs['<command>'])
-    kolla_cmd.extend(["-i", "%s/multinode" % str(env['resultdir']),
-                      "--passwords", "%s/passwords.yml" % str(env['resultdir']),
-                      "--configdir", "%s" % str(env['resultdir'])])
-    logging.info(kolla_cmd)
-    in_kolla(kolla_cmd)
 
 
 def _set_resultdir(name=None):

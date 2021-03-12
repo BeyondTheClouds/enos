@@ -18,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 DEFAULT_CONFIG = {
     'job_name': 'Enos',             # Job name in oarstat/gant
     'walltime': '02:00:00',         # Reservation duration time
-    'env_name': 'debian9-x64-nfs',  # Environment to deploy
+    'env_name': 'debian10-x64-min', # Environment to deploy
     'reservation': '',              # Reservation date
     'job_type': 'deploy',           # deploy, besteffort, ...
     'queue': 'default'              # default, production, testing

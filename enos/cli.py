@@ -27,7 +27,6 @@ Commands:
   info           Show information of the actual deployment.
   destroy        Destroy the deployment and optionally the related resources.
   deploy         Shortcut for enos up, then enos os and enos config.
-  kolla          Runs arbitrary kolla command on nodes.
   build          Build a reference image for later deployment.
 
 
@@ -90,11 +89,16 @@ def up(**kwargs):
 
 
 def os(**kwargs):
-    """
-    usage: enos os [-e ENV|--env=ENV] [--reconfigure] [-t TAGS|--tags=TAGS]
-                [-s|--silent|-vv]
+    """Usage:
+      enos os [-e ENV|--env=ENV] [--reconfigure] [-t TAGS|--tags=TAGS]
+              [-s|--silent|-vv]
+      enos os [-e ENV|--env=ENV] [-s|--silent|-vv] -- <kolla-cmd> ...
 
-    Run kolla and install OpenStack.
+    Install OpenStack with kolla-ansible.
+
+    The second command falls back on kolla to run arbitrary commands, e.g.,
+    `enos os -- prechecks`, see `enos os -- -help` for an exhaustive list of
+    supported commands.
 
     Options:
     -e ENV --env=ENV     Path to the environment directory. You should
@@ -107,6 +111,7 @@ def os(**kwargs):
     -s --silent          Quiet mode.
     -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
     -vv                  Verbose mode.
+
     """
     logger.debug(kwargs)
     t.install_os(**kwargs)
@@ -284,25 +289,6 @@ def deploy(**kwargs):
     t.deploy(config, config_file=config_file, **kwargs)
 
 
-def kolla(**kwargs):
-    """
-    usage: enos kolla [-e ENV|--env=ENV] [-s|--silent|-vv] -- <command>...
-
-    Run arbitrary Kolla command.
-
-    Options:
-    -e ENV --env=ENV     Path to the environment directory. You should
-                        use this option when you want to link a specific
-                        experiment [default: current].
-    -h --help            Show this help message.
-    -s --silent          Quiet mode.
-    -vv                  Verbose mode.
-    command              Kolla command (e.g prechecks, checks, pull)
-    """
-    logger.debug(kwargs)
-    t.kolla(**kwargs)
-
-
 def build(**kwargs):
     """
     usage: enos build <provider> [options]
@@ -319,15 +305,15 @@ def build(**kwargs):
     --base BASE        Base distribution for deployed virtual machines
                        [default: centos].
     --box BOX          Reference box for host virtual machines (vagrant)
-                       [default: generic/debian9].
+                       [default: generic/debian10].
     --cluster CLUSTER  Cluster where the image is built (g5k and vmong5k)
                        [default: parasilo].
     --directory DIR    Directory in which the image will be baked (vmong5k)
                        [default: ~/.enos].
     --environment ENV  Reference environment for deployment (g5k)
-                       [default: debian9-x64-nfs].
+                       [default: debian10-x64-min].
     --image IMAGE      Reference image path to bake on top of it (vmong5k)
-                       [default: /grid5000/virt-images/debian9-x64-base.qcow2].
+                       [default: /grid5000/virt-images/debian10-x64-base.qcow2].
     --type TYPE        Installation type of the BASE distribution
                        [default: binary].
 
@@ -362,7 +348,6 @@ def build(**kwargs):
 def _configure_logging(args):
     if '-vv' in args['<args>']:
         logging.basicConfig(level=logging.DEBUG)
-        args['<args>'].remove('-vv')
     elif '-s' in args['<args>']:
         logging.basicConfig(level=logging.ERROR)
         args['<args>'].remove('-s')
@@ -390,7 +375,6 @@ def main():
     pushtask(enostasks, bench)
     pushtask(enostasks, deploy)
     pushtask(enostasks, destroy)
-    pushtask(enostasks, kolla)
     pushtask(enostasks, info)
     pushtask(enostasks, init)
     pushtask(enostasks, os)

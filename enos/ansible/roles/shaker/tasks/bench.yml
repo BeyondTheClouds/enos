@@ -19,7 +19,7 @@
       - "11234:11234"
     volumes:
       - /root/shaker_home:/artifacts
-    env : "{{ os_env }}"
+    env : "{{ openstack_auth }}"
 
   register: docker_output
 
@@ -29,4 +29,3 @@
   until: finished.stdout == ""
   delay: 20
   retries: 10000
-

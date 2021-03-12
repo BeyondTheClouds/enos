@@ -10,45 +10,6 @@ tc_enable: true
 # output dir to store test validation of tc rules enforcement
 tc_output_dir: /tmp
 
-# default openstack env
-os_env:
-  OS_PROJECT_DOMAIN_NAME: Default
-  OS_USER_DOMAIN_NAME: Default
-  OS_PROJECT_NAME: "{{ keystone_admin_project }}"
-  OS_TENANT_NAME: "{{ keystone_admin_project }}"
-  OS_USERNAME: "{{ keystone_admin_user }}"
-  OS_PASSWORD: demo
-  OS_AUTH_URL: "{{ keystone_admin_url }}/v3"
-  OS_INTERFACE: internal
-  OS_IDENTITY_API_VERSION: "3"
-  OS_REGION_NAME: "{{ openstack_region_name }}"
-  OS_AUTH_PLUGIN: password
-
-# list of available patchs
-# to enable one patch copy past its description
-# to your local config file and enable it
-patches:
-  - name: patch galera.cnf.j2
-    src: galera.cnf.j2
-    dst: kolla/ansible/roles/mariadb/templates/galera.cnf.j2
-    enabled: "no"
-  - name: patch wsgi-keystone.conf.j2
-    src: wsgi-keystone.conf.j2
-    dst: kolla/ansible/roles/keystone/templates/wsgi-keystone.conf.j2
-    enabled: "no"
-  - name: patch haproxy.cfg.j2
-    src: haproxy.cfg.j2
-    dst: kolla/ansible/roles/haproxy/templates/haproxy.cfg.j2
-    enabled: "no"
-  - name: patch mariadb start
-    src: mariadb_start.yml
-    dst: kolla/ansible/roles/mariadb/tasks/start.yml
-    enabled: "no"
-  - name: patch mariadb bootstrap
-    src: mariadb_bootstrap.yml
-    dst: kolla/ansible/roles/mariadb/tasks/bootstrap.yml
-    enabled: "no"
-
 # docker images
 grafana_docker_image: grafana/grafana:5.1.3
 influxdb_docker_image: influxdb:1.5.3
