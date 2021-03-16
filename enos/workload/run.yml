@@ -11,10 +11,12 @@ rally:
       times:
         - 1
     scenarios:
-      - name: boot and list servers
+      - name: Boot and list servers on Nova
         file: nova-boot-list-cc.yml
         args:
           sla_max_avg_duration: 100
+      - name: Create and update an image on Glance
+        file: create-and-update-image.yaml 
         #plugin: path to your plugin relative to the workload dir
 shaker:
   enabled: false
@@ -23,4 +25,3 @@ shaker:
       file: misc/instance_metadata
     - name: shaker dense_l2
       file: openstack/dense_l2
-

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
+import pathlib
 import itertools
 import json
 import logging
@@ -16,7 +16,7 @@ from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, RSCS_DIR,
 from enos.utils.kolla import KollaAnsible
 from enos.utils.build import create_configuration
 from enos.utils.enostask import check_env
-from enos.utils.errors import EnosFilePathError
+from enos.services import (RallyOpenStack, Shaker)
 from enos.utils.extra import (generate_inventory, pop_ip, make_provider,
                               load_config, seekpath, get_vip_pool,
                               lookup_network, build_rsc_with_inventory,
@@ -41,11 +41,8 @@ def up(config, config_file=None, env=None, **kwargs):
     rsc, networks = \
         provider.init(env['config'], kwargs['--force-deploy'])
 
-    env['rsc'] = rsc
-    env['networks'] = networks
-
-    logging.debug(f"Provider ressources: {env['rsc']}")
-    logging.debug(f"Provider network information: {env['networks']}")
+    logging.debug(f"Provider resources: {rsc}")
+    logging.debug(f"Provider network information: {networks}")
 
     # Generates inventory for ansible/kolla
     inventory = os.path.join(str(env['resultdir']), 'multinode')
@@ -55,7 +52,7 @@ def up(config, config_file=None, env=None, **kwargs):
         base_inventory = os.path.join(RSCS_DIR, 'inventory.sample')
     else:
         base_inventory = seekpath(inventory_conf)
-    generate_inventory(env['rsc'], env['networks'], base_inventory, inventory)
+    generate_inventory(rsc, networks, base_inventory, inventory)
     logging.info('Generates inventory %s' % inventory)
 
     env['inventory'] = inventory
@@ -79,6 +76,9 @@ def up(config, config_file=None, env=None, **kwargs):
     rsc = elib.discover_networks(rsc, networks)
     rsc = build_rsc_with_inventory(rsc, env['inventory'])
 
+    env['rsc'] = rsc
+    env['networks'] = networks
+
     # Get variables required by the application
     vip_pool = get_vip_pool(networks)
     env['config'].update({
@@ -91,7 +91,7 @@ def up(config, config_file=None, env=None, **kwargs):
         'cwd':               str(pathlib.Path.cwd()),
     })
 
-    # Ensure python3 is on remote target (kolla requirement)
+    # Ensure python3 is on remote targets (kolla requirement)
     elib.ensure_python3(make_default=True, roles=rsc)
 
     # Install the Docker registry
@@ -130,18 +130,22 @@ def up(config, config_file=None, env=None, **kwargs):
     kolla_ansible = KollaAnsible(
         pip_package=env['config']['kolla-ansible'],
         inventory_path=inventory,
-        config_dir=str(env['resultdir']),
+        config_dir=env['resultdir'],
         globals_values=env['config']['kolla'])
 
-    kolla_ansible.execute(['bootstrap-servers'])
+    # Do not rely on kolla-ansible for docker, we already managed it with
+    # enoslib previously.
+    # https://github.com/openstack/kolla-ansible/blob/stable/ussuri/ansible/roles/baremetal/defaults/main.yml
+    # https://docs.openstack.org/kolla-ansible/ussuri/reference/deployment-and-bootstrapping/bootstrap-servers.html
+    kolla_ansible.execute(['bootstrap-servers',
+                           '--extra enable_docker_repo=false'])
 
     env['kolla-ansible'] = kolla_ansible
 
     # Generates the admin-openrc, see
     # https://github.com/openstack/kolla-ansible/blob/stable/ussuri/ansible/roles/common/templates/admin-openrc.sh.j2
-    admin_openrc_path = os.path.join(str(env['resultdir']), 'admin-openrc')
+    admin_openrc_path = env['resultdir'] / 'admin-openrc'
     os_auth_rc = kolla_ansible.get_admin_openrc_env_values()
-
     with open(admin_openrc_path, mode='w') as admin_openrc:
         for k, v in os_auth_rc.items():
             admin_openrc.write(f'export {k}="{v}"\n')
@@ -157,7 +161,7 @@ def up(config, config_file=None, env=None, **kwargs):
 
         # sudo required by `kolla-ansible destroy`.  See
         # https://github.com/openstack/kolla-ansible/blob/stable/ussuri/tools/validate-docker-execute.sh#L7
-        yml.apt(name=['sudo', 'git', 'fping', 'qemu-kvm'], update_cache=True)
+        yml.apt(name=['sudo', 'git', 'qemu-kvm'], update_cache=True)
         yml.pip(name=['docker', 'influxdb'], executable='pip3')
 
         # nscd prevents kolla-toolbox to start. See,
@@ -225,8 +229,7 @@ def init_os(env=None, **kwargs):
     logging.debug('phase[init]: args=%s' % kwargs)
 
     playbook_path = os.path.join(ANSIBLE_DIR, 'init_os.yml')
-    inventory_path = os.path.join(
-        str(env['resultdir']), 'multinode')
+    inventory_path = env['inventory']
 
     # Yes, if the external network isn't found we take the external ip in the
     # pool used for OpenStack services (like the apis) This mimic what was done
@@ -256,6 +259,8 @@ def init_os(env=None, **kwargs):
 @elib.enostask()
 @check_env
 def bench(env=None, **kwargs):
+    logging.debug('phase[bench]: args=%s' % kwargs)
+
     def cartesian(d):
         """returns the cartesian product of the args."""
         logging.debug(d)
@@ -271,14 +276,38 @@ def bench(env=None, **kwargs):
             product.append(dict(e))
         return product
 
-    logging.debug('phase[bench]: args=%s' % kwargs)
-    playbook_values = mk_enos_values(env)
-    workload_dir = seekpath(kwargs["--workload"])
-    with open(os.path.join(workload_dir, "run.yml")) as workload_f:
-        workload = yaml.load(workload_f)
+    if kwargs.get("--pull"):
+        RallyOpenStack.pull(env['rsc']['enos/bench'])
+        return
+
+    # Get rally service
+    rally = setdefault_lazy(
+        env, 'rally', lambda:
+        RallyOpenStack(agents=env['rsc']['enos/bench']))
+
+    # Get shaker service
+    shaker = setdefault_lazy(
+        env, 'shaker', lambda:
+        Shaker(agents=env['rsc']['enos/bench']))
+
+    workload_dir = pathlib.Path(seekpath(kwargs["--workload"]))
+    with open(workload_dir / "run.yml") as workload_f:
+        workload = yaml.safe_load(workload_f)
+
+        # Deploy rally if need be
+        if 'rally' in workload.keys():
+            rally.deploy(
+                env['kolla-ansible'].get_admin_openrc_env_values(),
+                kwargs.get("--reset"))
+
+        # Deploy shaker if need be
+        if 'shaker' in workload.keys():
+            shaker.deploy(
+                env['kolla-ansible'].get_admin_openrc_env_values(),
+                kwargs.get("--reset"))
+
         for bench_type, desc in workload.items():
             scenarios = desc.get("scenarios", [])
-            reset = kwargs.get("--reset")
             for idx, scenario in enumerate(scenarios):
                 # merging args
                 top_args = desc.get("args", {})
@@ -289,36 +318,20 @@ def bench(env=None, **kwargs):
                 enabled = scenario.get("enabled", True)
                 if not (top_enabled and enabled):
                     continue
-                for a in cartesian(top_args):
-                    playbook_path = os.path.join(ANSIBLE_DIR, 'enos.yml')
-                    inventory_path = os.path.join(
-                        str(env['resultdir']), 'multinode')
+                for args in cartesian(top_args):
                     # NOTE(msimonin) all the scenarios and plugins
                     # must reside on the workload directory
-                    scenario_location = os.path.join(
-                        workload_dir, scenario["file"])
-                    bench = {
-                        'type': bench_type,
-                        'scenario_location': scenario_location,
-                        'file': scenario["file"],
-                        'args': a
-                    }
-                    bench.update({'reset': False})
-                    if reset and idx == 0:
-                        bench.update({'reset': True})
+                    scenario_path = workload_dir / scenario["file"]
 
-                    if "plugin" in scenario:
-                        plugin = os.path.join(workload_dir,
-                                              scenario["plugin"])
-                        if os.path.isdir(plugin):
-                            plugin = plugin + "/"
-                        bench['plugin_location'] = plugin
-                    playbook_values.update(bench=bench)
-                    playbook_values.update(enos_action="bench")
+                    # Run Rally scenario
+                    if bench_type == 'rally':
+                        plugin = (workload_dir / scenario["plugin"]).resolve()\
+                            if "plugin" in scenario else None
+                        rally.run_scenario(scenario_path, args, plugin)
 
-                    elib.run_ansible([playbook_path],
-                                     inventory_path,
-                                     extra_vars=playbook_values)
+                    # Run shaker scenario
+                    elif bench_type == 'shaker':
+                        shaker.run_scenario(scenario['file'])
 
 
 @elib.enostask()
@@ -337,14 +350,21 @@ def backup(env=None, **kwargs):
     # create if necessary
     if not os.path.isdir(backup_dir):
         os.mkdir(backup_dir)
-    # update the env
-    env['config']['backup_dir'] = backup_dir
-    options = {}
-    options.update(env['config'])
-    options.update({'enos_action': 'backup'})
-    playbook_path = os.path.join(ANSIBLE_DIR, 'enos.yml')
-    inventory_path = os.path.join(str(env['resultdir']), 'multinode')
-    elib.run_ansible([playbook_path], inventory_path, extra_vars=options)
+
+    if 'rally' in env:
+        env['rally'].backup(pathlib.Path(backup_dir))
+
+    if 'shaker' in env:
+        env['shaker'].backup(pathlib.Path(backup_dir))
+
+    # # update the env
+    # env['config']['backup_dir'] = backup_dir
+    # options = {}
+    # options.update(env['config'])
+    # options.update({'enos_action': 'backup'})
+    # playbook_path = os.path.join(ANSIBLE_DIR, 'enos.yml')
+    # inventory_path = env['inventory']
+    # elib.run_ansible([playbook_path], inventory_path, extra_vars=options)
 
 
 def new(env=None, **kwargs):
@@ -428,12 +448,18 @@ def destroy(env=None, **kwargs):
         kolla_cmd.append('--verbose')
     env['kolla-ansible'].execute(kolla_cmd)
 
-    # Destroy enos resources
+    if 'rally' in env:
+        env['rally'].destroy()
+
+    if 'shaker' in env:
+        env['shaker'].destroy()
+
+    # Destroy enos monitoring
     options = {
         "enos_action": "destroy"
     }
     up_playbook = os.path.join(ANSIBLE_DIR, 'enos.yml')
-    inventory_path = os.path.join(str(env['resultdir']), 'multinode')
+    inventory_path = env['inventory']
     elib.run_ansible([up_playbook], inventory_path, extra_vars=options)
 
 
@@ -463,49 +489,3 @@ def build(provider, **kwargs):
     }
 
     deploy(configuration, **arguments)
-
-
-def _set_resultdir(name=None):
-    """Set or get the directory to store experiment results.
-
-    Looks at the `name` and create the directory if it doesn't exist
-    or returns it in other cases. If the name is `None`, then the
-    function generates an unique name for the results directory.
-    Finally, it links the directory to `SYMLINK_NAME`.
-
-    :param name: file path to an existing directory. It could be
-    weather an absolute or a relative to the current working
-    directory.
-
-    Returns the file path of the results directory.
-
-    """
-    # Compute file path of results directory
-    resultdir_name = name or 'enos_' + datetime.today().isoformat()
-    resultdir_path = os.path.abspath(resultdir_name)
-
-    # Raise error if a related file exists
-    if os.path.isfile(resultdir_path):
-        raise EnosFilePathError(resultdir_path,
-                                "Result directory cannot be created due "
-                                "to existing file %s" % resultdir_path)
-
-    # Create the result directory if it does not exist
-    if not os.path.isdir(resultdir_path):
-        os.mkdir(resultdir_path)
-        logging.info('Generate results directory %s' % resultdir_path)
-
-    # Symlink the result directory with the 'cwd/current' directory
-    link_path = SYMLINK_NAME
-    if os.path.lexists(link_path):
-        os.remove(link_path)
-    try:
-        os.symlink(resultdir_path, link_path)
-        logging.info("Symlink %s to %s" % (resultdir_path, link_path))
-    except OSError:
-        # An harmless error can occur due to a race condition when
-        # multiple regions are simultaneously deployed
-        logging.warning("Symlink %s to %s failed" %
-                        (resultdir_path, link_path))
-
-    return resultdir_path

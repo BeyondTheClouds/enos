@@ -18,9 +18,8 @@ ANSIBLE_DIR = os.path.join(ENOS_PATH, 'ansible')
 
 # KOLLA_NETWORKS (some of them)
 #
-# Référence: https://docs.openstack.org/kolla-ansible
-# production-architecture-guide.html#network-configuration
-#
+# See,
+# https://docs.openstack.org/kolla-ansible/ussuri/admin/production-architecture-guide.html#network-configuration
 # Default interface used by kolla to handle all the openstack traffic. It will
 # be provisionned automatically on the first NIC available. Finer grained
 # configuration using other network roles is possible using the enoslib

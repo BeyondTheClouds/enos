@@ -1,7 +1,0 @@
----
-- name: Utils
-  hosts: all
-  roles:
-    - { role: utils,
-        tags: ['utils'],
-      }

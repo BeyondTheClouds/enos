@@ -20,7 +20,7 @@ Commands:
   up             Get resources and install the docker registry.
   os             Run kolla and install OpenStack.
   init           Initialise OpenStack with the bare necessities.
-  bench          Run rally on this OpenStack.
+  bench          Run Rally/Shaker on this OpenStack.
   backup         Backup the environment
   ssh-tunnel     Print configuration for port forwarding with horizon.
   tc             Enforce network constraints
@@ -28,6 +28,7 @@ Commands:
   destroy        Destroy the deployment and optionally the related resources.
   deploy         Shortcut for enos up, then enos os and enos config.
   build          Build a reference image for later deployment.
+  help           Show this help message.
 
 
 See 'enos <command> --help' for more information on a specific
@@ -144,9 +145,9 @@ def init(**kwargs):
 def bench(**kwargs):
     """
     usage: enos bench [-e ENV|--env=ENV] [-s|--silent|-vv]
-        [--workload=WORKLOAD] [--reset]
+        [--workload=WORKLOAD] [--pull] [--reset]
 
-    Run rally on this OpenStack.
+    Run Rally/Shaker on this OpenStack.
 
     Options:
     -e ENV --env=ENV     Path to the environment directory. You should
@@ -369,6 +370,10 @@ def main():
 
     _configure_logging(args)
     argv = [args['<command>']] + args['<args>']
+
+    if argv == ['help']:
+        print(__doc__)
+        return
 
     enostasks = {}
     pushtask(enostasks, backup)

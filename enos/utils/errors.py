@@ -21,7 +21,6 @@ class EnosFilePathError(EnosError):
 class EnosProviderMissingConfigurationKeys(EnosError):
     def __init__(self, missing_overridden):
         super(EnosProviderMissingConfigurationKeys, self).__init__(
-            "Keys %s have to be overridden in the provider "
-            "section of the reservation file."
-            % missing_overridden)
+            f"Keys {missing_overridden} have to be overridden in the provider "
+            "section of the reservation file.")
         self.missing_ovorridden = missing_overridden

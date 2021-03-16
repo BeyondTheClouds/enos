@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 import copy
-import enoslib.api as api
-from enoslib.enos_inventory import EnosInventory
-from .errors import (EnosProviderMissingConfigurationKeys,
-                     EnosFilePathError)
-from .constants import (ENOS_PATH, NEUTRON_EXTERNAL_INTERFACE,
-                        FAKE_NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE,
-                        API_INTERFACE)
-from netaddr import IPRange
-
 import logging
 import os
 from operator import methodcaller
+from typing import Any, Callable
 
+import enoslib.api as api
+from enoslib.enos_inventory import EnosInventory
 from enoslib.types import Roles
+from netaddr import IPRange
+
+from .constants import (API_INTERFACE, ENOS_PATH,
+                        FAKE_NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE,
+                        NEUTRON_EXTERNAL_INTERFACE)
+from .errors import EnosFilePathError, EnosProviderMissingConfigurationKeys
 
 # These roles are mandatory for the
 # the original inventory to be valid
@@ -255,3 +255,12 @@ def build_rsc_with_inventory(rsc: Roles, inventory_path: str) -> Roles:
         new_rsc.update({grp: rsc_in_grp})
 
     return new_rsc
+
+
+def setdefault_lazy(env, key: str, thunk_value: Callable[[], Any]):
+    if key in env:
+        return env[key]
+    else:
+        value = thunk_value()
+        env[key] = value
+        return value
