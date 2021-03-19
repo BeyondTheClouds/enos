@@ -13,10 +13,9 @@ import enoslib as elib
 from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, RSCS_DIR,
                                   NEUTRON_EXTERNAL_INTERFACE,
                                   NETWORK_INTERFACE, TEMPLATE_DIR)
-from enos.utils.kolla import KollaAnsible
 from enos.utils.build import create_configuration
 from enos.utils.enostask import check_env
-from enos.services import (RallyOpenStack, Shaker)
+from enos.services import (KollaAnsible, RallyOpenStack, Shaker)
 from enos.utils.extra import (generate_inventory, pop_ip, make_provider,
                               load_config, seekpath, get_vip_pool,
                               lookup_network, build_rsc_with_inventory,
@@ -66,7 +65,7 @@ def up(config, config_file=None, env=None, **kwargs):
     # > enos-0 ansible_host=192.168.121.128 ansible_port='22'
     # > ansible_ssh_common_args='-o StrictHostKeyChecking=no -o
     # > UserKnownHostsFile=/dev/null'
-    # > ansible_ssh_private_key_file='/home/rfish/prog/enos/.vagrant/machines/enos-0/libvirt/private_key'
+    # > ansible_ssh_private_key_file='/home/rfish/prog/enos/.vagrant/machines/enos-0/libvirt/private_key' # noqa
     # > ansible_ssh_user='root' enos_devices="['eth1','eth2']"
     # > network_interface='eth1' network_interface_dev='eth1'
     # > network_interface_ip='192.168.42.245'
@@ -129,8 +128,8 @@ def up(config, config_file=None, env=None, **kwargs):
     })
     kolla_ansible = KollaAnsible(
         pip_package=env['config']['kolla-ansible'],
-        inventory_path=inventory,
         config_dir=env['resultdir'],
+        inventory_path=inventory,
         globals_values=env['config']['kolla'])
 
     # Do not rely on kolla-ansible for docker, we already managed it with
@@ -187,12 +186,10 @@ def up(config, config_file=None, env=None, **kwargs):
                 value=0,
                 state='present')
 
-    # Runs playbook that initializes resources (eg,
-    # install monitoring tools, Rally ...)
-    options = {}
-    options.update(env['config'])
-    enos_action = "pull" if kwargs.get("--pull") else "deploy"
-    options.update(enos_action=enos_action)
+    # Runs playbook that install monitoring tools (eg, Influx, Monitoring,
+    # Grafana)
+    options = env['config'].copy()
+    options.update(enos_action="pull" if kwargs.get("--pull") else "deploy")
     up_playbook = os.path.join(ANSIBLE_DIR, 'enos.yml')
     elib.run_ansible([up_playbook], env['inventory'], extra_vars=options,
                      tags=kwargs['--tags'])
@@ -277,7 +274,8 @@ def bench(env=None, **kwargs):
         return product
 
     if kwargs.get("--pull"):
-        RallyOpenStack.pull(env['rsc']['enos/bench'])
+        RallyOpenStack.pull(agents=env['rsc']['enos/bench'])
+        Shaker.pull(agents=env['rsc']['enos/bench'])
         return
 
     # Get rally service
@@ -306,6 +304,7 @@ def bench(env=None, **kwargs):
                 env['kolla-ansible'].get_admin_openrc_env_values(),
                 kwargs.get("--reset"))
 
+        # Parse bench and execute them
         for bench_type, desc in workload.items():
             scenarios = desc.get("scenarios", [])
             for idx, scenario in enumerate(scenarios):
@@ -319,18 +318,19 @@ def bench(env=None, **kwargs):
                 if not (top_enabled and enabled):
                     continue
                 for args in cartesian(top_args):
-                    # NOTE(msimonin) all the scenarios and plugins
-                    # must reside on the workload directory
-                    scenario_path = workload_dir / scenario["file"]
-
                     # Run Rally scenario
                     if bench_type == 'rally':
+                        # NOTE(msimonin) Scenarios and plugins
+                        # must reside on the workload directory
+                        scenario_path = workload_dir / scenario["file"]
                         plugin = (workload_dir / scenario["plugin"]).resolve()\
                             if "plugin" in scenario else None
                         rally.run_scenario(scenario_path, args, plugin)
 
                     # Run shaker scenario
                     elif bench_type == 'shaker':
+                        # Note(rcherrueau): Scenarios path should be local to
+                        # the container
                         shaker.run_scenario(scenario['file'])
 
 
@@ -338,7 +338,7 @@ def bench(env=None, **kwargs):
 @check_env
 def backup(env=None, **kwargs):
 
-    backup_dir = kwargs['--backup_dir'] \
+    backup_dir_str = kwargs['--backup_dir'] \
         or kwargs['--env'] \
         or SYMLINK_NAME
 
@@ -352,12 +352,12 @@ def backup(env=None, **kwargs):
         os.mkdir(backup_dir)
 
     if 'rally' in env:
-        env['rally'].backup(pathlib.Path(backup_dir))
+        env['rally'].backup(backup_dir)
 
     if 'shaker' in env:
-        env['shaker'].backup(pathlib.Path(backup_dir))
+        env['shaker'].backup(backup_dir)
 
-    # # update the env
+    # update the env
     # env['config']['backup_dir'] = backup_dir
     # options = {}
     # options.update(env['config'])

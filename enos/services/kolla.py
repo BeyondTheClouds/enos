@@ -42,9 +42,9 @@ DEFAULT_GLOBALS_PATH = os.path.join(
 # > from ansible.plugins.loader import filter_loader
 # > filter_loader.add_directory(os.path.join(ka.venv_path, KOLLA_FILTERS))
 #
-# [0] https://github.com/openstack/kolla-ansible/commit/bc053c09c180b21151da9312386c0d2fdc1a2700
-# [1] https://docs.ansible.com/ansible/latest/dev_guide/developing_locally.html
-# [2] https://github.com/ansible/ansible/blob/7fa32b9b44a229bfdd44811832eec0010b36afd1/lib/ansible/plugins/loader.py#L296
+# [0]https://github.com/openstack/kolla-ansible/commit/bc053c09c180b21151da9312386c0d2fdc1a2700
+# [1]https://docs.ansible.com/ansible/latest/dev_guide/developing_locally.html
+# [2]https://github.com/ansible/ansible/blob/7fa32b9b44a229bfdd44811832eec0010b36afd1/lib/ansible/plugins/loader.py#L296
 KOLLA_FILTERS = os.path.join(
     'share', 'kolla-ansible', 'ansible', 'filter_plugins')
 
@@ -78,19 +78,22 @@ class KollaAnsible(object):
     # module `KOLLA_TOOLBOX`.
     globals_values: Dict[str, Any]
 
+    # Inventory used by kolla-ansible.
+    _inventory: Path
+
     def __init__(self,
                  pip_package: str,
-                 inventory_path: str,
                  config_dir: Path,
+                 inventory_path: str,
                  globals_values={}) -> None:
         """Installs kolla-ansible locally in a dedicated virtual environment.
 
-        The virtual environment is created at `config_dir`. It its named using
-        the static method `gen_venv_path`.  If a virtual environment already
-        exists with the same name it is not recreated/installed.  The
-        `globals.yml` is created during the instantiation.  Authentication
-        variables are resolved with an extra call to a local Ansible and are
-        available under `self.globals_values.get('openstack_auth')`.
+        The virtual environment is created at `config_dir`. It its named after
+        the `pip_package`.  If a virtual environment already exists with the
+        same name it is not recreated/installed.  The `globals.yml` is created
+        during the deployment.  Authentication variables are resolved with
+        an extra call to a local Ansible.  They are available under
+        `self.globals_values.get('openstack_auth')`.
 
         Args:
           pip_package: The kolla-ansible pip package to install.  Package could
@@ -98,9 +101,9 @@ class KollaAnsible(object):
               package 'kolla-ansible==2.9.0', a git repository
               'git+https://github.com/openstack/kolla-ansible.git@stable/ussuri',
               or a local editable directory '-e ~/path/to/loca/kolla-ansible'.
-          inventory_path:  Path to the inventory file.
           config_dir: Path to the directory that will contains the
               `globals.yml`.
+          inventory_path:  Path to the inventory file.
           globals_values: Override kolla-ansible values for the `globals.yml`.
 
         This class offers the method `execute` to execute kolla-ansible
@@ -108,7 +111,8 @@ class KollaAnsible(object):
 
         .. code-block:: python
 
-          kolla = KollaAnsible('kolla-ansible==10.0.0', ...)
+          kolla = KollaAnsible('kolla-ansible==10.0.0', pathlib.Path('/tmp'),
+                               '', {'kolla_internal_vip_address': ''})
           kolla.execute(['bootstrap-servers'])
           kolla.execute(['deploy', '--help'])
 
@@ -126,17 +130,15 @@ class KollaAnsible(object):
           }
 
         """
-        # Deterministic virtual environment path
-        self.venv_path = KollaAnsible.gen_venv_path(config_dir, pip_package)
-
         # Install kolla-ansible
-        self._install_kolla(pip_package)
+        self.venv_path = KollaAnsible.pull(pip_package, config_dir)
 
         # Compute kolla-ansible args and globals
+        self._inventory = Path(inventory_path)
         self.globals_values = self._gen_globals_and_yml(
-            config_dir, globals_values, inventory_path)
-        self.kolla_args = KollaAnsible._mk_kolla_args(
-            config_dir, inventory_path, PASSWORDS_PATH)
+            config_dir, globals_values)
+        self.kolla_args = self._mk_kolla_args(
+            config_dir, PASSWORDS_PATH)
 
     def execute(self, operation: List[str]) -> None:
         'Executes an operation on kolla-ansible'
@@ -151,29 +153,21 @@ class KollaAnsible(object):
 
     def _execute_in_venv(self, cmd: List[str]):
         'Executes a command into the virtual environment of this kolla-ansible'
-        # Checks that the virtual environment exists.  Creates it otherwise.
-        if not self.venv_path.is_dir():
-            logging.debug(f'Creating venv {self.venv_path} ...')
-            subprocess.run(f'virtualenv -p {PY_VERSION} {self.venv_path}',
-                           shell=True, check=True)
-
-        # Executes the `cmd` in the virtual environment
         venv_cmd = [f'. {self.venv_path}/bin/activate &&'] + cmd
         logging.debug(f'Executing {venv_cmd} ...')
         subprocess.run(' '.join(venv_cmd), shell=True, check=True)
 
-    def _install_kolla(self, pip_kolla_package) -> None:
-        'Installs kolla ansible and its dependencies'
-        logging.info("Installing kolla-ansible and dependencies...")
-        pip_packages = [f'"{package}"' for package in
-                        (ANSIBLE_VERSION, 'influxdb', pip_kolla_package)]
-        self._execute_in_venv(['pip install'] + pip_packages)
+    def _mk_kolla_args(self, config_dir: Path,
+                       password_path: Path) -> List[str]:
+        'Computes the list of arguments to run kolla-ansible'
+        return ['--configdir ' + str(config_dir),
+                '--inventory ' + str(self._inventory),
+                '--passwords ' + str(password_path)]
 
     def _gen_globals_and_yml(
             self,
             config_dir: Path,
-            globals_values: Dict[str, Any],
-            inventory_path: str) -> Dict[str, Any]:
+            globals_values: Dict[str, Any]) -> Dict[str, Any]:
         """Generates and writes the globals in the `config_dir`.
 
         This generates all globals values.  It includes kolla-ansible default
@@ -201,8 +195,8 @@ class KollaAnsible(object):
         all_values.update(globals_values)
 
         # Compute `openstack_auth` values.
-        all_values.update(openstack_auth=self._resolve_openstack_auth(
-            inventory_path, all_values))
+        all_values.update(
+            openstack_auth=self._resolve_openstack_auth(all_values))
 
         # Put the final result into the `globals.yml`
         with open(config_dir / 'globals.yml', 'w') as f:
@@ -211,9 +205,7 @@ class KollaAnsible(object):
         return all_values
 
     def _resolve_openstack_auth(
-            self,
-            inventory_path: str,
-            globals_values: Dict[str, Any]) -> Dict[str, Any]:
+            self, globals_values: Dict[str, Any]) -> Dict[str, Any]:
         "Compute and returns the value of `globals_values['openstack_auth']`"
 
         # Get the former system paths.  We latter load kolla (required by the
@@ -239,7 +231,7 @@ class KollaAnsible(object):
                 str(self.venv_path / 'lib' / PY_VERSION / 'site-packages'))
 
             # Render `openstack_auth` into `osauth_path`
-            with elib.play_on(inventory_path=inventory_path,
+            with elib.play_on(inventory_path=str(self._inventory),
                               pattern_hosts="localhost",
                               extra_vars=globals_values) as yaml:
                 yaml.local_action(
@@ -278,20 +270,58 @@ class KollaAnsible(object):
 
         return os_auth_rc
 
+    def backup(self, destination: Path):
+        'Backup kolla-ansible logs and conf'
+        logging.info('Backup kolla-ansible logs and conf')
+        with elib.play_on(inventory_path=str(self._inventory),
+                          extra_vars=self.globals_values) as yaml:
+            yaml.archive(
+                display_name='Archive kolla-ansible logs and conf',
+                format='gz',
+                path=[
+                    # kolla-ansible logs
+                    '/var/lib/docker/volumes/kolla_logs/data',
+                    # kolla-ansible conf
+                    '/etc/kolla'],
+                dest='/tmp/kolla-log+conf.tar.gz')
+
+            yaml.fetch(
+                display_name='Fetch kolla-ansible logs and conf',
+                src='/tmp/kolla-log+conf.tar.gz',
+                dest=(str(destination)
+                      + '/{{ inventory_hostname }}-kolla-log+conf.tar.gz'))
+
     @staticmethod
-    def gen_venv_path(config_dir: Path, pip_package: str) -> Path:
-        'Generates a path for the virtual environment'
-        # Deterministic hash https://stackoverflow.com/a/42089311
+    def pull(pip_package: str, config_dir: Path) -> Path:
+        '''Install kolla-ansible in a virtual environment at `config_dir`.
+
+        The name of the virtual environment is computed based on the
+        `pip_package`, so calling that method with two different `pip_package`
+        values results in two different installations.
+
+        Args:
+            pip_package: The kolla-ansible pip package to install.  Package
+              could be specified using the pip package syntax.  For instance,
+              a PyPi package 'kolla-ansible==2.9.0', a git repository
+              'git+https://github.com/openstack/kolla-ansible.git@stable/ussuri',
+              or a local editable directory '-e ~/path/to/loca/kolla-ansible'.
+            config_dir:  Directory to install kolla-ansible in.
+        '''
+        logging.info("Installing kolla-ansible and dependencies...")
+
+        # Generates a path for the virtual environment computing a
+        # deterministic hash, See https://stackoverflow.com/a/42089311
         pip_ref_hash = int(hashlib.sha256(pip_package.encode('utf-8'))
                            .hexdigest(), 16) % 10**8
+        venv = config_dir / f'kolla-ansible-venv-{pip_ref_hash}'
 
-        return config_dir / f'kolla-ansible-venv-{pip_ref_hash}'
+        # Install kolla-ansible and its dependencies
+        with elib.play_on(roles={}, pattern_hosts="localhost") as yaml:
+            yaml.local_action(
+                display_name=f'Install kolla-ansible in {venv}',
+                module="pip",
+                name=[ANSIBLE_VERSION, 'influxdb', pip_package],
+                virtualenv=str(venv),
+                virtualenv_python=PY_VERSION)
 
-    @staticmethod
-    def _mk_kolla_args(config_dir: Path,
-                       inventory_path: str,
-                       password_path: Path) -> List[str]:
-        'Computes the list of arguments to run kolla-ansible'
-        return ['--configdir ' + str(config_dir),
-                '--inventory ' + inventory_path,
-                '--passwords ' + str(password_path)]
+        return venv

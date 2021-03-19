@@ -12,43 +12,43 @@ For any questions, feature requests, issues please use the `GitHub issue tracker
 
 Install from sources and make them editable
 -------------------------------------------
+Developing with enos requires `poetry`_.
 
 .. code-block:: bash
 
     $ git clone https://github.com/BeyondTheClouds/enos.git
     $ cd enos
-    $ virtualenv --python=python3 venv
-    $ source venv/bin/activate
-    (venv) $ pip install -e .
+    $ poetry install
 
-
-Get tox
--------
+Then, execute enos from poetry.
 
 .. code-block:: bash
 
-    (venv) $ pip install tox
+    $ poetry run enos help
+    $ poetry run enos deploy
+
+.. _poetry: https://python-poetry.org/
 
 Running the tests
 -----------------
 
 .. code-block:: bash
 
-    (venv) $ tox
+    $ poetry run tox
 
 Running syntax checker
 ----------------------
 
 .. code-block:: bash
 
-    (venv) $ tox -e pep8
+    $ poetry run tox -e pep8
 
 Generate the documentation
 --------------------------
 
 .. code-block:: bash
 
-    (venv) $ tox -e docs
+    $ poetry run tox -e docs
 
 
 Other Topics

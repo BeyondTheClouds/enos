@@ -2,7 +2,7 @@
 import copy
 import logging
 
-from enoslib.api import expand_groups
+from enoslib.service.netem.netem import expand_groups
 import enoslib.infra.enos_static.provider as enos_static
 from enoslib.infra.enos_static.configuration import Configuration
 

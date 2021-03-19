@@ -187,8 +187,8 @@ class RallyOpenStack():
                 yaml.fetch(
                     **title(f'fetch the {ext} rally report'),
                     src=f'rally-report.{ext}', flat=True,
-                    dest=str(destination) +
-                    '/{{ inventory_hostname }}-rally-report.' + ext)
+                    dest=(str(destination)
+                          + '/{{ inventory_hostname }}-rally-report.' + ext))
 
     def destroy(self):
         pass

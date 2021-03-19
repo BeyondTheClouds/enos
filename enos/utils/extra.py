@@ -190,8 +190,7 @@ def load_provider_config(provider_config, default_provider_config=None):
 
     # Throw error for missing overridden values of required keys
     missing_overridden = [k for k, v in default_provider_config.items()
-                          if v is None and
-                          k not in provider_config.keys()]
+                          if v is None and k not in provider_config.keys()]
     if missing_overridden:
         raise EnosProviderMissingConfigurationKeys(missing_overridden)
 

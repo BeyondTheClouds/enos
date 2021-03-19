@@ -7,9 +7,9 @@ class TestGenEnoslibRoles(unittest.TestCase):
 
     def test_with_resources(self):
         resources = {
-            "compute": [{"address": "1.2.3.4", "alias": "enos-0"}] ,
-            "control": [{"address": "1.2.3.5", "alias": "enos-1"}] ,
-            "network": [{"address": "1.2.3.6", "alias": "enos-2"}] ,
+            "compute": [{"address": "1.2.3.4", "alias": "enos-0"}],
+            "control": [{"address": "1.2.3.5", "alias": "enos-1"}],
+            "network": [{"address": "1.2.3.6", "alias": "enos-2"}],
         }
         conf = {
             "provider": {"networks": []},
@@ -24,14 +24,13 @@ class TestGenEnoslibRoles(unittest.TestCase):
         self.assertEqual(["default_group", "control"], machines[1]["roles"])
         self.assertEqual(["default_group", "network"], machines[2]["roles"])
 
-
     def test_with_topology(self):
         resources_1 = {
-            "compute": [{"address": "1.2.3.4", "alias": "enos-0"}] ,
-            "control": [{"address": "1.2.3.5", "alias": "enos-1"}] ,
+            "compute": [{"address": "1.2.3.4", "alias": "enos-0"}],
+            "control": [{"address": "1.2.3.5", "alias": "enos-1"}],
         }
         resources_2 = {
-            "network": [{"address": "1.2.3.6", "alias": "enos-2"}] ,
+            "network": [{"address": "1.2.3.6", "alias": "enos-2"}],
         }
 
         conf = {

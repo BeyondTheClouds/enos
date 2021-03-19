@@ -1,13 +1,15 @@
 import unittest
-from enos.utils.extra import *
-from enos.utils.errors import *
+import enos.utils.extra as xenos
+from enos.utils.errors import (EnosProviderMissingConfigurationKeys,
+                               EnosFilePathError)
 import enos.utils.constants as const
 import copy
 import contextlib
-import os, shutil
+import os
+import shutil
 import tempfile
-import mock
 import ddt
+
 
 class TestMakeProvider(unittest.TestCase):
 
@@ -24,25 +26,32 @@ class TestMakeProvider(unittest.TestCase):
     def test_make_g5k(self):
         "Tests the creation of G5k provider"
         from enos.provider.g5k import G5k
-        self.assertIsInstance(make_provider(self.__provider_env('g5k')), G5k)
-        self.assertIsInstance(make_provider(self.__provider_env_ext('g5k')), G5k)
+        self.assertIsInstance(
+            xenos.make_provider(self.__provider_env('g5k')), G5k)
+        self.assertIsInstance(
+            xenos.make_provider(self.__provider_env_ext('g5k')), G5k)
 
     def test_make_vbox(self):
         "Tests the creation of Vbox provider"
         from enos.provider.enos_vagrant import Enos_vagrant
-        self.assertIsInstance(make_provider(self.__provider_env('vagrant')), Enos_vagrant)
-        self.assertIsInstance(make_provider(self.__provider_env_ext('vagrant')), Enos_vagrant)
+        self.assertIsInstance(
+            xenos.make_provider(self.__provider_env('vagrant')), Enos_vagrant)
+        self.assertIsInstance(
+            xenos.make_provider(self.__provider_env_ext('vagrant')),
+            Enos_vagrant)
 
     def test_make_static(self):
         "Tests the creation of Static provider"
         from enos.provider.static import Static
-        self.assertIsInstance(make_provider(self.__provider_env('static')), Static)
-        self.assertIsInstance(make_provider(self.__provider_env_ext('static')), Static)
+        self.assertIsInstance(
+            xenos.make_provider(self.__provider_env('static')), Static)
+        self.assertIsInstance(
+            xenos.make_provider(self.__provider_env_ext('static')), Static)
 
     def test_make_unexist(self):
         "Tests the raise of error for unknown/unloaded provider"
         with self.assertRaises(ImportError):
-            make_provider(self.__provider_env('unexist'))
+            xenos.make_provider(self.__provider_env('unexist'))
 
 
 class TestLoadProviderConfig(unittest.TestCase):
@@ -51,7 +60,8 @@ class TestLoadProviderConfig(unittest.TestCase):
         expected = {
             'type': 'myprovider'
         }
-        provider_config = load_provider_config(copy.deepcopy(provider_config))
+        provider_config = xenos.load_provider_config(
+            copy.deepcopy(provider_config))
         self.assertDictEqual(expected, provider_config)
 
     def test_load_provider_config_nest_type_with_defaults(self):
@@ -65,7 +75,7 @@ class TestLoadProviderConfig(unittest.TestCase):
             'option1': 'value1',
             'option2': 'value2',
         }
-        provider_config = load_provider_config(
+        provider_config = xenos.load_provider_config(
             copy.deepcopy(provider_config),
             default_provider_config=default_provider_config)
         self.assertDictEqual(expected, provider_config)
@@ -84,7 +94,7 @@ class TestLoadProviderConfig(unittest.TestCase):
             'option1': 'myvalue1',
             'option2': 'value2',
         }
-        provider_config = load_provider_config(
+        provider_config = xenos.load_provider_config(
             copy.deepcopy(provider_config),
             default_provider_config=default_provider_config)
         self.assertDictEqual(expected, provider_config)
@@ -108,10 +118,10 @@ class TestLoadProviderConfig(unittest.TestCase):
             ('missing-overriding2', None),
             ('no-overriding-needed', False)])
 
-        with self.assertRaisesRegexp(
+        with self. assertRaisesRegex(
                 EnosProviderMissingConfigurationKeys,
-                "\['missing-overriding1', 'missing-overriding2'\]"):
-            load_provider_config(
+                r"\['missing-overriding1', 'missing-overriding2'\]"):
+            xenos.load_provider_config(
                 provider_config,
                 default_provider_config)
 
@@ -133,32 +143,32 @@ class TestPathLoading(unittest.TestCase):
                          msg)
 
     @ddt.data(('/abs/path/to/inventory.sample',
-               'inventories/inventory.sample'),
+               'resources/inventory.sample'),
               ('/abs/path/to/workload/', 'workload/'))
     @ddt.unpack
     def test_seek_path(self, abspath, relpath):
         # Execution from the source directory
         with working_directory(self.sourcedir):
-            self.assertPathEqual(seekpath(abspath),
+            self.assertPathEqual(xenos.seekpath(abspath),
                                  abspath,
-                                 "Seeking for an %s defined "
+                                 f"Seeking for an {abspath} defined "
                                  "with an absolute path should always "
-                                 "return that path" % abspath)
+                                 "return that path")
 
-            self.assertPathEqual(seekpath(relpath),
+            self.assertPathEqual(xenos.seekpath(relpath),
                                  os.path.join(const.ENOS_PATH, relpath),
-                                 "Seeking for %s from the source directory"
-                                 "should seek into enos source" % relpath)
+                                 f"Seeking for {relpath} from the source "
+                                 "directory should seek into enos source")
 
         # Execution from a working directory
         with working_directory(self.workdir):
-            self.assertPathEqual(seekpath(abspath),
+            self.assertPathEqual(xenos.seekpath(abspath),
                                  abspath,
                                  "Seeking for %s defined "
                                  "with an absolute path should always "
                                  "return that path" % abspath)
 
-            self.assertPathEqual(seekpath(relpath),
+            self.assertPathEqual(xenos.seekpath(relpath),
                                  os.path.join(const.ENOS_PATH, relpath),
                                  "In absence of %s in the working "
                                  "directory, enos should seek for that one "
@@ -168,7 +178,7 @@ class TestPathLoading(unittest.TestCase):
             # check seekpath behaviour
             os.makedirs(os.path.dirname(relpath))
             os.path.lexists(relpath) or os.mknod(relpath)
-            self.assertPathEqual(seekpath(relpath),
+            self.assertPathEqual(xenos.seekpath(relpath),
                                  os.path.join(self.workdir, relpath),
                                  "In presence of %s in the working directory,"
                                  "enos should take this one" % relpath)
@@ -178,11 +188,11 @@ class TestPathLoading(unittest.TestCase):
 
         with working_directory(self.sourcedir):
             with self.assertRaises(EnosFilePathError):
-                seekpath(unexisting)
+                xenos.seekpath(unexisting)
 
         with working_directory(self.workdir):
             with self.assertRaises(EnosFilePathError):
-                seekpath(unexisting)
+                xenos.seekpath(unexisting)
 
 
 @contextlib.contextmanager

@@ -7,9 +7,9 @@ rally:
     enabled: true
     args:
       concurrency:
-        - 1
+        - 10
       times:
-        - 1
+        - 10
     scenarios:
       - name: Boot and list servers on Nova
         file: nova-boot-list-cc.yml
@@ -19,7 +19,7 @@ rally:
         file: create-and-update-image.yaml 
         #plugin: path to your plugin relative to the workload dir
 shaker:
-  enabled: false
+  enabled: true
   scenarios:
     - name: shaker instance_metadata
       file: misc/instance_metadata
