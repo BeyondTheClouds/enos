@@ -17,10 +17,10 @@
     state: started
     env:
       INFLUXDB_HOST: "{{ influx_vip }}"
-      INFLUXDB_PORT: 8086
-      INFLUXDB_NAME: cadvisor
-      INFLUXDB_USER: root
-      INFLUXDB_PASS: root
+      INFLUXDB_PORT: "8086"
+      INFLUXDB_NAME: "cadvisor"
+      INFLUXDB_USER: "root"
+      INFLUXDB_PASS: "root"
 
 - name: Waiting for the grafana service to become available
   wait_for:

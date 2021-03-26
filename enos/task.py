@@ -337,19 +337,18 @@ def bench(env=None, **kwargs):
 @elib.enostask()
 @check_env
 def backup(env=None, **kwargs):
+    # Get/create the backup directory
+    backup_dir = pathlib.Path(
+        kwargs['--backup_dir']
+        or kwargs['--env']
+        or SYMLINK_NAME).resolve()
 
-    backup_dir_str = kwargs['--backup_dir'] \
-        or kwargs['--env'] \
-        or SYMLINK_NAME
+    if not backup_dir.is_dir():
+        backup_dir.mkdir()
 
-    backup_dir = os.path.abspath(backup_dir)
-
-    if 'docker' in env:
-        env['docker'].backup()
-
-    # create if necessary
-    if not os.path.isdir(backup_dir):
-        os.mkdir(backup_dir)
+    # Backups services
+    if 'kolla-ansible' in env:
+        env['kolla-ansible'].backup(backup_dir)
 
     if 'rally' in env:
         env['rally'].backup(backup_dir)
@@ -357,14 +356,17 @@ def backup(env=None, **kwargs):
     if 'shaker' in env:
         env['shaker'].backup(backup_dir)
 
-    # update the env
-    # env['config']['backup_dir'] = backup_dir
-    # options = {}
-    # options.update(env['config'])
-    # options.update({'enos_action': 'backup'})
-    # playbook_path = os.path.join(ANSIBLE_DIR, 'enos.yml')
-    # inventory_path = env['inventory']
-    # elib.run_ansible([playbook_path], inventory_path, extra_vars=options)
+    if 'docker' in env:
+        env['docker'].backup()
+
+    # Backup enos monitoring
+    env['config']['backup_dir'] = str(backup_dir)
+    options = {}
+    options.update(env['config'])
+    options.update({'enos_action': 'backup'})
+    playbook_path = os.path.join(ANSIBLE_DIR, 'enos.yml')
+    inventory_path = env['inventory']
+    elib.run_ansible([playbook_path], inventory_path, extra_vars=options)
 
 
 def new(env=None, **kwargs):
@@ -439,14 +441,11 @@ def destroy(env=None, **kwargs):
         provider.destroy(env)
         return
 
-    # Destroy OpenStack (kolla-ansible destroy) + monitoring + rally
-    # Destroying kolla resources
-    kolla_cmd = ['destroy', '--yes-i-really-really-mean-it']
-    if kwargs['--include-images']:
-        kolla_cmd.append('--include-images')
-    if kwargs['-v']:
-        kolla_cmd.append('--verbose')
-    env['kolla-ansible'].execute(kolla_cmd)
+    # Destroy OpenStack (kolla-ansible destroy)
+    if 'kolla-ansible' in env:
+        env['kolla-ansible'].destroy(
+            kwargs.get('--include-images', False),
+            kwargs.get('--verbose', False))
 
     if 'rally' in env:
         env['rally'].destroy()

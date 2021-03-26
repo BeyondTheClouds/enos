@@ -280,16 +280,27 @@ class KollaAnsible(object):
                 format='gz',
                 path=[
                     # kolla-ansible logs
-                    '/var/lib/docker/volumes/kolla_logs/data',
+                    '/var/lib/docker/volumes/kolla_logs/_data',
                     # kolla-ansible conf
                     '/etc/kolla'],
                 dest='/tmp/kolla-log+conf.tar.gz')
 
             yaml.fetch(
                 display_name='Fetch kolla-ansible logs and conf',
+                flat=True,
                 src='/tmp/kolla-log+conf.tar.gz',
                 dest=(str(destination)
                       + '/{{ inventory_hostname }}-kolla-log+conf.tar.gz'))
+
+    def destroy(self, include_images=False, verbose=False):
+        cmd = ['destroy', '--yes-i-really-really-mean-it']
+
+        if include_images:
+            cmd.append('--include-images')
+        if verbose:
+            cmd.append('verbose')
+
+        self.execute(cmd)
 
     @staticmethod
     def pull(pip_package: str, config_dir: Path) -> Path:
