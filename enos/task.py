@@ -3,10 +3,8 @@ import pathlib
 import itertools
 import json
 import logging
-import operator
 import os
 import pickle
-import pprint
 import yaml
 import enoslib as elib
 
@@ -417,10 +415,15 @@ def tc(env=None, network_constraints=None, extra_vars=None, **kwargs):
 
 @elib.enostask()
 def info(env=None, **kwargs):
-    if not kwargs['--out']:
-        pprint.pprint(env)
-    elif kwargs['--out'] == 'json':
-        print(json.dumps(env, default=operator.attrgetter('__dict__')))
+    def json_encoder(o):
+        'Render path with str'
+        if isinstance(o, pathlib.Path):
+            return str(o.resolve())
+        else:
+            return o.__dict__
+
+    if not kwargs['--out'] or kwargs['--out'] == 'json':
+        print(json.dumps(env, default=json_encoder, indent=True))
     elif kwargs['--out'] == 'pickle':
         print(pickle.dumps(env))
     elif kwargs['--out'] == 'yaml':
