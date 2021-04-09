@@ -83,7 +83,7 @@ The deployment is the combination of the following three phases:
 
       If you don't provide an ``inventory`` in your current working
       directory, then Enos uses a default one. You can view it on
-      GitHub at :enos_src:`enos/inventories/inventory.sample`. Note
+      GitHub at :enos_src:`enos/resources/inventory.sample`. Note
       that the produced file is available at ``cwd/current/multinode``
       (with ``cwd`` referencing to your current working directory).
 
