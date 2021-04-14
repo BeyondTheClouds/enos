@@ -2,10 +2,11 @@ import unittest
 import enos.utils.extra as xenos
 from enos.utils.errors import (EnosProviderMissingConfigurationKeys,
                                EnosFilePathError)
-import enos.utils.constants as const
+import enos.utils.constants as C
 import copy
 import contextlib
 import os
+import pathlib
 import shutil
 import tempfile
 import ddt
@@ -131,7 +132,7 @@ class TestPathLoading(unittest.TestCase):
     longMessage = True
 
     def setUp(self):
-        self.sourcedir = const.ENOS_PATH
+        self.sourcedir = C.ENOS_PATH
         self.workdir = os.path.realpath(tempfile.mkdtemp())
 
     def tearDown(self):
@@ -142,8 +143,7 @@ class TestPathLoading(unittest.TestCase):
                          os.path.normpath(p2),
                          msg)
 
-    @ddt.data(('/abs/path/to/inventory.sample',
-               'resources/inventory.sample'),
+    @ddt.data(('/abs/path/to/inventory.sample', 'inventory.sample'),
               ('/abs/path/to/workload/', 'workload/'))
     @ddt.unpack
     def test_seek_path(self, abspath, relpath):
@@ -156,7 +156,7 @@ class TestPathLoading(unittest.TestCase):
                                  "return that path")
 
             self.assertPathEqual(xenos.seekpath(relpath),
-                                 os.path.join(const.ENOS_PATH, relpath),
+                                 os.path.join(C.RSCS_DIR, relpath),
                                  f"Seeking for {relpath} from the source "
                                  "directory should seek into enos source")
 
@@ -169,15 +169,16 @@ class TestPathLoading(unittest.TestCase):
                                  "return that path" % abspath)
 
             self.assertPathEqual(xenos.seekpath(relpath),
-                                 os.path.join(const.ENOS_PATH, relpath),
+                                 os.path.join(C.RSCS_DIR, relpath),
                                  "In absence of %s in the working "
                                  "directory, enos should seek for that one "
                                  "in sources" % relpath)
 
             # Build a fake `relpath` in the working directory and
             # check seekpath behaviour
-            os.makedirs(os.path.dirname(relpath))
-            os.path.lexists(relpath) or os.mknod(relpath)
+            _path = pathlib.Path(relpath)
+            _path.parent.is_dir() or _path.parent.mkdir()
+            _path.exists() or os.mknod(str(_path))
             self.assertPathEqual(xenos.seekpath(relpath),
                                  os.path.join(self.workdir, relpath),
                                  "In presence of %s in the working directory,"

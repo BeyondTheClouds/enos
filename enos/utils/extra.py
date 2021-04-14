@@ -10,9 +10,7 @@ from enoslib.enos_inventory import EnosInventory
 from enoslib.types import Roles
 from netaddr import IPRange
 
-from .constants import (API_INTERFACE, ENOS_PATH,
-                        FAKE_NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE,
-                        NEUTRON_EXTERNAL_INTERFACE)
+import enos.utils.constants as C
 from .errors import EnosFilePathError, EnosProviderMissingConfigurationKeys
 
 # These roles are mandatory for the
@@ -40,12 +38,12 @@ def generate_inventory(roles, networks, base_inventory, dest):
 
     fake_interfaces = []
     fake_networks = []
-    provider_net = lookup_network(networks, [NEUTRON_EXTERNAL_INTERFACE])
+    provider_net = lookup_network(networks, [C.NEUTRON_EXTERNAL_INTERFACE])
     if not provider_net:
-        logging.error("The %s network is missing" % NEUTRON_EXTERNAL_INTERFACE)
+        logging.error(f"The {C.NEUTRON_EXTERNAL_INTERFACE} network is missing")
         logging.error("EnOS will try to fix that ....")
-        fake_interfaces = [FAKE_NEUTRON_EXTERNAL_INTERFACE]
-        fake_networks = [NEUTRON_EXTERNAL_INTERFACE]
+        fake_interfaces = [C.FAKE_NEUTRON_EXTERNAL_INTERFACE]
+        fake_networks = [C.NEUTRON_EXTERNAL_INTERFACE]
 
     api.generate_inventory(
         roles,
@@ -87,12 +85,13 @@ def get_vip_pool(networks):
     In kolla-ansible this is the network with the api_interface role.
     In kolla-ansible api_interface defaults to network_interface.
     """
-    provider_net = lookup_network(networks, [API_INTERFACE, NETWORK_INTERFACE])
+    provider_net = lookup_network(
+        networks, [C.API_INTERFACE, C.NETWORK_INTERFACE])
     if provider_net:
         return provider_net
 
     msg = "You must declare %s" % " or ".join(
-        [API_INTERFACE, NETWORK_INTERFACE])
+        [C.API_INTERFACE, C.NETWORK_INTERFACE])
     raise Exception(msg)
 
 
@@ -208,7 +207,7 @@ def seekpath(path):
     Seeking rules are:
     - If `path` is absolute then return it
     - Otherwise, look for `path` in the current working directory
-    - Otherwise, look for `path` in the source directory
+    - Otherwise, look for `path` in the resources directory
     - Otherwise, raise an `EnosFilePathError` exception
 
     """
@@ -218,14 +217,13 @@ def seekpath(path):
         abspath = path
     elif os.path.exists(os.path.abspath(path)):
         abspath = os.path.abspath(path)
-    elif os.path.exists(os.path.join(ENOS_PATH, path)):
-        abspath = os.path.join(ENOS_PATH, path)
+    elif os.path.exists(os.path.join(C.RSCS_DIR, path)):
+        abspath = os.path.join(C.RSCS_DIR, path)
     else:
         raise EnosFilePathError(
             path,
-            "There is no path to %s, neither in current "
-            "directory (%s) nor enos sources (%s)."
-            % (path, os.getcwd(), ENOS_PATH))
+            f"There is no path to {path}, neither in current "
+            f"directory ({os.getcwd()}) nor in enos sources ({C.RSCS_DIR}).")
 
     logging.debug("Seeking %s path resolves to %s", path, abspath)
 

@@ -17,9 +17,11 @@ rally:
           sla_max_avg_duration: 100
       - name: Create and update an image on Glance
         file: create-and-update-image.yaml 
+        args:
+          sla_max_avg_duration: 100
         #plugin: path to your plugin relative to the workload dir
 shaker:
-  enabled: true
+  enabled: false
   scenarios:
     - name: shaker instance_metadata
       file: misc/instance_metadata

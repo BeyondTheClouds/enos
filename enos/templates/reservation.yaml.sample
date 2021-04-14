@@ -120,7 +120,7 @@ provider:
 # ########################################################### #
 
 # This will describe the topology of your services
-inventory: inventories/inventory.sample
+inventory: inventory.sample
 
 # ########################################################### #
 # Docker registry parameters (choose *one* in the following)  #
