@@ -1,22 +1,5 @@
 ---
 # ########################################################### #
-# VMonG5K reservation parameters                              #
-# ########################################################### #
-provider:
-  type: vmong5k
-  job_name: 'enos'
-  walltime: '02:00:00'
-
-resources:
-  paravance:
-    network: 1
-    control: 1
-  parasilo:
-    compute: 1
-
-virt_image: /grid5000/virt-images/debian10-x64-base.qcow2
-
-# ########################################################### #
 # Grid'5000 reservation parameters                            #
 # ########################################################### #
 provider:
@@ -114,6 +97,22 @@ provider:
       dns: 8.8.8.8
       roles: ["neutron_external_interface"]
 
+# ########################################################### #
+# VMonG5K reservation parameters                              #
+# ########################################################### #
+provider:
+  type: vmong5k
+  job_name: 'enos'
+  walltime: '02:00:00'
+
+resources:
+  paravance:
+    network: 1
+    control: 1
+  parasilo:
+    compute: 1
+
+virt_image: /grid5000/virt-images/debian10-x64-base.qcow2
 
 # ########################################################### #
 # Inventory to use                                            #
@@ -166,16 +165,14 @@ registry:
 # ########################################################### #
 enable_monitoring: no
 
-
 # ########################################################### #
 # Kolla parameters                                            #
 # ########################################################### #
 # Repository
-kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
-kolla_ref: "stable/stein"
+kolla-ansible: kolla-ansible~=10.0
 
 # Vars : globals.yml
 kolla:
   kolla_base_distro: "centos"
   kolla_install_type: "source"
-  enable_heat: "no"
+  enable_heat: yes
