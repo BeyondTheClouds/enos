@@ -8,17 +8,20 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import enoslib as elib
 import yaml
 from ansible.plugins.loader import filter_loader as ansible_filter_loader
 from enos.utils import constants as C
 
+# Default kolla-ansible package to install (OpenStack ussuri)
+KOLLA_PKG = 'kolla-ansible~=10.0'
+
 # Kolla recommends installing ansible manually.  Currently 2.9 is supported.
 # Refers to the kolla-ansible User Guides for future versions. See,
 # https://docs.openstack.org/kolla-ansible/stein/user/quickstart.html#install-dependencies-not-using-a-virtual-environment
-ANSIBLE_VERSION = 'ansible>=2.9,<2.10'
+ANSIBLE_PKG = 'ansible>=2.9,<2.10'
 
 # Current python version
 PY_VERSION = f'python{sys.version_info.major}.{sys.version_info.minor}'
@@ -82,9 +85,9 @@ class KollaAnsible(object):
     _inventory: Path
 
     def __init__(self,
-                 pip_package: str,
                  config_dir: Path,
                  inventory_path: str,
+                 pip_package: Optional[str] = None,
                  globals_values={}) -> None:
         """Installs kolla-ansible locally in a dedicated virtual environment.
 
@@ -96,14 +99,15 @@ class KollaAnsible(object):
         `self.globals_values.get('openstack_auth')`.
 
         Args:
+          config_dir: Path to the directory that will contains the
+              `globals.yml`.
+          inventory_path:  Path to the inventory file.
           pip_package: The kolla-ansible pip package to install.  Package could
               be specified using the pip package syntax.  For instance, a PyPi
               package 'kolla-ansible==2.9.0', a git repository
               'git+https://github.com/openstack/kolla-ansible.git@stable/ussuri',
               or a local editable directory '-e ~/path/to/loca/kolla-ansible'.
-          config_dir: Path to the directory that will contains the
-              `globals.yml`.
-          inventory_path:  Path to the inventory file.
+              Defaults to `KOLLA_PKG`.
           globals_values: Override kolla-ansible values for the `globals.yml`.
 
         This class offers the method `execute` to execute kolla-ansible
@@ -111,8 +115,9 @@ class KollaAnsible(object):
 
         .. code-block:: python
 
-          kolla = KollaAnsible('kolla-ansible==10.0.0', pathlib.Path('/tmp'),
-                               '', {'kolla_internal_vip_address': ''})
+          kolla = KollaAnsible(
+              pathlib.Path('/tmp'), '', 'kolla-ansible~=10.0',
+              {'kolla_internal_vip_address': ''})
           kolla.execute(['bootstrap-servers'])
           kolla.execute(['deploy', '--help'])
 
@@ -131,7 +136,9 @@ class KollaAnsible(object):
 
         """
         # Install kolla-ansible
-        self.venv_path = KollaAnsible.pull(pip_package, config_dir)
+        self.venv_path = KollaAnsible.pull(
+            pip_package if pip_package is not None else KOLLA_PKG,
+            config_dir)
 
         # Compute kolla-ansible args and globals
         self._inventory = Path(inventory_path)
@@ -224,15 +231,19 @@ class KollaAnsible(object):
             # Note(rcherrueau): we also have to load kolla_ansible because the
             # filter in `KOLLA_FILTERS` does something like `form kolla_ansible
             # import filters`.  We load kolla_ansible from the virtual_env in
-            # the system path.
+            # the system path.  In that case, pbr may complain with: Versioning
+            # for this project requires either an sdist tarball, or access
+            # to an upstream git repository.  We set pbr to version '1.2.3' to
+            # disable all version calculation logic by pbr [0].
+            # [0]https://docs.openstack.org/pbr/latest/user/packagers.html#versioning
             ansible_filter_loader.add_directory(
                 str(self.venv_path / KOLLA_FILTERS))
             sys.path.append(
                 str(self.venv_path / 'lib' / PY_VERSION / 'site-packages'))
+            os.environ['PBR_VERSION'] = '1.2.3'
 
             # Render `openstack_auth` into `osauth_path`
-            with elib.play_on(inventory_path=str(self._inventory),
-                              pattern_hosts="localhost",
+            with elib.play_on(roles={}, pattern_hosts="localhost",
                               extra_vars=globals_values) as yaml:
                 yaml.local_action(
                     display_name='Compute values of `openstack_auth`',
@@ -324,14 +335,14 @@ class KollaAnsible(object):
         # deterministic hash, See https://stackoverflow.com/a/42089311
         pip_ref_hash = int(hashlib.sha256(pip_package.encode('utf-8'))
                            .hexdigest(), 16) % 10**8
-        venv = config_dir / f'kolla-ansible-venv-{pip_ref_hash}'
+        venv = (config_dir / f'kolla-ansible-venv-{pip_ref_hash}').resolve()
 
         # Install kolla-ansible and its dependencies
         with elib.play_on(roles={}, pattern_hosts="localhost") as yaml:
             yaml.local_action(
-                display_name=f'Install kolla-ansible in {venv}',
+                display_name=f'Install {pip_package} in {venv}',
                 module="pip",
-                name=[ANSIBLE_VERSION, 'influxdb', pip_package],
+                name=[ANSIBLE_PKG, 'influxdb', pip_package],
                 virtualenv=str(venv),
                 virtualenv_python=PY_VERSION)
 

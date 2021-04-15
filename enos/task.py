@@ -125,9 +125,9 @@ def up(config, config_file=None, env=None, **kwargs):
         'cwd':  os.getcwd()
     })
     kolla_ansible = KollaAnsible(
-        pip_package=env['config']['kolla-ansible'],
         config_dir=env['resultdir'],
         inventory_path=inventory,
+        pip_package=env['config'].get('kolla-ansible'),
         globals_values=env['config']['kolla'])
 
     # Do not rely on kolla-ansible for docker, we already managed it with

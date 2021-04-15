@@ -52,7 +52,7 @@ def load_config(config_file):
     config = {}
     if path.isfile(config_file):
         with open(config_file, 'r') as f:
-            config = yaml.load(f)
+            config = yaml.safe_load(f)
             logging.info("Reloaded configuration file %s", config_file)
             logging.debug("Configuration is %s", config)
     else:
