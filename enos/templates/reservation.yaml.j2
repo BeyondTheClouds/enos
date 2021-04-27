@@ -1,0 +1,66 @@
+# This is a sample configuration file for enos.  This file shows
+# available configuration options and their defaults in comments.
+---
+
+# Testbed targeted for the experiment and its resources.  Each
+# provider comes with specific options and a specific nomenclature for
+# resources.  Refer to the doc of each provider for more information.
+# See https://enos.readthedocs.io/en/v{{ enos_version }}/provider/
+#
+# Depending on the provider, this part may contain required contents
+# (marked as `<...>`).  In such a case, replace each <...> with a
+# proper value.
+#
+provider:
+  {{ provider | indent(2) }}
+resources:
+  {{ resources | indent(2) }}
+
+# Docker registry mirror (choose *one*)
+# - Deploy a local central cache to Docker Hub and use it for the time
+#   of the experiment.
+#   registry:
+#     type: internal
+#     port: 4000
+# - Use an already existing mirror to Docker Hub.
+#   registry:
+#     type: external
+#     ip: 192.168.142.253
+#     port: 5000
+# - Do nothing and fully rely on Docker Hub.
+#   registry:
+#	    type: none
+#
+# See https://enos.readthedocs.io/en/v{{ enos_version }}/customization/index.html#docker-registry-mirror-configuration
+#
+registry:
+  {{ registry | indent(2) }}
+
+# Deploy a monitoring stack made of cAdvisor, collectd, influxDB and
+# Graphana.
+# See https://enos.readthedocs.io/en/v{{ enos_version }}/analysis/
+#
+# enable_monitoring: no
+
+
+# kolla-ansible executable (could be a PyPi package, a git
+# repository, a local directory ...)
+# See https://enos.readthedocs.io/en/v{{ enos_version }}/customization/index.html#changing-kolla-version
+#
+# kolla-ansible: {{ kolla_ansible }}
+
+
+# Custom kolla-ansible parameters (as in `globals.yml`)
+# See https://enos.readthedocs.io/en/v{{ enos_version }}/customization/index.html#customize-kolla-variables
+#
+# kolla:
+#   kolla_base_distro: "centos"
+#   kolla_install_type: "source"
+#   enable_heat: yes
+
+
+# Kolla-Ansible inventory file that defines on which of the
+# `resources` nodes to deploy OpenStack services.
+# See https://enos.readthedocs.io/en/v{{ enos_version }}/customization/index.html#changing-the-topology
+#
+# inventory: inventory.sample

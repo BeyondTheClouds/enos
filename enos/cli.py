@@ -37,12 +37,15 @@ command.
 """
 
 import logging
+import textwrap
 from os import path
+from pathlib import Path
 from docopt import docopt
 import yaml
 
+import enos.tasks as tt
 import enos.task as t
-from enos.utils.constants import VERSION
+import enos.utils.constants as C
 from enos.utils.errors import EnosFilePathError
 
 logger = logging.getLogger(__name__)
@@ -191,19 +194,33 @@ def backup(**kwargs):
 
 def new(**kwargs):
     """
-    usage: enos new [-e ENV|--env=ENV] [-s|--silent|-vv]
+    usage: enos new [--provider=TESTBED] [-s|--silent|-vv]
 
-    Print reservation example, to be manually edited and customized:
-
-    enos new > reservation.yaml
+    Create a basic reservation.yaml file in the current directory.
 
     Options:
-    -h --help            Show this help message.
-    -s --silent          Quiet mode.
-    -vv                  Verbose mode.
+    --provider=TESTBED  Targeted testbed. One of g5k, vagrant:virtualbox,
+                        vagrant:libvirt, chameleonkvm, chameleonbaremetal,
+                        openstack, vmong5k, static [default: g5k].
+    -s --silent         Quiet mode.
+    -vv                 Verbose mode.
     """
     logger.debug(kwargs)
-    t.new(**kwargs)
+    provider = kwargs['--provider']
+
+    try:
+        tt.new(provider, Path('./reservation.yaml'))
+        logger.info(textwrap.fill(
+            'A `reservation.yaml` file has been placed in this directory.  '
+            f'You are now ready to deploy OpenStack on {provider} with '
+            '`enos deploy`.  Please read comments in the reservation.yaml '
+            'as well as the documentation on '
+            f'https://enos.readthedocs.io/en/v{C.VERSION}/ '
+            'for more information on using enos.'))
+    except FileExistsError:
+        logger.error(textwrap.fill(
+            'The `reservation.yaml` file already exists in this directory.  '
+            f'Remove it before running `enos new --provider={provider}`.'))
 
 
 def tc(**kwargs):
@@ -239,7 +256,7 @@ def info(**kwargs):
                              specific experiment [default: current].
 
     --out {json,pickle,yaml} Output the result in either json, pickle or
-                             yaml format.
+                             yaml format [default: json].
     """
     logger.debug(kwargs)
     t.info(**kwargs)
@@ -365,7 +382,7 @@ def pushtask(ts, f):
 
 def main():
     args = docopt(__doc__,
-                  version=VERSION,
+                  version=C.VERSION,
                   options_first=True)
 
     _configure_logging(args)

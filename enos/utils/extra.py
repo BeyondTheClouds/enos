@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 import copy
+import importlib
 import logging
 import os
 from operator import methodcaller
-from typing import Any, Callable
+from typing import Dict, Union, Any, Callable
 
+from enos.provider.provider import Provider
+import enos.utils.constants as C
 import enoslib.api as api
+from enos.utils.errors import (EnosFilePathError,
+                               EnosProviderMissingConfigurationKeys,
+                               EnosUnknownProvider)
 from enoslib.enos_inventory import EnosInventory
 from enoslib.types import Roles
 from netaddr import IPRange
-
-import enos.utils.constants as C
-from .errors import EnosFilePathError, EnosProviderMissingConfigurationKeys
 
 # These roles are mandatory for the
 # the original inventory to be valid
@@ -121,7 +124,7 @@ def pop_ip(provider_net):
     return ip
 
 
-def make_provider(provider_conf):
+def make_provider(provider_conf: Union[str, Dict[str, Any]]) -> Provider:
     """Instantiates the provider.
 
     Seeks into the configuration for the `provider` value. The value
@@ -130,22 +133,27 @@ def make_provider(provider_conf):
     and return the provider.
 
     """
-    provider_name = provider_conf['type']\
-                    if 'type' in provider_conf\
-                    else provider_conf
+    provider_name = ''
+    if isinstance(provider_conf, dict):
+        provider_name = provider_conf['type']
+    elif isinstance(provider_conf, str):
+        provider_name = provider_conf
 
     if provider_name == "vagrant":
         provider_name = "enos_vagrant"
 
-    package_name = '.'.join(['enos.provider', provider_name.lower()])
+    module_name = f'enos.provider.{provider_name.lower()}'
     class_name = provider_name.capitalize()
 
-    module = __import__(package_name, fromlist=[class_name])
-    klass = getattr(module, class_name)
+    try:
+        module = importlib.import_module(module_name)
+        klass = getattr(module, class_name)
 
-    logging.info("Loaded provider %s", module)
+        logging.info(f"Loaded provider {klass}")
 
-    return klass()
+        return klass()
+    except ModuleNotFoundError as e:
+        raise EnosUnknownProvider(provider_name) from e
 
 
 def gen_enoslib_roles(resources_or_topology):

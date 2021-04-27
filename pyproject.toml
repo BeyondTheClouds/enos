@@ -27,25 +27,23 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-enoslib = "~5.5.4"
-# enoslib = { path = '../enoslib', develop = true }
+enoslib = { version = "~5.5.4", extras = [ "chameleon" ] } 
+# enoslib = { path = '../enoslib', develop = true, extras = [ "chameleon" ]  }
 docopt = ">=0.6.2,<0.7.0"
 virtualenv = "^20.4.3"
+python-openstackclient = "^5.5.0"
+python-heatclient = "^2.3.0"
 influxdb = { version = "4.0.0", optional = true }
-python-openstackclient = { version = "^5.5.0", optional = true }
-python-heatclient = { version = "^2.3.0", optional = true }
 
 [tool.poetry.extras]
-# poetry install -E annotations -E openstack
+# poetry install -E annotations 
 annotations = ["influxdb"]
-openstack = ["python-openstackclient", "python-heatclient"]
 
 [tool.poetry.scripts]
 enos = "enos.cli:main"
 
 [tool.poetry.dev-dependencies]
 GitPython = ">=2.1.5"
-mypy = "^0.812"
 isort = "^5.7.0"
 ipdb = "^0.13.7"
 tox = "^3.23.0"

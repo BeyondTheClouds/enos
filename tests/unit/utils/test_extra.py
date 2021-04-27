@@ -1,7 +1,7 @@
 import unittest
 import enos.utils.extra as xenos
 from enos.utils.errors import (EnosProviderMissingConfigurationKeys,
-                               EnosFilePathError)
+                               EnosFilePathError, EnosUnknownProvider)
 import enos.utils.constants as C
 import copy
 import contextlib
@@ -51,7 +51,7 @@ class TestMakeProvider(unittest.TestCase):
 
     def test_make_unexist(self):
         "Tests the raise of error for unknown/unloaded provider"
-        with self.assertRaises(ImportError):
+        with self.assertRaises(EnosUnknownProvider):
             xenos.make_provider(self.__provider_env('unexist'))
 
 

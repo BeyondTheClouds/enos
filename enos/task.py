@@ -10,7 +10,7 @@ import enoslib as elib
 
 from enos.utils.constants import (SYMLINK_NAME, ANSIBLE_DIR, RSCS_DIR,
                                   NEUTRON_EXTERNAL_INTERFACE,
-                                  NETWORK_INTERFACE, TEMPLATE_DIR)
+                                  NETWORK_INTERFACE)
 from enos.utils.build import create_configuration
 from enos.utils.enostask import check_env
 from enos.services import (KollaAnsible, RallyOpenStack, Shaker)
@@ -118,7 +118,8 @@ def up(config, config_file=None, env=None, **kwargs):
     env['docker'] = docker
 
     # Install kolla-ansible and run bootstrap-servers
-    env['config']['kolla'].update({
+    kolla_globals_values = env['config'].get('kolla', {})
+    kolla_globals_values.update({
         'kolla_internal_vip_address': env['config']['vip'],
         'influx_vip': env['config']['influx_vip'],
         'resultdir': str(env['resultdir']),
@@ -128,7 +129,7 @@ def up(config, config_file=None, env=None, **kwargs):
         config_dir=env['resultdir'],
         inventory_path=inventory,
         pip_package=env['config'].get('kolla-ansible'),
-        globals_values=env['config']['kolla'])
+        globals_values=kolla_globals_values)
 
     # Do not rely on kolla-ansible for docker, we already managed it with
     # enoslib previously.
@@ -365,13 +366,6 @@ def backup(env=None, **kwargs):
     playbook_path = os.path.join(ANSIBLE_DIR, 'enos.yml')
     inventory_path = env['inventory']
     elib.run_ansible([playbook_path], inventory_path, extra_vars=options)
-
-
-def new(env=None, **kwargs):
-    logging.debug('phase[new]: args=%s' % kwargs)
-    with open(os.path.join(TEMPLATE_DIR, 'reservation.yaml.sample'),
-              mode='r') as content:
-        print(content.read())
 
 
 @elib.enostask()

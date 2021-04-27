@@ -9,8 +9,7 @@ from enoslib.infra.enos_static.configuration import Configuration
 from enos.provider.provider import Provider
 
 # - SPHINX_DEFAULT_CONFIG
-DEFAULT_CONFIG = {
-}
+DEFAULT_CONFIG = {'type': 'static'}
 # + SPHINX_DEFAULT_CONFIG
 
 LOGGER = logging.getLogger(__name__)

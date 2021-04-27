@@ -16,7 +16,8 @@ LOGGER = logging.getLogger(__name__)
 
 # - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {
-    'job_name': 'Enos',              # Job name in oarstat/gant
+    'type': 'g5k',                   # Name of the provider
+    'job_name': 'enos',              # Job name in oarstat/gant
     'walltime': '02:00:00',          # Reservation duration time
     'env_name': 'debian10-x64-min',  # Environment to deploy
     'reservation': '',               # Reservation date

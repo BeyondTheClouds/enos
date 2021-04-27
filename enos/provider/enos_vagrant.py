@@ -10,6 +10,7 @@ from enoslib.service.netem.netem import expand_groups
 
 # - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {
+    'type': 'vagrant',
     'backend': 'virtualbox',
     'box': 'generic/debian10',
     'user': 'root',
