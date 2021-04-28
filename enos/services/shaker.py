@@ -42,7 +42,7 @@ class Shaker():
 
         with elib.play_on(roles={'all': agents},) as yaml:
             yaml.docker_image(
-                **title('pulling docker image {IMG}'),
+                **title(f'pulling docker image {IMG}'),
                 name=IMG, source='pull', state='present')
 
     def deploy(self, openstack_auth: Dict[str, str], reset=False):

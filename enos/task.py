@@ -118,13 +118,13 @@ def up(config, config_file=None, env=None, **kwargs):
     env['docker'] = docker
 
     # Install kolla-ansible and run bootstrap-servers
-    kolla_globals_values = env['config'].get('kolla', {})
-    kolla_globals_values.update({
+    kolla_globals_values = {
         'kolla_internal_vip_address': env['config']['vip'],
         'influx_vip': env['config']['influx_vip'],
         'resultdir': str(env['resultdir']),
         'cwd':  os.getcwd()
-    })
+    }
+    kolla_globals_values.update(env['config'].get('kolla', {}))
     kolla_ansible = KollaAnsible(
         config_dir=env['resultdir'],
         inventory_path=inventory,
@@ -172,7 +172,7 @@ def up(config, config_file=None, env=None, **kwargs):
         # https://bugs.launchpad.net/kolla-ansible/+bug/1862739
         for banned_ip in ['127.0.1.1', '127.0.2.1']:
             yml.lineinfile(
-                display_name='Ensure hostname does not point to {banned_ip}',
+                display_name=f'Ensure hostname does not point to {banned_ip}',
                 dest='/etc/hosts',
                 regexp='^' + banned_ip + '\\b.*\\s{{ ansible_hostname }}\\b.*',
                 state='absent')
@@ -417,11 +417,11 @@ def info(env=None, **kwargs):
             return o.__dict__
 
     if not kwargs['--out'] or kwargs['--out'] == 'json':
-        print(json.dumps(env, default=json_encoder, indent=True))
+        print(json.dumps(env.data, default=json_encoder, indent=True))
     elif kwargs['--out'] == 'pickle':
-        print(pickle.dumps(env))
+        print(pickle.dumps(env.data))
     elif kwargs['--out'] == 'yaml':
-        print(yaml.dump(env))
+        print(yaml.dump(env.data))
     else:
         print("--out doesn't suppport %s output format" % kwargs['--out'])
         print(info.__doc__)
