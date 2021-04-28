@@ -28,7 +28,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-enoslib = { version = "~5.5.4", extras = [ "chameleon" ] } 
+enoslib = { version = "~5.6", extras = [ "chameleon" ] } 
 # enoslib = { path = '../enoslib', develop = true, extras = [ "chameleon" ]  }
 docopt = ">=0.6.2,<0.7.0"
 virtualenv = "^20.4.3"

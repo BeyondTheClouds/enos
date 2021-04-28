@@ -417,11 +417,11 @@ def info(env=None, **kwargs):
             return o.__dict__
 
     if not kwargs['--out'] or kwargs['--out'] == 'json':
-        print(json.dumps(env, default=json_encoder, indent=True))
+        print(json.dumps(env.data, default=json_encoder, indent=True))
     elif kwargs['--out'] == 'pickle':
-        print(pickle.dumps(env))
+        print(pickle.dumps(env.data))
     elif kwargs['--out'] == 'yaml':
-        print(yaml.dump(env))
+        print(yaml.dump(env.data))
     else:
         print("--out doesn't suppport %s output format" % kwargs['--out'])
         print(info.__doc__)
