@@ -1,3 +1,7 @@
+import textwrap
+import enos.utils.constants as C
+
+
 class EnosError(Exception):
     pass
 
@@ -18,10 +22,20 @@ class EnosFilePathError(EnosError):
         self.filepath = filepath
 
 
+class EnosUnknownProvider(EnosError):
+    def __init__(self, provider_name):
+        super(self.__class__, self).__init__(textwrap.dedent(f''' \
+          The provider '{provider_name}' could not be found.
+
+          Please refer to https://enos.readthedocs.io/en/v{C.VERSION}/provider/
+          to use a provider that exists.
+        '''))
+        self.provider_name = provider_name
+
+
 class EnosProviderMissingConfigurationKeys(EnosError):
     def __init__(self, missing_overridden):
         super(EnosProviderMissingConfigurationKeys, self).__init__(
-            "Keys %s have to be overridden in the provider "
-            "section of the reservation file."
-            % missing_overridden)
+            f"Keys {missing_overridden} have to be overridden in the provider "
+            "section of the reservation file.")
         self.missing_ovorridden = missing_overridden

@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 import copy
-import enoslib.api as api
-from .errors import (EnosProviderMissingConfigurationKeys,
-                     EnosFilePathError)
-from .constants import (ENOS_PATH, ANSIBLE_DIR, VENV_KOLLA,
-                        NEUTRON_EXTERNAL_INTERFACE,
-                        FAKE_NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE,
-                        API_INTERFACE, OPENSTACK_RELEASE)
-from netaddr import IPRange
-
+import importlib
 import logging
 import os
-from subprocess import check_call
-import yaml
+from operator import methodcaller
+from typing import Dict, Union, Any, Callable
+
+from enos.provider.provider import Provider
+import enos.utils.constants as C
+import enoslib.api as api
+from enos.utils.errors import (EnosFilePathError,
+                               EnosProviderMissingConfigurationKeys,
+                               EnosUnknownProvider)
+from enoslib.enos_inventory import EnosInventory
+from enoslib.types import Roles
+from netaddr import IPRange
 
 # These roles are mandatory for the
 # the original inventory to be valid
@@ -39,12 +41,12 @@ def generate_inventory(roles, networks, base_inventory, dest):
 
     fake_interfaces = []
     fake_networks = []
-    provider_net = lookup_network(networks, [NEUTRON_EXTERNAL_INTERFACE])
+    provider_net = lookup_network(networks, [C.NEUTRON_EXTERNAL_INTERFACE])
     if not provider_net:
-        logging.error("The %s network is missing" % NEUTRON_EXTERNAL_INTERFACE)
+        logging.error(f"The {C.NEUTRON_EXTERNAL_INTERFACE} network is missing")
         logging.error("EnOS will try to fix that ....")
-        fake_interfaces = [FAKE_NEUTRON_EXTERNAL_INTERFACE]
-        fake_networks = [NEUTRON_EXTERNAL_INTERFACE]
+        fake_interfaces = [C.FAKE_NEUTRON_EXTERNAL_INTERFACE]
+        fake_networks = [C.NEUTRON_EXTERNAL_INTERFACE]
 
     api.generate_inventory(
         roles,
@@ -59,7 +61,7 @@ def generate_inventory(roles, networks, base_inventory, dest):
         f.write("\n")
         # generate mandatory groups that are empty
         mandatory = [group for group in KOLLA_MANDATORY_GROUPS
-                       if group not in roles.keys()]
+                     if group not in roles.keys()]
         for group in mandatory:
             f.write("[%s]\n" % group)
 
@@ -68,137 +70,6 @@ def generate_inventory(roles, networks, base_inventory, dest):
                 f.write(line)
 
     logging.info("Inventory file written to " + dest)
-
-
-def get_kolla_required_values(env):
-    """Returns a dictionary with all values required by kolla-ansible
-based on the Enos environment.
-
-    """
-    values = {
-        'kolla_internal_vip_address': env['config']['vip'],
-        'influx_vip':                 env['config']['influx_vip'],
-        'kolla_ref':                  env['config']['kolla_ref'],
-        'resultdir':                  str(env['resultdir'])
-    }
-
-    # NOTE(msimonin): This seems unused by kola-ansible.  In any case we don't
-    # rely on kolla-ansible to provide the monitoring stack
-    #
-    # Manage monitoring stack
-    # if 'enable_monitoring' in env['config']:
-    #    values['enable_monitoring'] = env['config']['enable_monitoring']
-
-    # NOTE(msimonin): I think there was a confusion some time ago. What EnOS
-    # provide is a transparent registry mirror not a registry  in itself. User
-    # that want to use a registry need to specify manually in the kolla section
-    # the corresponding values.  For this reason I'm commenting the following
-    #
-    # Manage docker registry
-    # registry_type = env['config']['registry']['type']
-    # if registry_type == 'internal':
-    #    values['docker_registry'] = \
-    #        "%s:4000" % env['config']['registry_vip']
-    # elif registry_type == 'external':
-    #    values['docker_registry'] = \
-    #        "%s:%s" % (env['config']['registry']['ip'],
-    #                   env['config']['registry']['port'])
-
-    values['openstack_release'] = OPENSTACK_RELEASE
-
-    return values
-
-
-def mk_kolla_values(src_path, required_values, user_values):
-    """Builds a dictionary with all kolla values.
-
-    :param src_path: Path to kolla-ansible sources.
-
-    :param required_values: Values required by kolla-ansible.
-
-    :param user_values: User specic kolla values as defined into
-        the reservation file.
-
-    return values related to kolla-ansible
-    """
-    kolla_values = {}
-
-    # Get kolla-ansible `all.yml` values
-    with open(os.path.join(
-            src_path, 'ansible', 'group_vars', 'all.yml'), 'r') as f:
-        kolla_values.update(yaml.load(f))
-
-    # Override with required values
-    kolla_values.update(required_values)
-
-    # Override with user specific values
-    kolla_values.update(user_values)
-
-    return kolla_values
-
-
-def mk_enos_values(env):
-    "Builds a dictionary with all enos values based on the environment."
-    enos_values = {}
-
-    # Get all kolla values
-    enos_values.update(mk_kolla_values(
-        os.path.join(str(env['resultdir']), 'kolla'),
-        get_kolla_required_values(env),
-        env['config']['kolla']))
-
-    # Update with user specific values (except already got kolla)
-    enos_values.update(
-        {k: v for k, v in env['config'].items() if k != "kolla"})
-
-    # Add the Current Working Directory (cwd)
-    #enos_values.update(cwd=env['cwd'])
-    enos_values.update(cwd=os.getcwd())
-
-    # Defer the following variables to the environment
-    # These two interfaces are set in the host vars
-    # We don't need them here since they will overwrite those in the inventory
-    enos_values.pop(NEUTRON_EXTERNAL_INTERFACE, None)
-    enos_values.pop(NETWORK_INTERFACE, None)
-
-    return enos_values
-
-
-# TODO(rcherrueau): Remove this helper function and move code into
-# enos.install_os when the following FIXME will be addressed.
-def bootstrap_kolla(env):
-    """Setups all necessities for calling kolla-ansible.
-
-    - On the local host
-      + Patches kolla+ansible sources (if any).
-      + Builds globals.yml into result dir.
-      + Builds password.yml into result dir.
-      + Builds admin+openrc into result dir.
-    - On all the hosts
-      + Remove the ip addresses on the
-        neutron_external_interface (set in the
-        inventory hostvars)
-
-    """
-    # Write the globals.yml file in the result dir.
-    #
-    # FIXME: Find a neat way to put this into the next bootsrap_kolla
-    # playbook. Then, remove this util function and call directly the
-    # playbook from `enos os`.
-    globals_path = os.path.join(str(env['resultdir']), 'globals.yml')
-    globals_values = get_kolla_required_values(env)
-    globals_values.update(env['config']['kolla'])
-    # NOTE(msimonin): we don't store the cwd in the env byt default
-    globals_values.update(cwd=os.getcwd())
-    with open(globals_path, 'w') as f:
-        yaml.dump(globals_values, f, default_flow_style=False)
-
-    # Patch kolla-ansible sources + Write admin-openrc and
-    # password.yml in the result dir
-    enos_values = mk_enos_values(env)
-    playbook = os.path.join(ANSIBLE_DIR, 'bootstrap_kolla.yml')
-
-    api.run_ansible([playbook], env['inventory'], extra_vars=enos_values)
 
 
 def lookup_network(networks, roles):
@@ -217,12 +88,13 @@ def get_vip_pool(networks):
     In kolla-ansible this is the network with the api_interface role.
     In kolla-ansible api_interface defaults to network_interface.
     """
-    provider_net = lookup_network(networks, [API_INTERFACE, NETWORK_INTERFACE])
+    provider_net = lookup_network(
+        networks, [C.API_INTERFACE, C.NETWORK_INTERFACE])
     if provider_net:
         return provider_net
 
     msg = "You must declare %s" % " or ".join(
-        [API_INTERFACE, NETWORK_INTERFACE])
+        [C.API_INTERFACE, C.NETWORK_INTERFACE])
     raise Exception(msg)
 
 
@@ -252,7 +124,7 @@ def pop_ip(provider_net):
     return ip
 
 
-def make_provider(provider_conf):
+def make_provider(provider_conf: Union[str, Dict[str, Any]]) -> Provider:
     """Instantiates the provider.
 
     Seeks into the configuration for the `provider` value. The value
@@ -261,22 +133,27 @@ def make_provider(provider_conf):
     and return the provider.
 
     """
-    provider_name = provider_conf['type']\
-                    if 'type' in provider_conf\
-                    else provider_conf
+    provider_name = ''
+    if isinstance(provider_conf, dict):
+        provider_name = provider_conf['type']
+    elif isinstance(provider_conf, str):
+        provider_name = provider_conf
 
     if provider_name == "vagrant":
         provider_name = "enos_vagrant"
 
-    package_name = '.'.join(['enos.provider', provider_name.lower()])
+    module_name = f'enos.provider.{provider_name.lower()}'
     class_name = provider_name.capitalize()
 
-    module = __import__(package_name, fromlist=[class_name])
-    klass = getattr(module, class_name)
+    try:
+        module = importlib.import_module(module_name)
+        klass = getattr(module, class_name)
 
-    logging.info("Loaded provider %s", module)
+        logging.info(f"Loaded provider {klass}")
 
-    return klass()
+        return klass()
+    except ModuleNotFoundError as e:
+        raise EnosUnknownProvider(provider_name) from e
 
 
 def gen_enoslib_roles(resources_or_topology):
@@ -320,8 +197,7 @@ def load_provider_config(provider_config, default_provider_config=None):
 
     # Throw error for missing overridden values of required keys
     missing_overridden = [k for k, v in default_provider_config.items()
-                          if v is None and
-                          k not in provider_config.keys()]
+                          if v is None and k not in provider_config.keys()]
     if missing_overridden:
         raise EnosProviderMissingConfigurationKeys(missing_overridden)
 
@@ -339,7 +215,7 @@ def seekpath(path):
     Seeking rules are:
     - If `path` is absolute then return it
     - Otherwise, look for `path` in the current working directory
-    - Otherwise, look for `path` in the source directory
+    - Otherwise, look for `path` in the resources directory
     - Otherwise, raise an `EnosFilePathError` exception
 
     """
@@ -349,40 +225,47 @@ def seekpath(path):
         abspath = path
     elif os.path.exists(os.path.abspath(path)):
         abspath = os.path.abspath(path)
-    elif os.path.exists(os.path.join(ENOS_PATH, path)):
-        abspath = os.path.join(ENOS_PATH, path)
+    elif os.path.exists(os.path.join(C.RSCS_DIR, path)):
+        abspath = os.path.join(C.RSCS_DIR, path)
     else:
         raise EnosFilePathError(
             path,
-            "There is no path to %s, neither in current "
-            "directory (%s) nor enos sources (%s)."
-            % (path, os.getcwd(), ENOS_PATH))
+            f"There is no path to {path}, neither in current "
+            f"directory ({os.getcwd()}) nor in enos sources ({C.RSCS_DIR}).")
 
     logging.debug("Seeking %s path resolves to %s", path, abspath)
 
     return abspath
 
 
-def check_call_in_venv(venv_dir, cmd):
-    """Calls command in kolla virtualenv."""
-    def check_venv(venv_path):
+def build_rsc_with_inventory(rsc: Roles, inventory_path: str) -> Roles:
+    '''Return a new `rsc` with roles from the inventory.
 
-        if not os.path.exists(venv_path):
-            check_call("virtualenv -p python2 %s" % venv_path, shell=True)
-            check_call_in_venv(venv_dir, "pip install --upgrade pip")
+    In enos, we have a strong binding between enoslib roles and kolla-ansible
+    groups.  We need for instance to know hosts of the 'enos/registry' group.
+    This method takes an enoslib Roles object and an inventory_path and returns
+    a new Roles object that contains all groups (as in the inventory file) with
+    their hosts (as in enoslib).
 
-    cmd_in_venv = []
-    cmd_in_venv.append(". %s/bin/activate " % venv_dir)
-    cmd_in_venv.append('&&')
-    if isinstance(cmd, list):
-        cmd_in_venv.extend(cmd)
+    '''
+    inv = EnosInventory(sources=inventory_path)
+    rsc_by_name = {h.alias: h for h in api.get_hosts(rsc, 'all')}
+
+    # Build a new rsc with all groups in it
+    new_rsc = rsc.copy()
+    for grp in inv.list_groups():
+        hostnames_in_grp = map(methodcaller('get_name'), inv.get_hosts(grp))
+        rsc_in_grp = [rsc_by_name[h_name] for h_name in hostnames_in_grp
+                      if h_name in rsc_by_name]
+        new_rsc.update({grp: rsc_in_grp})
+
+    return new_rsc
+
+
+def setdefault_lazy(env, key: str, thunk_value: Callable[[], Any]):
+    if key in env:
+        return env[key]
     else:
-        cmd_in_venv.append(cmd)
-    check_venv(venv_dir)
-    _cmd = ' '.join(cmd_in_venv)
-    logging.debug(_cmd)
-    return check_call(_cmd, shell=True)
-
-
-def in_kolla(cmd):
-    check_call_in_venv(VENV_KOLLA, cmd)
+        value = thunk_value()
+        env[key] = value
+        return value

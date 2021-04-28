@@ -11,17 +11,15 @@ import os
 # PATH constants
 ENOS_PATH = os.path.abspath(
   os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+RSCS_DIR = os.path.join(ENOS_PATH, 'resources')
 SYMLINK_NAME = os.path.abspath(os.path.join(os.getcwd(), 'current'))
 TEMPLATE_DIR = os.path.join(ENOS_PATH, 'templates')
-INVENTORY_DIR = os.path.join(ENOS_PATH, 'inventories')
 ANSIBLE_DIR = os.path.join(ENOS_PATH, 'ansible')
-VENV_KOLLA = 'venv_kolla'
 
 # KOLLA_NETWORKS (some of them)
 #
-# Référence: https://docs.openstack.org/kolla-ansible
-# production-architecture-guide.html#network-configuration
-#
+# See,
+# https://docs.openstack.org/kolla-ansible/ussuri/admin/production-architecture-guide.html#network-configuration
 # Default interface used by kolla to handle all the openstack traffic. It will
 # be provisionned automatically on the first NIC available. Finer grained
 # configuration using other network roles is possible using the enoslib
@@ -45,6 +43,4 @@ NEUTRON_EXTERNAL_INTERFACE = 'neutron_external_interface'
 FAKE_NEUTRON_EXTERNAL_INTERFACE = 'nei'
 
 # ENOS Setup
-VERSION = '6.0.0'
-
-OPENSTACK_RELEASE = 'stein'
+VERSION = '7.0.0'

@@ -1,7 +1,7 @@
 from enos.provider.provider import Provider
 from enos.utils.constants import NETWORK_INTERFACE
 from enos.utils.extra import gen_enoslib_roles
-from enoslib.api import expand_groups
+from enoslib.service.netem.netem import expand_groups
 from enoslib.infra.enos_openstack.provider import Openstack as Enos_Openstack
 from enoslib.infra.enos_openstack.configuration import Configuration
 

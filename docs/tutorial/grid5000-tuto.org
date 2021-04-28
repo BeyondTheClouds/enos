@@ -1,8 +1,8 @@
 # -*- org-rst-code-block: code-block; -*-
 #+TITLE: EnOS Tutorial on top of Grid'5000
-#+AUTHOR: Didier Iscovery
+#+AUTHOR: Ronan-Alexandre Cherrueau, Didier Iscovery
 #+EMAIL: {firstname.lastname}@inria.fr
-#+DATE: <2018-08-17 Fri>
+#+DATE: [2021-04-12 Mon]
 
 #+LANGUAGE: en
 #+OPTIONS: ':t author:nil email:nil date:nil toc:nil
@@ -59,16 +59,13 @@ set +o errexit
 #+END_SRC
 
 ** Setup of Functional Test
-   :PROPERTIES:
-   :header-args: :tangle ../../tests/functionnal/tests/tutorial/enos-node.sh :noweb yes
-   :END:
-
 Every source blocks of this section are going be tangled at the top of
 the functional test file.
 
 Set the Shebang, tells to exit immediately if a command exits with a
 non-zero status, and tells to print commands and their arguments as
 they are executed.
+#+HEADER: :tangle ../../tests/functionnal/tests/tutorial/enos-node.sh :noweb yes
 #+BEGIN_SRC sh :shebang #!/usr/bin/env bash
 <<lst:-errexit>>
 set -o xtrace
@@ -81,7 +78,7 @@ To follow the lab you’ll need :
 - An SSH client ({{{eg}}} OpenSSH on Linux/Mac, Putty on Windows)
   + Follow the [[https://www.grid5000.fr/mediawiki/index.php/SSH#Setting_up_a_user_config_file][G5K’s recommendations]] and edit your =~/.ssh/config=
     file to configure SSH for Grid’5000.
-  + Be sure your configure works by typing =ssh rennes.g5k= for
+  + Be sure your configuration works by typing =ssh rennes.g5k= for
     instance.
 
 * Presentation
@@ -213,11 +210,11 @@ will host the ~nova-compute~ and ~nova-libvirt~ containers to provide
 VM hypervisor mechanisms.
 
 #+BEGIN_note
-Note that to deploy on G5K, we need a dedicated node to run EnOS
-because it is discouraged to run experiments on the frontend. This
-restriction is meant to avoid disturbing other users that are logged,
-since the frontend node has limited resources. On a regular
-deployment, EnOS could be run directly from your laptop.
+To run EnOS and deploy OpenStack on G5K we need a dedicated because it
+is discouraged to run experiments from the frontend. This restriction
+is meant to avoid disturbing other users that are logged, since the
+frontend node has limited resources.  EnOS could also be run directly
+from your laptop.
 #+END_note
 
 * Set the /enos/ node and install EnOS
@@ -257,8 +254,8 @@ prompt).
 
 #+BEGIN_note
 Note that we created a ~tmux~ session in order to be resilient to any
-network failure during your ssh session. Whenever you want to restore
-this session, you can connect to the frontend and attach to your tmux
+network failure during the ssh session.  Whenever we want to restore
+this session, we can connect to the frontend and attach to our tmux
 session, as follows:
 
 #+BEGIN_SRC sh
@@ -278,7 +275,7 @@ mkdir -p ~/enos-myxp
 cd ~/enos-myxp
 #+END_SRC
 
-Then, install EnOS in your working directory (python3.5+ is required):
+Then, install EnOS in your working directory (python3.7+ is required):
 
 #+BEGIN_SRC sh :tangle ../../tests/functionnal/tests/tutorial/enos-node.sh
 # enos:~/enos-myxp$
@@ -286,14 +283,14 @@ virtualenv --python=python3 venv
 # (venv) enos:~/enos-myxp$
 . venv/bin/activate
 # (venv) enos:~/enos-myxp$
-pip install "enos[openstack]==6.0.0"
+pip install "enos[openstack]~=7.0.0"
 #+END_SRC
 
 #+BEGIN_note
-Note that EnOS is a Python project. We installed it inside a virtual
+EnOS is a Python project. We installed it inside a virtual
 environment, with ~virtualenv~, to avoid any conflict regarding the
 version of its dependencies. Furthermore, it does not install anything
-outside the virtual environment which keeps your OS clean. Remember
+outside the virtual environment which keeps the OS clean. Remember
 that you have to be in the virtual environment to use EnOS. It means
 that if you open a new terminal, you need to re-enter the venv. For
 instance, now that EnOS is installed, you can come back as follow:
@@ -357,12 +354,12 @@ testbed and run performance analysis.
 The description of the configuration is done in a ~reservation.yaml~
 file. You may generate a new one with ~enos new > reservation.yaml~.
 The configuration file is pretty fat, with a configuration sample for
-all testbed supported by EnOS (G5k, Chameleon, Vagrant, ...).
+all supported testbed (G5k, Chameleon, Vagrant, ...).
 
-Use your favorite text editor to open the ~reservation.yaml~ file, for
-instance: ~vim reservation.yaml~, and edit it to fit your situation --
-{{{ie}}} something like listing [[lst:reservation.yaml]]. Three parts of
-this configuration file are interested for a simple use of EnOS:
+Use your favorite text editor to open the ~reservation.yaml~ file and
+edit it to fit your situation -- {{{ie}}} something like listing
+[[lst:reservation.yaml]]. Three parts of this configuration file are
+interested for a simple use of EnOS:
 - ~provider~ section (l. [[(provider-sec)]]): Defines on which testbed to
   deploy OpenStack ({{{ie}}} G5k, Chameleon, Vagrant, ...).
 - ~resources~ section (l. [[(rsc-sec)]]): Defines the number and role of
@@ -371,36 +368,16 @@ this configuration file are interested for a simple use of EnOS:
   node).
 - ~kolla~ section (l. [[(kolla-sec)]]): Defines the OpenStack
   configuration, for instance:
-  + Which OpenStack version to deploy ({{{eg}}} ~kolla-ref:
-    "stable/stein"~).
+  + Which OpenStack version to deploy ({{{eg}}} ~kolla-ansible:
+    kolla-ansible~=10.0~ -- OpenStack Ussuri).
   + Which OpenStack project to enable/disable ({{{eg}}} ~enable_heat:
-    "no"~).
+    yes~).
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Functional Test Specific Code
-# The Next listing adds the use of CEPH for the docker registry. This
-# is specific to the functional tests as it speed up the deployment
-# (or, at least, populate and test the CEPH backend). This extra
-# configuration doesn't appear in the TP because it adds information
-# that doesn't serve the pedagogical discourse.
-
-#+NAME: lst:include-ceph
-#+BEGIN_SRC yaml :exports none
-ceph: true
-ceph_keyring: /home/discovery/.ceph/ceph.client.discovery.keyring
-ceph_id: discovery
-ceph_rbd: discovery_kolla_registry/datas
-ceph_mon_host:
-  - ceph0.rennes.grid5000.fr
-  - ceph1.rennes.grid5000.fr
-  - ceph2.rennes.grid5000.fr
-#+END_SRC
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #+CAPTION: Sample of ~reservation.yaml~ that books on G5k during
 #+CAPTION: 4 hours, 3 machines on the ~paravance~ cluster: a
 #+CAPTION: ~control~, a ~network~ and a ~compute~ node on which
-#+CAPTION: will be deployed the requested OpenStack stable/stein
-#+CAPTION: services.
+#+CAPTION: will be deployed the requested OpenStack Ussuri services.
 #+NAME: lst:reservation.yaml
 #+BEGIN_SRC yaml -r -n :noweb strip-export :tangle ../../tests/functionnal/tests/tutorial/reservation.yaml
 ---
@@ -421,14 +398,15 @@ resources:                    (ref:rsc-sec)
 # ############################################### #
 # Inventory to use                                #
 # ############################################### #
-inventory: inventories/inventory.sample
+inventory: resources/inventory.sample
 
 # ############################################### #
 # docker registry parameters
 # ############################################### #
 registry:
-  type: internal
-  <<lst:include-ceph>>
+   type: external
+   ip: docker-cache.grid5000.fr
+   port: 80
 
 # ############################################### #
 # Enos Customizations                             #
@@ -438,14 +416,13 @@ enable_monitoring: yes
 # ############################################### #
 # Kolla parameters                                #
 # ############################################### #
-kolla_repo: "https://git.openstack.org/openstack/kolla-ansible" (ref:kolla-sec)
-kolla_ref: "stable/stein"
+kolla-ansible: kolla-ansible~=10.0 (ref:kolla-sec)
 
 # Vars : kolla_repo/ansible/group_vars/all.yml
 kolla:
   kolla_base_distro: "centos"
   kolla_install_type: "source"
-  enable_heat: "yes"
+  enable_heat: yes
 #+END_SRC
 
 The ~provider~ section tells on which testbed to deploy OpenStack plus
@@ -496,8 +473,7 @@ enos info
 
 In particular, you should see the IP address of the deployed nodes.
 
-While EnOS deploys OpenStack (it takes ~20 to 45 minutes -- there are
-way to speed up your deployment[fn:enos-internal-registry]), you can
+While EnOS deploys OpenStack (it takes ~20 to 45 minutes), you can
 observe EnOS running containers on the control node. For that, you can
 access to the control node by typing:
 
@@ -513,13 +489,13 @@ exit
 #+END_SRC
 
 #+BEGIN_note
-Note that at the end of your session, you can release your reservation
-by typing:
+At the end of your session, you can release your reservation by typing
+the following command.  This will destroy all your deployment and
+delete your reservation.
 #+BEGIN_SRC sh
 # (venv) enos:~/enos-myxp$
 enos destroy --hard
 #+END_SRC
-It will destroy all your deployment and delete your reservation.
 #+END_note
 
 * Play with OpenStack
@@ -1212,14 +1188,15 @@ provider:
 # ############################################### #
 # Inventory to use                                #
 # ############################################### #
-inventory: inventories/inventory.sample
+inventory: resources/inventory.sample
 
 # ############################################### #
 # docker registry parameters
 # ############################################### #
 registry:
-  type: internal
-  <<lst:include-ceph>>
+  type: external
+  ip: docker-cache.grid5000.fr
+  port: 80
 
 # ############################################### #
 # Enos Customizations                             #
@@ -1229,14 +1206,13 @@ enable_monitoring: yes
 # ############################################### #
 # Kolla parameters                                #
 # ############################################### #
-kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
-kolla_ref: "stable/stein"
+kolla-ansible: kolla-ansible~=10.0
 
 # Vars : kolla_repo/ansible/group_vars/all.yml
 kolla:
   kolla_base_distro: "centos"
   kolla_install_type: "source"
-  enable_heat: "yes"
+  enable_heat: yes
 #+END_SRC
 
 ** How to export this tutorial                                     :noexport:

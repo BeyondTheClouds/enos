@@ -54,7 +54,7 @@ To follow the lab you’ll need :
   - Follow the `G5K’s recommendations <https://www.grid5000.fr/mediawiki/index.php/SSH#Setting_up_a_user_config_file>`_ and edit your ``~/.ssh/config``
     file to configure SSH for Grid’5000.
 
-  - Be sure your configure works by typing ``ssh rennes.g5k`` for
+  - Be sure your configuration works by typing ``ssh rennes.g5k`` for
     instance.
 
 2 Presentation
@@ -83,14 +83,14 @@ infrastructure management. Among the various projects (30+), here is a
 selection corresponding to the bare necessities to operate
 infrastructure:
 
-Nova    
+Nova
     the compute resource manager (*i.e.*,
     virtual/bare-metal machines and containers)
 
-Glance  
+Glance
     the image store
 
-Neutron 
+Neutron
     the network manager for compute resources
     interconnection
 
@@ -118,13 +118,13 @@ interfaces are configured by neutron, supposing keystone authorized
 the operation. Such cooperation is possible through three
 communication channels:
 
-REST APIs               
+REST APIs
     used for inter-project communications
 
 Message queue (RabbitMQ)
     used for intra-project communications
 
-Database (MariaDB)      
+Database (MariaDB)
     used to store project states
 
 From the user viewpoint, OpenStack can be operated by three ways:
@@ -222,11 +222,11 @@ VM hypervisor mechanisms.
 
 .. note::
 
-    Note that to deploy on G5K, we need a dedicated node to run EnOS
-    because it is discouraged to run experiments on the frontend. This
-    restriction is meant to avoid disturbing other users that are logged,
-    since the frontend node has limited resources. On a regular
-    deployment, EnOS could be run directly from your laptop.
+    To run EnOS and deploy OpenStack on G5K we need a dedicated because it
+    is discouraged to run experiments from the frontend. This restriction
+    is meant to avoid disturbing other users that are logged, since the
+    frontend node has limited resources.  EnOS could also be run directly
+    from your laptop.
 
 3 Set the *enos* node and install EnOS
 --------------------------------------
@@ -268,8 +268,8 @@ prompt).
 .. note::
 
     Note that we created a ``tmux`` session in order to be resilient to any
-    network failure during your ssh session. Whenever you want to restore
-    this session, you can connect to the frontend and attach to your tmux
+    network failure during the ssh session.  Whenever we want to restore
+    this session, we can connect to the frontend and attach to our tmux
     session, as follows:
 
     .. code-block:: sh
@@ -289,7 +289,7 @@ experiments:
     # enos:~$
     cd ~/enos-myxp
 
-Then, install EnOS in your working directory (python3.5+ is required):
+Then, install EnOS in your working directory (python3.7+ is required):
 
 .. code-block:: sh
 
@@ -298,14 +298,14 @@ Then, install EnOS in your working directory (python3.5+ is required):
     # (venv) enos:~/enos-myxp$
     . venv/bin/activate
     # (venv) enos:~/enos-myxp$
-    pip install "enos[openstack]==6.0.0"
+    pip install "enos[openstack]~=7.0.0"
 
 .. note::
 
-    Note that EnOS is a Python project. We installed it inside a virtual
+    EnOS is a Python project. We installed it inside a virtual
     environment, with ``virtualenv``, to avoid any conflict regarding the
     version of its dependencies. Furthermore, it does not install anything
-    outside the virtual environment which keeps your OS clean. Remember
+    outside the virtual environment which keeps the OS clean. Remember
     that you have to be in the virtual environment to use EnOS. It means
     that if you open a new terminal, you need to re-enter the venv. For
     instance, now that EnOS is installed, you can come back as follow:
@@ -372,12 +372,12 @@ testbed and run performance analysis.
 The description of the configuration is done in a ``reservation.yaml``
 file. You may generate a new one with ``enos new > reservation.yaml``.
 The configuration file is pretty fat, with a configuration sample for
-all testbed supported by EnOS (G5k, Chameleon, Vagrant, ...).
+all supported testbed (G5k, Chameleon, Vagrant, ...).
 
-Use your favorite text editor to open the ``reservation.yaml`` file, for
-instance: ``vim reservation.yaml``, and edit it to fit your situation --
-*i.e.*, something like listing `lst:reservation.yaml`_. Three parts of
-this configuration file are interested for a simple use of EnOS:
+Use your favorite text editor to open the ``reservation.yaml`` file and
+edit it to fit your situation -- *i.e.*, something like listing
+`lst:reservation.yaml`_. Three parts of this configuration file are
+interested for a simple use of EnOS:
 
 - ``provider`` section (l. 5): Defines on which testbed to
   deploy OpenStack (*i.e.*, G5k, Chameleon, Vagrant, ...).
@@ -387,12 +387,13 @@ this configuration file are interested for a simple use of EnOS:
   ``paravance`` with 1 ``control`` node, 1 ``network`` node and 1 ``compute``
   node).
 
-- ``kolla`` section (l. 36): Defines the OpenStack
+- ``kolla`` section (l. 37): Defines the OpenStack
   configuration, for instance:
 
-  - Which OpenStack version to deploy (*e.g.*, ``kolla-ref: "stable/stein"``).
+  - Which OpenStack version to deploy (*e.g.*, ``kolla-ansible: kolla-ansible~=10.0`` -- OpenStack Ussuri).
 
-  - Which OpenStack project to enable/disable (*e.g.*, ``enable_heat: "no"``).
+  - Which OpenStack project to enable/disable (*e.g.*, ``enable_heat: yes``).
+
 
 .. code-block:: yaml
     :lineno-start: 1
@@ -402,12 +403,12 @@ this configuration file are interested for a simple use of EnOS:
     # ############################################### #
     # Grid'5000 reservation parameters                #
     # ############################################### #
-    provider:                     
+    provider:
       type: g5k
       job_name: 'enos'
       walltime: '04:00:00'
 
-    resources:                    
+    resources:
       paravance:
         compute: 1
         network: 1
@@ -416,14 +417,15 @@ this configuration file are interested for a simple use of EnOS:
     # ############################################### #
     # Inventory to use                                #
     # ############################################### #
-    inventory: inventories/inventory.sample
+    inventory: resources/inventory.sample
 
     # ############################################### #
     # docker registry parameters
     # ############################################### #
     registry:
-      type: internal
-
+       type: external
+       ip: docker-cache.grid5000.fr
+       port: 80
 
     # ############################################### #
     # Enos Customizations                             #
@@ -433,14 +435,13 @@ this configuration file are interested for a simple use of EnOS:
     # ############################################### #
     # Kolla parameters                                #
     # ############################################### #
-    kolla_repo: "https://git.openstack.org/openstack/kolla-ansible" 
-    kolla_ref: "stable/stein"
+    kolla-ansible: kolla-ansible~=10.0
 
     # Vars : kolla_repo/ansible/group_vars/all.yml
     kolla:
       kolla_base_distro: "centos"
       kolla_install_type: "source"
-      enable_heat: "yes"
+      enable_heat: yes
 
 The ``provider`` section tells on which testbed to deploy OpenStack plus
 its configuration. The configuration may vary from one testbed to
@@ -493,8 +494,7 @@ your deployment by typing:
 
 In particular, you should see the IP address of the deployed nodes.
 
-While EnOS deploys OpenStack (it takes ~20 to 45 minutes -- there are
-way to speed up your deployment [11]_ ), you can
+While EnOS deploys OpenStack (it takes ~20 to 45 minutes), you can
 observe EnOS running containers on the control node. For that, you can
 access to the control node by typing:
 
@@ -511,15 +511,14 @@ access to the control node by typing:
 
 .. note::
 
-    Note that at the end of your session, you can release your reservation
-    by typing:
+    At the end of your session, you can release your reservation by typing
+    the following command.  This will destroy all your deployment and
+    delete your reservation.
 
     .. code-block:: sh
 
         # (venv) enos:~/enos-myxp$
         enos destroy --hard
-
-    It will destroy all your deployment and delete your reservation.
 
 5 Play with OpenStack
 ---------------------
@@ -837,10 +836,10 @@ you to understand the behavior of your OpenStack.
 Activating the monitoring stack is as simple as setting the
 ``enable_monitoring`` to ``yes`` in your ``reservation.yaml``. This key
 tells EnOS to deploy two monitoring systems. First,
-cAdvisor [12]_ , a tool to collect resource usage of running
+cAdvisor [11]_ , a tool to collect resource usage of running
 containers. Using cAdvisor, EnOS gives information about the
 CPU/RAM/Network consumption per cluster/node/service. Second,
-Collectd [13]_ , a tool to collect performance data of specific
+Collectd [12]_ , a tool to collect performance data of specific
 applications. For instance, Collectd enables EnOS to record the number
 of updates that have been performed on the Nova database.
 
@@ -853,7 +852,7 @@ order to collect interesting information.
 
 A popular tool to visualize information provided by cAdvisor and
 Collectd (and whatever monitoring system you could use) is
-Grafana [14]_ . Grafana is a Web metrics dashboard. A Docker
+Grafana [13]_ . Grafana is a Web metrics dashboard. A Docker
 container is in charge of providing this service inside the control
 node. As a consequence, prior being able to be reachable from your
 browser, you need to set a tunnel to this service, by typing on your
@@ -902,8 +901,8 @@ Neutron handle networks communications.
 
 OpenStack comes with dedicated tools that provide workload to stress
 control and data plane. The one for control plane is called
-Rally [15]_  and the one for data plane is called
-Shaker [16]_ . And these two are well integrated into EnOS.
+Rally [14]_  and the one for data plane is called
+Shaker [15]_ . And these two are well integrated into EnOS.
 
 EnOS looks inside the ``workload`` directory for a file named ``run.yml``.
 
@@ -935,20 +934,20 @@ overrides the ``sla_max_avg_duration`` default value solely in the ``boot and li
     :name: lst:run.yml
 
     ---
-    rally:                                   
+    rally:
         enabled: yes
-        args:                                
-          concurrency:                       
+        args:
+          concurrency:
             - 5
-          times:                             
+          times:
             - 10
-        scenarios:                           
+        scenarios:
           - name: boot and list servers
             file: nova-boot-list-cc.yml
-            args:                            
+            args:
               sla_max_avg_duration: 30
     shaker:
-      enabled: yes                           
+      enabled: yes
       scenarios:
         - name: OpenStack L3 East-West Dense
           file: openstack/dense_l3_east_west
@@ -969,7 +968,7 @@ Calling Rally and Shaker from EnOS is done with:
     minutes.
 
 Rally and Shaker provide a huge list of scenarios on their respective
-GitHub [17]_  [18]_ . Before going further,
+GitHub [16]_  [17]_ . Before going further,
 go through the Rally list and try to add the scenario of your choice
 into the ``run.yml``. Note that you have to download the scenario file
 in the ``workload`` directory and then put a new item under the
@@ -1109,7 +1108,7 @@ VMs co-located on the same compute are 100ms RTT. This is because
 packet are routed by Neutron service that is inside ``grp1`` and VMs are
 inside the ``grp2``.
 
-Now, reconfigure Neutron to use DVR [19]_ . DVR will push Neutron
+Now, reconfigure Neutron to use DVR [18]_ . DVR will push Neutron
 agent directly on the compute of ``grp2``. With EnOS, you should do so
 by updating the ``reservation.yaml`` and add ``enable_neutron_dvr: "yes"``
 under the ``kolla`` key.
@@ -1133,7 +1132,7 @@ pay the cost of WAN latency.
 This experiment shows the importance of activating DVR in a WAN
 context, and how you can easily see that using EnOS. Do not hesitate
 to take a look at the complete list of Shaker scenarios on their
-GitHub [18]_  and continue to have fun with EnOS.
+GitHub [17]_  and continue to have fun with EnOS.
 
 8 Appendix
 ----------
@@ -1222,21 +1221,15 @@ GitHub [18]_  and continue to have fun with EnOS.
     # ############################################### #
     # Inventory to use                                #
     # ############################################### #
-    inventory: inventories/inventory.sample
+    inventory: resources/inventory.sample
 
     # ############################################### #
     # docker registry parameters
     # ############################################### #
     registry:
-      type: internal
-      ceph: true
-      ceph_keyring: /home/discovery/.ceph/ceph.client.discovery.keyring
-      ceph_id: discovery
-      ceph_rbd: discovery_kolla_registry/datas
-      ceph_mon_host:
-        - ceph0.rennes.grid5000.fr
-        - ceph1.rennes.grid5000.fr
-        - ceph2.rennes.grid5000.fr
+      type: external
+      ip: docker-cache.grid5000.fr
+      port: 80
 
     # ############################################### #
     # Enos Customizations                             #
@@ -1246,14 +1239,13 @@ GitHub [18]_  and continue to have fun with EnOS.
     # ############################################### #
     # Kolla parameters                                #
     # ############################################### #
-    kolla_repo: "https://git.openstack.org/openstack/kolla-ansible"
-    kolla_ref: "stable/stein"
+    kolla-ansible: kolla-ansible~=10.0
 
     # Vars : kolla_repo/ansible/group_vars/all.yml
     kolla:
       kolla_base_distro: "centos"
       kolla_install_type: "source"
-      enable_heat: "yes"
+      enable_heat: yes
 
 
 .. [1] `https://www.openstack.org/ <https://www.openstack.org/>`_
@@ -1276,20 +1268,18 @@ GitHub [18]_  and continue to have fun with EnOS.
 
 .. [10] `https://enos.readthedocs.io/en/stable/provider/index.html <https://enos.readthedocs.io/en/stable/provider/index.html>`_
 
-.. [11] `https://enos.readthedocs.io/en/stable/customization/index.html#internal-registry <https://enos.readthedocs.io/en/stable/customization/index.html#internal-registry>`_
+.. [11] `https://github.com/google/cadvisor <https://github.com/google/cadvisor>`_
 
-.. [12] `https://github.com/google/cadvisor <https://github.com/google/cadvisor>`_
+.. [12] `https://collectd.org/ <https://collectd.org/>`_
 
-.. [13] `https://collectd.org/ <https://collectd.org/>`_
+.. [13] `https://grafana.com/ <https://grafana.com/>`_
 
-.. [14] `https://grafana.com/ <https://grafana.com/>`_
+.. [14] `https://rally.readthedocs.io/en/latest/ <https://rally.readthedocs.io/en/latest/>`_
 
-.. [15] `https://rally.readthedocs.io/en/latest/ <https://rally.readthedocs.io/en/latest/>`_
+.. [15] `https://pyshaker.readthedocs.io/en/latest/ <https://pyshaker.readthedocs.io/en/latest/>`_
 
-.. [16] `https://pyshaker.readthedocs.io/en/latest/ <https://pyshaker.readthedocs.io/en/latest/>`_
+.. [16] `https://github.com/openstack/rally/tree/master/rally/plugins/openstack/scenarios <https://github.com/openstack/rally/tree/master/rally/plugins/openstack/scenarios>`_
 
-.. [17] `https://github.com/openstack/rally/tree/master/rally/plugins/openstack/scenarios <https://github.com/openstack/rally/tree/master/rally/plugins/openstack/scenarios>`_
+.. [17] `https://github.com/openstack/shaker/tree/master/shaker/scenarios/openstack <https://github.com/openstack/shaker/tree/master/shaker/scenarios/openstack>`_
 
-.. [18] `https://github.com/openstack/shaker/tree/master/shaker/scenarios/openstack <https://github.com/openstack/shaker/tree/master/shaker/scenarios/openstack>`_
-
-.. [19] `https://wiki.openstack.org/wiki/Neutron/DVR <https://wiki.openstack.org/wiki/Neutron/DVR>`_
+.. [18] `https://wiki.openstack.org/wiki/Neutron/DVR <https://wiki.openstack.org/wiki/Neutron/DVR>`_

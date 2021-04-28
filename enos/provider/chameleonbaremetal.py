@@ -9,6 +9,7 @@ import logging
 
 # - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {
+    # Name of the provider
     'type': 'chameleonbaremetal',
     # Name os the lease to use
     'lease_name': 'enos-lease',

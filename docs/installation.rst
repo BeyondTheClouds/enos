@@ -29,9 +29,7 @@ Then install enos inside a virtualenv (python3.5+ required):
 .. note::
 
    The latest *packaged* version of enos will install the latest
-   *stable* version of OpenStack. If you want to install the
-   development version of OpenStack, you should install enos from
-   sources (see :ref:`contribute`).
+   *stable* version of OpenStack.
 
 
 Configuration
@@ -59,12 +57,11 @@ dedicated :ref:`provider` configuration
 Deployment
 ----------
 
-Once your configuration is done, you can launch the deployment :
+Once your configuration is done, you can launch the deployment:
 
 .. code-block:: bash
 
     (venv) $ enos deploy
-
 
 The deployment is the combination of the following three phases:
 
@@ -86,7 +83,7 @@ The deployment is the combination of the following three phases:
 
       If you don't provide an ``inventory`` in your current working
       directory, then Enos uses a default one. You can view it on
-      GitHub at :enos_src:`enos/inventories/inventory.sample`. Note
+      GitHub at :enos_src:`enos/resources/inventory.sample`. Note
       that the produced file is available at ``cwd/current/multinode``
       (with ``cwd`` referencing to your current working directory).
 

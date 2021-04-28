@@ -1,4 +1,0 @@
----
-- include: ../install_agent.yml
-
-- include: ../insecure_registry.yml

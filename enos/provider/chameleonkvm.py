@@ -6,12 +6,15 @@ import logging
 
 # - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {
+    # Name of the provider
     'type': 'chameleonkvm',
+    # Glance image to use
     'image': 'CC-Ubuntu16.04',
+    # User to use to connect to the machines
+    # (sudo will be used to configure them)
     'user': 'cc',
-    'dns_nameservers': ['129.114.97.1',
-                        '129.114.97.2',
-                        '129.116.84.203']
+    # DNS server to use when creating network
+    'dns_nameservers': ['129.114.97.1', '129.114.97.2', '129.116.84.203'],
 }
 # + SPHINX_DEFAULT_CONFIG
 

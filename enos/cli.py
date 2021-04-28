@@ -20,15 +20,15 @@ Commands:
   up             Get resources and install the docker registry.
   os             Run kolla and install OpenStack.
   init           Initialise OpenStack with the bare necessities.
-  bench          Run rally on this OpenStack.
+  bench          Run Rally/Shaker on this OpenStack.
   backup         Backup the environment
   ssh-tunnel     Print configuration for port forwarding with horizon.
   tc             Enforce network constraints
   info           Show information of the actual deployment.
   destroy        Destroy the deployment and optionally the related resources.
   deploy         Shortcut for enos up, then enos os and enos config.
-  kolla          Runs arbitrary kolla command on nodes.
   build          Build a reference image for later deployment.
+  help           Show this help message.
 
 
 See 'enos <command> --help' for more information on a specific
@@ -37,12 +37,15 @@ command.
 """
 
 import logging
+import textwrap
 from os import path
+from pathlib import Path
 from docopt import docopt
 import yaml
 
+import enos.tasks as tt
 import enos.task as t
-from enos.utils.constants import VERSION
+import enos.utils.constants as C
 from enos.utils.errors import EnosFilePathError
 
 logger = logging.getLogger(__name__)
@@ -52,7 +55,7 @@ def load_config(config_file):
     config = {}
     if path.isfile(config_file):
         with open(config_file, 'r') as f:
-            config = yaml.load(f)
+            config = yaml.safe_load(f)
             logging.info("Reloaded configuration file %s", config_file)
             logging.debug("Configuration is %s", config)
     else:
@@ -90,11 +93,16 @@ def up(**kwargs):
 
 
 def os(**kwargs):
-    """
-    usage: enos os [-e ENV|--env=ENV] [--reconfigure] [-t TAGS|--tags=TAGS]
-                [-s|--silent|-vv]
+    """Usage:
+      enos os [-e ENV|--env=ENV] [--reconfigure] [-t TAGS|--tags=TAGS]
+              [-s|--silent|-vv]
+      enos os [-e ENV|--env=ENV] [-s|--silent|-vv] -- <kolla-cmd> ...
 
-    Run kolla and install OpenStack.
+    Install OpenStack with kolla-ansible.
+
+    The second command falls back on kolla to run arbitrary commands, e.g.,
+    `enos os -- prechecks`, see `enos os -- -help` for an exhaustive list of
+    supported commands.
 
     Options:
     -e ENV --env=ENV     Path to the environment directory. You should
@@ -107,6 +115,7 @@ def os(**kwargs):
     -s --silent          Quiet mode.
     -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
     -vv                  Verbose mode.
+
     """
     logger.debug(kwargs)
     t.install_os(**kwargs)
@@ -139,9 +148,9 @@ def init(**kwargs):
 def bench(**kwargs):
     """
     usage: enos bench [-e ENV|--env=ENV] [-s|--silent|-vv]
-        [--workload=WORKLOAD] [--reset]
+        [--workload=WORKLOAD] [--pull] [--reset]
 
-    Run rally on this OpenStack.
+    Run Rally/Shaker on this OpenStack.
 
     Options:
     -e ENV --env=ENV     Path to the environment directory. You should
@@ -185,19 +194,33 @@ def backup(**kwargs):
 
 def new(**kwargs):
     """
-    usage: enos new [-e ENV|--env=ENV] [-s|--silent|-vv]
+    usage: enos new [--provider=TESTBED] [-s|--silent|-vv]
 
-    Print reservation example, to be manually edited and customized:
-
-    enos new > reservation.yaml
+    Create a basic reservation.yaml file in the current directory.
 
     Options:
-    -h --help            Show this help message.
-    -s --silent          Quiet mode.
-    -vv                  Verbose mode.
+    --provider=TESTBED  Targeted testbed. One of g5k, vagrant:virtualbox,
+                        vagrant:libvirt, chameleonkvm, chameleonbaremetal,
+                        openstack, vmong5k, static [default: g5k].
+    -s --silent         Quiet mode.
+    -vv                 Verbose mode.
     """
     logger.debug(kwargs)
-    t.new(**kwargs)
+    provider = kwargs['--provider']
+
+    try:
+        tt.new(provider, Path('./reservation.yaml'))
+        logger.info(textwrap.fill(
+            'A `reservation.yaml` file has been placed in this directory.  '
+            f'You are now ready to deploy OpenStack on {provider} with '
+            '`enos deploy`.  Please read comments in the reservation.yaml '
+            'as well as the documentation on '
+            f'https://enos.readthedocs.io/en/v{C.VERSION}/ '
+            'for more information on using enos.'))
+    except FileExistsError:
+        logger.error(textwrap.fill(
+            'The `reservation.yaml` file already exists in this directory.  '
+            f'Remove it before running `enos new --provider={provider}`.'))
 
 
 def tc(**kwargs):
@@ -233,7 +256,7 @@ def info(**kwargs):
                              specific experiment [default: current].
 
     --out {json,pickle,yaml} Output the result in either json, pickle or
-                             yaml format.
+                             yaml format [default: json].
     """
     logger.debug(kwargs)
     t.info(**kwargs)
@@ -284,25 +307,6 @@ def deploy(**kwargs):
     t.deploy(config, config_file=config_file, **kwargs)
 
 
-def kolla(**kwargs):
-    """
-    usage: enos kolla [-e ENV|--env=ENV] [-s|--silent|-vv] -- <command>...
-
-    Run arbitrary Kolla command.
-
-    Options:
-    -e ENV --env=ENV     Path to the environment directory. You should
-                        use this option when you want to link a specific
-                        experiment [default: current].
-    -h --help            Show this help message.
-    -s --silent          Quiet mode.
-    -vv                  Verbose mode.
-    command              Kolla command (e.g prechecks, checks, pull)
-    """
-    logger.debug(kwargs)
-    t.kolla(**kwargs)
-
-
 def build(**kwargs):
     """
     usage: enos build <provider> [options]
@@ -319,15 +323,15 @@ def build(**kwargs):
     --base BASE        Base distribution for deployed virtual machines
                        [default: centos].
     --box BOX          Reference box for host virtual machines (vagrant)
-                       [default: generic/debian9].
+                       [default: generic/debian10].
     --cluster CLUSTER  Cluster where the image is built (g5k and vmong5k)
                        [default: parasilo].
     --directory DIR    Directory in which the image will be baked (vmong5k)
                        [default: ~/.enos].
     --environment ENV  Reference environment for deployment (g5k)
-                       [default: debian9-x64-nfs].
+                       [default: debian10-x64-min].
     --image IMAGE      Reference image path to bake on top of it (vmong5k)
-                       [default: /grid5000/virt-images/debian9-x64-base.qcow2].
+                       [default: /grid5000/virt-images/debian10-x64-base.qcow2].
     --type TYPE        Installation type of the BASE distribution
                        [default: binary].
 
@@ -362,7 +366,6 @@ def build(**kwargs):
 def _configure_logging(args):
     if '-vv' in args['<args>']:
         logging.basicConfig(level=logging.DEBUG)
-        args['<args>'].remove('-vv')
     elif '-s' in args['<args>']:
         logging.basicConfig(level=logging.ERROR)
         args['<args>'].remove('-s')
@@ -379,18 +382,21 @@ def pushtask(ts, f):
 
 def main():
     args = docopt(__doc__,
-                  version=VERSION,
+                  version=C.VERSION,
                   options_first=True)
 
     _configure_logging(args)
     argv = [args['<command>']] + args['<args>']
+
+    if argv == ['help']:
+        print(__doc__)
+        return
 
     enostasks = {}
     pushtask(enostasks, backup)
     pushtask(enostasks, bench)
     pushtask(enostasks, deploy)
     pushtask(enostasks, destroy)
-    pushtask(enostasks, kolla)
     pushtask(enostasks, info)
     pushtask(enostasks, init)
     pushtask(enostasks, os)

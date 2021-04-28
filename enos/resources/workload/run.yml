@@ -1,0 +1,29 @@
+---
+# this is a sample of workload
+# prerequisite:
+# - we rely on the rally template mechanism
+#
+rally:
+    enabled: true
+    args:
+      concurrency:
+        - 10
+      times:
+        - 10
+    scenarios:
+      - name: Boot and list servers on Nova
+        file: nova-boot-list-cc.yml
+        args:
+          sla_max_avg_duration: 100
+      - name: Create and update an image on Glance
+        file: create-and-update-image.yaml 
+        args:
+          sla_max_avg_duration: 100
+        #plugin: path to your plugin relative to the workload dir
+shaker:
+  enabled: false
+  scenarios:
+    - name: shaker instance_metadata
+      file: misc/instance_metadata
+    - name: shaker dense_l2
+      file: openstack/dense_l2

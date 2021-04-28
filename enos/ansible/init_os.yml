@@ -3,10 +3,10 @@
   hosts: network[0]
   vars:
     images:
-      - name: debian-9
-        url: https://cdimage.debian.org/cdimage/openstack/current-9/debian-9-openstack-amd64.qcow2
+      - name: debian-10
+        url: https://cloud.debian.org/images/cloud/OpenStack/current-10/debian-10-openstack-amd64.qcow2
       - name: cirros.uec
-        url: http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img
+        url: http://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
   roles:
     - { role: init_os,
         tags: ['init_os'] }

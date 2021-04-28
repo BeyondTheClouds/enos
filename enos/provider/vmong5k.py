@@ -15,8 +15,9 @@ LOGGER = logging.getLogger(__name__)
 
 # - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {
-    'job_name': 'enos-vmong5k',
-    'walltime': '02:00:00'
+    'type': 'vmong5k',      # Name of the provider
+    'job_name': 'enos',     # Job name in oarstat/gant
+    'walltime': '02:00:00'  # Reservation duration time
 }
 
 DEFAULT_FLAVOUR_BY_ROLE = {

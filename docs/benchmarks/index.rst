@@ -71,9 +71,3 @@ Supported keys :
 * :code:`file`: must be the alias of the scenario. Enos don't support custom scenario
   yet.
 * :code:`enabled`: Whether to run this scenario
-
-
-Osprofiler
-----------
-
-Supporting OSProfiler in Rally benchmarks is planned for Q3 2017.
