@@ -1,0 +1,466 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>OpenStack SDK &mdash; Enos 7.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="EnOS Tutorial on top of Grid’5000" href="grid5000-tuto.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Enos
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                7.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../provider/index.html">Provider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli/index.html">Enos command line</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks/index.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../customization/index.html">Customizations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../network-emulation/index.html">Network Emulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/index.html">Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute/index.html">Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../jenkins/index.html">Jenkins</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="grid5000-tuto.html">EnOS Tutorial on top of Grid’5000</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">OpenStack SDK</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Enos</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Tutorials</a> &raquo;</li>
+        
+      <li>OpenStack SDK</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/tutorial/openstacksdk.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="openstack-sdk">
+<span id="openstacksdk"></span><h1>OpenStack SDK<a class="headerlink" href="#openstack-sdk" title="Permalink to this headline">¶</a></h1>
+<p>The python <a class="reference external" href="https://docs.openstack.org/openstacksdk/latest/index.html">OpenStack SDK</a>
+is a library that exposed the OpenStack API to the developers. The
+following use information provided by Enos to connect to OpenStack
+and then programmatically create a project, users and networks. It
+assumes Enos has already deployed an OpenStack and your are in the
+virtual environment if you have created one.</p>
+<p>First install the OpenStack SDK.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>venv<span class="o">)</span> $ pip install python-openstacksdk
+</pre></div>
+</div>
+<p>Then asks enos where is your <code class="docutils literal notranslate"><span class="pre">admin-openrc</span></code>, source it and check
+everything is OK.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>venv<span class="o">)</span> $ <span class="nb">source</span> <span class="k">$(</span>enos info --out json<span class="p">|</span>jq -r <span class="s1">&#39;.resultdir&#39;</span><span class="k">)</span>/admin-openrc
+<span class="o">(</span>vnev<span class="o">)</span> $ env<span class="p">|</span>fgrep OS<span class="p">|</span>sort
+<span class="nv">OS_AUTH_PLUGIN</span><span class="o">=</span>password
+<span class="nv">OS_AUTH_URL</span><span class="o">=</span>http://10.24.189.255:35357/v3
+<span class="nv">OS_IDENTITY_API_VERSION</span><span class="o">=</span><span class="m">3</span>
+<span class="nv">OS_INTERFACE</span><span class="o">=</span>internal
+<span class="nv">OS_PASSWORD</span><span class="o">=</span>demo
+<span class="nv">OS_PROJECT_DOMAIN_NAME</span><span class="o">=</span>Default
+<span class="nv">OS_PROJECT_NAME</span><span class="o">=</span>admin
+<span class="nv">OS_REGION_NAME</span><span class="o">=</span>RegionOne
+<span class="nv">OS_TENANT_NAME</span><span class="o">=</span>admin
+<span class="nv">OS_USER_DOMAIN_NAME</span><span class="o">=</span>Default
+<span class="nv">OS_USERNAME</span><span class="o">=</span>admin
+</pre></div>
+</div>
+<p>And that’s it!</p>
+<p>Now, you can execute the following <code class="docutils literal notranslate"><span class="pre">openstacksdk.py</span></code> file that reads
+<code class="docutils literal notranslate"><span class="pre">OS_*</span></code> variables from you environment to instantiate the <code class="docutils literal notranslate"><span class="pre">cloud</span></code>
+REST client. Executes it with <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">openstacksdk.py</span></code>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">openstack</span>
+
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="n">LOG</span>   <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">make_cloud</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Connects to OpenStack cloud using environment variables</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An new openstack.connection.Connection</span>
+
+<span class="sd">    Refs:</span>
+<span class="sd">        - https://docs.openstack.org/openstacksdk/latest/user/connection.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;New admin authentication on </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;OS_AUTH_URL&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">openstack</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">cloud</span><span class="o">=</span><span class="s1">&#39;envvars&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">make_account</span><span class="p">(</span><span class="n">identity</span><span class="p">,</span> <span class="n">users</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a new project an put `users` in it.</span>
+
+<span class="sd">    Create a new project if it doesn&#39;t exists and put</span>
+<span class="sd">    users `users` in it. Then assigne member and heat roles</span>
+<span class="sd">    to these users in the newly created project.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        identity: Proxy for identity aka keystone [1]</span>
+<span class="sd">        users: A list of users name to create and put into the project,</span>
+<span class="sd">            users can access OpenStack with the password &quot;demo&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The newly created project [2]</span>
+
+<span class="sd">    Refs:</span>
+<span class="sd">        [1] https://docs.openstack.org/openstacksdk/latest/user/proxies/identity_v3.html</span>
+<span class="sd">        [2] https://docs.openstack.org/openstacksdk/latest/user/resources/identity/v3/project.html#openstack.identity.v3.project.Project</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Compute project name from users name</span>
+    <span class="n">project_name</span> <span class="o">=</span> <span class="s2">&quot;project-</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="s1">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">u</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">users</span><span class="p">)</span>
+
+    <span class="c1"># Test if the project exists and create it if need be</span>
+    <span class="n">project</span> <span class="o">=</span> <span class="n">identity</span><span class="o">.</span><span class="n">find_project</span><span class="p">(</span><span class="n">project_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">project</span><span class="p">:</span>
+        <span class="n">project</span> <span class="o">=</span> <span class="n">identity</span><span class="o">.</span><span class="n">create_project</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">project_name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Project of </span><span class="si">%s</span><span class="s2">.&quot;</span> <span class="o">%</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">u</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">users</span><span class="p">))</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Created a new project </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">project</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">user_name</span> <span class="ow">in</span> <span class="n">users</span><span class="p">:</span>
+        <span class="c1"># Test if user exists and create it if need be</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">identity</span><span class="o">.</span><span class="n">find_user</span><span class="p">(</span><span class="n">user_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">user</span><span class="p">:</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">identity</span><span class="o">.</span><span class="n">create_user</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">user_name</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;demo&quot;</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Created a new user </span><span class="si">%s</span><span class="s2"> with password demo&quot;</span> <span class="o">%</span> <span class="n">user</span><span class="p">)</span>
+
+        <span class="c1"># Assign user to member and heat_stack_owner role in newly</span>
+        <span class="c1"># created project.</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;member&quot;</span><span class="p">,</span> <span class="s2">&quot;heat_stack_owner&quot;</span><span class="p">]:</span>
+            <span class="n">role</span> <span class="o">=</span> <span class="n">identity</span><span class="o">.</span><span class="n">find_role</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+            <span class="c1"># The `heat_stack_owner` role only exists if heat is deployed</span>
+            <span class="k">if</span> <span class="n">role</span><span class="p">:</span>
+                <span class="n">identity</span><span class="o">.</span><span class="n">assign_project_role_to_user</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">role</span><span class="p">)</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Assigne role </span><span class="si">%s</span><span class="s2"> to user </span><span class="si">%s</span><span class="s2"> in project </span><span class="si">%s</span><span class="s2">&quot;</span>
+                        <span class="o">%</span> <span class="p">(</span><span class="n">role</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">project</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">project</span>
+
+
+<span class="k">def</span> <span class="nf">make_private_net</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">project</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a new private network only visible by members of `project`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        net: Proxy for network aka neutron [1]</span>
+<span class="sd">        project: An OpenStack project [2]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The subnet of the newly created private network [3]</span>
+
+<span class="sd">    Refs:</span>
+<span class="sd">        [1] https://docs.openstack.org/openstacksdk/latest/user/proxies/network.html</span>
+<span class="sd">        [2] https://docs.openstack.org/openstacksdk/latest/user/resources/identity/v3/project.html#openstack.identity.v3.project.Project</span>
+<span class="sd">        [3] https://docs.openstack.org/openstacksdk/latest/user/resources/network/v2/subnet.html#openstack.network.v2.subnet.Subnet</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Test if the private network exists and create it if need be</span>
+    <span class="c1"># https://docs.openstack.org/openstacksdk/latest/user/resources/network/v2/network.html#openstack.network.v2.network.Network</span>
+    <span class="n">private_net</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">find_network</span><span class="p">(</span><span class="s2">&quot;private&quot;</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">private_net</span><span class="p">:</span>
+        <span class="n">private_net</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">create_network</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;private&quot;</span><span class="p">,</span>
+            <span class="n">project_id</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">provider_network_type</span><span class="o">=</span><span class="s2">&quot;vxlan&quot;</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Created a new private network </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">private_net</span><span class="p">)</span>
+
+    <span class="c1"># Test if the subntet exists and create it if need be</span>
+    <span class="c1"># https://docs.openstack.org/openstacksdk/latest/user/resources/network/v2/subnet.html#openstack.network.v2.subnet.Subnet</span>
+    <span class="n">private_snet</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">find_subnet</span><span class="p">(</span><span class="s2">&quot;private-subnet&quot;</span><span class="p">,</span> <span class="n">network_id</span><span class="o">=</span><span class="n">private_net</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">private_snet</span><span class="p">:</span>
+        <span class="n">private_snet</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">create_subnet</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;private-subnet&quot;</span><span class="p">,</span>
+            <span class="n">network_id</span><span class="o">=</span><span class="n">private_net</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">project_id</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">ip_version</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+            <span class="n">is_dhcp_enable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">cidr</span><span class="o">=</span><span class="s2">&quot;10.0.0.0/24&quot;</span><span class="p">,</span>
+            <span class="n">gateway_ip</span><span class="o">=</span><span class="s2">&quot;10.0.0.1&quot;</span><span class="p">,</span>
+            <span class="n">allocation_pools</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="s2">&quot;10.0.0.2&quot;</span><span class="p">,</span> <span class="s2">&quot;end&quot;</span><span class="p">:</span> <span class="s2">&quot;10.0.0.254&quot;</span><span class="p">}],</span>
+            <span class="c1"># dns.watch</span>
+            <span class="n">dns_nameservers</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;84.200.69.80&quot;</span><span class="p">,</span> <span class="s2">&quot;84.200.70.40&quot;</span><span class="p">])</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Created a new private subnet </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">private_snet</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">private_snet</span>
+
+
+<span class="k">def</span> <span class="nf">make_router</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">project</span><span class="p">,</span> <span class="n">priv_snet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make a router for communications between private and public net.</span>
+
+<span class="sd">    Enos comes with a public network setup in a KaVLAN. This function</span>
+<span class="sd">    makes a router between the public network and a `priv_sunet`.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        net: Proxy for network aka neutron [1]</span>
+<span class="sd">        project: An OpenStack project [2]</span>
+<span class="sd">        priv_snet: The subnet of private network to put in the router [3]</span>
+
+<span class="sd">    Refs:</span>
+<span class="sd">        [1] https://docs.openstack.org/openstacksdk/latest/user/proxies/network.html</span>
+<span class="sd">        [2] https://docs.openstack.org/openstacksdk/latest/user/resources/identity/v3/project.html#openstack.identity.v3.project.Project</span>
+<span class="sd">        [3] https://docs.openstack.org/openstacksdk/latest/user/resources/network/v2/subnet.html#openstack.network.v2.subnet.Subnet</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get the public net from Enos</span>
+    <span class="n">public_net</span>  <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">find_network</span><span class="p">(</span><span class="s2">&quot;public&quot;</span><span class="p">,</span> <span class="n">ignore_missing</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">public_snet</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">find_subnet</span><span class="p">(</span><span class="s2">&quot;public-subnet&quot;</span><span class="p">,</span> <span class="n">ignore_missing</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># Test if the router exists and create it if need be</span>
+    <span class="c1"># https://docs.openstack.org/openstacksdk/latest/user/resources/network/v2/router.html#openstack.network.v2.router.Router</span>
+    <span class="n">router</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">find_router</span><span class="p">(</span><span class="s2">&quot;router&quot;</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">router</span><span class="p">:</span>
+        <span class="n">router</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">create_router</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;router&quot;</span><span class="p">,</span>
+            <span class="n">project_id</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="c1"># Add public gateway</span>
+            <span class="n">external_gateway_info</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;network_id&#39;</span><span class="p">:</span> <span class="n">public_net</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="s1">&#39;enable_snat&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s1">&#39;external_fixed_ips&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;subnet_id&#39;</span><span class="p">:</span> <span class="n">public_snet</span><span class="o">.</span><span class="n">id</span><span class="p">,}]</span>
+            <span class="p">})</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Created a new router </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">router</span><span class="p">)</span>
+
+        <span class="c1"># Add private interface</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">add_interface_to_router</span><span class="p">(</span><span class="n">router</span><span class="p">,</span> <span class="n">subnet_id</span><span class="o">=</span><span class="n">priv_snet</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Added private interface </span><span class="si">%s</span><span class="s2"> to router&quot;</span> <span class="o">%</span> <span class="n">res</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">make_sec_group_rule</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">project</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enable every kind of communication (icmp, http, ssh) in `project`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        net: Proxy for network aka neutron [1]</span>
+<span class="sd">        project: An OpenStack project [2]</span>
+
+<span class="sd">    Refs:</span>
+<span class="sd">        [1] https://docs.openstack.org/openstacksdk/latest/user/proxies/network.html</span>
+<span class="sd">        [2] https://docs.openstack.org/openstacksdk/latest/user/resources/identity/v3/project.html#openstack.identity.v3.project.Project</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Delete default security group rules</span>
+    <span class="n">sgrs</span> <span class="o">=</span> <span class="p">[</span><span class="n">sgr</span> <span class="k">for</span> <span class="n">sgr</span> <span class="ow">in</span> <span class="n">net</span><span class="o">.</span><span class="n">security_group_rules</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">sgr</span><span class="o">.</span><span class="n">project_id</span> <span class="o">==</span> <span class="n">project</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">sgr</span> <span class="ow">in</span> <span class="n">sgrs</span><span class="p">:</span>
+        <span class="n">net</span><span class="o">.</span><span class="n">delete_security_group_rule</span><span class="p">(</span><span class="n">sgr</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Delete sgr </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">sgr</span><span class="p">)</span>
+
+    <span class="c1"># Find the sec group for this project</span>
+    <span class="n">sg_default</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">find_security_group</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">project_id</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+    <span class="c1"># Let all traffic goes in/out</span>
+    <span class="n">protocols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;icmp&quot;</span><span class="p">,</span> <span class="s2">&quot;udp&quot;</span><span class="p">,</span> <span class="s2">&quot;tcp&quot;</span><span class="p">]</span>
+    <span class="n">directions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ingress&quot;</span><span class="p">,</span> <span class="s2">&quot;egress&quot;</span><span class="p">]</span>
+    <span class="n">crit</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">protocols</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">directions</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="ow">in</span> <span class="n">crit</span><span class="p">:</span>
+        <span class="n">sgr</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">create_security_group_rule</span><span class="p">(</span>
+            <span class="n">direction</span><span class="o">=</span><span class="n">d</span><span class="p">,</span>
+            <span class="n">ether_type</span><span class="o">=</span><span class="s2">&quot;IPv4&quot;</span><span class="p">,</span>
+            <span class="n">port_range_min</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="s2">&quot;icmp&quot;</span> <span class="k">else</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">port_range_max</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="s2">&quot;icmp&quot;</span> <span class="k">else</span> <span class="mi">65535</span><span class="p">,</span>
+            <span class="n">project_id</span><span class="o">=</span><span class="n">project</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">protocol</span><span class="o">=</span><span class="n">p</span><span class="p">,</span>
+            <span class="n">remote_ip_prefix</span><span class="o">=</span><span class="s2">&quot;0.0.0.0/0&quot;</span><span class="p">,</span>
+            <span class="n">security_group_id</span><span class="o">=</span><span class="n">sg_default</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Created a new sgr </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">sgr</span><span class="p">)</span>
+
+
+<span class="n">cloud</span> <span class="o">=</span> <span class="n">make_cloud</span><span class="p">()</span>
+<span class="n">project</span> <span class="o">=</span> <span class="n">make_account</span><span class="p">(</span><span class="n">cloud</span><span class="o">.</span><span class="n">identity</span><span class="p">,</span> <span class="p">[</span>
+    <span class="s2">&quot;Leonardo&quot;</span><span class="p">,</span> <span class="s2">&quot;Michelangelo&quot;</span><span class="p">,</span> <span class="s2">&quot;Donatello&quot;</span><span class="p">,</span> <span class="s2">&quot;Raphael&quot;</span><span class="p">])</span>
+<span class="n">priv_snet</span> <span class="o">=</span> <span class="n">make_private_net</span><span class="p">(</span><span class="n">cloud</span><span class="o">.</span><span class="n">network</span><span class="p">,</span> <span class="n">project</span><span class="p">)</span>
+<span class="n">make_router</span><span class="p">(</span><span class="n">cloud</span><span class="o">.</span><span class="n">network</span><span class="p">,</span> <span class="n">project</span><span class="p">,</span> <span class="n">priv_snet</span><span class="p">)</span>
+<span class="n">make_sec_group_rule</span><span class="p">(</span><span class="n">cloud</span><span class="o">.</span><span class="n">network</span><span class="p">,</span> <span class="n">project</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="grid5000-tuto.html" class="btn btn-neutral float-left" title="EnOS Tutorial on top of Grid’5000" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, discovery.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

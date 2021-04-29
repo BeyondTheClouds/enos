@@ -1,0 +1,325 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Getting Started &mdash; Enos 7.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Provider" href="provider/index.html" />
+    <link rel="prev" title="Welcome to Enos’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Enos
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                7.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deployment">Deployment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="provider/index.html">Provider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli/index.html">Enos command line</a></li>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks/index.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="customization/index.html">Customizations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="network-emulation/index.html">Network Emulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis/index.html">Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contribute/index.html">Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jenkins/index.html">Jenkins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial/index.html">Tutorials</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Enos</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Getting Started</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="getting-started">
+<span id="installation"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>Installation<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip install -U enos
+</pre></div>
+</div>
+<p>You may prefer to go with a virtualenv. Please refer to the
+<a class="reference external" href="https://virtualenv.pypa.io/en/stable/">virtualenv</a> documentation
+and the rest of this section for further information.</p>
+<p>Then install enos inside a virtualenv (python3.7+ required):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ mkdir my-experiment <span class="o">&amp;&amp;</span> <span class="nb">cd</span> my-experiment
+$ virtualenv -p python3 venv
+$ <span class="nb">source</span> venv/bin/activate
+<span class="o">(</span>venv<span class="o">)</span> $ pip install -U pip
+<span class="o">(</span>venv<span class="o">)</span> $ pip install enos
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The latest <em>packaged</em> version of enos will install the latest
+<em>stable</em> version of OpenStack.</p>
+</div>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>To get started you need an Enos configuration file.  Among other
+things, that file tells Enos on which testbed to acquire resources and
+deploy OpenStack.  Enos supports many testbeds including Vagrant,
+Grid’5000, Chameleon and more generally any OpenStack cloud.</p>
+<p>The configuration may vary from one testbed to another.  For this
+quick-start, we will bring up an OpenStack on Vagrant/VirtualBox
+because it is free and works on all major platforms.  Please, refer to
+the dedicated <a class="reference internal" href="provider/index.html#provider"><span class="std std-ref">Provider</span></a> section for the full list of supported
+testbed.</p>
+<p>First, make sure you have <a class="reference external" href="https://www.virtualbox.org/">VirtualBox</a>
+and <a class="reference external" href="https://www.vagrantup.com/downloads">Vagrant</a> installed. Then,
+generate the configuration file with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>(venv) $ enos new --provider=vagrant:virtualbox
+</pre></div>
+</div>
+<p>This generates a <code class="docutils literal notranslate"><span class="pre">reservation.yaml</span></code> file in the current directory.
+This file shows available configuration options (and their defaults in
+comments).  Take the time to review that file before going further.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If a key is defined several times in the configuration file, only the last
+occurence will be taken into account. In particular to switch from one
+provider to another, you can move down the key <code class="docutils literal notranslate"><span class="pre">provider</span></code> and its
+associated <code class="docutils literal notranslate"><span class="pre">resources</span></code> key.</p>
+</div>
+</div>
+<div class="section" id="deployment">
+<h2>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">¶</a></h2>
+<p>Once your configuration is done, you can launch the deployment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>venv<span class="o">)</span> $ enos deploy
+</pre></div>
+</div>
+<p>The deployment is the combination of the following three phases:</p>
+<ol class="arabic">
+<li><p>Acquire the resources that are necessary for the deployment of
+OpenStack. Enos acquires resources according to the <code class="docutils literal notranslate"><span class="pre">provider</span></code>
+and <code class="docutils literal notranslate"><span class="pre">resources</span></code> information in the configuration file. One can
+perform this phase by calling <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">up</span></code>.</p></li>
+<li><p>Deploy OpenStack on the resources acquired during the previous
+phase. Enos uses the resource list provided by the previous phase
+and combines it with the information specified in the file targeted
+by the <code class="docutils literal notranslate"><span class="pre">inventory</span></code> key to produce a file that gives a mapping of
+which OpenStack services have to be deployed to which resources.
+Enos then calls the Kolla Ansible tool with this file to deploy the
+containerized OpenStack services to the right resources. One can
+perform this phase by calling <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">os</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you don’t provide an <code class="docutils literal notranslate"><span class="pre">inventory</span></code> in your current working
+directory, then Enos uses a default one. You can view it on
+GitHub at <a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/c497bc2/enos/resources/inventory.sample">enos/resources/inventory.sample</a>. Note
+that the produced file is available at <code class="docutils literal notranslate"><span class="pre">cwd/current/multinode</span></code>
+(with <code class="docutils literal notranslate"><span class="pre">cwd</span></code> referencing to your current working directory).</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If you run Enos on macOS, chances are that the BSD version of <cite>docopt</cite>
+has been installed. Since it is not compatible with Kolla-Ansible,
+it leads to failures during the second phase of Enos. macOS users
+should first install the GNU version of <cite>docopt</cite>, and call <code class="docutils literal notranslate"><span class="pre">enos</span>
+<span class="pre">deploy</span></code> or <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">os</span></code> with an appropriate PATH environment variable:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>venv<span class="o">)</span> $ brew install gnu-docopt
+<span class="o">(</span>venv<span class="o">)</span> $ <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/usr/local/opt/gnu-getopt/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span> enos deploy
+</pre></div>
+</div>
+</div>
+</li>
+<li><p>Initialize the freshly deployed OpenStack. Enos initializes
+OpenStack with the bare necessities, i.e., install a <code class="docutils literal notranslate"><span class="pre">member</span></code>
+role, download and install a cirros image, install default flavors
+(m1.tiny, …, m1.xlarge) and setup a network (one public/one
+private). One can perform this phase by calling <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">init</span></code>.</p></li>
+</ol>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="provider/index.html" class="btn btn-neutral float-right" title="Provider" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to Enos’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, discovery.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

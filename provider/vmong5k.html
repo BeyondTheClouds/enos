@@ -1,0 +1,442 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Virtual Machines on Grid’5000 &mdash; Enos 7.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Openstack" href="openstack.html" />
+    <link rel="prev" title="Vagrant" href="vagrant.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Enos
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                7.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Provider</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="static.html">Static</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid5000.html">Grid’5000</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vagrant.html">Vagrant</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Virtual Machines on Grid’5000</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-configuration">Basic configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deployment">Deployment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#default-provider-configuration">Default Provider Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#advanced-configurations">Advanced Configurations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#build-an-image">Build an Image</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openstack.html">Openstack</a></li>
+<li class="toctree-l2"><a class="reference internal" href="openstack.html#chameleon-cloud-kvm">Chameleon Cloud (KVM)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="openstack.html#chameleon-cloud-bare-metal">Chameleon Cloud (Bare Metal)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom.html">Custom Provider</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cli/index.html">Enos command line</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks/index.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../customization/index.html">Customizations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../network-emulation/index.html">Network Emulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/index.html">Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute/index.html">Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../jenkins/index.html">Jenkins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Tutorials</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Enos</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Provider</a> &raquo;</li>
+        
+      <li>Virtual Machines on Grid’5000</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/provider/vmong5k.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="virtual-machines-on-grid-5000">
+<span id="vmong5k"></span><h1>Virtual Machines on Grid’5000<a class="headerlink" href="#virtual-machines-on-grid-5000" title="Permalink to this headline">¶</a></h1>
+<p>It is possible to deploy virtual machines on top of bare nodes of Grid’5000.
+This hybrid approach is useful to take advantage of all resources available in
+each node. In this way several virtual machines with different roles can be
+coexist at the same time in a single node depending on the requirements.
+Actually, in the current implementation machines with different roles will not
+be colocalized (enoslib limitation) but several those with the same role can
+coexist. The provisioning of the virtual machines and their deployment is
+transparent to the user.</p>
+<div class="section" id="basic-configuration">
+<h2>Basic configuration<a class="headerlink" href="#basic-configuration" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">vmong5k</span></code> provider relies on cluster names to group wanted resources in
+the same way the Grid’5000 provider does. It also take advantage of the virtual
+machine sizes of the Vagrant provider to describe resources.</p>
+<p>Refer to the <a class="reference internal" href="../installation.html#installation"><span class="std std-ref">Getting Started</span></a> section to install EnOS.</p>
+<p>To access the Grid’5000 API, you must configure
+<a class="reference external" href="https://pypi.org/project/python-grid5000/">python-grid5000</a>. Please refer to
+the corresponding documentation</p>
+<p>The following is a valid resource description:</p>
+<div class="highlight-yaml notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nt">enable_monitoring</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="nt">inventory</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span>
+<span class="nt">kolla</span><span class="p">:</span>
+  <span class="nt">enable_heat</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+  <span class="nt">kolla_base_distro</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">centos</span>
+  <span class="nt">kolla_install_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="nt">kolla_ref</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">stable/stein</span>
+<span class="nt">kolla_repo</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span>
+<span class="nt">provider</span><span class="p">:</span>
+  <span class="nt">job_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">enos-jenkins</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">vmong5k</span>
+  <span class="nt">walltime</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">01:00:00</span>
+<span class="nt">registry</span><span class="p">:</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">internal</span>
+<span class="nt">resources</span><span class="p">:</span>
+  <span class="nt">parapluie</span><span class="p">:</span>
+    <span class="nt">compute</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+    <span class="nt">control</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+  <span class="nt">paravance</span><span class="p">:</span>
+    <span class="nt">network</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="deployment">
+<h2>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">¶</a></h2>
+<p>We suggest running the deployment from a dedicated node (specially for large
+deployments). To reserve a node prior the deployment and launch the deployment
+you can execute the commands after creating a valid configuration file and
+setting up the appropriate execution environment for EnOS:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>frontend&gt; oarsub -I -l <span class="s1">&#39;walltime=2:00:00&#39;</span>
+node&gt; enos deploy
+</pre></div>
+</div>
+</div>
+<div class="section" id="default-provider-configuration">
+<h2>Default Provider Configuration<a class="headerlink" href="#default-provider-configuration" title="Permalink to this headline">¶</a></h2>
+<p>The provider comes with the following default options:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DEFAULT_CONFIG</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;vmong5k&#39;</span><span class="p">,</span>      <span class="c1"># Name of the provider</span>
+    <span class="s1">&#39;job_name&#39;</span><span class="p">:</span> <span class="s1">&#39;enos&#39;</span><span class="p">,</span>     <span class="c1"># Job name in oarstat/gant</span>
+    <span class="s1">&#39;walltime&#39;</span><span class="p">:</span> <span class="s1">&#39;02:00:00&#39;</span>  <span class="c1"># Reservation duration time</span>
+<span class="p">}</span>
+
+<span class="n">DEFAULT_FLAVOUR_BY_ROLE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;control&#39;</span><span class="p">:</span> <span class="s1">&#39;extra-large&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;network&#39;</span><span class="p">:</span> <span class="s1">&#39;large&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;compute&#39;</span><span class="p">:</span> <span class="s1">&#39;medium&#39;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>These values be overridden in the configuration file.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Some default values are implicit. They are the defaults from the other
+providers involved in the deployment and execution.</p>
+</div>
+</div>
+<div class="section" id="advanced-configurations">
+<h2>Advanced Configurations<a class="headerlink" href="#advanced-configurations" title="Permalink to this headline">¶</a></h2>
+<p>A configuration equivalent to the basic one presented before shows a finer and
+more explicit definition of the resources:</p>
+<div class="highlight-yaml notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nt">enable_monitoring</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="nt">inventory</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span>
+<span class="nt">kolla</span><span class="p">:</span>
+  <span class="nt">enable_heat</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+  <span class="nt">kolla_base_distro</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">centos</span>
+  <span class="nt">kolla_install_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="nt">kolla_ref</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">stable/stein</span>
+<span class="nt">kolla_repo</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span>
+<span class="nt">provider</span><span class="p">:</span>
+  <span class="nt">image</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/grid5000/virt-images/debian9-x64-base.qcow2</span>
+  <span class="nt">job_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">enos-jenkins</span>
+  <span class="nt">resources</span><span class="p">:</span>
+    <span class="nt">machines</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="nt">cluster</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">parapluie</span>
+      <span class="nt">flavour</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">medium</span>
+      <span class="nt">nodes</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+      <span class="nt">roles</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">compute</span>
+    <span class="p p-Indicator">-</span> <span class="nt">cluster</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">parapluie</span>
+      <span class="nt">flavour</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">extra-large</span>
+      <span class="nt">nodes</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+      <span class="nt">roles</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">control</span>
+    <span class="p p-Indicator">-</span> <span class="nt">cluster</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">paravance</span>
+      <span class="nt">flavour_desc</span><span class="p">:</span>
+        <span class="nt">core</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
+        <span class="nt">mem</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">4096</span>
+      <span class="nt">nodes</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+      <span class="nt">roles</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">network</span>
+    <span class="nt">networks</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">network_interface</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">vmong5k</span>
+  <span class="nt">walltime</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">01:00:00</span>
+<span class="nt">registry</span><span class="p">:</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">internal</span>
+</pre></div>
+</td></tr></table></div>
+<p>Other possibilities includes the customization of the topology, networking, etc.
+These options are described in <a class="reference internal" href="../customization/index.html#customizations"><span class="std std-ref">Customizations</span></a> and
+<a class="reference internal" href="../network-emulation/index.html#network-emulation"><span class="std std-ref">Network Emulation</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The flavor of the resource can be set by name or using an inline description
+with <code class="docutils literal notranslate"><span class="pre">flavour_desc</span></code> as is the case of the network in the example.</p>
+</div>
+</div>
+<div class="section" id="build-an-image">
+<h2>Build an Image<a class="headerlink" href="#build-an-image" title="Permalink to this headline">¶</a></h2>
+<p>A personalised image created and stored in Grid’5000, containing all the
+dependencies to install OpenStack in subsequent deployments, may be built
+directly from the command line on-the-fly without any intermediary deploy
+execution. Run the command <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">build</span> <span class="pre">vmong5k</span></code>, changing the default values
+accordingly (specially the <code class="docutils literal notranslate"><span class="pre">--cluster</span></code> one).</p>
+<p>In order to complete the image construction, after the execution of EnOS, a file
+with the same name of the virtual machine created during the enactment (for
+example:  <code class="docutils literal notranslate"><span class="pre">vm-ac28907433b45227ee0d784d24ac91fb-1-0</span></code>) is located in the
+directory configured with the argument <code class="docutils literal notranslate"><span class="pre">--directory</span></code> (default <code class="docutils literal notranslate"><span class="pre">~/.enos</span></code>).
+Rename this file and placed it in a permanent location visible on Grid’5000 such
+as <code class="docutils literal notranslate"><span class="pre">~/public/enos-openstack-image.qcow2</span></code>, then the configuration can reuse that
+image setting the image as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>provider:
+  type: vmong5k
+  image: ~/public/enos-openstack-image.qcow2
+  ...
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="openstack.html" class="btn btn-neutral float-right" title="Openstack" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="vagrant.html" class="btn btn-neutral float-left" title="Vagrant" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, discovery.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

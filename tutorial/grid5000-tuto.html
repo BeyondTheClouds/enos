@@ -1,0 +1,1465 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>EnOS Tutorial on top of Grid’5000 &mdash; Enos 7.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="OpenStack SDK" href="openstacksdk.html" />
+    <link rel="prev" title="Tutorials" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Enos
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                7.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../provider/index.html">Provider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli/index.html">Enos command line</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks/index.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../customization/index.html">Customizations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../network-emulation/index.html">Network Emulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/index.html">Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute/index.html">Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../jenkins/index.html">Jenkins</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">EnOS Tutorial on top of Grid’5000</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#requirements-and-setup">1 Requirements and Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#presentation">2 Presentation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#openstack">2.1 OpenStack</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#enos">2.2 EnOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#topology-deployed-in-this-lab">2.3 Topology deployed in this lab</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#set-the-enos-node-and-install-enos">3 Set the <em>enos</em> node and install EnOS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#deploy-openstack-using-enos">4 Deploy OpenStack using EnOS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#the-enos-configuration-file">4.1 The EnOS configuration file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#deploy-openstack">4.2 Deploy OpenStack</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#play-with-openstack">5 Play with OpenStack</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#unleash-the-operator-in-you">5.1 Unleash the Operator in You</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#stress-and-visualize-openstack-behavior-using-enos">6 Stress and Visualize OpenStack Behavior using EnOS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#visualize-openstack-behavior">6.1 Visualize OpenStack Behavior</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#benchmark-openstack">6.2 Benchmark OpenStack</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backup-your-results">6.3 Backup your results</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#add-traffic-shaping">7 Add Traffic Shaping</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#define-network-constraints">7.1 Define Network Constraints</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#run-dataplane-benchmarks-with-and-without-dvr">7.2 Run Dataplane Benchmarks with and without DVR</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#appendix">8 Appendix</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#nova-scenario-for-rally">8.1 Nova scenario for Rally</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#configuration-file-with-a-topology-and-network-constraints">8.2 Configuration file with a topology and network constraints</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="openstacksdk.html">OpenStack SDK</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Enos</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Tutorials</a> &raquo;</li>
+        
+      <li>EnOS Tutorial on top of Grid’5000</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/tutorial/grid5000-tuto.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="enos-tutorial-on-top-of-grid5000">
+<h1>EnOS Tutorial on top of Grid’5000<a class="headerlink" href="#enos-tutorial-on-top-of-grid5000" title="Permalink to this headline">¶</a></h1>
+<p>OpenStack <a class="footnote-reference brackets" href="#id23" id="id1">1</a>  has become the <em>defacto</em> solution to operate
+compute, network and storage resources in public and private Clouds.
+This lab aims at exploring EnOS <a class="footnote-reference brackets" href="#id24" id="id2">2</a>  <a class="footnote-reference brackets" href="#id25" id="id3">3</a> , a
+holistic framework to conduct evaluations of different OpenStack
+configurations in an easy and reproducible manner. In particular, EnOS
+helps you in deploying real OpenStack instances on different types of
+infrastructure (from virtual environments based on VMs like Vagrant,
+to real large-scale testbeds composed of bare-metal machines like
+Grid’5000), stressing it and getting feedback. This lab is composed of
+two part:</p>
+<p>The first part is about getting started with EnOS. More precisely we
+are going to:</p>
+<ul class="simple">
+<li><p>Deploy and configure OpenStack on Grid’5000 using EnOS.</p></li>
+<li><p>Operate this OpenStack to manage IaaS resources (<em>e.g.</em>, boot VMs).</p></li>
+<li><p>Understand the benchmark mechanisms and run some evaluations.</p></li>
+<li><p>Visualize the collected metrics through Grafana.</p></li>
+</ul>
+<p>For those who desire to go further, we propose to use EnOS to
+investigate OpenStack in WAN networks. In this investigation we will
+study the impact of a specific feature used in such context, just like
+a developer would do. To that end, we will:</p>
+<ul class="simple">
+<li><p>Simulate a WAN-wide topology with EnOS by playing with traffic
+shaping.</p></li>
+<li><p>See how EnOS can be used to customize OpenStack (enable/disable
+features).</p></li>
+<li><p>Benchmark the deployed OpenStack and backup metrics.</p></li>
+<li><p>Analyze the collected metrics to highlight the impact of features.</p></li>
+</ul>
+<div class="section" id="requirements-and-setup">
+<h2>1 Requirements and Setup<a class="headerlink" href="#requirements-and-setup" title="Permalink to this headline">¶</a></h2>
+<p>To follow the lab you’ll need :</p>
+<ul class="simple">
+<li><p>A Web browser (<em>e.g.</em>, Firefox)</p></li>
+<li><p>A Grid’5000 account</p></li>
+<li><p>An SSH client (<em>e.g.</em>, OpenSSH on Linux/Mac, Putty on Windows)</p>
+<ul>
+<li><p>Follow the <a class="reference external" href="https://www.grid5000.fr/mediawiki/index.php/SSH#Setting_up_a_user_config_file">G5K’s recommendations</a> and edit your <code class="docutils literal notranslate"><span class="pre">~/.ssh/config</span></code>
+file to configure SSH for Grid’5000.</p></li>
+<li><p>Be sure your configuration works by typing <code class="docutils literal notranslate"><span class="pre">ssh</span> <span class="pre">rennes.g5k</span></code> for
+instance.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="presentation">
+<h2>2 Presentation<a class="headerlink" href="#presentation" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Since OpenStack deployment can be quite long (~20, 30 minutes) you
+might be interested in starting its deployment before reading the
+presentation of OpenStack and EnOS (you can <a class="reference internal" href="#deploy-openstack-using-enos">4 Deploy OpenStack using EnOS</a> and come
+back later).</p>
+</div>
+<p>Adrien Lebre gave a lecture regarding Cloud Computing, OpenStack and
+EnOS. You can find the slides of this lecture <a class="reference external" href="http://enos.irisa.fr/tp-polytech/openstack-slides.pdf">here</a>. In the following,
+we quickly present some information regarding OpenStack, EnOS and the
+lab we are going to set today.</p>
+<div class="section" id="openstack">
+<h3>2.1 OpenStack<a class="headerlink" href="#openstack" title="Permalink to this headline">¶</a></h3>
+<p>OpenStack is the <em>defacto</em> solution to manage infrastructures
+(<em>i.e.</em>, compute, network, storage resources). To that end, it
+provides management mechanisms as a modular platform composed of
+several projects, each of which is in charge of an aspect of the
+infrastructure management. Among the various projects (30+), here is a
+selection corresponding to the bare necessities to operate
+infrastructure:</p>
+<dl class="simple">
+<dt>Nova</dt><dd><p>the compute resource manager (<em>i.e.</em>,
+virtual/bare-metal machines and containers)</p>
+</dd>
+<dt>Glance</dt><dd><p>the image store</p>
+</dd>
+<dt>Neutron</dt><dd><p>the network manager for compute resources
+interconnection</p>
+</dd>
+<dt>Keystone</dt><dd><p>the authentication/authorization manager</p>
+</dd>
+</dl>
+<p>Each project are themselves based on multiple modules. Since OpenStack
+is designed as a distributed software, each module can be deployed on
+different physical/virtual machines. For instance, here is a set of
+modules that compose Nova:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nova-api</span></code>: in charge of managing users’ requests</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nova-scheduler</span></code>: in charge of scheduling compute resources on
+compute nodes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nova-compute</span></code>: in charge of the life-cycle of compute resources</p></li>
+<li><p>…</p></li>
+</ul>
+<p>To provide all the features expected by an infrastructure manager,
+OpenStack’s modules need cooperation. For instance, when a user asks
+nova to boot a VM, the image is fetched from glance, its network
+interfaces are configured by neutron, supposing keystone authorized
+the operation. Such cooperation is possible through three
+communication channels:</p>
+<dl class="simple">
+<dt>REST APIs</dt><dd><p>used for inter-project communications</p>
+</dd>
+<dt>Message queue (RabbitMQ)</dt><dd><p>used for intra-project communications</p>
+</dd>
+<dt>Database (MariaDB)</dt><dd><p>used to store project states</p>
+</dd>
+</dl>
+<p>From the user viewpoint, OpenStack can be operated by three ways:</p>
+<ul class="simple">
+<li><p>Horizon: the OpenStack service in charge of providing a Web GUI</p></li>
+<li><p>The OpenStack CLI</p></li>
+<li><p>REST APIs</p></li>
+</ul>
+</div>
+<div class="section" id="enos">
+<h3>2.2 EnOS<a class="headerlink" href="#enos" title="Permalink to this headline">¶</a></h3>
+<p>EnOS is a holistic framework to conduct evaluations of different
+OpenStack configurations in an easy and reproducible manner. In
+particular, EnOS helps you in deploying real OpenStack instances on
+different types of infrastructure (from virtual environments based on
+VMs like Vagrant, to real large-scale testbeds composed of bare-metal
+machines like Grid’5000), stressing it and getting feedback.</p>
+<p>Many projects exist to deploy OpenStack (e.g.
+OpenStack-Ansible <a class="footnote-reference brackets" href="#id26" id="id4">4</a> , OpenStack-Chef <a class="footnote-reference brackets" href="#id27" id="id5">5</a> ,
+OpenStack Kolla <a class="footnote-reference brackets" href="#id28" id="id6">6</a> , Kubernetes <a class="footnote-reference brackets" href="#id29" id="id7">7</a> ,
+Juju <a class="footnote-reference brackets" href="#id30" id="id8">8</a> ). EnOS relies on the Kolla OpenStack project to
+deploy OpenStack modules as Docker containers.</p>
+<p>EnOS’ workflow is the following:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">up</span></code>: book, provision and bootstrap testbed resources</p>
+<ul>
+<li><p>install dependencies (Docker)</p></li>
+<li><p>install monitoring tools (cAdvisor, collectd, influxdb, grafana)</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">deploy</span></code>: deploy OpenStack (based on Kolla)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">bench</span></code>: benchmark OpenStack</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">backup</span></code>: backup the collected metrics</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">destroy</span></code>: release resources</p></li>
+</ul>
+</div>
+<div class="section" id="topology-deployed-in-this-lab">
+<h3>2.3 Topology deployed in this lab<a class="headerlink" href="#topology-deployed-in-this-lab" title="Permalink to this headline">¶</a></h3>
+<p>The lab makes use of EnOS to deploy OpenStack on Grid’5000. In
+particular, we will need four G5K machines for our deployment:</p>
+<ul class="simple">
+<li><p><em>enos</em> node: A machine we will deploy ourselves to run EnOS.</p></li>
+<li><p><em>control</em> node: A machine that hosts the control modules, projects’
+APIs and databases.</p></li>
+<li><p><em>network</em> node: A machine that hosts network agents.</p></li>
+<li><p><em>compute</em> node: A machine that manages the compute modules where
+guest VMs live.</p></li>
+</ul>
+<p>Note that while we will deploy the <em>enos</em> node ourselves on G5K, but
+the three other nodes will be deployed automatically by EnOS. The
+following figure depicts the status of the different components in
+play during the lab:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>                       <span class="o">+---------------+</span>
+<span class="o">+----------------------+</span> <span class="n">g5k</span><span class="o">-</span><span class="n">frontend</span>  <span class="o">+----------------------+</span>
+<span class="o">|</span>                      <span class="o">+-------+-------+</span>                      <span class="o">|</span>
+<span class="o">|</span>                              <span class="o">|</span>                              <span class="o">|</span>
+<span class="o">|</span>                              <span class="n">v</span>                              <span class="o">|</span>
+<span class="o">|</span>                      <span class="o">+---------------+</span>                      <span class="o">|</span>
+<span class="o">|</span>           <span class="o">+----------+</span>     <span class="n">enos</span>      <span class="o">+----------+</span>           <span class="o">|</span>
+<span class="o">|</span>           <span class="o">|</span>          <span class="o">+---------------+</span>          <span class="o">|</span>           <span class="o">|</span>
+<span class="o">|</span>           <span class="o">|</span>                  <span class="o">|</span>                  <span class="o">|</span>           <span class="o">|</span>
+<span class="o">|</span>           <span class="n">v</span>                  <span class="n">v</span>                  <span class="n">v</span>           <span class="o">|</span>
+<span class="o">|</span>   <span class="o">+-------+-------+</span>  <span class="o">+-------+-------+</span>  <span class="o">+-------+------</span> <span class="o">+</span>   <span class="o">|</span>
+<span class="o">|</span>   <span class="o">|</span>    <span class="n">compute</span>    <span class="o">|</span>  <span class="o">|</span>    <span class="n">control</span>    <span class="o">|</span>  <span class="o">|</span>    <span class="n">network</span>    <span class="o">|</span>   <span class="o">|</span>
+<span class="o">|</span>   <span class="o">|</span>               <span class="o">|</span>  <span class="o">|</span>               <span class="o">|</span>  <span class="o">|</span>               <span class="o">|</span>   <span class="o">|</span>
+<span class="o">|</span>   <span class="o">|</span> <span class="o">*</span> <span class="n">container</span> <span class="mi">1</span> <span class="o">|</span>  <span class="o">|</span> <span class="o">*</span> <span class="n">container</span> <span class="mi">1</span> <span class="o">|</span>  <span class="o">|</span> <span class="o">*</span> <span class="n">container</span> <span class="mi">1</span> <span class="o">|</span>   <span class="o">|</span>
+<span class="o">|</span>   <span class="o">|</span> <span class="o">*</span> <span class="n">container</span> <span class="mi">2</span> <span class="o">|</span>  <span class="o">|</span> <span class="o">*</span> <span class="n">container</span> <span class="mi">2</span> <span class="o">|</span>  <span class="o">|</span> <span class="o">*</span> <span class="n">container</span> <span class="mi">2</span> <span class="o">|</span>   <span class="o">|</span>
+<span class="o">|</span>   <span class="o">|</span> <span class="o">*</span> <span class="o">...</span>         <span class="o">|</span>  <span class="o">|</span> <span class="o">*</span> <span class="o">...</span>         <span class="o">|</span>  <span class="o">|</span> <span class="o">*</span> <span class="o">...</span>         <span class="o">|</span>   <span class="o">|</span>
+<span class="o">|</span>   <span class="o">|</span> <span class="o">*</span> <span class="n">container</span> <span class="n">n</span> <span class="o">|</span>  <span class="o">|</span> <span class="o">*</span> <span class="n">container</span> <span class="n">n</span> <span class="o">|</span>  <span class="o">|</span> <span class="o">*</span> <span class="n">container</span> <span class="n">n</span> <span class="o">|</span>   <span class="o">|</span>
+<span class="o">|</span>   <span class="o">+---------------+</span>  <span class="o">+---------------+</span>  <span class="o">+---------------+</span>   <span class="o">|</span>
+<span class="o">|</span>                                                             <span class="o">|</span>
+<span class="o">+-------------------------------------------------------------+</span>
+</pre></div>
+</div>
+<p>As we can see in this figure, EnOS will be in charge of provisioning
+the <em>compute</em>, <em>control</em> and <em>network</em> nodes. In particular, EnOS will
+deploy Docker containers inside each nodes, which correspond to
+OpenStack services. For instance, the <em>control</em> node will host the
+<code class="docutils literal notranslate"><span class="pre">nova-api</span></code> and <code class="docutils literal notranslate"><span class="pre">nova-scheduler</span></code> containers while the <em>compute</em> node
+will host the <code class="docutils literal notranslate"><span class="pre">nova-compute</span></code> and <code class="docutils literal notranslate"><span class="pre">nova-libvirt</span></code> containers to provide
+VM hypervisor mechanisms.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To run EnOS and deploy OpenStack on G5K we need a dedicated because it
+is discouraged to run experiments from the frontend. This restriction
+is meant to avoid disturbing other users that are logged, since the
+frontend node has limited resources.  EnOS could also be run directly
+from your laptop.</p>
+</div>
+</div>
+</div>
+<div class="section" id="set-the-enos-node-and-install-enos">
+<h2>3 Set the <em>enos</em> node and install EnOS<a class="headerlink" href="#set-the-enos-node-and-install-enos" title="Permalink to this headline">¶</a></h2>
+<p>The first step is to determine on which cluster you will deploy
+OpenStack. To that end, you can run <code class="docutils literal notranslate"><span class="pre">funk</span></code> (Find yoUr Nodes on g5K)
+from any frontend to see the availability on G5K:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># laptop:~$</span>
+ssh nantes.g5k
+<span class="c1"># fnantes:~$</span>
+funk -w <span class="m">4</span>:00:00
+</pre></div>
+</div>
+<p>In this example, we check the availability of G5K’s clusters for the
+next four hours (adapt the time regarding your situation). Note that
+you can adapt the time of your reservation afterward, using the
+<code class="docutils literal notranslate"><span class="pre">oarwalltime</span></code> command <a class="footnote-reference brackets" href="#id31" id="id9">9</a> . Find a cluster with at least
+four nodes available before going further. Once it is done, reach the
+cluster’s site first, and then, get a new machine which we will use as
+our <em>enos</em> node. In this document, we target the parapide cluster,
+located in the Rennes site:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># fnantes:~$</span>
+ssh rennes
+<span class="c1"># frennes:~$ -- Not mandatory, but recommended</span>
+tmux
+<span class="c1"># frennes:~$ -- Let&#39;s connect to the enos node</span>
+oarsub -I -l <span class="s2">&quot;nodes=1,walltime=4:00:00&quot;</span> -p <span class="s2">&quot;cluster=&#39;parapide&#39;&quot;</span>
+</pre></div>
+</div>
+<p>Here, we get a new machine in interactive mode (<em>i.e.</em>,
+<code class="docutils literal notranslate"><span class="pre">-I</span></code>) for the next four hours from the parapide cluster. If it
+succeeds you should be directly connected to this node (check your
+prompt).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note that we created a <code class="docutils literal notranslate"><span class="pre">tmux</span></code> session in order to be resilient to any
+network failure during the ssh session.  Whenever we want to restore
+this session, we can connect to the frontend and attach to our tmux
+session, as follows:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># laptop:~$</span>
+ssh rennes.g5k
+<span class="c1"># frennes:~$ -- Stands for &quot;tmux attach&quot;</span>
+tmux a
+</pre></div>
+</div>
+</div>
+<p>Make a directory from where you will install EnOS and run your
+experiments:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># enos:~$</span>
+mkdir -p ~/enos-myxp
+<span class="c1"># enos:~$</span>
+<span class="nb">cd</span> ~/enos-myxp
+</pre></div>
+</div>
+<p>Then, install EnOS in your working directory (python3.7+ is required):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># enos:~/enos-myxp$</span>
+virtualenv --python<span class="o">=</span>python3 venv
+<span class="c1"># (venv) enos:~/enos-myxp$</span>
+. venv/bin/activate
+<span class="c1"># (venv) enos:~/enos-myxp$</span>
+pip install <span class="s2">&quot;enos[openstack]~=7.0.0&quot;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>EnOS is a Python project. We installed it inside a virtual
+environment, with <code class="docutils literal notranslate"><span class="pre">virtualenv</span></code>, to avoid any conflict regarding the
+version of its dependencies. Furthermore, it does not install anything
+outside the virtual environment which keeps the OS clean. Remember
+that you have to be in the virtual environment to use EnOS. It means
+that if you open a new terminal, you need to re-enter the venv. For
+instance, now that EnOS is installed, you can come back as follow:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># laptop:~$</span>
+ssh rennes.g5k
+<span class="c1"># frennes:~$</span>
+<span class="nb">cd</span> ~/enos-myxp
+<span class="c1"># frennes:~/enos-myxp$</span>
+<span class="nb">source</span> venv/bin/activate
+</pre></div>
+</div>
+</div>
+<p>Before going further, check EnOS works by typing <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">--help</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Enos: Monitor and test your OpenStack.
+[&lt;args&gt; ...] [-e ENV|--env=ENV]
+            [-h|--help] [-v|--version] [-s|--silent|--vv]
+
+General options:
+  -e ENV --env=ENV  Path to the environment directory. You should
+                    use this option when you want to link to a specific
+                    experiment. Not specifying this value will
+                    discard the loading of the environment (it
+                    makes sense for `up`).
+  -h --help         Show this help message.
+  -s --silent       Quiet mode.
+  -v --version      Show version number.
+  -vv               Verbose mode.
+
+Commands:
+  new            Print a reservation.yaml example
+  up             Get resources and install the docker registry.
+  os             Run kolla and install OpenStack.
+  init           Initialise OpenStack with the bare necessities.
+  bench          Run rally on this OpenStack.
+  backup         Backup the environment
+  ssh-tunnel     Print configuration for port forwarding with horizon.
+  tc             Enforce network constraints
+  info           Show information of the actual deployment.
+  destroy        Destroy the deployment and optionally the related resources.
+  deploy         Shortcut for enos up, then enos os and enos config.
+  kolla          Runs arbitrary kolla command on nodes
+See &#39;enos &lt;command&gt; --help&#39; for more information on a specific
+command.
+</pre></div>
+</div>
+</div>
+<div class="section" id="deploy-openstack-using-enos">
+<h2>4 Deploy OpenStack using EnOS<a class="headerlink" href="#deploy-openstack-using-enos" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="the-enos-configuration-file">
+<h3>4.1 The EnOS configuration file<a class="headerlink" href="#the-enos-configuration-file" title="Permalink to this headline">¶</a></h3>
+<p>To deploy OpenStack, EnOS reads a <em>configuration file</em>. This file
+states the OpenStack resources you want to deploy/measure together
+with their topology. A configuration could say, “Deploy a basic
+OpenStack on a single node”, or “Put OpenStack control services on
+ClusterA and compute services on ClusterB”, but also “Deploy each
+OpenStack services on a dedicated node and add WAN network latency
+between them”. So that EnOS can deploy such OpenStack over your
+testbed and run performance analysis.</p>
+<p>The description of the configuration is done in a <code class="docutils literal notranslate"><span class="pre">reservation.yaml</span></code>
+file. You may generate a new one with <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">new</span> <span class="pre">&gt;</span> <span class="pre">reservation.yaml</span></code>.
+The configuration file is pretty fat, with a configuration sample for
+all supported testbed (G5k, Chameleon, Vagrant, …).</p>
+<p>Use your favorite text editor to open the <code class="docutils literal notranslate"><span class="pre">reservation.yaml</span></code> file and
+edit it to fit your situation – <em>i.e.</em>, something like listing
+<a class="reference internal" href="#lst-reservation-yaml">lst:reservation.yaml</a>. Three parts of this configuration file are
+interested for a simple use of EnOS:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">provider</span></code> section (l. 5): Defines on which testbed to
+deploy OpenStack (<em>i.e.</em>, G5k, Chameleon, Vagrant, …).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resources</span></code> section (l. 10): Defines the number and role of
+machines to deploy on the testbed (<em>e.g.</em>, book 3 nodes on
+<code class="docutils literal notranslate"><span class="pre">paravance</span></code> with 1 <code class="docutils literal notranslate"><span class="pre">control</span></code> node, 1 <code class="docutils literal notranslate"><span class="pre">network</span></code> node and 1 <code class="docutils literal notranslate"><span class="pre">compute</span></code>
+node).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">kolla</span></code> section (l. 37): Defines the OpenStack
+configuration, for instance:</p>
+<ul>
+<li><p>Which OpenStack version to deploy (<em>e.g.</em>, <code class="docutils literal notranslate"><span class="pre">kolla-ansible:</span> <span class="pre">kolla-ansible~=10.0</span></code> – OpenStack Ussuri).</p></li>
+<li><p>Which OpenStack project to enable/disable (<em>e.g.</em>, <code class="docutils literal notranslate"><span class="pre">enable_heat:</span> <span class="pre">yes</span></code>).</p></li>
+</ul>
+</li>
+</ul>
+<div class="highlight-yaml notranslate" id="lst-reservation-yaml"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nn">---</span>
+<span class="c1"># ############################################### #</span>
+<span class="c1"># Grid&#39;5000 reservation parameters                #</span>
+<span class="c1"># ############################################### #</span>
+<span class="nt">provider</span><span class="p">:</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">g5k</span>
+  <span class="nt">job_name</span><span class="p">:</span> <span class="s">&#39;enos&#39;</span>
+  <span class="nt">walltime</span><span class="p">:</span> <span class="s">&#39;04:00:00&#39;</span>
+
+<span class="nt">resources</span><span class="p">:</span>
+  <span class="nt">paravance</span><span class="p">:</span>
+    <span class="nt">compute</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+    <span class="nt">network</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+    <span class="nt">control</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+
+<span class="c1"># ############################################### #</span>
+<span class="c1"># Inventory to use                                #</span>
+<span class="c1"># ############################################### #</span>
+<span class="nt">inventory</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">resources/inventory.sample</span>
+
+<span class="c1"># ############################################### #</span>
+<span class="c1"># docker registry parameters</span>
+<span class="c1"># ############################################### #</span>
+<span class="nt">registry</span><span class="p">:</span>
+   <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">external</span>
+   <span class="nt">ip</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">docker-cache.grid5000.fr</span>
+   <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+
+<span class="c1"># ############################################### #</span>
+<span class="c1"># Enos Customizations                             #</span>
+<span class="c1"># ############################################### #</span>
+<span class="nt">enable_monitoring</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">yes</span>
+
+<span class="c1"># ############################################### #</span>
+<span class="c1"># Kolla parameters                                #</span>
+<span class="c1"># ############################################### #</span>
+<span class="nt">kolla-ansible</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">kolla-ansible~=10.0</span>
+
+<span class="c1"># Vars : kolla_repo/ansible/group_vars/all.yml</span>
+<span class="nt">kolla</span><span class="p">:</span>
+  <span class="nt">kolla_base_distro</span><span class="p">:</span> <span class="s">&quot;centos&quot;</span>
+  <span class="nt">kolla_install_type</span><span class="p">:</span> <span class="s">&quot;source&quot;</span>
+  <span class="nt">enable_heat</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">yes</span>
+</pre></div>
+</td></tr></table></div>
+<p>The <code class="docutils literal notranslate"><span class="pre">provider</span></code> section tells on which testbed to deploy OpenStack plus
+its configuration. The configuration may vary from one testbed to
+another. For instance, Grid’5000 and Chameleon are research testbed
+were resources have to be booked, thus the configuration includes a
+<code class="docutils literal notranslate"><span class="pre">walltime</span></code> to define the time of your reservation. Conversely, the
+Vagrant provider starts VM with VirtualBox on your local machine, and
+thus doesn’t include such a option. Please, refer to the EnOS provider
+documentation <a class="footnote-reference brackets" href="#id32" id="id10">10</a>  to find the configuration parameters
+depending on the testbed. For the sake of this lab we are going to use
+the Grid’5000 provider (<em>i.e.</em>, <code class="docutils literal notranslate"><span class="pre">type:</span> <span class="pre">g5k</span></code>). Note that a <code class="docutils literal notranslate"><span class="pre">walltime</span></code>
+of 3 hours is enough for the first part of this workshop. If you plan
+to stay for the second part you should set 5 hours</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">resources</span></code> key contains the description of the desired resources
+and their topology. Once again, way you describe your topology may
+vary a little bit depending on the testbed you target. Please, refer
+to the EnOS provider documentation <a class="footnote-reference brackets" href="#id32" id="id11">10</a>  to find examples
+of resources description depending on the testbed. Here we declare the
+G5K cluster we target (<em>e.g.</em>, <code class="docutils literal notranslate"><span class="pre">paravance</span></code>), as well as the resources
+we want to deploy on: a <code class="docutils literal notranslate"><span class="pre">control</span></code>, a <code class="docutils literal notranslate"><span class="pre">network</span></code> and a <code class="docutils literal notranslate"><span class="pre">compute</span></code> node on
+which will be deployed all the required OpenStack services.</p>
+</div>
+<div class="section" id="deploy-openstack">
+<h3>4.2 Deploy OpenStack<a class="headerlink" href="#deploy-openstack" title="Permalink to this headline">¶</a></h3>
+<p>EnOS manages all the aspects of an OpenStack deployment by calling
+<code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">deploy</span></code>. Concretely, the <code class="docutils literal notranslate"><span class="pre">deploy</span></code> phase first gets resources on
+your testbed following your configuration description. Then, it
+provisions these resources with Docker. Finally, it starts each
+OpenStack services (e.g. Keystone, Nova, Neutron) inside a dedicated
+Docker container.</p>
+<p>Launch the deployment with:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+enos deploy -f reservation.yaml
+</pre></div>
+</div>
+<p>EnOS is now provisioning three machines on the cluster targeted by the
+<code class="docutils literal notranslate"><span class="pre">reservation.yaml</span></code>. Once the machines are provisioned, EnOS deploy
+OpenStack services on them, and you can display information regarding
+your deployment by typing:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+enos info
+</pre></div>
+</div>
+<p>In particular, you should see the IP address of the deployed nodes.</p>
+<p>While EnOS deploys OpenStack (it takes ~20 to 45 minutes), you can
+observe EnOS running containers on the control node. For that, you can
+access to the control node by typing:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+ssh -l root <span class="k">$(</span>enos info --out json <span class="p">|</span> jq -r <span class="s1">&#39;.rsc.control[0].address&#39;</span><span class="k">)</span>
+<span class="c1"># control:~# -- List the downloaded Docker images</span>
+docker images
+<span class="c1"># control:~# -- List the running Docker containers</span>
+docker ps
+<span class="c1"># control:~# -- Go back to `(venv) enos:~/enos-myxp$`</span>
+<span class="nb">exit</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>At the end of your session, you can release your reservation by typing
+the following command.  This will destroy all your deployment and
+delete your reservation.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+enos destroy --hard
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="play-with-openstack">
+<h2>5 Play with OpenStack<a class="headerlink" href="#play-with-openstack" title="Permalink to this headline">¶</a></h2>
+<p>The last service deployed is the OpenStack dashboard (Horizon). Once
+the deployment process is finished, Horizon is reachable from G5k.
+More precisely, Horizon runs in a Docker container on the control
+node, and listens on port 80. To access Horizon from your own web
+browser (from your laptop), you can create an SSH tunnel from your
+laptop to control node, located in G5K. To that end, you first need
+to get control node’s IP address, and then create the tunnel. Open a
+new terminal and type the following:</p>
+<ol class="arabic">
+<li><p>Find the control node address using EnOS:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+enos info
+<span class="c1"># (venv) enos:~/enos-myxp$</span>
+enos info --out json <span class="p">|</span> jq -r <span class="s1">&#39;.rsc.control[0].address&#39;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Create the tunnel from your laptop:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># laptop:~$ -- `ssh -NL 8000:&lt;g5k-control&gt;:80 &lt;g5k-site&gt;.g5k`, e.g.,</span>
+ssh -NL <span class="m">8000</span>:paravance-14-kavlan-4.nantes.grid5000.fr:80 rennes.g5k
+</pre></div>
+</div>
+</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This lab has been designed to <strong>run on a cluster where nodes have two network interfaces</strong>. <strong>If you plan to run the lab on a cluster with a single network interface</strong>, <strong>please run the following script on the network node</strong>. You can check how many network interfaces are
+associated to a cluster by consulting the <a class="reference external" href="https://www.grid5000.fr/mediawiki/images/G5k_cheat_sheet.pdf">G5k Cheatsheet</a>. If you are
+concerned, connect to the network node as root with:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+ssh -l root <span class="k">$(</span>enos info --out json <span class="p">|</span> jq -r <span class="s1">&#39;.rsc.network[0].address&#39;</span><span class="k">)</span>
+</pre></div>
+</div>
+<p>And execute the following script:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env bash</span>
+
+<span class="c1"># The network interface</span>
+<span class="nv">IF</span><span class="o">=</span>&lt;interface-network-node-<span class="o">(</span>eno<span class="p">|</span>eth<span class="o">)[</span><span class="m">0</span>-9<span class="o">]</span>&gt;
+<span class="c1"># This is the list of the vip of $IF</span>
+<span class="nv">ips</span><span class="o">=</span><span class="k">$(</span>ip addr show dev <span class="nv">$IF</span><span class="p">|</span>grep <span class="s2">&quot;inet .*/32&quot;</span> <span class="p">|</span> awk <span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
+<span class="k">if</span> <span class="o">[[</span> ! -z <span class="s2">&quot;</span><span class="nv">$ips</span><span class="s2">&quot;</span> <span class="o">]]</span>
+<span class="k">then</span>
+  <span class="c1"># vip detected</span>
+  <span class="nb">echo</span> <span class="nv">$ips</span>
+  docker <span class="nb">exec</span> -ti openvswitch_vswitchd ovs-vsctl add-port br-ex <span class="nv">$IF</span> <span class="o">&amp;&amp;</span> ip addr flush <span class="nv">$IF</span> <span class="o">&amp;&amp;</span> dhclient -nw br-ex
+  <span class="k">for</span> ip <span class="k">in</span> <span class="nv">$ips</span>
+  <span class="k">do</span>
+    ip addr add <span class="nv">$ip</span> dev br-ex
+  <span class="k">done</span>
+<span class="k">else</span>
+  <span class="nb">echo</span> <span class="s2">&quot;nothing to do&quot;</span>
+<span class="k">fi</span>
+</pre></div>
+</div>
+</div>
+<p>Once it is done, you can access Horizon from your web browser through
+<a class="reference external" href="http://localhost:8000">http://localhost:8000</a> with the following credentials:</p>
+<ul class="simple">
+<li><p>login: <code class="docutils literal notranslate"><span class="pre">admin</span></code></p></li>
+<li><p>password: <code class="docutils literal notranslate"><span class="pre">demo</span></code></p></li>
+</ul>
+<p>From here, you can reach <code class="docutils literal notranslate"><span class="pre">Project</span> <span class="pre">&gt;</span> <span class="pre">Compute</span> <span class="pre">&gt;</span> <span class="pre">Instances</span> <span class="pre">&gt;</span> <span class="pre">Launch</span> <span class="pre">Instance</span></code> and boot a virtual machine given the following information:</p>
+<ul class="simple">
+<li><p>a name (e.g., <code class="docutils literal notranslate"><span class="pre">horizon-vm</span></code>)</p></li>
+<li><p>an image (e.g., <code class="docutils literal notranslate"><span class="pre">cirros</span></code>)</p></li>
+<li><p>a flavor to limit the resources of your instance (I recommend
+<code class="docutils literal notranslate"><span class="pre">tiny</span></code>)</p></li>
+<li><p>and a network setting (must be <code class="docutils literal notranslate"><span class="pre">private</span></code>)</p></li>
+</ul>
+<p>You should select options by clicking on the arrow on the right of
+each possibility. When the configuration is OK, the <code class="docutils literal notranslate"><span class="pre">Launch</span> <span class="pre">Instance</span></code>
+button should be enabled. After clicking on it, you should see the
+instance in the <code class="docutils literal notranslate"><span class="pre">Active</span></code> state in less than a minute.</p>
+<p>Now, you have several options to connect to your freshly deployed VM.
+For instance, by clicking on its name, Horizon provides a virtual
+console under the <code class="docutils literal notranslate"><span class="pre">Console</span></code> tab. Use the following credentials to
+access the VM:</p>
+<ul class="simple">
+<li><p>login: <code class="docutils literal notranslate"><span class="pre">cirros</span></code></p></li>
+<li><p>password: <code class="docutils literal notranslate"><span class="pre">cubswin:)</span></code></p></li>
+</ul>
+<p>While Horizon is helpful to discover OpenStack features, this is not
+how a real operator administrates OpenStack. A real operator prefers
+command line interface 😄.</p>
+<div class="section" id="unleash-the-operator-in-you">
+<h3>5.1 Unleash the Operator in You<a class="headerlink" href="#unleash-the-operator-in-you" title="Permalink to this headline">¶</a></h3>
+<p>OpenStack provides a command line interface to operate your Cloud. But
+before using it, you need to set your environment with the OpenStack
+credentials, so that the command line won’t bother you by requiring
+credentials each time.</p>
+<p>Load the OpenStack credentials:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+. current/admin-openrc
+</pre></div>
+</div>
+<p>You can then check that your environment is correctly set executing
+the following command that should output something similar to the
+listing <a class="reference internal" href="#lst-env-os">lst:env-os</a>:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+env<span class="p">|</span>fgrep OS_<span class="p">|</span>sort
+</pre></div>
+</div>
+<div class="highlight-sh notranslate" id="lst-env-os"><div class="highlight"><pre><span></span><span class="nv">OS_AUTH_URL</span><span class="o">=</span>http://10.24.61.255:35357/v3
+<span class="nv">OS_IDENTITY_API_VERSION</span><span class="o">=</span><span class="m">3</span>
+<span class="nv">OS_PASSWORD</span><span class="o">=</span>demo
+<span class="nv">OS_PROJECT_DOMAIN_ID</span><span class="o">=</span>default
+<span class="nv">OS_PROJECT_DOMAIN_NAME</span><span class="o">=</span>default
+<span class="nv">OS_PROJECT_NAME</span><span class="o">=</span>admin
+<span class="nv">OS_REGION_NAME</span><span class="o">=</span>RegionOne
+<span class="nv">OS_TENANT_NAME</span><span class="o">=</span>admin
+<span class="nv">OS_USER_DOMAIN_ID</span><span class="o">=</span>default
+<span class="nv">OS_USER_DOMAIN_NAME</span><span class="o">=</span>default
+<span class="nv">OS_USERNAME</span><span class="o">=</span>admin
+</pre></div>
+</div>
+<p>All operations to manage OpenStack are done through one single command
+line, called <code class="docutils literal notranslate"><span class="pre">openstack</span></code>. Doing an <code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">--help</span></code> displays the
+really long list of possibilities provided by this command. The
+following gives you a selection of the most often used commands to
+operate your Cloud:</p>
+<dl class="simple">
+<dt>List OpenStack running services</dt><dd><p><code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">endpoint</span> <span class="pre">list</span></code></p>
+</dd>
+<dt>List images</dt><dd><p><code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">image</span> <span class="pre">list</span></code></p>
+</dd>
+<dt>List flavors</dt><dd><p><code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">flavor</span> <span class="pre">list</span></code></p>
+</dd>
+<dt>List networks</dt><dd><p><code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">network</span> <span class="pre">list</span></code></p>
+</dd>
+<dt>List computes</dt><dd><p><code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">hypervisor</span> <span class="pre">list</span></code></p>
+</dd>
+<dt>List VMs (running or not)</dt><dd><p><code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">server</span> <span class="pre">list</span></code></p>
+</dd>
+<dt>Get details on a specific VM</dt><dd><p><code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">server</span> <span class="pre">show</span> <span class="pre">&lt;vm-name&gt;</span></code></p>
+</dd>
+<dt>Start a new VM</dt><dd><p><code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">server</span> <span class="pre">create</span> <span class="pre">--image</span> <span class="pre">&lt;image-name&gt;</span> <span class="pre">--flavor</span> <span class="pre">&lt;flavor-name&gt;</span> <span class="pre">--nic</span> <span class="pre">net-id=&lt;net-id&gt;</span> <span class="pre">&lt;vm-name&gt;</span></code></p>
+</dd>
+<dt>View VMs logs</dt><dd><p><code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">console</span> <span class="pre">log</span> <span class="pre">show</span> <span class="pre">&lt;vm-name&gt;</span></code></p>
+</dd>
+</dl>
+<p>Based on these commands, you can use the CLI to start a new tiny
+cirros VM called <code class="docutils literal notranslate"><span class="pre">cli-vm</span></code>:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+openstack server create --image cirros.uec<span class="se">\</span>
+                        --flavor m1.tiny<span class="se">\</span>
+                        --network private <span class="se">\</span>
+                        cli-vm
+</pre></div>
+</div>
+<p>Then, display the information about your VM with the following command:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+openstack server show cli-vm
+</pre></div>
+</div>
+<p>Note in particular the status of your VM. This status will go from
+<code class="docutils literal notranslate"><span class="pre">BUILD</span></code>: OpenStack is looking for the best place to boot the VM, to
+<code class="docutils literal notranslate"><span class="pre">ACTIVE</span></code>: your VM is running. The status could also be <code class="docutils literal notranslate"><span class="pre">ERROR</span></code> if you
+are experiencing hard times with your infrastructure.</p>
+<p>With the previous <code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">server</span> <span class="pre">create</span></code> command, the VM boots with
+a private IP. Private IPs are used for communication between VMs,
+meaning you cannot ping your VM from the lab machine. Network lovers
+will find a challenge here: try to ping the VM from the lab machine.
+For the others, you have to manually affect a floating IP to your
+machine if you want it pingable from the enos node.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+openstack server add floating ip<span class="se">\</span>
+  cli-vm<span class="se">\</span>
+  <span class="k">$(</span>openstack floating ip create public -c floating_ip_address -f value<span class="k">)</span>
+</pre></div>
+</div>
+<p>You can ask for the status of your VM and its IPs with:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+openstack server show cli-vm -c status -c addresses
+</pre></div>
+</div>
+<p>Wait one minute or two the time for the VM to boot, and when the state
+is <code class="docutils literal notranslate"><span class="pre">ACTIVE</span></code>, you can ping it on its floating IP and SSH on it:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+ping &lt;floating-ip&gt;
+<span class="c1"># (venv) enos:~/enos-myxp$</span>
+ssh -l cirros &lt;floating-ip&gt;
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Waiting for the IP to appear and then ping it could be done with a
+bunch of bash commands, such as in listing <a class="reference internal" href="#lst-query-ip">lst:query-ip</a>.</p>
+<div class="highlight-sh notranslate" id="lst-query-ip"><div class="highlight"><pre><span></span><span class="nv">FIXED_IP</span><span class="o">=</span><span class="k">$(</span>openstack server show cli-vm -c addresses -f value <span class="p">|</span> sed  -Er <span class="s1">&#39;s/private=(10\.0\.0\.[0-9]+).*/\1/g&#39;</span><span class="k">)</span>
+<span class="nv">FLOATING_IP</span><span class="o">=</span><span class="k">$(</span>openstack floating ip list --fixed-ip-address <span class="s2">&quot;</span><span class="nv">$FIXED_IP</span><span class="s2">&quot;</span> -f value -c <span class="s2">&quot;Floating IP Address&quot;</span> <span class="p">|</span> head -n <span class="m">1</span><span class="k">)</span>
+<span class="nv">COUNT</span><span class="o">=</span><span class="m">20</span>
+<span class="k">while</span> <span class="o">[[</span> <span class="nv">$COUNT</span> -ne <span class="m">0</span> <span class="o">]]</span> <span class="p">;</span> <span class="k">do</span>
+    ping -c <span class="m">1</span> <span class="s2">&quot;</span><span class="nv">$FLOATING_IP</span><span class="s2">&quot;</span>
+    <span class="nv">RC</span><span class="o">=</span><span class="nv">$?</span>
+    <span class="k">if</span> <span class="o">[[</span> <span class="nv">$RC</span> -eq <span class="m">0</span> <span class="o">]]</span> <span class="p">;</span> <span class="k">then</span>
+        <span class="nv">COUNT</span><span class="o">=</span><span class="m">0</span>
+    <span class="k">else</span>
+        <span class="nv">COUNT</span><span class="o">=</span><span class="k">$((</span>COUNT <span class="o">-</span> <span class="m">1</span><span class="k">))</span>
+        sleep <span class="m">5</span>
+    <span class="k">fi</span>
+<span class="k">done</span>
+
+
+<span class="k">if</span> <span class="o">[[</span> <span class="nv">$RC</span> -ne <span class="m">0</span> <span class="o">]]</span> <span class="p">;</span> <span class="k">then</span>
+    <span class="nb">echo</span> <span class="s2">&quot;Timeout.&quot;</span><span class="p">;</span> <span class="nb">exit</span> <span class="m">124</span>
+<span class="k">fi</span>
+</pre></div>
+</div>
+<p>You can also check that the VM finished to boot by looking at its logs
+with <code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">console</span> <span class="pre">log</span> <span class="pre">show</span> <span class="pre">cli-vm</span></code>. The cirros VM finished to
+boot when last lines are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">===</span> <span class="n">cirros</span><span class="p">:</span> <span class="n">current</span><span class="o">=</span><span class="mf">0.3</span><span class="o">.</span><span class="mi">4</span> <span class="n">uptime</span><span class="o">=</span><span class="mf">16.56</span> <span class="o">===</span>
+  <span class="n">____</span>               <span class="n">____</span>  <span class="n">____</span>
+ <span class="o">/</span> <span class="n">__</span><span class="o">/</span> <span class="n">__</span> <span class="n">____</span> <span class="n">____</span> <span class="o">/</span> <span class="n">__</span> \<span class="o">/</span> <span class="n">__</span><span class="o">/</span>
+<span class="o">/</span> <span class="o">/</span><span class="n">__</span> <span class="o">/</span> <span class="o">//</span> <span class="n">__</span><span class="o">//</span> <span class="n">__</span><span class="o">//</span> <span class="o">/</span><span class="n">_</span><span class="o">/</span> <span class="o">/</span>\ \
+\<span class="n">___</span><span class="o">//</span><span class="n">_</span><span class="o">//</span><span class="n">_</span><span class="o">/</span>  <span class="o">/</span><span class="n">_</span><span class="o">/</span>   \<span class="n">____</span><span class="o">/</span><span class="n">___</span><span class="o">/</span>
+   <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">cirros</span><span class="o">-</span><span class="n">cloud</span><span class="o">.</span><span class="n">net</span>
+
+
+<span class="n">login</span> <span class="k">as</span> <span class="s1">&#39;cirros&#39;</span> <span class="n">user</span><span class="o">.</span> <span class="n">default</span> <span class="n">password</span><span class="p">:</span> <span class="s1">&#39;cubswin:)&#39;</span><span class="o">.</span> <span class="n">use</span> <span class="s1">&#39;sudo&#39;</span> <span class="k">for</span> <span class="n">root</span><span class="o">.</span>
+<span class="n">cli</span><span class="o">-</span><span class="n">vm</span> <span class="n">login</span><span class="p">:</span>
+</pre></div>
+</div>
+</div>
+<p>Before going to the next section, play around with the <code class="docutils literal notranslate"><span class="pre">openstack</span></code> CLI
+and Horizon. For instance, list all the features offered by Nova with
+<code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">server</span> <span class="pre">--help</span></code>. Here are some commands:</p>
+<ol class="arabic">
+<li><p>SSH on <code class="docutils literal notranslate"><span class="pre">cli-vm</span></code> using its name rather than its private IP.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+openstack server ssh cli-vm --public --login cirros
+</pre></div>
+</div>
+</li>
+<li><p>Create a snapshot of <code class="docutils literal notranslate"><span class="pre">cli-vm</span></code>.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+nova image-create cli-vm cli-vm-snapshot --poll
+</pre></div>
+</div>
+</li>
+<li><p>Delete the <code class="docutils literal notranslate"><span class="pre">cli-vm</span></code>.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+openstack server delete cli-vm --wait
+</pre></div>
+</div>
+</li>
+<li><p>Boot a new machine <code class="docutils literal notranslate"><span class="pre">cli-vm-clone</span></code> from the snapshot.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+openstack server create --image cli-vm-snapshot<span class="se">\</span>
+                        --flavor m1.tiny<span class="se">\</span>
+                        --network private<span class="se">\</span>
+                        --wait<span class="se">\</span>
+                        cli-vm-clone
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="section" id="stress-and-visualize-openstack-behavior-using-enos">
+<h2>6 Stress and Visualize OpenStack Behavior using EnOS<a class="headerlink" href="#stress-and-visualize-openstack-behavior-using-enos" title="Permalink to this headline">¶</a></h2>
+<p>EnOS not only deploys OpenStack according to your configuration, but
+also instruments it with a <em>monitoring stack</em>. The monitoring stack
+polls performance characteristics of the running services and helps
+you to understand the behavior of your OpenStack.</p>
+<p>Activating the monitoring stack is as simple as setting the
+<code class="docutils literal notranslate"><span class="pre">enable_monitoring</span></code> to <code class="docutils literal notranslate"><span class="pre">yes</span></code> in your <code class="docutils literal notranslate"><span class="pre">reservation.yaml</span></code>. This key
+tells EnOS to deploy two monitoring systems. First,
+cAdvisor <a class="footnote-reference brackets" href="#id33" id="id12">11</a> , a tool to collect resource usage of running
+containers. Using cAdvisor, EnOS gives information about the
+CPU/RAM/Network consumption per cluster/node/service. Second,
+Collectd <a class="footnote-reference brackets" href="#id34" id="id13">12</a> , a tool to collect performance data of specific
+applications. For instance, Collectd enables EnOS to record the number
+of updates that have been performed on the Nova database.</p>
+<p>The rest of this section, first shows how to visualize cAdvisor and
+Collectd information. Then, it presents tools to stress OpenStack in
+order to collect interesting information.</p>
+<div class="section" id="visualize-openstack-behavior">
+<h3>6.1 Visualize OpenStack Behavior<a class="headerlink" href="#visualize-openstack-behavior" title="Permalink to this headline">¶</a></h3>
+<p>A popular tool to visualize information provided by cAdvisor and
+Collectd (and whatever monitoring system you could use) is
+Grafana <a class="footnote-reference brackets" href="#id35" id="id14">13</a> . Grafana is a Web metrics dashboard. A Docker
+container is in charge of providing this service inside the control
+node. As a consequence, prior being able to be reachable from your
+browser, you need to set a tunnel to this service, by typing on your
+laptop:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># laptop:~$ -- `ssh -NL 3000:&lt;g5k-control&gt;:3000 &lt;g5k-site&gt;.g5k`, e.g.,</span>
+ssh -NL <span class="m">3000</span>:paravance-14-kavlan-4.nantes.grid5000.fr:3000 nantes.g5k
+</pre></div>
+</div>
+<p>You can then access Grafana at <a class="reference external" href="http://localhost:3000">http://localhost:3000</a> with the
+following credentials:</p>
+<ul class="simple">
+<li><p>login: <code class="docutils literal notranslate"><span class="pre">admin</span></code></p></li>
+<li><p>password: <code class="docutils literal notranslate"><span class="pre">admin</span></code></p></li>
+</ul>
+<p>The Grafana dashboard is highly customizable. For the sake of
+simplicity, we propose to use our configuration file that you can get
+with:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># laptop:~$</span>
+curl -O http://enos.irisa.fr/tp-g5k/grafana_dashboard.json
+</pre></div>
+</div>
+<p>You have then to import this file into Grafana. First, click on the
+<code class="docutils literal notranslate"><span class="pre">Grafana</span> <span class="pre">logo</span> <span class="pre">&gt;</span> <span class="pre">+</span> <span class="pre">&gt;</span> <span class="pre">Import</span> <span class="pre">&gt;</span> <span class="pre">Upload</span> <span class="pre">.json</span> <span class="pre">file</span></code> and select the
+<code class="docutils literal notranslate"><span class="pre">grafana_dashboard.json</span></code> file. Next, make names of the right column
+matching names of the left column by selecting the good item in the
+list. And finish by clicking on Save &amp; Open. This opens the dashboard
+with several measures on Nova, Neutron, Keystone, RabbitMQ, …
+services. Keep the dashboard open until the end of the lab, you will
+see consumption variation as we will perform stress tests.</p>
+</div>
+<div class="section" id="benchmark-openstack">
+<h3>6.2 Benchmark OpenStack<a class="headerlink" href="#benchmark-openstack" title="Permalink to this headline">¶</a></h3>
+<p>Stressing a Cloud manager can be done at two levels: at the <em>control plane</em> and at the <em>data plane</em>, and so it is for OpenStack. The
+control plane stresses OpenStack API. That is to say, features we used
+in the previous section to start a VM, get a floating IP, and all the
+features listed by <code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">--help</span></code>. The data plane stresses the
+usage of resources provided by an OpenStack feature. For instance, a
+network data plane testing tool will measure how resources provided by
+Neutron handle networks communications.</p>
+<p>OpenStack comes with dedicated tools that provide workload to stress
+control and data plane. The one for control plane is called
+Rally <a class="footnote-reference brackets" href="#id36" id="id15">14</a>  and the one for data plane is called
+Shaker <a class="footnote-reference brackets" href="#id37" id="id16">15</a> . And these two are well integrated into EnOS.</p>
+<p>EnOS looks inside the <code class="docutils literal notranslate"><span class="pre">workload</span></code> directory for a file named <code class="docutils literal notranslate"><span class="pre">run.yml</span></code>.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+mkdir -p workload
+<span class="c1"># (venv) enos:~/enos-myxp$</span>
+touch workload/run.yml
+</pre></div>
+</div>
+<p>Edit the file <code class="docutils literal notranslate"><span class="pre">run.yml</span></code> with your favorite editor. An example of such
+a file is given in listing <a class="reference internal" href="#lst-run-yml">lst:run.yml</a>. The <code class="docutils literal notranslate"><span class="pre">rally</span></code> (l. 2) key
+specifies the list of <code class="docutils literal notranslate"><span class="pre">scenarios</span></code> (l. 9) to execute (here, only
+the <a class="reference internal" href="#nova-scenario-for-rally">8.1 Nova scenario for Rally</a> – available at
+<code class="docutils literal notranslate"><span class="pre">~/enos-myxp/workload/nova-boot-list-cc.yml</span></code> – that asks Nova to boot
+VMs and list them) and their customization.</p>
+<p>The customization could be done by using the top level <code class="docutils literal notranslate"><span class="pre">args</span></code> (l.
+4). In such case, it applies to any scenario. For instance
+here, <code class="docutils literal notranslate"><span class="pre">concurrency</span></code> (l. 5) and <code class="docutils literal notranslate"><span class="pre">times</span></code> (l. 7) tells Rally
+to launch <code class="docutils literal notranslate"><span class="pre">5</span></code> OpenStack client for a total of <code class="docutils literal notranslate"><span class="pre">10</span></code> execution of every
+scenario. The customization could also be done on a per-scenario basis
+with the dedicated <code class="docutils literal notranslate"><span class="pre">args</span></code> (l. 12), and thus could be only
+applies to the specific scenario. For instance here, the <code class="docutils literal notranslate"><span class="pre">30</span></code> value
+overrides the <code class="docutils literal notranslate"><span class="pre">sla_max_avg_duration</span></code> default value solely in the <code class="docutils literal notranslate"><span class="pre">boot</span> <span class="pre">and</span> <span class="pre">list</span> <span class="pre">servers</span></code> scenario.</p>
+<div class="highlight-yaml notranslate" id="lst-run-yml"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nn">---</span>
+<span class="nt">rally</span><span class="p">:</span>
+    <span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">yes</span>
+    <span class="nt">args</span><span class="p">:</span>
+      <span class="nt">concurrency</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">5</span>
+      <span class="nt">times</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+    <span class="nt">scenarios</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">boot and list servers</span>
+        <span class="nt">file</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nova-boot-list-cc.yml</span>
+        <span class="nt">args</span><span class="p">:</span>
+          <span class="nt">sla_max_avg_duration</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">30</span>
+<span class="nt">shaker</span><span class="p">:</span>
+  <span class="nt">enabled</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">yes</span>
+  <span class="nt">scenarios</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">OpenStack L3 East-West Dense</span>
+      <span class="nt">file</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">openstack/dense_l3_east_west</span>
+</pre></div>
+</td></tr></table></div>
+<p>Calling Rally and Shaker from EnOS is done with:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+enos bench --workload<span class="o">=</span>workload
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>At the same time as enos bench is running, keep an eye on the Grafana
+dashboard available at <a class="reference external" href="http://localhost:3000">http://localhost:3000</a>. At the top left of the
+page, you can click on the clock icon ⌚ and tells Grafana to
+automatically refresh every 5 seconds and only display the last 5
+minutes.</p>
+</div>
+<p>Rally and Shaker provide a huge list of scenarios on their respective
+GitHub <a class="footnote-reference brackets" href="#id38" id="id18">16</a>  <a class="footnote-reference brackets" href="#id39" id="id19">17</a> . Before going further,
+go through the Rally list and try to add the scenario of your choice
+into the <code class="docutils literal notranslate"><span class="pre">run.yml</span></code>. Note that you have to download the scenario file
+in the <code class="docutils literal notranslate"><span class="pre">workload</span></code> directory and then put a new item under the
+<code class="docutils literal notranslate"><span class="pre">scenarios</span></code> key (l. 9) . The new item should contain, at least,
+the <code class="docutils literal notranslate"><span class="pre">name</span></code> of the scenario and its <code class="docutils literal notranslate"><span class="pre">file</span></code> path (relative to the
+<code class="docutils literal notranslate"><span class="pre">workload</span></code> directory).</p>
+</div>
+<div class="section" id="backup-your-results">
+<h3>6.3 Backup your results<a class="headerlink" href="#backup-your-results" title="Permalink to this headline">¶</a></h3>
+<p>Rally and Shaker produce reports on executed scenarios. For instance,
+Rally produces a report with the full duration, load mean duration,
+number of iteration and percent of failures, per scenario. These
+reports, plus data measured by cAdvisor and Collectd, plus logs of
+every OpenStack services can be backup by EnOS with:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+enos backup --backup_dir<span class="o">=</span>benchresults
+</pre></div>
+</div>
+<p>The argument <code class="docutils literal notranslate"><span class="pre">backup_dir</span></code> tells where to store backup archives. If you
+look into this directory, you will see, among others, an archive named
+<code class="docutils literal notranslate"><span class="pre">&lt;controler-node&gt;-rally.tar.gz</span></code>. Concretely, this archive contains a
+backup of Rally database with all raw data and the Rally reports. You
+can extract the Rally report of the <em>Nova boot and list servers</em>
+scenario with the following command and then open it in your favorite
+browser:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+tar --file benchresults/*-rally.tar.gz<span class="se">\</span>
+    --get <span class="k">$(</span>tar --file benchresults/*-rally.tar.gz<span class="se">\</span>
+                --list <span class="p">|</span> grep <span class="s2">&quot;root/rally_home/report-nova-boot-list-cc.yml-.*.html&quot;</span><span class="k">)</span>
+</pre></div>
+</div>
+<p>For those interested in playing with deploying applications on top of
+OpenStack, you can jump to another workshop involving Heat: the
+OpenStack Orchestration service <a class="reference external" href="http://enos.irisa.fr/tp-g5k/HEAT-SUBJECT.html">here</a>.</p>
+</div>
+</div>
+<div class="section" id="add-traffic-shaping">
+<h2>7 Add Traffic Shaping<a class="headerlink" href="#add-traffic-shaping" title="Permalink to this headline">¶</a></h2>
+<p>EnOS allows to enforce network emulation in terms of latency,
+bandwidth limitation and packet loss.</p>
+<div class="section" id="define-network-constraints">
+<h3>7.1 Define Network Constraints<a class="headerlink" href="#define-network-constraints" title="Permalink to this headline">¶</a></h3>
+<p>Network constraints (latency/bandwidth limitations) are enabled by the
+use of groups of nodes. Resources must be described using a <code class="docutils literal notranslate"><span class="pre">topology</span></code>
+description instead of a <code class="docutils literal notranslate"><span class="pre">resources</span></code> description. For instance,
+listings <a class="reference internal" href="#lst-topos-g5k">lst:topos-g5k</a> defines two groups named <code class="docutils literal notranslate"><span class="pre">grp1</span></code> and <code class="docutils literal notranslate"><span class="pre">grp2</span></code>.</p>
+<div class="highlight-yaml notranslate" id="lst-topos-g5k"><div class="highlight"><pre><span></span><span class="nt">topology</span><span class="p">:</span>
+  <span class="nt">grp1</span><span class="p">:</span>
+    <span class="nt">paravance</span><span class="p">:</span>
+      <span class="nt">control</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+      <span class="nt">network</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+  <span class="nt">grp2</span><span class="p">:</span>
+    <span class="nt">paravance</span><span class="p">:</span>
+      <span class="nt">compute</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+</pre></div>
+</div>
+<p>Constraints are then described under the <code class="docutils literal notranslate"><span class="pre">network_constraints</span></code> key in
+the <code class="docutils literal notranslate"><span class="pre">reservation.yaml</span></code> file:</p>
+<div class="highlight-yaml notranslate" id="lst-net-constraints"><div class="highlight"><pre><span></span><span class="nt">network_constraints</span><span class="p">:</span>
+  <span class="nt">enable</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+  <span class="nt">default_delay</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">25ms</span>
+  <span class="nt">default_rate</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">100mbit</span>
+  <span class="nt">default_loss</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1%</span>
+  <span class="nt">constraints</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="nt">src</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">grp1</span>
+      <span class="nt">dst</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">grp2</span>
+      <span class="nt">delay</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">50ms</span>
+      <span class="nt">rate</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1gbit</span>
+      <span class="nt">loss</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0%</span>
+      <span class="nt">symmetric</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+</pre></div>
+</div>
+<p>Copy your <code class="docutils literal notranslate"><span class="pre">reservation.yaml</span></code> file as <code class="docutils literal notranslate"><span class="pre">reservation-topo.yaml</span></code> with <code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">reservation.yaml</span> <span class="pre">reservation-topo.yaml</span></code> and edit it to include the
+topology and network constraints definition. An example of such file
+is given in <a class="reference internal" href="#configuration-file-with-a-topology-and-network-constraints">8.2 Configuration file with a topology and network constraints</a>.</p>
+<p>Since our topology is now defined by groups, we need to re-run <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">deploy</span> <span class="pre">-f</span> <span class="pre">reservation-topo.yaml</span></code> (which should be faster than the
+first time). And then enforce these constraints with <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">tc</span></code>, which
+results in:</p>
+<ul class="simple">
+<li><p>Default network delay is 50ms.</p></li>
+<li><p>Default bandwidth is 100Mbit/s.</p></li>
+<li><p>Default packet loss percentage is 0.1%.</p></li>
+<li><p>Network delay between machines of <code class="docutils literal notranslate"><span class="pre">grp1</span></code> and <code class="docutils literal notranslate"><span class="pre">grp2</span></code> is 100ms
+(2x50ms: symmetric).</p></li>
+<li><p>Bandwidth between machines of <code class="docutils literal notranslate"><span class="pre">grp1</span></code> and <code class="docutils literal notranslate"><span class="pre">grp2</span></code> is 1 Gbit/s.</p></li>
+<li><p>Packet loss percentage between machines of <code class="docutils literal notranslate"><span class="pre">grp1</span></code> and <code class="docutils literal notranslate"><span class="pre">grp2</span></code> is 0%.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Invoking <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">tc</span> <span class="pre">--test</span></code> generates various reports that validate the
+correct enforcement of the constraints. They are based on <code class="docutils literal notranslate"><span class="pre">fping</span></code> and
+<code class="docutils literal notranslate"><span class="pre">flent</span></code> latency and bandwidth measurements respectively. The report is
+located in the
+<code class="docutils literal notranslate"><span class="pre">~/enos-myxp/current/_tmp_enos_/&lt;g5k-(control|network|compute)&gt;.out</span></code>.</p>
+</div>
+</div>
+<div class="section" id="run-dataplane-benchmarks-with-and-without-dvr">
+<h3>7.2 Run Dataplane Benchmarks with and without DVR<a class="headerlink" href="#run-dataplane-benchmarks-with-and-without-dvr" title="Permalink to this headline">¶</a></h3>
+<p>Run the Shaker <code class="docutils literal notranslate"><span class="pre">dense_l3_east_west</span></code> scenario with</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+enos bench --workload<span class="o">=</span>workload
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you look carefully, you will see that execution of Nova boot and
+list fails because of a SLA violation. You can try to customize
+listing <a class="reference internal" href="#lst-run-yml">lst:run.yml</a> to make the test pass.</p>
+</div>
+<p>In this scenario Shaker launches pairs of instances on the same
+compute node. Instances are connected to different tenant networks
+connected to one router. The traffic goes from one network to the
+other (L3 east-west). Get the Shaker report with <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">backup</span></code> and
+analyze it. You will remark that network communications between two
+VMs co-located on the same compute are 100ms RTT. This is because
+packet are routed by Neutron service that is inside <code class="docutils literal notranslate"><span class="pre">grp1</span></code> and VMs are
+inside the <code class="docutils literal notranslate"><span class="pre">grp2</span></code>.</p>
+<p>Now, reconfigure Neutron to use DVR <a class="footnote-reference brackets" href="#id40" id="id21">18</a> . DVR will push Neutron
+agent directly on the compute of <code class="docutils literal notranslate"><span class="pre">grp2</span></code>. With EnOS, you should do so
+by updating the <code class="docutils literal notranslate"><span class="pre">reservation.yaml</span></code> and add <code class="docutils literal notranslate"><span class="pre">enable_neutron_dvr:</span> <span class="pre">&quot;yes&quot;</span></code>
+under the <code class="docutils literal notranslate"><span class="pre">kolla</span></code> key.
+Then, tell EnOS to reconfigure Neutron.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+enos os --tags<span class="o">=</span>neutron --reconfigure
+</pre></div>
+</div>
+<p>And finally, re-execute the <code class="docutils literal notranslate"><span class="pre">dense_l3_east_west</span></code> scenario.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
+enos bench --workload<span class="o">=</span>workload
+</pre></div>
+</div>
+<p>Compare this result with the previous one. You see that you no more
+pay the cost of WAN latency.</p>
+<p>This experiment shows the importance of activating DVR in a WAN
+context, and how you can easily see that using EnOS. Do not hesitate
+to take a look at the complete list of Shaker scenarios on their
+GitHub <a class="footnote-reference brackets" href="#id39" id="id22">17</a>  and continue to have fun with EnOS.</p>
+</div>
+</div>
+<div class="section" id="appendix">
+<h2>8 Appendix<a class="headerlink" href="#appendix" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="nova-scenario-for-rally">
+<h3>8.1 Nova scenario for Rally<a class="headerlink" href="#nova-scenario-for-rally" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span>{% set image_name = image_name or &quot;cirros.uec&quot; %}
+{% set flavor_name = flavor_name or &quot;m1.tiny&quot; %}
+{% set sla_max_avg_duration = sla_max_avg_duration or 60 %}
+{% set sla_max_failure = sla_max_failure or 0 %}
+{% set sla_max_seconds = sla_max_seconds or 60 %}
+---
+  NovaServers.boot_and_list_server:
+    -
+      args:
+        flavor:
+          name: {{flavor_name}}
+        image:
+          name: {{image_name}}
+        detailed: true
+        auto_assign_nic: true
+      runner:
+        concurrency: {{concurrency}}
+        times: {{times}}
+        type: &quot;constant&quot;
+      context:
+        users:
+          tenants: 1
+          users_per_tenant: 1
+        network:
+          start_cidr: &quot;10.2.0.0/24&quot;
+          networks_per_tenant: 1
+        quotas:
+          neutron:
+            network: -1
+            port: -1
+          nova:
+            instances: -1
+            cores: -1
+            ram: -1
+      sla:
+        max_avg_duration: {{sla_max_avg_duration}}
+        max_seconds_per_iteration: {{sla_max_seconds}}
+        failure_rate:
+          max: {{sla_max_failure}}
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuration-file-with-a-topology-and-network-constraints">
+<h3>8.2 Configuration file with a topology and network constraints<a class="headerlink" href="#configuration-file-with-a-topology-and-network-constraints" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nn">---</span>
+<span class="c1"># ############################################### #</span>
+<span class="c1"># Grid&#39;5000 reservation parameters                #</span>
+<span class="c1"># ############################################### #</span>
+<span class="nt">provider</span><span class="p">:</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">g5k</span>
+  <span class="nt">job_name</span><span class="p">:</span> <span class="s">&#39;enos&#39;</span>
+  <span class="nt">walltime</span><span class="p">:</span> <span class="s">&#39;04:00:00&#39;</span>
+
+<span class="nt">topology</span><span class="p">:</span>
+  <span class="nt">grp1</span><span class="p">:</span>
+    <span class="nt">paravance</span><span class="p">:</span>
+      <span class="nt">control</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+      <span class="nt">network</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+  <span class="nt">grp2</span><span class="p">:</span>
+    <span class="nt">paravance</span><span class="p">:</span>
+      <span class="nt">compute</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+
+<span class="nt">network_constraints</span><span class="p">:</span>
+  <span class="nt">enable</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+  <span class="nt">default_delay</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">25ms</span>
+  <span class="nt">default_rate</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">100mbit</span>
+  <span class="nt">default_loss</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.1%</span>
+  <span class="nt">constraints</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="nt">src</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">grp1</span>
+      <span class="nt">dst</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">grp2</span>
+      <span class="nt">delay</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">50ms</span>
+      <span class="nt">rate</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1gbit</span>
+      <span class="nt">loss</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0%</span>
+      <span class="nt">symmetric</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="c1"># ############################################### #</span>
+<span class="c1"># Inventory to use                                #</span>
+<span class="c1"># ############################################### #</span>
+<span class="nt">inventory</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">resources/inventory.sample</span>
+
+<span class="c1"># ############################################### #</span>
+<span class="c1"># docker registry parameters</span>
+<span class="c1"># ############################################### #</span>
+<span class="nt">registry</span><span class="p">:</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">external</span>
+  <span class="nt">ip</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">docker-cache.grid5000.fr</span>
+  <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+
+<span class="c1"># ############################################### #</span>
+<span class="c1"># Enos Customizations                             #</span>
+<span class="c1"># ############################################### #</span>
+<span class="nt">enable_monitoring</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">yes</span>
+
+<span class="c1"># ############################################### #</span>
+<span class="c1"># Kolla parameters                                #</span>
+<span class="c1"># ############################################### #</span>
+<span class="nt">kolla-ansible</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">kolla-ansible~=10.0</span>
+
+<span class="c1"># Vars : kolla_repo/ansible/group_vars/all.yml</span>
+<span class="nt">kolla</span><span class="p">:</span>
+  <span class="nt">kolla_base_distro</span><span class="p">:</span> <span class="s">&quot;centos&quot;</span>
+  <span class="nt">kolla_install_type</span><span class="p">:</span> <span class="s">&quot;source&quot;</span>
+  <span class="nt">enable_heat</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">yes</span>
+</pre></div>
+</div>
+<dl class="footnote brackets">
+<dt class="label" id="id23"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p><a class="reference external" href="https://www.openstack.org/">https://www.openstack.org/</a></p>
+</dd>
+<dt class="label" id="id24"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd><p><a class="reference external" href="https://hal.inria.fr/hal-01415522v2">https://hal.inria.fr/hal-01415522v2</a></p>
+</dd>
+<dt class="label" id="id25"><span class="brackets"><a class="fn-backref" href="#id3">3</a></span></dt>
+<dd><p><a class="reference external" href="https://beyondtheclouds.github.io/enos/">https://beyondtheclouds.github.io/enos/</a></p>
+</dd>
+<dt class="label" id="id26"><span class="brackets"><a class="fn-backref" href="#id4">4</a></span></dt>
+<dd><p><a class="reference external" href="https://github.com/openstack/openstack-ansible">https://github.com/openstack/openstack-ansible</a></p>
+</dd>
+<dt class="label" id="id27"><span class="brackets"><a class="fn-backref" href="#id5">5</a></span></dt>
+<dd><p><a class="reference external" href="https://github.com/openstack/openstack-chef-repo">https://github.com/openstack/openstack-chef-repo</a></p>
+</dd>
+<dt class="label" id="id28"><span class="brackets"><a class="fn-backref" href="#id6">6</a></span></dt>
+<dd><p><a class="reference external" href="https://docs.openstack.org/developer/kolla-ansible/">https://docs.openstack.org/developer/kolla-ansible/</a></p>
+</dd>
+<dt class="label" id="id29"><span class="brackets"><a class="fn-backref" href="#id7">7</a></span></dt>
+<dd><p><a class="reference external" href="https://github.com/stackanetes/stackanetes">https://github.com/stackanetes/stackanetes</a></p>
+</dd>
+<dt class="label" id="id30"><span class="brackets"><a class="fn-backref" href="#id8">8</a></span></dt>
+<dd><p><a class="reference external" href="https://jujucharms.com/openstack">https://jujucharms.com/openstack</a></p>
+</dd>
+<dt class="label" id="id31"><span class="brackets"><a class="fn-backref" href="#id9">9</a></span></dt>
+<dd><p><a class="reference external" href="https://www.grid5000.fr/mediawiki/index.php/Advanced_OAR#Changing_the_walltime_of_a_running_job">https://www.grid5000.fr/mediawiki/index.php/Advanced_OAR#Changing_the_walltime_of_a_running_job</a></p>
+</dd>
+<dt class="label" id="id32"><span class="brackets">10</span><span class="fn-backref">(<a href="#id10">1</a>,<a href="#id11">2</a>)</span></dt>
+<dd><p><a class="reference external" href="https://beyondtheclouds.github.io/enos/provider/">https://beyondtheclouds.github.io/enos/provider/</a></p>
+</dd>
+<dt class="label" id="id33"><span class="brackets"><a class="fn-backref" href="#id12">11</a></span></dt>
+<dd><p><a class="reference external" href="https://github.com/google/cadvisor">https://github.com/google/cadvisor</a></p>
+</dd>
+<dt class="label" id="id34"><span class="brackets"><a class="fn-backref" href="#id13">12</a></span></dt>
+<dd><p><a class="reference external" href="https://collectd.org/">https://collectd.org/</a></p>
+</dd>
+<dt class="label" id="id35"><span class="brackets"><a class="fn-backref" href="#id14">13</a></span></dt>
+<dd><p><a class="reference external" href="https://grafana.com/">https://grafana.com/</a></p>
+</dd>
+<dt class="label" id="id36"><span class="brackets"><a class="fn-backref" href="#id15">14</a></span></dt>
+<dd><p><a class="reference external" href="https://rally.readthedocs.io/en/latest/">https://rally.readthedocs.io/en/latest/</a></p>
+</dd>
+<dt class="label" id="id37"><span class="brackets"><a class="fn-backref" href="#id16">15</a></span></dt>
+<dd><p><a class="reference external" href="https://pyshaker.readthedocs.io/en/latest/">https://pyshaker.readthedocs.io/en/latest/</a></p>
+</dd>
+<dt class="label" id="id38"><span class="brackets"><a class="fn-backref" href="#id18">16</a></span></dt>
+<dd><p><a class="reference external" href="https://github.com/openstack/rally/tree/master/rally/plugins/openstack/scenarios">https://github.com/openstack/rally/tree/master/rally/plugins/openstack/scenarios</a></p>
+</dd>
+<dt class="label" id="id39"><span class="brackets">17</span><span class="fn-backref">(<a href="#id19">1</a>,<a href="#id22">2</a>)</span></dt>
+<dd><p><a class="reference external" href="https://github.com/openstack/shaker/tree/master/shaker/scenarios/openstack">https://github.com/openstack/shaker/tree/master/shaker/scenarios/openstack</a></p>
+</dd>
+<dt class="label" id="id40"><span class="brackets"><a class="fn-backref" href="#id21">18</a></span></dt>
+<dd><p><a class="reference external" href="https://wiki.openstack.org/wiki/Neutron/DVR">https://wiki.openstack.org/wiki/Neutron/DVR</a></p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="openstacksdk.html" class="btn btn-neutral float-right" title="OpenStack SDK" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, discovery.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

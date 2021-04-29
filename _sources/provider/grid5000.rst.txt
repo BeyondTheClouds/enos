@@ -1,0 +1,157 @@
+.. _grid5000:
+
+Grid'5000
+=========
+
+Quick start
+-----------
+
+To access the Grid'5000 API, you must configure `python-grid5000
+<https://pypi.org/project/python-grid5000/>`_.  Roughly there is two
+possibilities.  First, when you access to Grid'5000 from outside of it
+(e.g from your local workstation). In such a case, you need to specify
+the following configuration file:
+
+.. code-block:: bash
+
+    $ echo '
+    username: MYLOGIN
+    password: MYPASSWORD
+    ' > ~/.python-grid5000.yaml
+    $ chmod 600 ~/.python-grid5000.yaml
+
+Second, when you access to the API from inside Grid’5000 (e.g., a
+Grid'5000 frontend). In such case, providing the username and password
+is unnecessary.  The python-grid5000 lib only need to deal with SSL
+verification by specifying the path to the certificate to use:
+
+.. code-block:: bash
+
+    $ echo '
+    verify_ssl: /etc/ssl/certs/ca-certificates.crt
+    ' > ~/.python-grid5000.yaml
+
+.. note::
+
+  You may want to refer to the installation section of python-grid5000
+  library to correctly configure your Grid'5000 connection
+  information. See https://pypi.org/project/python-grid5000/
+
+After that, ask Enos to create a new ``reservation.yaml`` file with
+the provider ``g5k``. Then review the information in the file
+(especially, the walltime and cluster names for resources). And you
+are ready for the deployment of OpenStack.
+
+
+.. code-block:: bash
+
+    $ enos new --provider=g5k
+    $ <editor> reservation.yaml  # optional
+    $ enos deploy
+
+
+.. note::
+
+   On Grid'5000, we recommend to install Enos in a virtual
+   environment.  Refer to the :ref:`installation` section for more
+   information.
+
+Provider configuration
+----------------------
+
+The provider comes with the following default options:
+
+.. literalinclude:: ../../enos/provider/g5k.py
+   :language: python
+   :start-after: # - SPHINX_DEFAULT_CONFIG
+   :end-before: # + SPHINX_DEFAULT_CONFIG
+
+They can be overriden in the configuration file.
+
+Reservation
+^^^^^^^^^^^
+
+In order to reserve in advance the ressources needed by your deployment you can
+set the ``reservation`` key to the desired start date. And launch ``enos
+deploy``.
+
+.. code-block:: yaml
+
+    # Reserve the 29. February 2020 at 19:00:00 for 14 hours
+    provider:
+      type: g5k
+      ...
+      reservation: 2020-02-29 19:00:00
+      walltime: 14:00:00
+      ...
+
+EnOS will wait for the job to start. You can keep the process running in the
+background (e.g using a screen). Alternatively you can stop it (once the
+reservation is done) and relaunch it later with the exact same configuration
+file. For this purpose you can leverage the ``-f`` options of EnOS.
+
+
+Basic complete example
+^^^^^^^^^^^^^^^^^^^^^^
+
+The provider relies on cluster names to group the wanted resources. For example
+the following is a valid resources description:
+
+.. literalinclude:: ../../tests/functionnal/tests/grid5000/basic-00.yaml
+   :language: yaml
+   :linenos:
+
+
+Deployment from a Grid'5000 node
+--------------------------------
+
+If you want to run the deployment from within Grid'5000, we suggest
+you to run the deployment from a dedicated node (especially for large
+deployment). For now the recommended way to do so is to reserve one
+node prior to your reservation. In the case of an interactive
+deployment:
+
+.. code-block:: bash
+
+    frontend$ oarsub -I -l 'walltime=2:00:00'
+    node$ source venv/bin/activate
+    node$ <edit configuration>
+    node$ enos deploy
+
+Advanced example
+----------------
+
+The following is equivalent to the basic configuration but allows for a finer
+grained definition of the resources and associated roles.
+
+.. literalinclude:: ../../tests/functionnal/tests/grid5000/advanced-00.yaml
+   :language: yaml
+   :linenos:
+
+
+Building an Environment
+-----------------------
+
+A personalised environment stored in Grid'5000, containing all the dependencies
+to install OpenStack in subsequent deployments, may be built directly from
+command line on-the-fly without and intermediary deploy execution. Run the
+command ``enos build g5k``, changing the default values accordingly (specially
+the ``--cluster`` one).
+
+In order to complete the environment construction, after the execution of EnOS
+on the frontend execute the ``tgz-g5k`` command following the instructions of
+the `Grid5000 documentation
+<https://www.grid5000.fr/w/Advanced_Kadeploy#Create_a_new_environment_from_a_customized_environment>`_
+to finish the registration of the new environment.
+
+Once the environment is registered in the database, the name of this environment
+can be used in the EnOS configuration replacing the default one. For example,
+let's suppose we want to use a personalised environment named
+``enos-debian10-x64-openstack``, then the configuration can be set as follows:
+
+.. code-block:: yaml
+
+   provider:
+     type: g5k
+     env_name: enos-debian10-x64-openstack
+     ...

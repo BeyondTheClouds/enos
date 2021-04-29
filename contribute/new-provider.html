@@ -1,0 +1,302 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Write a new provider &mdash; Enos 7.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Jenkins" href="../jenkins/index.html" />
+    <link rel="prev" title="Contribute" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Enos
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                7.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../provider/index.html">Provider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli/index.html">Enos command line</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks/index.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../customization/index.html">Customizations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../network-emulation/index.html">Network Emulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/index.html">Analysis</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Contribute</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html#install-from-sources-and-make-them-editable">Install from sources and make them editable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#running-the-tests">Running the tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#running-syntax-checker">Running syntax checker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="index.html#generate-the-documentation">Generate the documentation</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html#other-topics">Other Topics</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Write a new provider</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#init-method">Init Method</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#destroy-method">Destroy Method</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#default-provider-configuration-methods">Default Provider Configuration Methods</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#provider-instantiation">Provider Instantiation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../jenkins/index.html">Jenkins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Tutorials</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Enos</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Contribute</a> &raquo;</li>
+        
+      <li>Write a new provider</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/contribute/new-provider.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="write-a-new-provider">
+<span id="new-provider"></span><h1>Write a new provider<a class="headerlink" href="#write-a-new-provider" title="Permalink to this headline">¶</a></h1>
+<p>The actual implementation gives providers for <a class="reference internal" href="../provider/static.html#static"><span class="std std-ref">Static</span></a> resources,
+<a class="reference internal" href="../provider/vagrant.html#vagrant-provider"><span class="std std-ref">Vagrant</span></a>, <a class="reference internal" href="../provider/grid5000.html#grid5000"><span class="std std-ref">Grid’5000</span></a> and <a class="reference internal" href="../provider/openstack.html#openstack"><span class="std std-ref">Openstack</span></a> itself. If
+you want to support another testbed, then implementing a new provider
+is easy as 500 lines of Python code.</p>
+<p>The new provider should follow the <a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/c497bc2/enos/provider/provider.py">provider.py</a> interface which consists in three
+methods: <code class="docutils literal notranslate"><span class="pre">init</span></code>, <code class="docutils literal notranslate"><span class="pre">destroy</span></code> and <code class="docutils literal notranslate"><span class="pre">default_config</span></code>. Another good
+starting point is the simple <a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/c497bc2/enos/provider/static.py">static implementation</a>.</p>
+<div class="section" id="init-method">
+<h2>Init Method<a class="headerlink" href="#init-method" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">init</span></code> method provides resources and provisions the environment.
+To let the provider knows what kind and how many resources should be
+provided, the method is fed with the <code class="docutils literal notranslate"><span class="pre">config</span></code> object that maps the
+reservations file. So a provider can access the resource description
+with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">rsc</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;resources&#39;</span><span class="p">]</span>
+
+<span class="c1"># Use rsc to book resources ...</span>
+</pre></div>
+</div>
+<p>At the end of the <code class="docutils literal notranslate"><span class="pre">init</span></code>, the provider should return a list of
+<a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/c497bc2/enos/provider/host.py">host.py</a> that Enos can SSH on,
+together with a pool of available IP for OpenStack Network.</p>
+</div>
+<div class="section" id="destroy-method">
+<h2>Destroy Method<a class="headerlink" href="#destroy-method" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">destoy</span></code> method destroys resources that have been used for the
+deployment. The provider can rely on the environment variable to get
+information related to its deployment.</p>
+</div>
+<div class="section" id="default-provider-configuration-methods">
+<h2>Default Provider Configuration Methods<a class="headerlink" href="#default-provider-configuration-methods" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">default_config</span></code> specifies keys used to configure the provider
+with a <code class="docutils literal notranslate"><span class="pre">dict</span></code>. A key could be <em>optional</em> and so should be provided
+with a default value, or <em>required</em> and so should be set to <code class="docutils literal notranslate"><span class="pre">None</span></code>.
+The user then can override these keys in the reservation file, under
+the <code class="docutils literal notranslate"><span class="pre">provider</span></code> key. Keys marked as <code class="docutils literal notranslate"><span class="pre">None</span></code> in the
+<code class="docutils literal notranslate"><span class="pre">default_config</span></code> are automatically tested for overriding in the
+reservation file.</p>
+</div>
+<div class="section" id="provider-instantiation">
+<h2>Provider Instantiation<a class="headerlink" href="#provider-instantiation" title="Permalink to this headline">¶</a></h2>
+<p>Enos automatically instantiates a provider based on the name specified
+in the <code class="docutils literal notranslate"><span class="pre">reservation.yaml</span></code>. For instance, based on the following
+reservation file,</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">provider</span><span class="p">:</span> <span class="s">&quot;my-provider&quot;</span>
+</pre></div>
+</div>
+<p>Enos seeks for a file called <code class="docutils literal notranslate"><span class="pre">my-provider.py</span></code> into <code class="docutils literal notranslate"><span class="pre">enos/provider</span></code>
+and instantiates its main class. But sometimes, the provider requires
+extra information for its initialisation. The good place for this
+information is to put it under the provider key. In this case, the
+provider name should be accessible throughout the <code class="docutils literal notranslate"><span class="pre">type</span></code> key:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">provider</span><span class="p">:</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="s">&quot;my-provider&quot;</span>
+  <span class="nt">extra-var</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+<p>Then the provider can access <code class="docutils literal notranslate"><span class="pre">extra-var</span></code> with
+<code class="docutils literal notranslate"><span class="pre">config['provider']['extra-var']</span></code>. Supported extra information is
+documented into the provider documentation.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../jenkins/index.html" class="btn btn-neutral float-right" title="Jenkins" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Contribute" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, discovery.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

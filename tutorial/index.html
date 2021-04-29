@@ -1,0 +1,247 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Tutorials &mdash; Enos 7.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="EnOS Tutorial on top of Grid’5000" href="grid5000-tuto.html" />
+    <link rel="prev" title="Jenkins" href="../jenkins/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Enos
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                7.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../provider/index.html">Provider</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../cli/index.html">Enos command line</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks/index.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../customization/index.html">Customizations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../network-emulation/index.html">Network Emulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/index.html">Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute/index.html">Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../jenkins/index.html">Jenkins</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="grid5000-tuto.html">EnOS Tutorial on top of Grid’5000</a></li>
+<li class="toctree-l2"><a class="reference internal" href="openstacksdk.html">OpenStack SDK</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Enos</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Tutorials</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/tutorial/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tutorials">
+<span id="tutorial"></span><h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
+<p>This section presents few tutorials. The <a href="#id1"><span class="problematic" id="id2">`EnOS Tutorial on top of Grid’5000`_</span></a>
+shows you how to deploy,configure, stress and collect metrics of OpenStack
+on top of Grid’5000 using Enos. The <a href="#id3"><span class="problematic" id="id4">`OpenStack SDK`_</span></a> shows you how to
+reads Enos environment file to then interact with OpenStack using the
+OpenStack SDK to create a new OpenStack project with users in it.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="grid5000-tuto.html">EnOS Tutorial on top of Grid’5000</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="grid5000-tuto.html#requirements-and-setup">1 Requirements and Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid5000-tuto.html#presentation">2 Presentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid5000-tuto.html#set-the-enos-node-and-install-enos">3 Set the <em>enos</em> node and install EnOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid5000-tuto.html#deploy-openstack-using-enos">4 Deploy OpenStack using EnOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid5000-tuto.html#play-with-openstack">5 Play with OpenStack</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid5000-tuto.html#stress-and-visualize-openstack-behavior-using-enos">6 Stress and Visualize OpenStack Behavior using EnOS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid5000-tuto.html#add-traffic-shaping">7 Add Traffic Shaping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="grid5000-tuto.html#appendix">8 Appendix</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="openstacksdk.html">OpenStack SDK</a></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="grid5000-tuto.html" class="btn btn-neutral float-right" title="EnOS Tutorial on top of Grid’5000" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../jenkins/index.html" class="btn btn-neutral float-left" title="Jenkins" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, discovery.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

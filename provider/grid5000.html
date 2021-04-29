@@ -1,0 +1,500 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Grid’5000 &mdash; Enos 7.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Vagrant" href="vagrant.html" />
+    <link rel="prev" title="Static" href="static.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Enos
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                7.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Provider</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="static.html">Static</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Grid’5000</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#quick-start">Quick start</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#provider-configuration">Provider configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#reservation">Reservation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#basic-complete-example">Basic complete example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#deployment-from-a-grid-5000-node">Deployment from a Grid’5000 node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#advanced-example">Advanced example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#building-an-environment">Building an Environment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vagrant.html">Vagrant</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vmong5k.html">Virtual Machines on Grid’5000</a></li>
+<li class="toctree-l2"><a class="reference internal" href="openstack.html">Openstack</a></li>
+<li class="toctree-l2"><a class="reference internal" href="openstack.html#chameleon-cloud-kvm">Chameleon Cloud (KVM)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="openstack.html#chameleon-cloud-bare-metal">Chameleon Cloud (Bare Metal)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom.html">Custom Provider</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../cli/index.html">Enos command line</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks/index.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../customization/index.html">Customizations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../network-emulation/index.html">Network Emulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../analysis/index.html">Analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute/index.html">Contribute</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../jenkins/index.html">Jenkins</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Tutorials</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Enos</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Provider</a> &raquo;</li>
+        
+      <li>Grid’5000</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/provider/grid5000.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="grid-5000">
+<span id="grid5000"></span><h1>Grid’5000<a class="headerlink" href="#grid-5000" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="quick-start">
+<h2>Quick start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<p>To access the Grid’5000 API, you must configure <a class="reference external" href="https://pypi.org/project/python-grid5000/">python-grid5000</a>.  Roughly there is two
+possibilities.  First, when you access to Grid’5000 from outside of it
+(e.g from your local workstation). In such a case, you need to specify
+the following configuration file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">echo</span> <span class="s1">&#39;</span>
+<span class="s1">username: MYLOGIN</span>
+<span class="s1">password: MYPASSWORD</span>
+<span class="s1">&#39;</span> &gt; ~/.python-grid5000.yaml
+$ chmod <span class="m">600</span> ~/.python-grid5000.yaml
+</pre></div>
+</div>
+<p>Second, when you access to the API from inside Grid’5000 (e.g., a
+Grid’5000 frontend). In such case, providing the username and password
+is unnecessary.  The python-grid5000 lib only need to deal with SSL
+verification by specifying the path to the certificate to use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">echo</span> <span class="s1">&#39;</span>
+<span class="s1">verify_ssl: /etc/ssl/certs/ca-certificates.crt</span>
+<span class="s1">&#39;</span> &gt; ~/.python-grid5000.yaml
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You may want to refer to the installation section of python-grid5000
+library to correctly configure your Grid’5000 connection
+information. See <a class="reference external" href="https://pypi.org/project/python-grid5000/">https://pypi.org/project/python-grid5000/</a></p>
+</div>
+<p>After that, ask Enos to create a new <code class="docutils literal notranslate"><span class="pre">reservation.yaml</span></code> file with
+the provider <code class="docutils literal notranslate"><span class="pre">g5k</span></code>. Then review the information in the file
+(especially, the walltime and cluster names for resources). And you
+are ready for the deployment of OpenStack.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ enos new --provider<span class="o">=</span>g5k
+$ &lt;editor&gt; reservation.yaml  <span class="c1"># optional</span>
+$ enos deploy
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On Grid’5000, we recommend to install Enos in a virtual
+environment.  Refer to the <a class="reference internal" href="../installation.html#installation"><span class="std std-ref">Getting Started</span></a> section for more
+information.</p>
+</div>
+</div>
+<div class="section" id="provider-configuration">
+<h2>Provider configuration<a class="headerlink" href="#provider-configuration" title="Permalink to this headline">¶</a></h2>
+<p>The provider comes with the following default options:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">DEFAULT_CONFIG</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;g5k&#39;</span><span class="p">,</span>                   <span class="c1"># Name of the provider</span>
+    <span class="s1">&#39;job_name&#39;</span><span class="p">:</span> <span class="s1">&#39;enos&#39;</span><span class="p">,</span>              <span class="c1"># Job name in oarstat/gant</span>
+    <span class="s1">&#39;walltime&#39;</span><span class="p">:</span> <span class="s1">&#39;02:00:00&#39;</span><span class="p">,</span>          <span class="c1"># Reservation duration time</span>
+    <span class="s1">&#39;env_name&#39;</span><span class="p">:</span> <span class="s1">&#39;debian10-x64-min&#39;</span><span class="p">,</span>  <span class="c1"># Environment to deploy (see `kaenv3 -l`)</span>
+    <span class="s1">&#39;reservation&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>               <span class="c1"># Reservation date</span>
+    <span class="s1">&#39;job_type&#39;</span><span class="p">:</span> <span class="s1">&#39;deploy&#39;</span><span class="p">,</span>            <span class="c1"># deploy, besteffort, ...</span>
+    <span class="s1">&#39;queue&#39;</span><span class="p">:</span> <span class="s1">&#39;default&#39;</span>               <span class="c1"># default, production, testing</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>They can be overriden in the configuration file.</p>
+<div class="section" id="reservation">
+<h3>Reservation<a class="headerlink" href="#reservation" title="Permalink to this headline">¶</a></h3>
+<p>In order to reserve in advance the ressources needed by your deployment you can
+set the <code class="docutils literal notranslate"><span class="pre">reservation</span></code> key to the desired start date. And launch <code class="docutils literal notranslate"><span class="pre">enos</span>
+<span class="pre">deploy</span></code>.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Reserve the 29. February 2020 at 19:00:00 for 14 hours</span>
+<span class="nt">provider</span><span class="p">:</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">g5k</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+  <span class="nt">reservation</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2020-02-29 19:00:00</span>
+  <span class="nt">walltime</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">14:00:00</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+<p>EnOS will wait for the job to start. You can keep the process running in the
+background (e.g using a screen). Alternatively you can stop it (once the
+reservation is done) and relaunch it later with the exact same configuration
+file. For this purpose you can leverage the <code class="docutils literal notranslate"><span class="pre">-f</span></code> options of EnOS.</p>
+</div>
+<div class="section" id="basic-complete-example">
+<h3>Basic complete example<a class="headerlink" href="#basic-complete-example" title="Permalink to this headline">¶</a></h3>
+<p>The provider relies on cluster names to group the wanted resources. For example
+the following is a valid resources description:</p>
+<div class="highlight-yaml notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nt">enable_monitoring</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="nt">inventory</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span>
+<span class="nt">kolla</span><span class="p">:</span>
+  <span class="nt">enable_heat</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+  <span class="nt">kolla_base_distro</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">centos</span>
+  <span class="nt">kolla_install_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="nt">kolla_ref</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">stable/stein</span>
+<span class="nt">kolla_repo</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span>
+<span class="nt">provider</span><span class="p">:</span>
+  <span class="nt">job_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">enos-jenkins</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">g5k</span>
+  <span class="nt">walltime</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">02:00:00</span>
+<span class="nt">registry</span><span class="p">:</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">external</span>
+  <span class="nt">ip</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">docker-cache.grid5000.fr</span>
+  <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+<span class="nt">resources</span><span class="p">:</span>
+  <span class="nt">gros</span><span class="p">:</span>
+    <span class="nt">compute</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+    <span class="nt">control</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+    <span class="nt">network</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+</div>
+<div class="section" id="deployment-from-a-grid-5000-node">
+<h2>Deployment from a Grid’5000 node<a class="headerlink" href="#deployment-from-a-grid-5000-node" title="Permalink to this headline">¶</a></h2>
+<p>If you want to run the deployment from within Grid’5000, we suggest
+you to run the deployment from a dedicated node (especially for large
+deployment). For now the recommended way to do so is to reserve one
+node prior to your reservation. In the case of an interactive
+deployment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>frontend$ oarsub -I -l <span class="s1">&#39;walltime=2:00:00&#39;</span>
+node$ <span class="nb">source</span> venv/bin/activate
+node$ &lt;edit configuration&gt;
+node$ enos deploy
+</pre></div>
+</div>
+</div>
+<div class="section" id="advanced-example">
+<h2>Advanced example<a class="headerlink" href="#advanced-example" title="Permalink to this headline">¶</a></h2>
+<p>The following is equivalent to the basic configuration but allows for a finer
+grained definition of the resources and associated roles.</p>
+<div class="highlight-yaml notranslate"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nt">inventory</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span>
+<span class="nt">kolla</span><span class="p">:</span>
+  <span class="nt">enable_heat</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+  <span class="nt">kolla_base_distro</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">centos</span>
+  <span class="nt">kolla_install_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="nt">kolla_ref</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">stable/stein</span>
+<span class="nt">kolla_repo</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span>
+<span class="nt">provider</span><span class="p">:</span>
+  <span class="nt">job_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">enos-jenkins</span>
+  <span class="nt">resources</span><span class="p">:</span>
+    <span class="nt">machines</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="nt">cluster</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">paravance</span>
+      <span class="nt">nodes</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+      <span class="nt">primary_network</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">int-net</span>
+      <span class="nt">role</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">control</span>
+      <span class="nt">secondary_networks</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">ext-net</span>
+    <span class="p p-Indicator">-</span> <span class="nt">cluster</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">paravance</span>
+      <span class="nt">nodes</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+      <span class="nt">primary_network</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">int-net</span>
+      <span class="nt">role</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">compute</span>
+      <span class="nt">secondary_networks</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">ext-net</span>
+    <span class="p p-Indicator">-</span> <span class="nt">cluster</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">paravance</span>
+      <span class="nt">nodes</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+      <span class="nt">primary_network</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">int-net</span>
+      <span class="nt">role</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">network</span>
+      <span class="nt">secondary_networks</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">ext-net</span>
+    <span class="nt">networks</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="nt">id</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">int-net</span>
+      <span class="nt">role</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">network_interface</span>
+      <span class="nt">site</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rennes</span>
+      <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">kavlan</span>
+    <span class="p p-Indicator">-</span> <span class="nt">id</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ext-net</span>
+      <span class="nt">role</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">neutron_external_interface</span>
+      <span class="nt">site</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">rennes</span>
+      <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">kavlan</span>
+  <span class="nt">role_distribution</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">debug</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">g5k</span>
+  <span class="nt">walltime</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">02:00:00</span>
+<span class="nt">registry</span><span class="p">:</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">internal</span>
+</pre></div>
+</td></tr></table></div>
+</div>
+<div class="section" id="building-an-environment">
+<h2>Building an Environment<a class="headerlink" href="#building-an-environment" title="Permalink to this headline">¶</a></h2>
+<p>A personalised environment stored in Grid’5000, containing all the dependencies
+to install OpenStack in subsequent deployments, may be built directly from
+command line on-the-fly without and intermediary deploy execution. Run the
+command <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">build</span> <span class="pre">g5k</span></code>, changing the default values accordingly (specially
+the <code class="docutils literal notranslate"><span class="pre">--cluster</span></code> one).</p>
+<p>In order to complete the environment construction, after the execution of EnOS
+on the frontend execute the <code class="docutils literal notranslate"><span class="pre">tgz-g5k</span></code> command following the instructions of
+the <a class="reference external" href="https://www.grid5000.fr/w/Advanced_Kadeploy#Create_a_new_environment_from_a_customized_environment">Grid5000 documentation</a>
+to finish the registration of the new environment.</p>
+<p>Once the environment is registered in the database, the name of this environment
+can be used in the EnOS configuration replacing the default one. For example,
+let’s suppose we want to use a personalised environment named
+<code class="docutils literal notranslate"><span class="pre">enos-debian10-x64-openstack</span></code>, then the configuration can be set as follows:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">provider</span><span class="p">:</span>
+  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">g5k</span>
+  <span class="nt">env_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">enos-debian10-x64-openstack</span>
+  <span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="vagrant.html" class="btn btn-neutral float-right" title="Vagrant" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="static.html" class="btn btn-neutral float-left" title="Static" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, discovery.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
