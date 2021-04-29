@@ -1,11 +1,14 @@
-name: build & publish doc
+name: doc
 on:
+  # Trigger on push
   push:
     paths:
-      # Call this action if we change the doc ...
+      # trigger only if we change the doc ...
       - 'docs/**'
       # ... or if we change the project version
       - 'pyproject.toml'
+  # Trigger manually from the "Actions" tab
+  workflow_dispatch:
 
 jobs:
   deploy:

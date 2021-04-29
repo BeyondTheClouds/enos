@@ -1,4 +1,4 @@
-|Build Status| |Pypi| |Code style| |License|
+|Build Status| |Doc Status| |Pypi| |Code style| |License|
 
 Join us on gitter :  |Join the chat at
 https://gitter.im/BeyondTheClouds/enos|
@@ -79,3 +79,5 @@ Links
    :target: https://www.gnu.org/licenses/gpl-3.0
 .. |Pypi| image:: https://badge.fury.io/py/enos.svg
     :target: https://badge.fury.io/py/enos
+.. |Doc Status| image:: https://github.com/BeyondTheClouds/enos/actions/workflows/build-and-publish-doc.yml/badge.svg
+   :target: https://github.com/BeyondTheClouds/enos/actions/workflows/build-and-publish-doc.yml
