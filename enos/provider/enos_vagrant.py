@@ -10,10 +10,10 @@ from enoslib.service.netem.netem import expand_groups
 
 # - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {
-    'type': 'vagrant',
-    'backend': 'virtualbox',
-    'box': 'generic/debian10',
-    'user': 'root',
+    'type': 'vagrant',          # Name of the provider
+    'backend': 'virtualbox',    # Name of the virtualization technology
+    'box': 'generic/debian10',  # Box -- https://app.vagrantup.com/boxes/search
+    'user': 'root',             # SSH user
 }
 # + SPHINX_DEFAULT_CONFIG
 
