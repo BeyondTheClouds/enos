@@ -1,0 +1,38 @@
+name: build & publish doc
+on:
+  push:
+    paths:
+      # Call this action if we change the doc ...
+      - 'docs/**'
+      # ... or if we change the project version
+      - 'pyproject.toml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout sources to build the doc
+      uses: actions/checkout@v2
+
+    - name: Get python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Upgrade pip and install poetry
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install poetry
+
+    - name: Build the documentation
+      run: |
+        poetry install
+        poetry run tox -edocs
+
+    - name: Deploy on gh-pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token:  ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs/_build/html
+        publish_branch: gh-pages

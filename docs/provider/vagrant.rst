@@ -10,16 +10,35 @@ To get started with the vagrant provider, you need to install
 
 * `Vagrant <https://www.vagrantup.com/>`_
 
-You'll also need a virtualization backend. EnOS supports both Virtualbox and
-Libvirt as shown below.
+You'll also need a virtualization backend. EnOS supports both
+VirtualBox and Libvirt as shown below.
 
-Then, refer to the :ref:`installation` section to install Enos.
+Refer to the :ref:`installation` section to install Enos. Then asks
+Enos to create a new ``reservation.yaml`` file with the provider
+``vagrant`` and one of the virtualization technology ``virtualbox`` or
+``libvirt``. Then review the information in the file, and you are
+ready for the deployment of OpenStack.
 
-Basic Configuration
--------------------
+.. code-block:: bash
 
-The provider relies on virtual machine sizes to group the wanted resources. For
-example the following is a valid configuration
+    $ enos new --provider=vagrant:virtualbox  # or --provider=vagrant:libvirt
+    $ <editor> reservation.yaml               # optional
+    $ enos deploy
+
+
+Provider configuration
+----------------------
+
+The provider comes with the following default options:
+
+.. literalinclude:: ../../enos/provider/enos_vagrant.py
+   :start-after: # - SPHINX_DEFAULT_CONFIG
+   :end-before: # + SPHINX_DEFAULT_CONFIG
+
+
+The provider relies on virtual machine sizes to group the wanted
+resources. For example the following is a valid configuration
+
 
 .. literalinclude:: ../../tests/functionnal/tests/vagrant/basic_vbox.yaml
    :language: yaml
@@ -28,8 +47,8 @@ example the following is a valid configuration
 The list of the sizes may be found :enos_src:`here
 <https://gitlab.inria.fr/discovery/enoslib/blob/master/enoslib/infra/enos_vagrant/constants.py#L23-48>`.
 
-By default virtualbox will be used. See below to learn how to change the default
-virtualbox backend.
+By default VirtualBox will be used. See below to learn how to change
+for libvirt.
 
 Use libvirt as the backend for Vagrant
 --------------------------------------
@@ -51,13 +70,6 @@ grained definition of the resources and associated roles.
    :language: yaml
    :linenos:
 
-Default Configuration
----------------------
-
-.. literalinclude:: ../../enos/provider/enos_vagrant.py
-   :start-after: # - SPHINX_DEFAULT_CONFIG
-   :end-before: # + SPHINX_DEFAULT_CONFIG
-
 Build a Box
 -----------
 
@@ -71,8 +83,8 @@ the following commands to register a box named ``personal/enos-box-openstack``:
 
 .. code-block:: bash
 
-   > vagrant package
-   > vagrant box add package.box --name personal/enos-box-openstack
+   $ vagrant package
+   $ vagrant box add package.box --name personal/enos-box-openstack
 
 
 Once the box is registed in the vagrant catalog, the name of this box can be

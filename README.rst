@@ -1,4 +1,4 @@
-|Build Status| |Documentation Status| |Code style| |License| |Pypi|
+|Build Status| |Pypi| |Code style| |License|
 
 Join us on gitter :  |Join the chat at
 https://gitter.im/BeyondTheClouds/enos|
@@ -27,9 +27,9 @@ Quick Start
 For the quick-start, we will bring up an OpenStack on VirtualBox
 because it is free and works on all major platforms.  Enos can,
 however, work with many testbeds including `Grid'5000
-<https://enos.readthedocs.io/en/stable/provider/grid5000.html>`__ and
+<https://beyondtheclouds.github.io/enos/provider/grid5000.html>`__ and
 `Chameleon
-<https://enos.readthedocs.io/en/stable/provider/openstack.html>`__.
+<https://beyondtheclouds.github.io/enos/provider/openstack.html>`__.
 
 First, make sure your development machine has `VirtualBox
 <https://www.virtualbox.org/>`__ and `Vagrant
@@ -49,10 +49,11 @@ take a while (around 30 minutes to pull and run all OpenStack docker
 images).
 
 You can `customize
-<https://enos.readthedocs.io/en/stable/customization/>`__ the deployed
-services and the number of virtual machines allocated by modifying the
-generated `reservation.yaml` file.  Calls `enos --help` or read the
-`documentation <https://enos.readthedocs.io>`__ for more information.
+<https://beyondtheclouds.github.io/enos/customization/>`__ the
+deployed services and the number of virtual machines allocated by
+modifying the generated ``reservation.yaml`` file.  Calls ``enos
+--help`` or read the `documentation
+<https://beyondtheclouds.github.io/enos/>`__ for more information.
 
 Acknowledgment
 ==============
@@ -64,14 +65,12 @@ Enos is developed in the context of the `Discovery
 Links
 =====
 
--  Docs - https://enos.readthedocs.io
--  Docker - https://hub.docker.com/r/beyondtheclouds/
+-  Docs - https://beyondtheclouds.github.io/enos/
 -  Discovery - https://beyondtheclouds.github.io/
+-  Docker - https://hub.docker.com/r/beyondtheclouds/
 
 .. |Build Status| image:: https://travis-ci.org/BeyondTheClouds/enos.svg?branch=master
    :target: https://travis-ci.org/BeyondTheClouds/enos
-.. |Documentation Status| image:: https://readthedocs.org/projects/enos/badge/?version=stable
-   :target: http://enos.readthedocs.io/en/stable/?badge=stable
 .. |Join the chat at https://gitter.im/BeyondTheClouds/enos| image:: https://badges.gitter.im/BeyondTheClouds/enos.svg
    :target: https://gitter.im/BeyondTheClouds/enos?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 .. |Code style| image:: https://api.codacy.com/project/badge/Grade/87536e9c0f0d47e08d1b9e0950c9d14b

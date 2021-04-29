@@ -9,7 +9,13 @@ deploy OpenStack on.
 Installation
 ------------
 
-Refer to the :ref:`installation` section to install Enos.
+Refer to the :ref:`installation` section to install Enos. Then do:
+
+.. code-block:: bash
+
+    $ enos new --provider=static
+    $ enos deploy
+
 
 Configuration
 -------------

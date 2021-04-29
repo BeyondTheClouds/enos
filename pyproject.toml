@@ -6,7 +6,7 @@ authors = ["Didier Iscovery <discovery-dev@inria.fr>"]
 license = "GPL-3.0-or-later"
 readme = "README.rst"
 homepage = "https://github.com/BeyondTheClouds/enos"
-documentation = "https://enos.readthedocs.io/en/stable/"
+documentation = "https://beyondtheclouds.github.io/enos/"
 keywords = ["OpenStack", "Evaluation", "Grid'5000", "Chameleon", "Vagrant"]
 classifiers = [
   'Development Status :: 4 - Beta',
@@ -28,7 +28,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-enoslib = { version = "~5.6", extras = [ "chameleon" ] } 
+enoslib = { version = "~5.6", extras = [ "chameleon" ] }
 # enoslib = { path = '../enoslib', develop = true, extras = [ "chameleon" ]  }
 docopt = ">=0.6.2,<0.7.0"
 virtualenv = "^20.4.3"
@@ -37,14 +37,13 @@ python-heatclient = "^2.3.0"
 influxdb = { version = "4.0.0", optional = true }
 
 [tool.poetry.extras]
-# poetry install -E annotations 
+# poetry install -E annotations
 annotations = ["influxdb"]
 
 [tool.poetry.scripts]
 enos = "enos.cli:main"
 
 [tool.poetry.dev-dependencies]
-GitPython = ">=2.1.5"
 isort = "^5.7.0"
 ipdb = "^0.13.7"
 tox = "^3.23.0"
@@ -52,6 +51,8 @@ pytest = "^6.2.3"
 flake8 = "^3.9.0"
 mock = "^4.0.3"
 ddt = "^1.4.2"
+# doc
+GitPython = ">=2.1.5"
 Sphinx = "^3.5.3"
 sphinx-autobuild = "^2021.3.14"
 sphinx-rtd-theme = "^0.5.2"

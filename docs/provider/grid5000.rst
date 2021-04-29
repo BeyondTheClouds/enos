@@ -3,66 +3,61 @@
 Grid'5000
 =========
 
-
-Installation
-------------
-
-Connect to a Grid'5000 frontend of your choice. Then, refer to the
-:ref:`installation` section to install Enos.
-
-To access the Grid'5000 API, you must configure
-`python-grid5000 <https://pypi.org/project/python-grid5000/>`_. Please refer to
-the corresponding documentation
-
-If the `virtualenv` module is missing:
-
-.. code-block:: bash
-
-    $ pip install virtualenv --user     # Install virtualenv
-    $ export PATH=~/.local/bin/:${PATH} # Put it into your path
-
-
-Basic configuration
--------------------
-
-The provider relies on cluster names to group the wanted resources. For example
-the following is a valid resources description:
-
-.. literalinclude:: ../../tests/functionnal/tests/grid5000/basic-00.yaml
-   :language: yaml
-   :linenos:
-
-
-Deployment
+Quick start
 -----------
 
-We suggest you to run the deployment from a dedicated node (especially for large
-deployment). For now the recommended way to do so is to reserve one node prior
-of your reservation. In the case of an interactive deployment:
+To access the Grid'5000 API, you must configure `python-grid5000
+<https://pypi.org/project/python-grid5000/>`_.  Roughly there is two
+possibilities.  First, when you access to Grid'5000 from outside of it
+(e.g from your local workstation). In such a case, you need to specify
+the following configuration file:
 
 .. code-block:: bash
 
-    frontend$ oarsub -I -l 'walltime=2:00:00'
-    node$ source venv/bin/activate
-    node$ <edit configuration>
-    node$ enos deploy
+    $ echo '
+    username: MYLOGIN
+    password: MYPASSWORD
+    ' > ~/.python-grid5000.yaml
+    $ chmod 600 ~/.python-grid5000.yaml
+
+Second, when you access to the API from inside Grid’5000 (e.g., a
+Grid'5000 frontend). In such case, providing the username and password
+is unnecessary.  The python-grid5000 lib only need to deal with SSL
+verification by specifying the path to the certificate to use:
+
+.. code-block:: bash
+
+    $ echo '
+    verify_ssl: /etc/ssl/certs/ca-certificates.crt
+    ' > ~/.python-grid5000.yaml
 
 .. note::
 
-   You'll need to configure the access to the Grid'5000 API by setting the following
-   in your ``~/.execo.conf.py`` :
+  You may want to refer to the installation section of python-grid5000
+  library to correctly configure your Grid'5000 connection
+  information. See https://pypi.org/project/python-grid5000/
 
-  .. code-block:: python
-
-      # ~/.execo.conf.py
-      g5k_configuration = {
-          'api_username': "your username",
-          'api_verify_ssl_cert': False
-      }
+After that, ask Enos to create a new ``reservation.yaml`` file with
+the provider ``g5k``. Then review the information in the file
+(especially, the walltime and cluster names for resources). And you
+are ready for the deployment of OpenStack.
 
 
-Default provider configuration
--------------------------------
+.. code-block:: bash
+
+    $ enos new --provider=g5k
+    $ <editor> reservation.yaml  # optional
+    $ enos deploy
+
+
+.. note::
+
+   On Grid'5000, we recommend to install Enos in a virtual
+   environment.  Refer to the :ref:`installation` section for more
+   information.
+
+Provider configuration
+----------------------
 
 The provider comes with the following default options:
 
@@ -73,20 +68,8 @@ The provider comes with the following default options:
 
 They can be overriden in the configuration file.
 
-
-Advanced Configuration
-----------------------
-
-The following is equivalent to the basic configuration but allows for a finer
-grained definition of the resources and associated roles.
-
-.. literalinclude:: ../../tests/functionnal/tests/grid5000/advanced-00.yaml
-   :language: yaml
-   :linenos:
-
-
 Reservation
------------
+^^^^^^^^^^^
 
 In order to reserve in advance the ressources needed by your deployment you can
 set the ``reservation`` key to the desired start date. And launch ``enos
@@ -108,6 +91,44 @@ reservation is done) and relaunch it later with the exact same configuration
 file. For this purpose you can leverage the ``-f`` options of EnOS.
 
 
+Basic complete example
+^^^^^^^^^^^^^^^^^^^^^^
+
+The provider relies on cluster names to group the wanted resources. For example
+the following is a valid resources description:
+
+.. literalinclude:: ../../tests/functionnal/tests/grid5000/basic-00.yaml
+   :language: yaml
+   :linenos:
+
+
+Deployment from a Grid'5000 node
+--------------------------------
+
+If you want to run the deployment from within Grid'5000, we suggest
+you to run the deployment from a dedicated node (especially for large
+deployment). For now the recommended way to do so is to reserve one
+node prior to your reservation. In the case of an interactive
+deployment:
+
+.. code-block:: bash
+
+    frontend$ oarsub -I -l 'walltime=2:00:00'
+    node$ source venv/bin/activate
+    node$ <edit configuration>
+    node$ enos deploy
+
+Advanced example
+----------------
+
+The following is equivalent to the basic configuration but allows for a finer
+grained definition of the resources and associated roles.
+
+.. literalinclude:: ../../tests/functionnal/tests/grid5000/advanced-00.yaml
+   :language: yaml
+   :linenos:
+
+
 Building an Environment
 -----------------------
 
@@ -126,11 +147,11 @@ to finish the registration of the new environment.
 Once the environment is registered in the database, the name of this environment
 can be used in the EnOS configuration replacing the default one. For example,
 let's suppose we want to use a personalised environment named
-``enos-debian9-x64-openstack``, then the configuration can be set as follows:
+``enos-debian10-x64-openstack``, then the configuration can be set as follows:
 
 .. code-block:: yaml
 
    provider:
      type: g5k
-     env_name: enos-debian9-x64-openstack
+     env_name: enos-debian10-x64-openstack
      ...

@@ -1252,7 +1252,7 @@ GitHub [17]_  and continue to have fun with EnOS.
 
 .. [2] `https://hal.inria.fr/hal-01415522v2 <https://hal.inria.fr/hal-01415522v2>`_
 
-.. [3] `https://enos.readthedocs.io/en/stable/ <https://enos.readthedocs.io/en/stable/>`_
+.. [3] `https://beyondtheclouds.github.io/enos/ <https://beyondtheclouds.github.io/enos/>`_
 
 .. [4] `https://github.com/openstack/openstack-ansible <https://github.com/openstack/openstack-ansible>`_
 
@@ -1266,7 +1266,7 @@ GitHub [17]_  and continue to have fun with EnOS.
 
 .. [9] `https://www.grid5000.fr/mediawiki/index.php/Advanced_OAR#Changing_the_walltime_of_a_running_job <https://www.grid5000.fr/mediawiki/index.php/Advanced_OAR#Changing_the_walltime_of_a_running_job>`_
 
-.. [10] `https://enos.readthedocs.io/en/stable/provider/index.html <https://enos.readthedocs.io/en/stable/provider/index.html>`_
+.. [10] `https://beyondtheclouds.github.io/enos/provider/ <https://beyondtheclouds.github.io/enos/provider/>`_
 
 .. [11] `https://github.com/google/cadvisor <https://github.com/google/cadvisor>`_
 
