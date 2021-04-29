@@ -23,8 +23,8 @@ OS_RSC = {'<set a flavor (see `openstack flavor list`)>':
           {'compute': 1, 'network': 1, 'control': 1}}
 VMONG5K_RSC = {'paravance': {'compute': 1, 'network': 1, 'control': 1}}
 STATIC_RSC = (
-    f'<refer to the doc https://enos.readthedocs.io/en/v{C.VERSION}/'
-    'provider/static.html>')
+    '<refer to the doc at '
+    'https://beyondtheclouds.github.io/enos/provider/static.html>')
 
 # Registry definitions
 INTERNAL_REG = {'type': 'internal', 'port': 4000}
@@ -132,5 +132,4 @@ def new(provider_name: str, output_path: Path):
             provider=dump(provider_conf, provider_required_keys),
             resources=yaml.dump(resources_conf),
             registry=yaml.dump(registry_conf),
-            kolla_ansible=kolla.KOLLA_PKG,
-            enos_version=C.VERSION))
+            kolla_ansible=kolla.KOLLA_PKG))

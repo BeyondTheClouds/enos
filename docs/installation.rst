@@ -15,7 +15,7 @@ You may prefer to go with a virtualenv. Please refer to the
 and the rest of this section for further information.
 
 
-Then install enos inside a virtualenv (python3.5+ required):
+Then install enos inside a virtualenv (python3.7+ required):
 
 .. code-block:: bash
 
@@ -35,17 +35,28 @@ Then install enos inside a virtualenv (python3.5+ required):
 Configuration
 -------------
 
-To get started you can get the sample configuration file and edit it:
+To get started you need an Enos configuration file.  Among other
+things, that file tells Enos on which testbed to acquire resources and
+deploy OpenStack.  Enos supports many testbeds including Vagrant,
+Grid'5000, Chameleon and more generally any OpenStack cloud.
+
+The configuration may vary from one testbed to another.  For this
+quick-start, we will bring up an OpenStack on Vagrant/VirtualBox
+because it is free and works on all major platforms.  Please, refer to
+the dedicated :ref:`provider` section for the full list of supported
+testbed.
+
+First, make sure you have `VirtualBox <https://www.virtualbox.org/>`__
+and `Vagrant <https://www.vagrantup.com/downloads>`__ installed. Then,
+generate the configuration file with:
 
 .. parsed-literal::
 
-    $ enos new > reservation.yaml
-    $ <editor> reservation.yaml
+    (venv) $ enos new --provider=vagrant:virtualbox
 
-
-The configuration may vary from one provider to another, please refer to the
-dedicated :ref:`provider` configuration
-
+This generates a ``reservation.yaml`` file in the current directory.
+This file shows available configuration options (and their defaults in
+comments).  Take the time to review that file before going further.
 
 .. note::
 
@@ -65,19 +76,19 @@ Once your configuration is done, you can launch the deployment:
 
 The deployment is the combination of the following three phases:
 
-1. Acquire the raw resources that are necessary for the deployment of
+1. Acquire the resources that are necessary for the deployment of
    OpenStack. Enos acquires resources according to the ``provider``
-   and ``resources`` information in the reservation file. One can
+   and ``resources`` information in the configuration file. One can
    perform this phase by calling ``enos up``.
 
-2. Deploy OpenStack to the resources acquired during the previous
+2. Deploy OpenStack on the resources acquired during the previous
    phase. Enos uses the resource list provided by the previous phase
    and combines it with the information specified in the file targeted
    by the ``inventory`` key to produce a file that gives a mapping of
    which OpenStack services have to be deployed to which resources.
-   Enos then calls the Kolla-Ansible tool with this file to deploy the
-   containerized OpenStack services to the right resources. One
-   can perform this phase by calling ``enos os``.
+   Enos then calls the Kolla Ansible tool with this file to deploy the
+   containerized OpenStack services to the right resources. One can
+   perform this phase by calling ``enos os``.
 
    .. note::
 

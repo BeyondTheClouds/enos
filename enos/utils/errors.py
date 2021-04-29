@@ -1,5 +1,4 @@
 import textwrap
-import enos.utils.constants as C
 
 
 class EnosError(Exception):
@@ -27,7 +26,7 @@ class EnosUnknownProvider(EnosError):
         super(self.__class__, self).__init__(textwrap.dedent(f''' \
           The provider '{provider_name}' could not be found.
 
-          Please refer to https://enos.readthedocs.io/en/v{C.VERSION}/provider/
+          Please refer to https://beyondtheclouds.github.io/enos/provider/
           to use a provider that exists.
         '''))
         self.provider_name = provider_name

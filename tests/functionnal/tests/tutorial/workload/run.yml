@@ -1,18 +1,18 @@
 ---
-rally:                                   
+rally:
     enabled: yes
-    args:                                
-      concurrency:                       
+    args:
+      concurrency:
         - 5
-      times:                             
+      times:
         - 10
-    scenarios:                           
+    scenarios:
       - name: boot and list servers
         file: nova-boot-list-cc.yml
-        args:                            
+        args:
           sla_max_avg_duration: 30
 shaker:
-  enabled: yes                           
+  enabled: yes
   scenarios:
     - name: OpenStack L3 East-West Dense
       file: openstack/dense_l3_east_west

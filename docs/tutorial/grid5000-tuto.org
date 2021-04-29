@@ -1254,7 +1254,7 @@ elisp code.
 * Footnotes
 [fn:openstack] https://www.openstack.org/
 [fn:enos-paper] https://hal.inria.fr/hal-01415522v2
-[fn:enos-website] https://enos.readthedocs.io/en/stable/
+[fn:enos-website] https://beyondtheclouds.github.io/enos/
 
 [fn:os-ansible] https://github.com/openstack/openstack-ansible
 [fn:os-chef] https://github.com/openstack/openstack-chef-repo
@@ -1264,8 +1264,8 @@ elisp code.
 
 [fn:oarwalltime] https://www.grid5000.fr/mediawiki/index.php/Advanced_OAR#Changing_the_walltime_of_a_running_job
 
-[fn:enos-provider] [[https://enos.readthedocs.io/en/stable/provider/index.html]]
-[fn:enos-internal-registry] https://enos.readthedocs.io/en/stable/customization/index.html#internal-registry
+[fn:enos-provider] [[https://beyondtheclouds.github.io/enos/provider/]]
+[fn:enos-internal-registry] https://beyondtheclouds.github.io/enos/customization/index.html#internal-registry
 
 [fn:cadvisor] https://github.com/google/cadvisor
 [fn:collectd] https://collectd.org/

@@ -215,7 +215,7 @@ def new(**kwargs):
             f'You are now ready to deploy OpenStack on {provider} with '
             '`enos deploy`.  Please read comments in the reservation.yaml '
             'as well as the documentation on '
-            f'https://enos.readthedocs.io/en/v{C.VERSION}/ '
+            f'https://beyondtheclouds.github.io/enos/ '
             'for more information on using enos.'))
     except FileExistsError:
         logger.error(textwrap.fill(
