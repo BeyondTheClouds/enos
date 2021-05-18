@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
 from abc import ABCMeta, abstractmethod
 
+from typing import Any, Dict, Tuple
+import enoslib.types as elib_t
+
 
 class Provider:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def init(self, config, force=False):
+    def init(self,
+             config: Dict[str, Any],
+             force: bool = False) -> Tuple[elib_t.Roles, elib_t.Networks]:
         """Provides resources and provisions the environment.
 
         The `config` parameter contains the client request (eg, number
@@ -27,7 +32,7 @@ class Provider:
         pass
 
     @abstractmethod
-    def default_config(self):
+    def default_config(self) -> Dict[str, Any]:
         """The default provider configuration.
 
         Returns a dict with all keys used to initialise the provider

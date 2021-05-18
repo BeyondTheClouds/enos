@@ -61,7 +61,8 @@ KOLLA_FILTERS = os.path.join(
 KOLLA_TOOLBOX = os.path.join(
     'share', 'kolla-ansible', 'ansible', 'library')
 
-# TODO: Proper handling of kolla networks.
+
+# XXX: Proper handling of kolla networks.
 # Remember to remove NEUTRON_EXTERNAL_INTERFACE, NETWORK_INTERFACE, that are in
 # the inventory from the globals_values.
 
@@ -219,11 +220,11 @@ class KollaAnsible(object):
         # `put_address_in_context` filter) and change that path.
         old_sys_paths = sys.path.copy()
 
-        try:
-            # Temporary file to later store the result of the rendered
-            # `openstack_auth` variable by Ansible.
-            _, osauth_path = tempfile.mkstemp()
+        # Temporary file to later store the result of the rendered
+        # `openstack_auth` variable by Ansible.
+        _, osauth_path = tempfile.mkstemp()
 
+        try:
             # Load kolla-ansible specific filters `KOLLA_FILTERS` since the
             # `{{openstack_auth}}` variable relies on the
             # `put_address_in_context` filter to manage IPv6.
@@ -246,7 +247,7 @@ class KollaAnsible(object):
             with elib.play_on(roles={}, pattern_hosts="localhost",
                               extra_vars=globals_values) as yaml:
                 yaml.local_action(
-                    display_name='Compute values of `openstack_auth`',
+                    **title('Compute values of `openstack_auth`'),
                     module="copy",
                     content="{{ openstack_auth }}",
                     dest=osauth_path)
@@ -287,7 +288,7 @@ class KollaAnsible(object):
         with elib.play_on(inventory_path=str(self._inventory),
                           extra_vars=self.globals_values) as yaml:
             yaml.archive(
-                display_name='Archive kolla-ansible logs and conf',
+                **title('Archive kolla-ansible logs and conf'),
                 format='gz',
                 path=[
                     # kolla-ansible logs
@@ -297,7 +298,7 @@ class KollaAnsible(object):
                 dest='/tmp/kolla-log+conf.tar.gz')
 
             yaml.fetch(
-                display_name='Fetch kolla-ansible logs and conf',
+                **title('Fetch kolla-ansible logs and conf'),
                 flat=True,
                 src='/tmp/kolla-log+conf.tar.gz',
                 dest=(str(destination)
@@ -340,10 +341,15 @@ class KollaAnsible(object):
         # Install kolla-ansible and its dependencies
         with elib.play_on(roles={}, pattern_hosts="localhost") as yaml:
             yaml.local_action(
-                display_name=f'Install {pip_package} in {venv}',
+                **title(f'Install {pip_package} in {venv}'),
                 module="pip",
                 name=[ANSIBLE_PKG, 'influxdb', pip_package],
                 virtualenv=str(venv),
                 virtualenv_python=PY_VERSION)
 
         return venv
+
+
+def title(title: str) -> Dict[str, str]:
+    "A title for an ansible yaml commands"
+    return {"display_name": "Kolla : " + title}

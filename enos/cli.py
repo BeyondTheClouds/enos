@@ -16,7 +16,7 @@ General options:
   -vv               Verbose mode.
 
 Commands:
-  new            Print a reservation.yaml example
+  new            Create a reservation.yaml file in the current directory.
   up             Get resources and install the docker registry.
   os             Run kolla and install OpenStack.
   init           Initialise OpenStack with the bare necessities.

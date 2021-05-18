@@ -205,6 +205,6 @@ class RallyOpenStack():
             return True
 
 
-def title(title: str) -> str:
+def title(title: str) -> Dict[str, str]:
     "A title for ansible yaml commands"
     return {"display_name": "Rally : " + title}

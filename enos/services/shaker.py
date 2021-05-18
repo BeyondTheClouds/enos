@@ -99,6 +99,6 @@ class Shaker():
         pass
 
 
-def title(title: str) -> str:
+def title(title: str) -> Dict[str, str]:
     "A title for an ansible yaml commands"
     return {"display_name": "Shaker : " + title}

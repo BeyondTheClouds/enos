@@ -1,3 +1,9 @@
+"""Create a basic reservation.yaml file.
+
+Support generation for g5k, vagrant:virtualbox, vagrant:libvirt, chameleonkvm,
+chameleonbaremetal, openstack, vmong5k and static providers.
+
+"""
 import logging
 import textwrap
 from pathlib import Path
@@ -55,22 +61,30 @@ def dump(info: Dict[str, Union[str, int]], required_keys: List[str]) -> str:
     return yaml_str
 
 
-def get_provider_and_backend_names(provider: str) -> Tuple[str, Optional[str]]:
-    '''Find the provider name and the backend name if any.
+def get_provider_and_backend_names(pattern: str) -> Tuple[str, Optional[str]]:
+    '''Find the provider name, and the backend name if any.
 
     For instance, `vagrant:virtualbox` returns (vagrant, virtualbox) and `g5k`
     return (g5k, None).
 
     '''
-    p = provider.split(':')
-
-    if len(p) == 1:
-        return p[0], None
+    _pattern = pattern.split(':')
+    if len(_pattern) == 1:
+        provider_name = _pattern[0]
+        backend_name = None
     else:
-        return p[0], ':'.join(p[1:])
+        provider_name = _pattern[0]
+        backend_name = ':'.join(_pattern[1:])
+
+    return provider_name, backend_name
 
 
 def new(provider_name: str, output_path: Path):
+    '''Create a basic reservation.yaml file.
+
+    Create the reservation.yaml file for `provider_name` at `outpout_path`.
+
+    '''
     # Get the provider and backend names, e.g. (g5k, None) or (vagrant,
     # virtualbox)
     provider, backend = get_provider_and_backend_names(provider_name)
