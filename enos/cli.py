@@ -77,28 +77,22 @@ def up(**kwargs):
     """
     LOGGER.debug('phase[up]: args=%s' % kwargs)
 
-    # Parse optional parameters
+    # Get parameters
+    config_file = pathlib.Path(kwargs.get('-f', './reservation.yaml'))
     is_force_deploy = kwargs.get('--force-deploy', False)
     is_pull_only = kwargs.get('--pull', False)
     tags = kwargs.get('--tags', None)
 
-    # Parse the configuration file (reservation.yaml)
-    config_file = pathlib.Path(kwargs.get('-f', './reservation.yaml'))
-    if not config_file.is_file():
-        LOGGER.error(textwrap.fill(
-            f'The path {config_file} does not point to a regular file. '
-            'Please, create a "reservation.yaml" file with `enos new` first '
-            'or ensure to link an existing file with the `-f` option'))
-        sys.exit(1)
-
     # Launch the *up* task
     try:
         tt.up(config_file, is_force_deploy, is_pull_only, tags)
+
+    # Display nice error messages for the user
     except EnosFilePathError as err:
         LOGGER.error(textwrap.fill(
-            f'The path {err.filepath} does not point to a regular file. '
-            'Please, create a "reservation.yaml" file with `enos new` first '
-            'or ensure to link an existing file with the `-f` option'))
+            f'The path "{err.filepath}" does not point to a regular file. '
+            'Please, ensure to link an existing file with the `-f` option '
+            'or first create a "reservation.yaml" file with `enos new`.'))
     except EnosUnknownProvider as err:
         LOGGER.error(textwrap.fill(str(err)))
     except yaml.YAMLError as err:
