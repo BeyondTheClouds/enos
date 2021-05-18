@@ -1,7 +1,9 @@
 ---
-# ############################################### #
-# Grid'5000 reservation parameters                #
-# ############################################### #
+# Testbed targeted for the experiment and its resources.  Each
+# provider comes with specific options and a specific nomenclature for
+# resources.  Refer to the doc of each provider for more information.
+# See https://beyondtheclouds.github.io/enos/provider/
+#
 provider:
   type: g5k
   job_name: 'enos'
@@ -29,31 +31,37 @@ network_constraints:
       loss: 0%
       symmetric: true
 
-# ############################################### #
-# Inventory to use                                #
-# ############################################### #
-inventory: resources/inventory.sample
-
-# ############################################### #
-# docker registry parameters
-# ############################################### #
+# Docker registry mirror to g5k cache
+# See  https://beyondtheclouds.github.io/enos/customization/index.html#docker-registry-mirror-configuration
+#
 registry:
-  type: external
-  ip: docker-cache.grid5000.fr
-  port: 80
+   type: external
+   ip: docker-cache.grid5000.fr
+   port: 80
 
-# ############################################### #
-# Enos Customizations                             #
-# ############################################### #
+# Deploy a monitoring stack made of cAdvisor, collectd, influxDB and
+# Graphana.
+# See https://beyondtheclouds.github.io/enos/analysis/
+#
 enable_monitoring: yes
 
-# ############################################### #
-# Kolla parameters                                #
-# ############################################### #
-kolla-ansible: kolla-ansible~=10.0
+# kolla-ansible executable (could be a PyPi package, a git
+# repository, a local directory ...)
+# See https://beyondtheclouds.github.io/enos/customization/index.html#changing-kolla-version
+#
+# kolla-ansible: kolla-ansible~=10.0
 
-# Vars : kolla_repo/ansible/group_vars/all.yml
-kolla:
-  kolla_base_distro: "centos"
-  kolla_install_type: "source"
-  enable_heat: yes
+# Custom kolla-ansible parameters (as in `globals.yml`)
+# See https://beyondtheclouds.github.io/enos/customization/index.html#customize-kolla-variables
+#
+# kolla:
+#   kolla_base_distro: "centos"
+#   kolla_install_type: "source"
+#   enable_heat: yes
+
+
+# Kolla-Ansible inventory file that defines on which of the
+# `resources` nodes to deploy OpenStack services.
+# See https://beyondtheclouds.github.io/enos/customization/index.html#changing-the-topology
+#
+# inventory: inventory.sample
