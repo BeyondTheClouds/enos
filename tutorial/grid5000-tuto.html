@@ -462,7 +462,7 @@ virtualenv --python<span class="o">=</span>python3 venv
 <span class="c1"># (venv) enos:~/enos-myxp$</span>
 . venv/bin/activate
 <span class="c1"># (venv) enos:~/enos-myxp$</span>
-pip install <span class="s2">&quot;enos[openstack]~=7.0.0&quot;</span>
+pip install enos
 </pre></div>
 </div>
 <div class="admonition note">
@@ -530,21 +530,18 @@ OpenStack services on a dedicated node and add WAN network latency
 between them”. So that EnOS can deploy such OpenStack over your
 testbed and run performance analysis.</p>
 <p>The description of the configuration is done in a <code class="docutils literal notranslate"><span class="pre">reservation.yaml</span></code>
-file. You may generate a new one with <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">new</span> <span class="pre">&gt;</span> <span class="pre">reservation.yaml</span></code>.
-The configuration file is pretty fat, with a configuration sample for
-all supported testbed (G5k, Chameleon, Vagrant, …).</p>
-<p>Use your favorite text editor to open the <code class="docutils literal notranslate"><span class="pre">reservation.yaml</span></code> file and
-edit it to fit your situation – <em>i.e.</em>, something like listing
-<a class="reference internal" href="#lst-reservation-yaml">lst:reservation.yaml</a>. Three parts of this configuration file are
-interested for a simple use of EnOS:</p>
+file. You may generate a new one with <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">new</span> <span class="pre">--provider=g5k</span></code>. Use
+your favorite text editor to open it and edit it to fit your situation
+– <em>i.e.</em>, something like listing <a class="reference internal" href="#lst-reservation-yaml">lst:reservation.yaml</a>. Three parts
+of this configuration file are interested for a simple use of EnOS:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">provider</span></code> section (l. 5): Defines on which testbed to
+<li><p><code class="docutils literal notranslate"><span class="pre">provider</span></code> section (l. 8): Defines on which testbed to
 deploy OpenStack (<em>i.e.</em>, G5k, Chameleon, Vagrant, …).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">resources</span></code> section (l. 10): Defines the number and role of
+<li><p><code class="docutils literal notranslate"><span class="pre">resources</span></code> section (l. 13): Defines the number and role of
 machines to deploy on the testbed (<em>e.g.</em>, book 3 nodes on
 <code class="docutils literal notranslate"><span class="pre">paravance</span></code> with 1 <code class="docutils literal notranslate"><span class="pre">control</span></code> node, 1 <code class="docutils literal notranslate"><span class="pre">network</span></code> node and 1 <code class="docutils literal notranslate"><span class="pre">compute</span></code>
 node).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">kolla</span></code> section (l. 37): Defines the OpenStack
+<li><p><code class="docutils literal notranslate"><span class="pre">kolla</span></code> section (l. 33): Defines the OpenStack
 configuration, for instance:</p>
 <ul>
 <li><p>Which OpenStack version to deploy (<em>e.g.</em>, <code class="docutils literal notranslate"><span class="pre">kolla-ansible:</span> <span class="pre">kolla-ansible~=10.0</span></code> – OpenStack Ussuri).</p></li>
@@ -594,10 +591,22 @@ configuration, for instance:</p>
 <span class="normal">40</span>
 <span class="normal">41</span>
 <span class="normal">42</span>
-<span class="normal">43</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nn">---</span>
-<span class="c1"># ############################################### #</span>
-<span class="c1"># Grid&#39;5000 reservation parameters                #</span>
-<span class="c1"># ############################################### #</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span></pre></div></td><td class="code"><div class="highlight"><pre><span></span><span class="nn">---</span>
+
+<span class="c1"># Testbed targeted for the experiment and its resources.  Each</span>
+<span class="c1"># provider comes with specific options and a specific nomenclature for</span>
+<span class="c1"># resources.  Refer to the doc of each provider for more information.</span>
+<span class="c1"># See https://beyondtheclouds.github.io/enos/provider/</span>
+<span class="c1">#</span>
 <span class="nt">provider</span><span class="p">:</span>
   <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">g5k</span>
   <span class="nt">job_name</span><span class="p">:</span> <span class="s">&#39;enos&#39;</span>
@@ -609,34 +618,40 @@ configuration, for instance:</p>
     <span class="nt">network</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
     <span class="nt">control</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
 
-<span class="c1"># ############################################### #</span>
-<span class="c1"># Inventory to use                                #</span>
-<span class="c1"># ############################################### #</span>
-<span class="nt">inventory</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">resources/inventory.sample</span>
-
-<span class="c1"># ############################################### #</span>
-<span class="c1"># docker registry parameters</span>
-<span class="c1"># ############################################### #</span>
+<span class="c1"># Docker registry mirror to g5k cache</span>
+<span class="c1"># See  https://beyondtheclouds.github.io/enos/customization/index.html#docker-registry-mirror-configuration</span>
+<span class="c1">#</span>
 <span class="nt">registry</span><span class="p">:</span>
    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">external</span>
    <span class="nt">ip</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">docker-cache.grid5000.fr</span>
    <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 
-<span class="c1"># ############################################### #</span>
-<span class="c1"># Enos Customizations                             #</span>
-<span class="c1"># ############################################### #</span>
+<span class="c1"># Deploy a monitoring stack made of cAdvisor, collectd, influxDB and</span>
+<span class="c1"># Graphana.</span>
+<span class="c1"># See https://beyondtheclouds.github.io/enos/analysis/</span>
+<span class="c1">#</span>
 <span class="nt">enable_monitoring</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">yes</span>
 
-<span class="c1"># ############################################### #</span>
-<span class="c1"># Kolla parameters                                #</span>
-<span class="c1"># ############################################### #</span>
-<span class="nt">kolla-ansible</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">kolla-ansible~=10.0</span>
+<span class="c1"># kolla-ansible executable (could be a PyPi package, a git</span>
+<span class="c1"># repository, a local directory ...)</span>
+<span class="c1"># See https://beyondtheclouds.github.io/enos/customization/index.html#changing-kolla-version</span>
+<span class="c1">#</span>
+<span class="c1"># kolla-ansible: kolla-ansible~=10.0</span>
 
-<span class="c1"># Vars : kolla_repo/ansible/group_vars/all.yml</span>
-<span class="nt">kolla</span><span class="p">:</span>
-  <span class="nt">kolla_base_distro</span><span class="p">:</span> <span class="s">&quot;centos&quot;</span>
-  <span class="nt">kolla_install_type</span><span class="p">:</span> <span class="s">&quot;source&quot;</span>
-  <span class="nt">enable_heat</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="c1"># Custom kolla-ansible parameters (as in `globals.yml`)</span>
+<span class="c1"># See https://beyondtheclouds.github.io/enos/customization/index.html#customize-kolla-variables</span>
+<span class="c1">#</span>
+<span class="c1"># kolla:</span>
+<span class="c1">#   kolla_base_distro: &quot;centos&quot;</span>
+<span class="c1">#   kolla_install_type: &quot;source&quot;</span>
+<span class="c1">#   enable_heat: yes</span>
+
+
+<span class="c1"># Kolla-Ansible inventory file that defines on which of the</span>
+<span class="c1"># `resources` nodes to deploy OpenStack services.</span>
+<span class="c1"># See https://beyondtheclouds.github.io/enos/customization/index.html#changing-the-topology</span>
+<span class="c1">#</span>
+<span class="c1"># inventory: inventory.sample</span>
 </pre></div>
 </td></tr></table></div>
 <p>The <code class="docutils literal notranslate"><span class="pre">provider</span></code> section tells on which testbed to deploy OpenStack plus
@@ -686,7 +701,7 @@ enos info
 observe EnOS running containers on the control node. For that, you can
 access to the control node by typing:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
-ssh -l root <span class="k">$(</span>enos info --out json <span class="p">|</span> jq -r <span class="s1">&#39;.rsc.control[0].address&#39;</span><span class="k">)</span>
+ssh -l root <span class="k">$(</span>enos info --out<span class="o">=</span>json <span class="p">|</span> jq -r <span class="s1">&#39;.rsc.control[0].address&#39;</span><span class="k">)</span>
 <span class="c1"># control:~# -- List the downloaded Docker images</span>
 docker images
 <span class="c1"># control:~# -- List the running Docker containers</span>
@@ -919,7 +934,7 @@ bunch of bash commands, such as in listing <a class="reference internal" href="#
 <p>You can also check that the VM finished to boot by looking at its logs
 with <code class="docutils literal notranslate"><span class="pre">openstack</span> <span class="pre">console</span> <span class="pre">log</span> <span class="pre">show</span> <span class="pre">cli-vm</span></code>. The cirros VM finished to
 boot when last lines are:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">===</span> <span class="n">cirros</span><span class="p">:</span> <span class="n">current</span><span class="o">=</span><span class="mf">0.3</span><span class="o">.</span><span class="mi">4</span> <span class="n">uptime</span><span class="o">=</span><span class="mf">16.56</span> <span class="o">===</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">===</span> <span class="n">cirros</span><span class="p">:</span> <span class="n">current</span><span class="o">=</span><span class="mf">0.3.4</span> <span class="n">uptime</span><span class="o">=</span><span class="mf">16.56</span> <span class="o">===</span>
   <span class="n">____</span>               <span class="n">____</span>  <span class="n">____</span>
  <span class="o">/</span> <span class="n">__</span><span class="o">/</span> <span class="n">__</span> <span class="n">____</span> <span class="n">____</span> <span class="o">/</span> <span class="n">__</span> \<span class="o">/</span> <span class="n">__</span><span class="o">/</span>
 <span class="o">/</span> <span class="o">/</span><span class="n">__</span> <span class="o">/</span> <span class="o">//</span> <span class="n">__</span><span class="o">//</span> <span class="n">__</span><span class="o">//</span> <span class="o">/</span><span class="n">_</span><span class="o">/</span> <span class="o">/</span>\ \
@@ -1294,9 +1309,11 @@ GitHub <a class="footnote-reference brackets" href="#id39" id="id22">17</a>  and
 <div class="section" id="configuration-file-with-a-topology-and-network-constraints">
 <h3>8.2 Configuration file with a topology and network constraints<a class="headerlink" href="#configuration-file-with-a-topology-and-network-constraints" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nn">---</span>
-<span class="c1"># ############################################### #</span>
-<span class="c1"># Grid&#39;5000 reservation parameters                #</span>
-<span class="c1"># ############################################### #</span>
+<span class="c1"># Testbed targeted for the experiment and its resources.  Each</span>
+<span class="c1"># provider comes with specific options and a specific nomenclature for</span>
+<span class="c1"># resources.  Refer to the doc of each provider for more information.</span>
+<span class="c1"># See https://beyondtheclouds.github.io/enos/provider/</span>
+<span class="c1">#</span>
 <span class="nt">provider</span><span class="p">:</span>
   <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">g5k</span>
   <span class="nt">job_name</span><span class="p">:</span> <span class="s">&#39;enos&#39;</span>
@@ -1324,34 +1341,40 @@ GitHub <a class="footnote-reference brackets" href="#id39" id="id22">17</a>  and
       <span class="nt">loss</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0%</span>
       <span class="nt">symmetric</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
 
-<span class="c1"># ############################################### #</span>
-<span class="c1"># Inventory to use                                #</span>
-<span class="c1"># ############################################### #</span>
-<span class="nt">inventory</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">resources/inventory.sample</span>
-
-<span class="c1"># ############################################### #</span>
-<span class="c1"># docker registry parameters</span>
-<span class="c1"># ############################################### #</span>
+<span class="c1"># Docker registry mirror to g5k cache</span>
+<span class="c1"># See  https://beyondtheclouds.github.io/enos/customization/index.html#docker-registry-mirror-configuration</span>
+<span class="c1">#</span>
 <span class="nt">registry</span><span class="p">:</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">external</span>
-  <span class="nt">ip</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">docker-cache.grid5000.fr</span>
-  <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+   <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">external</span>
+   <span class="nt">ip</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">docker-cache.grid5000.fr</span>
+   <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
 
-<span class="c1"># ############################################### #</span>
-<span class="c1"># Enos Customizations                             #</span>
-<span class="c1"># ############################################### #</span>
+<span class="c1"># Deploy a monitoring stack made of cAdvisor, collectd, influxDB and</span>
+<span class="c1"># Graphana.</span>
+<span class="c1"># See https://beyondtheclouds.github.io/enos/analysis/</span>
+<span class="c1">#</span>
 <span class="nt">enable_monitoring</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">yes</span>
 
-<span class="c1"># ############################################### #</span>
-<span class="c1"># Kolla parameters                                #</span>
-<span class="c1"># ############################################### #</span>
-<span class="nt">kolla-ansible</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">kolla-ansible~=10.0</span>
+<span class="c1"># kolla-ansible executable (could be a PyPi package, a git</span>
+<span class="c1"># repository, a local directory ...)</span>
+<span class="c1"># See https://beyondtheclouds.github.io/enos/customization/index.html#changing-kolla-version</span>
+<span class="c1">#</span>
+<span class="c1"># kolla-ansible: kolla-ansible~=10.0</span>
 
-<span class="c1"># Vars : kolla_repo/ansible/group_vars/all.yml</span>
-<span class="nt">kolla</span><span class="p">:</span>
-  <span class="nt">kolla_base_distro</span><span class="p">:</span> <span class="s">&quot;centos&quot;</span>
-  <span class="nt">kolla_install_type</span><span class="p">:</span> <span class="s">&quot;source&quot;</span>
-  <span class="nt">enable_heat</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">yes</span>
+<span class="c1"># Custom kolla-ansible parameters (as in `globals.yml`)</span>
+<span class="c1"># See https://beyondtheclouds.github.io/enos/customization/index.html#customize-kolla-variables</span>
+<span class="c1">#</span>
+<span class="c1"># kolla:</span>
+<span class="c1">#   kolla_base_distro: &quot;centos&quot;</span>
+<span class="c1">#   kolla_install_type: &quot;source&quot;</span>
+<span class="c1">#   enable_heat: yes</span>
+
+
+<span class="c1"># Kolla-Ansible inventory file that defines on which of the</span>
+<span class="c1"># `resources` nodes to deploy OpenStack services.</span>
+<span class="c1"># See https://beyondtheclouds.github.io/enos/customization/index.html#changing-the-topology</span>
+<span class="c1">#</span>
+<span class="c1"># inventory: inventory.sample</span>
 </pre></div>
 </div>
 <dl class="footnote brackets">

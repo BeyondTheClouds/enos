@@ -298,7 +298,7 @@ Then, install EnOS in your working directory (python3.7+ is required):
     # (venv) enos:~/enos-myxp$
     . venv/bin/activate
     # (venv) enos:~/enos-myxp$
-    pip install "enos[openstack]~=7.0.0"
+    pip install enos
 
 .. note::
 
@@ -370,24 +370,20 @@ between them”. So that EnOS can deploy such OpenStack over your
 testbed and run performance analysis.
 
 The description of the configuration is done in a ``reservation.yaml``
-file. You may generate a new one with ``enos new > reservation.yaml``.
-The configuration file is pretty fat, with a configuration sample for
-all supported testbed (G5k, Chameleon, Vagrant, ...).
+file. You may generate a new one with ``enos new --provider=g5k``. Use
+your favorite text editor to open it and edit it to fit your situation
+-- *i.e.*, something like listing `lst:reservation.yaml`_. Three parts
+of this configuration file are interested for a simple use of EnOS:
 
-Use your favorite text editor to open the ``reservation.yaml`` file and
-edit it to fit your situation -- *i.e.*, something like listing
-`lst:reservation.yaml`_. Three parts of this configuration file are
-interested for a simple use of EnOS:
-
-- ``provider`` section (l. 5): Defines on which testbed to
+- ``provider`` section (l. 8): Defines on which testbed to
   deploy OpenStack (*i.e.*, G5k, Chameleon, Vagrant, ...).
 
-- ``resources`` section (l. 10): Defines the number and role of
+- ``resources`` section (l. 13): Defines the number and role of
   machines to deploy on the testbed (*e.g.*, book 3 nodes on
   ``paravance`` with 1 ``control`` node, 1 ``network`` node and 1 ``compute``
   node).
 
-- ``kolla`` section (l. 37): Defines the OpenStack
+- ``kolla`` section (l. 33): Defines the OpenStack
   configuration, for instance:
 
   - Which OpenStack version to deploy (*e.g.*, ``kolla-ansible: kolla-ansible~=10.0`` -- OpenStack Ussuri).
@@ -400,9 +396,12 @@ interested for a simple use of EnOS:
     :name: lst:reservation.yaml
 
     ---
-    # ############################################### #
-    # Grid'5000 reservation parameters                #
-    # ############################################### #
+
+    # Testbed targeted for the experiment and its resources.  Each
+    # provider comes with specific options and a specific nomenclature for
+    # resources.  Refer to the doc of each provider for more information.
+    # See https://beyondtheclouds.github.io/enos/provider/
+    #
     provider:
       type: g5k
       job_name: 'enos'
@@ -414,34 +413,40 @@ interested for a simple use of EnOS:
         network: 1
         control: 1
 
-    # ############################################### #
-    # Inventory to use                                #
-    # ############################################### #
-    inventory: resources/inventory.sample
-
-    # ############################################### #
-    # docker registry parameters
-    # ############################################### #
+    # Docker registry mirror to g5k cache
+    # See  https://beyondtheclouds.github.io/enos/customization/index.html#docker-registry-mirror-configuration
+    #
     registry:
        type: external
        ip: docker-cache.grid5000.fr
        port: 80
 
-    # ############################################### #
-    # Enos Customizations                             #
-    # ############################################### #
+    # Deploy a monitoring stack made of cAdvisor, collectd, influxDB and
+    # Graphana.
+    # See https://beyondtheclouds.github.io/enos/analysis/
+    #
     enable_monitoring: yes
 
-    # ############################################### #
-    # Kolla parameters                                #
-    # ############################################### #
-    kolla-ansible: kolla-ansible~=10.0
+    # kolla-ansible executable (could be a PyPi package, a git
+    # repository, a local directory ...)
+    # See https://beyondtheclouds.github.io/enos/customization/index.html#changing-kolla-version
+    #
+    # kolla-ansible: kolla-ansible~=10.0
 
-    # Vars : kolla_repo/ansible/group_vars/all.yml
-    kolla:
-      kolla_base_distro: "centos"
-      kolla_install_type: "source"
-      enable_heat: yes
+    # Custom kolla-ansible parameters (as in `globals.yml`)
+    # See https://beyondtheclouds.github.io/enos/customization/index.html#customize-kolla-variables
+    #
+    # kolla:
+    #   kolla_base_distro: "centos"
+    #   kolla_install_type: "source"
+    #   enable_heat: yes
+
+
+    # Kolla-Ansible inventory file that defines on which of the
+    # `resources` nodes to deploy OpenStack services.
+    # See https://beyondtheclouds.github.io/enos/customization/index.html#changing-the-topology
+    #
+    # inventory: inventory.sample
 
 The ``provider`` section tells on which testbed to deploy OpenStack plus
 its configuration. The configuration may vary from one testbed to
@@ -501,7 +506,7 @@ access to the control node by typing:
 .. code-block:: sh
 
     # (venv) enos:~/enos-myxp$
-    ssh -l root $(enos info --out json | jq -r '.rsc.control[0].address')
+    ssh -l root $(enos info --out=json | jq -r '.rsc.control[0].address')
     # control:~# -- List the downloaded Docker images
     docker images
     # control:~# -- List the running Docker containers
@@ -1188,9 +1193,11 @@ GitHub [17]_  and continue to have fun with EnOS.
 .. code-block:: yaml
 
     ---
-    # ############################################### #
-    # Grid'5000 reservation parameters                #
-    # ############################################### #
+    # Testbed targeted for the experiment and its resources.  Each
+    # provider comes with specific options and a specific nomenclature for
+    # resources.  Refer to the doc of each provider for more information.
+    # See https://beyondtheclouds.github.io/enos/provider/
+    #
     provider:
       type: g5k
       job_name: 'enos'
@@ -1218,34 +1225,40 @@ GitHub [17]_  and continue to have fun with EnOS.
           loss: 0%
           symmetric: true
 
-    # ############################################### #
-    # Inventory to use                                #
-    # ############################################### #
-    inventory: resources/inventory.sample
-
-    # ############################################### #
-    # docker registry parameters
-    # ############################################### #
+    # Docker registry mirror to g5k cache
+    # See  https://beyondtheclouds.github.io/enos/customization/index.html#docker-registry-mirror-configuration
+    #
     registry:
-      type: external
-      ip: docker-cache.grid5000.fr
-      port: 80
+       type: external
+       ip: docker-cache.grid5000.fr
+       port: 80
 
-    # ############################################### #
-    # Enos Customizations                             #
-    # ############################################### #
+    # Deploy a monitoring stack made of cAdvisor, collectd, influxDB and
+    # Graphana.
+    # See https://beyondtheclouds.github.io/enos/analysis/
+    #
     enable_monitoring: yes
 
-    # ############################################### #
-    # Kolla parameters                                #
-    # ############################################### #
-    kolla-ansible: kolla-ansible~=10.0
+    # kolla-ansible executable (could be a PyPi package, a git
+    # repository, a local directory ...)
+    # See https://beyondtheclouds.github.io/enos/customization/index.html#changing-kolla-version
+    #
+    # kolla-ansible: kolla-ansible~=10.0
 
-    # Vars : kolla_repo/ansible/group_vars/all.yml
-    kolla:
-      kolla_base_distro: "centos"
-      kolla_install_type: "source"
-      enable_heat: yes
+    # Custom kolla-ansible parameters (as in `globals.yml`)
+    # See https://beyondtheclouds.github.io/enos/customization/index.html#customize-kolla-variables
+    #
+    # kolla:
+    #   kolla_base_distro: "centos"
+    #   kolla_install_type: "source"
+    #   enable_heat: yes
+
+
+    # Kolla-Ansible inventory file that defines on which of the
+    # `resources` nodes to deploy OpenStack services.
+    # See https://beyondtheclouds.github.io/enos/customization/index.html#changing-the-topology
+    #
+    # inventory: inventory.sample
 
 
 .. [1] `https://www.openstack.org/ <https://www.openstack.org/>`_
