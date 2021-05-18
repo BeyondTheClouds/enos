@@ -1,9 +1,7 @@
 import unittest
 import enos.utils.extra as xenos
-from enos.utils.errors import (EnosProviderMissingConfigurationKeys,
-                               EnosFilePathError, EnosUnknownProvider)
+from enos.utils.errors import (EnosFilePathError, EnosUnknownProvider)
 import enos.utils.constants as C
-import copy
 import contextlib
 import os
 import pathlib
@@ -53,78 +51,6 @@ class TestMakeProvider(unittest.TestCase):
         "Tests the raise of error for unknown/unloaded provider"
         with self.assertRaises(EnosUnknownProvider):
             xenos.make_provider(self.__provider_env('unexist'))
-
-
-class TestLoadProviderConfig(unittest.TestCase):
-    def test_load_provider_config_nest_type(self):
-        provider_config = 'myprovider'
-        expected = {
-            'type': 'myprovider'
-        }
-        provider_config = xenos.load_provider_config(
-            copy.deepcopy(provider_config))
-        self.assertDictEqual(expected, provider_config)
-
-    def test_load_provider_config_nest_type_with_defaults(self):
-        provider_config = 'myprovider'
-        default_provider_config = {
-            'option1': 'value1',
-            'option2': 'value2',
-        }
-        expected = {
-            'type': 'myprovider',
-            'option1': 'value1',
-            'option2': 'value2',
-        }
-        provider_config = xenos.load_provider_config(
-            copy.deepcopy(provider_config),
-            default_provider_config=default_provider_config)
-        self.assertDictEqual(expected, provider_config)
-
-    def test_load_provider_config_with_defaults(self):
-        provider_config = {
-            'type': 'myprovider',
-            'option1': 'myvalue1'
-        }
-        default_provider_config = {
-            'option1': 'value1',
-            'option2': 'value2',
-        }
-        expected = {
-            'type': 'myprovider',
-            'option1': 'myvalue1',
-            'option2': 'value2',
-        }
-        provider_config = xenos.load_provider_config(
-            copy.deepcopy(provider_config),
-            default_provider_config=default_provider_config)
-        self.assertDictEqual(expected, provider_config)
-
-    def test_load_provider_config_with_missing_keys(self):
-        from collections import OrderedDict
-
-        provider_config = {
-            'is-overrided1': 'overrided-value',
-            'is-overrided2': 'overrided-value'
-        }
-
-        # Note: Go with an OrderedDict and its order preserving keys
-        # extraction, rather than vanilla dict. OrderedDict makes the
-        # assertRaisesRegexp reliable on the order of missing keys in
-        # the error message.
-        default_provider_config = OrderedDict([
-            ('is-overrided1', None),
-            ('missing-overriding1', None),
-            ('is-overrided2', None),
-            ('missing-overriding2', None),
-            ('no-overriding-needed', False)])
-
-        with self. assertRaisesRegex(
-                EnosProviderMissingConfigurationKeys,
-                r"\['missing-overriding1', 'missing-overriding2'\]"):
-            xenos.load_provider_config(
-                provider_config,
-                default_provider_config)
 
 
 @ddt.ddt

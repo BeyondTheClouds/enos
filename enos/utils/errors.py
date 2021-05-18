@@ -30,11 +30,3 @@ class EnosUnknownProvider(EnosError):
           to use a provider that exists.
         '''))
         self.provider_name = provider_name
-
-
-class EnosProviderMissingConfigurationKeys(EnosError):
-    def __init__(self, missing_overridden):
-        super(EnosProviderMissingConfigurationKeys, self).__init__(
-            f"Keys {missing_overridden} have to be overridden in the provider "
-            "section of the reservation file.")
-        self.missing_ovorridden = missing_overridden

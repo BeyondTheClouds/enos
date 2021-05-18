@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import copy
 import importlib
 import logging
 import os
@@ -10,7 +9,6 @@ from enos.provider.provider import Provider
 import enos.utils.constants as C
 import enoslib.api as api
 from enos.utils.errors import (EnosFilePathError,
-                               EnosProviderMissingConfigurationKeys,
                                EnosUnknownProvider)
 from enoslib.enos_inventory import EnosInventory
 from enoslib.types import Roles
@@ -171,44 +169,6 @@ def gen_enoslib_roles(resources_or_topology):
                        "number": v2}
 
 
-def load_config(config, default_provider_config):
-    """Load and set default values to the configuration
-
-        Groups syntax is expanded here.
-    """
-    conf = copy.deepcopy(config)
-    conf['provider'] = load_provider_config(
-        conf['provider'],
-        default_provider_config=default_provider_config)
-    return conf
-
-
-def load_provider_config(provider_config, default_provider_config=None):
-    """Load a set default values for the provider configuration.
-
-    This methods checks that every `None` keys in the
-    `default_provider_config` are overridden by a value in `provider
-    config`.
-
-    """
-    default_provider_config = default_provider_config or {}
-    if not isinstance(provider_config, dict):
-        provider_config = {'type': provider_config}
-
-    # Throw error for missing overridden values of required keys
-    missing_overridden = [k for k, v in default_provider_config.items()
-                          if v is None and k not in provider_config.keys()]
-    if missing_overridden:
-        raise EnosProviderMissingConfigurationKeys(missing_overridden)
-
-    # Builds the provider configuration by merging default and user
-    # config
-    new_provider_config = default_provider_config.copy()
-    new_provider_config.update(provider_config)
-
-    return new_provider_config
-
-
 def seekpath(path):
     """Seek for an enos file `path` and returns its absolute counterpart.
 
@@ -269,3 +229,22 @@ def setdefault_lazy(env, key: str, thunk_value: Callable[[], Any]):
         value = thunk_value()
         env[key] = value
         return value
+
+
+def check_env(fn):
+    """Decorator for an Enos Task.
+
+    This decorator checks if an environment file exists.
+
+    """
+    def decorator(*args, **kwargs):
+        # If no directory is provided, set the default one
+        resultdir = kwargs.get('--env', C.SYMLINK_NAME)
+        # Check if the env file exists
+        env_path = os.path.join(resultdir, 'env')
+        if not os.path.isfile(env_path):
+            raise Exception("The file %s does not exist." % env_path)
+
+        # Proceeds with the function execution
+        return fn(*args, **kwargs)
+    return decorator

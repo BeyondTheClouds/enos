@@ -26,7 +26,7 @@ Commands:
   tc             Enforce network constraints
   info           Show information of the actual deployment.
   destroy        Destroy the deployment and optionally the related resources.
-  deploy         Shortcut for enos up, then enos os and enos config.
+  deploy         Alias for enos up, then enos os and enos init.
   build          Build a reference image for later deployment.
   help           Show this help message.
 
@@ -37,32 +37,20 @@ command.
 """
 
 import logging
+import pathlib
+import sys
 import textwrap
-from os import path
 from pathlib import Path
-from docopt import docopt
-import yaml
 
-import enos.tasks as tt
 import enos.task as t
 import enos.utils.constants as C
-from enos.utils.errors import EnosFilePathError
+import enos.tasks as tt
+import yaml
+from docopt import docopt
+from enos.utils.errors import EnosFilePathError, EnosUnknownProvider
 
-logger = logging.getLogger(__name__)
 
-
-def load_config(config_file):
-    config = {}
-    if path.isfile(config_file):
-        with open(config_file, 'r') as f:
-            config = yaml.safe_load(f)
-            logging.info("Reloaded configuration file %s", config_file)
-            logging.debug("Configuration is %s", config)
-    else:
-        raise EnosFilePathError(
-            config_file, "Configuration file %s does not exist" % config_file)
-
-    return config_file, config
+LOGGER = logging.getLogger(__name__)
 
 
 def up(**kwargs):
@@ -87,9 +75,40 @@ def up(**kwargs):
     -vv                  Verbose mode.
 
     """
-    logger.debug(kwargs)
-    config_file, config = load_config(kwargs['-f'])
-    t.up(config, config_file=config_file, **kwargs)
+    LOGGER.debug('phase[up]: args=%s' % kwargs)
+
+    # Parse optional parameters
+    is_force_deploy = kwargs.get('--force-deploy', False)
+    is_pull_only = kwargs.get('--pull', False)
+    tags = kwargs.get('--tags', None)
+
+    # Parse the configuration file (reservation.yaml)
+    config_file = pathlib.Path(kwargs.get('-f', './reservation.yaml'))
+    if not config_file.is_file():
+        LOGGER.error(textwrap.fill(
+            f'The path {config_file} does not point to a regular file. '
+            'Please, create a "reservation.yaml" file with `enos new` first '
+            'or ensure to link an existing file with the `-f` option'))
+        sys.exit(1)
+
+    # Launch the *up* task
+    try:
+        tt.up(config_file, is_force_deploy, is_pull_only, tags)
+    except EnosFilePathError as err:
+        LOGGER.error(textwrap.fill(
+            f'The path {err.filepath} does not point to a regular file. '
+            'Please, create a "reservation.yaml" file with `enos new` first '
+            'or ensure to link an existing file with the `-f` option'))
+    except EnosUnknownProvider as err:
+        LOGGER.error(textwrap.fill(str(err)))
+    except yaml.YAMLError as err:
+        error_loc = ""
+        if hasattr(err, 'problem_mark'):
+            loc = err.problem_mark
+            error_loc = f"at {loc.line+1}:{loc.column+1}"
+
+        LOGGER.error(f'Syntax error in the file {config_file} '
+                     + error_loc)
 
 
 def os(**kwargs):
@@ -117,7 +136,7 @@ def os(**kwargs):
     -vv                  Verbose mode.
 
     """
-    logger.debug(kwargs)
+    LOGGER.debug(kwargs)
     t.install_os(**kwargs)
 
 
@@ -141,8 +160,46 @@ def init(**kwargs):
     -s --silent          Quiet mode.
     -vv                  Verbose mode.
     """
-    logger.debug(kwargs)
+    LOGGER.debug(kwargs)
     t.init_os(**kwargs)
+
+
+def deploy(**kwargs):
+    """
+    usage: enos deploy [-e ENV|--env=ENV] [-f CONFIG_FILE] [--force-deploy]
+                    [--pull] [-s|--silent|-vv]
+
+    Alias for enos up, then enos os, and finally enos init.
+
+    Options:
+    -e ENV --env=ENV     Path to the environment directory. You should
+                         use this option when you want to link a specific
+                         experiment.
+    -f CONFIG_FILE       Path to the configuration file describing the
+                         deployment [default: ./reservation.yaml].
+    --force-deploy       Force deployment [default: False].
+    --pull               Only preinstall software (e.g pull docker images)
+                         [default: False].
+    -s --silent          Quiet mode.
+    -vv                  Verbose mode.
+    """
+    LOGGER.debug('phase[deploy]: args=%s' % kwargs)
+
+    # --tags cannot be provided in 'deploy' but is mandatory for
+    # 'up'. Similarly, --reconfigure cannot be provided in 'deploy' but is
+    # mandatory for 'os'.
+    kwargs['--tags'] = None
+    kwargs['--reconfigure'] = False
+
+    up(**kwargs)
+
+    # If the user doesn't specify an experiment, then set the ENV directory to
+    # the default one.
+    if not kwargs['--env']:
+        kwargs['--env'] = C.SYMLINK_NAME
+
+    os(**kwargs)
+    init(**kwargs)
 
 
 def bench(**kwargs):
@@ -168,7 +225,7 @@ def bench(**kwargs):
     --pull               Only preinstall software (e.g pull docker images)
                          [default: False].
     """
-    logger.debug(kwargs)
+    LOGGER.debug(kwargs)
     t.bench(**kwargs)
 
 
@@ -188,7 +245,7 @@ def backup(**kwargs):
     -s --silent          Quiet mode.
     -vv                  Verbose mode.
     """
-    logger.debug(kwargs)
+    LOGGER.debug(kwargs)
     t.backup(**kwargs)
 
 
@@ -205,12 +262,12 @@ def new(**kwargs):
     -s --silent         Quiet mode.
     -vv                 Verbose mode.
     """
-    logger.debug(kwargs)
+    LOGGER.debug(kwargs)
     provider = kwargs['--provider']
 
     try:
         tt.new(provider, Path('./reservation.yaml'))
-        logger.info(textwrap.fill(
+        LOGGER.info(textwrap.fill(
             'A `reservation.yaml` file has been placed in this directory.  '
             f'You are now ready to deploy OpenStack on {provider} with '
             '`enos deploy`.  Please read comments in the reservation.yaml '
@@ -218,7 +275,7 @@ def new(**kwargs):
             f'https://beyondtheclouds.github.io/enos/ '
             'for more information on using enos.'))
     except FileExistsError:
-        logger.error(textwrap.fill(
+        LOGGER.error(textwrap.fill(
             'The `reservation.yaml` file already exists in this directory.  '
             f'Remove it before running `enos new --provider={provider}`.'))
 
@@ -239,7 +296,7 @@ def tc(**kwargs):
     --reset              Reset the constraints.
     -vv                  Verbose mode.
     """
-    logger.debug(kwargs)
+    LOGGER.debug(kwargs)
     t.tc(**kwargs)
 
 
@@ -258,7 +315,7 @@ def info(**kwargs):
     --out {json,pickle,yaml} Output the result in either json, pickle or
                              yaml format [default: json].
     """
-    logger.debug(kwargs)
+    LOGGER.debug(kwargs)
     t.info(**kwargs)
 
 
@@ -279,32 +336,8 @@ def destroy(**kwargs):
     -s --silent          Quiet mode.
     -vv                  Verbose mode.
     """
-    logger.debug(kwargs)
+    LOGGER.debug(kwargs)
     t.destroy(**kwargs)
-
-
-def deploy(**kwargs):
-    """
-    usage: enos deploy [-e ENV|--env=ENV] [-f CONFIG_FILE] [--force-deploy]
-                    [--pull] [-s|--silent|-vv]
-
-    Shortcut for enos up, then enos os, and finally enos config.
-
-    Options:
-    -e ENV --env=ENV     Path to the environment directory. You should
-                         use this option when you want to link a specific
-                         experiment.
-    -f CONFIG_FILE       Path to the configuration file describing the
-                         deployment [default: ./reservation.yaml].
-    --force-deploy       Force deployment [default: False].
-    --pull               Only preinstall software (e.g pull docker images)
-                         [default: False].
-    -s --silent          Quiet mode.
-    -vv                  Verbose mode.
-    """
-    logger.debug(kwargs)
-    config_file, config = load_config(kwargs['-f'])
-    t.deploy(config, config_file=config_file, **kwargs)
 
 
 def build(**kwargs):
@@ -323,7 +356,6 @@ def build(**kwargs):
     --base BASE        Base distribution for deployed virtual machines
                        [default: centos].
     --box BOX          Reference box for host virtual machines (vagrant)
-                       [default: generic/debian10].
     --cluster CLUSTER  Cluster where the image is built (g5k and vmong5k)
                        [default: parasilo].
     --directory DIR    Directory in which the image will be baked (vmong5k)
@@ -341,7 +373,7 @@ def build(**kwargs):
 
     """
 
-    logger.debug(kwargs)
+    LOGGER.debug(kwargs)
     provider = kwargs.pop('<provider>')
     arguments = {}
     if '--backend' in kwargs:
