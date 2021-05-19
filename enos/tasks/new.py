@@ -15,7 +15,7 @@ import enos.utils.constants as C
 from enos.services import kolla
 from enos.utils.extra import make_provider
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 # Resources definitions
 G5K_RSC = {'paravance': {'compute': 1, 'network': 1, 'control': 1}}
@@ -45,6 +45,7 @@ def dump(info: Dict[str, Union[str, int]], required_keys: List[str]) -> str:
     All keys absent from `required_keys` are commented out with `#`.
 
     '''
+
     _info = info.copy()
 
     yaml_str = ''
@@ -68,23 +69,33 @@ def get_provider_and_backend_names(pattern: str) -> Tuple[str, Optional[str]]:
     return (g5k, None).
 
     '''
+
     _pattern = pattern.split(':')
-    if len(_pattern) == 1:
-        provider_name = _pattern[0]
+    provider_name = _pattern[0]
+    if len(_pattern) == 1:          # *No* backend in the pattern
         backend_name = None
-    else:
-        provider_name = _pattern[0]
+    else:                           # Remaining pattern is the backend
         backend_name = ':'.join(_pattern[1:])
 
     return provider_name, backend_name
 
 
 def new(provider_name: str, output_path: Path):
-    '''Create a basic reservation.yaml file.
+    '''Create a basic configuration file (reservation.yaml ).
 
-    Create the reservation.yaml file for `provider_name` at `outpout_path`.
+    Create the configuration file for `provider_name` at `outpout_path`.
+
+    Args:
+      provider_name: Name of the provider, e.g., g5k, vagrant:libvirt, ...
+      output_path: Path to write the configuration file to.
+
+    Raises:
+      EnosUnknownProvider: if the provider name does not match a known
+        provider.
+      FileExistsError: if the output_path points to a file that already exists.
 
     '''
+
     # Get the provider and backend names, e.g. (g5k, None) or (vagrant,
     # virtualbox)
     provider, backend = get_provider_and_backend_names(provider_name)
@@ -133,10 +144,10 @@ def new(provider_name: str, output_path: Path):
         resources_conf = STATIC_RSC
         registry_conf = INTERNAL_REG
 
-    logger.debug(f'Generating {output_path} file with '
+    LOGGER.debug(f'Generating {output_path} file with '
                  f'provider conf {provider_conf}, '
                  f'registry conf {registry_conf}, and '
-                 f'resource conf {resources_conf}')
+                 f'resource conf {resources_conf} ...')
 
     # Render the reservation.yaml.j2 template
     with open(Path(C.TEMPLATE_DIR) / 'reservation.yaml.j2') as jinja_f,\

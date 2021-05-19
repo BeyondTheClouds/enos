@@ -28,17 +28,25 @@ def up(config: Dict[str, Any],
        is_pull_only: bool,
        tags: Optional[List[str]],
        env: elib.Environment = None):
-    """
-    Get resources on the testbed and install dependencies.
+    """Get resources on the testbed and install dependencies.
+
+    Args:
+        config: A dict with information such as the provider, resources, etc,
+          as provided by the configuration file (reservation.yaml).
+        is_force_deploy: If true, start from a fresh environment.
+        is_pull_only: Only pull dependencies. Do not install them.
+        tags: Only run ansible tasks tagged with these values.
 
     Put into the env:
-    - config_file: Path to the configuration file
-    - config: Configuration (dict)
-    - inventory: Path to the inventory file
-    - rsc/networks: Enoslib rscs and networks
-    - docker: The docker service
-    - kolla-ansible: The kolla-ansible service
-    """
+        config: Configuration (as a dict)
+        inventory: Path to the inventory file
+        rsc/networks: Enoslib rscs and networks
+        docker: The docker service
+        kolla-ansible: The kolla-ansible service
+
+    Raises:
+        EnosUnknownProvider: if the provider name in the configuration file
+          does not match to a known provider.
 
     """
 
