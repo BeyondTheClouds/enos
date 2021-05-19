@@ -2,7 +2,6 @@
 import importlib
 import logging
 import os
-from operator import methodcaller
 from typing import Dict, Union, Any, Callable
 
 from enos.provider.provider import Provider
@@ -10,8 +9,6 @@ import enos.utils.constants as C
 import enoslib.api as api
 from enos.utils.errors import (EnosFilePathError,
                                EnosUnknownProvider)
-from enoslib.enos_inventory import EnosInventory
-from enoslib.types import Roles
 from netaddr import IPRange
 
 # These roles are mandatory for the
@@ -196,30 +193,6 @@ def seekpath(path):
     logging.debug("Seeking %s path resolves to %s", path, abspath)
 
     return abspath
-
-
-def build_rsc_with_inventory(rsc: Roles, inventory_path: str) -> Roles:
-    '''Return a new `rsc` with roles from the inventory.
-
-    In enos, we have a strong binding between enoslib roles and kolla-ansible
-    groups.  We need for instance to know hosts of the 'enos/registry' group.
-    This method takes an enoslib Roles object and an inventory_path and returns
-    a new Roles object that contains all groups (as in the inventory file) with
-    their hosts (as in enoslib).
-
-    '''
-    inv = EnosInventory(sources=inventory_path)
-    rsc_by_name = {h.alias: h for h in api.get_hosts(rsc, 'all')}
-
-    # Build a new rsc with all groups in it
-    new_rsc = rsc.copy()
-    for grp in inv.list_groups():
-        hostnames_in_grp = map(methodcaller('get_name'), inv.get_hosts(grp))
-        rsc_in_grp = [rsc_by_name[h_name] for h_name in hostnames_in_grp
-                      if h_name in rsc_by_name]
-        new_rsc.update({grp: rsc_in_grp})
-
-    return new_rsc
 
 
 def setdefault_lazy(env, key: str, thunk_value: Callable[[], Any]):

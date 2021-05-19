@@ -6,14 +6,15 @@ Get resources on the testbed and install dependencies.
 import logging
 import os
 from pathlib import Path
+from operator import methodcaller
 
 import enoslib as elib
-import yaml
+import enoslib.types as elib_t
+from enoslib.enos_inventory import EnosInventory
 
-from enos.utils.errors import EnosFilePathError
 from enos.services import KollaAnsible
 import enos.utils.constants as C
-from enos.utils.extra import (build_rsc_with_inventory, generate_inventory,
+from enos.utils.extra import (generate_inventory,
                               get_vip_pool, make_provider, pop_ip, seekpath)
 
 from typing import List, Optional, Dict, Any
@@ -21,24 +22,8 @@ from typing import List, Optional, Dict, Any
 LOGGER = logging.getLogger(__name__)
 
 
-def load_config(config_file: Path) -> Dict[str, Any]:
-    "Load the configuration yaml file"
-
-    # Ensure `config_file` points to a file
-    if not config_file.is_file():
-        raise EnosFilePathError(
-            config_file,
-            f'Configuration file {config_file} does not exist')
-
-    # Parse it
-    with open(config_file, 'r') as yaml_file:
-        config = yaml.safe_load(yaml_file)
-        LOGGER.info(f"Loaded configuration file {config_file}")
-        return config
-
-
 @elib.enostask(new=True)
-def up(config_file: Path,
+def up(config: Dict[str, Any],
        is_force_deploy: bool,
        is_pull_only: bool,
        tags: Optional[List[str]],
@@ -55,17 +40,15 @@ def up(config_file: Path,
     - kolla-ansible: The kolla-ansible service
     """
 
-    # Load the configuration
-    config = load_config(config_file)
-    env['config_file'] = config_file
+    """
 
     # Get the provider and update config with provider default values
     provider_type = config['provider']['type']
     provider = make_provider(provider_type)
     provider_conf = dict(provider.default_config(), **config['provider'])
     config.update(provider=provider_conf)
+    LOGGER.debug(f"Loaded config {config}")
     env['config'] = config
-    LOGGER.debug("Loaded config: %s", config)
 
     # Call the provider to initialize resources
     rsc, networks = provider.init(env['config'], is_force_deploy)
@@ -82,7 +65,6 @@ def up(config_file: Path,
         base_inventory = seekpath(inventory_conf)
     generate_inventory(rsc, networks, base_inventory, inventory)
     LOGGER.info('Generates inventory %s' % inventory)
-
     env['inventory'] = inventory
 
     # Fills rsc with information such as network_interface and then
@@ -103,7 +85,6 @@ def up(config_file: Path,
     # > neutron_external_interface_ip='192.168.43.245'
     rsc = elib.discover_networks(rsc, networks)
     rsc = build_rsc_with_inventory(rsc, env['inventory'])
-
     env['rsc'] = rsc
     env['networks'] = networks
 
@@ -145,7 +126,6 @@ def up(config_file: Path,
 
     LOGGER.info(f'Deploying docker service as {docker.registry_opts}')
     docker.deploy()
-
     env['docker'] = docker
 
     # Install kolla-ansible and run bootstrap-servers
@@ -170,7 +150,6 @@ def up(config_file: Path,
     # TODO: give it tags if any
     kolla_ansible.execute(['bootstrap-servers',
                            '--extra enable_docker_repo=false'])
-
     env['kolla-ansible'] = kolla_ansible
 
     # Generates the admin-openrc, see
@@ -236,7 +215,36 @@ def up(config_file: Path,
     elib.run_ansible(
         [up_playbook], env['inventory'], extra_vars=options, tags=tags)
 
+
+# Utils
 
 def title(title: str) -> Dict[str, str]:
     "A title for an ansible yaml commands"
+
     return {"display_name": "enos up : " + title}
+
+
+def build_rsc_with_inventory(
+        rsc: elib_t.Roles, inventory_path: str) -> elib_t.Roles:
+    '''Return a new `rsc` with roles from the inventory.
+
+    In enos, we have a strong binding between enoslib roles and kolla-ansible
+    groups.  We need for instance to know hosts of the 'enos/registry' group.
+    This method takes an enoslib Roles object and an inventory_path and returns
+    a new Roles object that contains all groups (as in the inventory file) with
+    their hosts (as in enoslib).
+
+    '''
+
+    inv = EnosInventory(sources=inventory_path)
+    rsc_by_name = {h.alias: h for h in elib.api.get_hosts(rsc, 'all')}
+
+    # Build a new rsc with all groups in it
+    new_rsc = rsc.copy()
+    for grp in inv.list_groups():
+        hostnames_in_grp = map(methodcaller('get_name'), inv.get_hosts(grp))
+        rsc_in_grp = [rsc_by_name[h_name] for h_name in hostnames_in_grp
+                      if h_name in rsc_by_name]
+        new_rsc.update({grp: rsc_in_grp})
+
+    return new_rsc

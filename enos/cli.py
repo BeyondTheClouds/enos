@@ -38,9 +38,9 @@ command.
 
 import logging
 import pathlib
-import sys
 import textwrap
 from pathlib import Path
+from typing import Dict, Any
 
 import enos.task as t
 import enos.utils.constants as C
@@ -85,7 +85,8 @@ def up(**kwargs):
 
     # Launch the *up* task
     try:
-        tt.up(config_file, is_force_deploy, is_pull_only, tags)
+        config = _load_config(config_file)
+        tt.up(config, is_force_deploy, is_pull_only, tags)
 
     # Display nice error messages for the user
     except EnosFilePathError as err:
@@ -93,16 +94,16 @@ def up(**kwargs):
             f'The path "{err.filepath}" does not point to a regular file. '
             'Please, ensure to link an existing file with the `-f` option '
             'or first create a "reservation.yaml" file with `enos new`.'))
-    except EnosUnknownProvider as err:
-        LOGGER.error(textwrap.fill(str(err)))
     except yaml.YAMLError as err:
         error_loc = ""
         if hasattr(err, 'problem_mark'):
-            loc = err.problem_mark
+            loc = getattr(err, 'problem_mark')
             error_loc = f"at {loc.line+1}:{loc.column+1}"
 
         LOGGER.error(f'Syntax error in the file {config_file} '
                      + error_loc)
+    except EnosUnknownProvider as err:
+        LOGGER.error(textwrap.fill(str(err)))
 
 
 def os(**kwargs):
@@ -388,6 +389,24 @@ def build(**kwargs):
         arguments['distribution'] = kwargs['--type']
     t.build(provider, **arguments)
 
+
+# utils
+
+def _load_config(config_file: Path) -> Dict[str, Any]:
+    "Load the configuration yaml file"
+
+    # Ensure `config_file` points to a file
+    if not config_file.is_file():
+        raise EnosFilePathError(
+            config_file,
+            f'Configuration file {config_file} does not exist')
+
+    # Parse it
+    with open(config_file, 'r') as yaml_file:
+        config = yaml.safe_load(yaml_file)
+        LOGGER.info(f"Loaded configuration file {config_file}")
+        return config
+
 
 def _configure_logging(args):
     if '-vv' in args['<args>']:
@@ -405,7 +424,7 @@ def _configure_logging(args):
 def pushtask(ts, f):
     ts.update({f.__name__: f})
 
-
+
 def main():
     args = docopt(__doc__,
                   version=C.VERSION,
