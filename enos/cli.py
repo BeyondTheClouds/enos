@@ -1,46 +1,44 @@
 # -*- coding: utf-8 -*-
-"""Enos: Monitor and test your OpenStack.
+"""\
+Enos: Deploy and test your OpenStack.
 
-usage: enos <command> [<args> ...] [-e ENV|--env=ENV]
-            [-h|--help] [-v|--version] [-s|--silent|--vv]
+USAGE:
+  enos [-h] [-q|-v|-vv] [-V] <command> [<args> ...]
 
-General options:
-  -e ENV --env=ENV  Path to the environment directory. You should
-                    use this option when you want to link to a specific
-                    experiment. Not specifying this value will
-                    discard the loading of the environment (it
-                    makes sense for `up`).
-  -h --help         Show this help message.
-  -s --silent       Quiet mode.
-  -v --version      Show version number.
-  -vv               Verbose mode.
+ARGUMENTS:
+  <command>      The command to execute.
+  <args>         The arguments of the command.
 
-Commands:
+GLOBAL OPTIONS:
+  -h --help      Show this help message.
+  -q --quiet     Do not output any message.
+  -v --verbose   Increase the verbosity of messages: '-v' for verbose output,
+                 '-vv' for debug.
+  -V --version   Show version number.
+
+COMMANDS:
   new            Create a reservation.yaml file in the current directory.
-  up             Get resources and install the docker registry.
-  os             Run kolla and install OpenStack.
+  up             Get and setup resources on the testbed.
+  os             Install OpenStack.
   init           Initialise OpenStack with the bare necessities.
+  deploy         Alias for enos up, then enos os and finally enos init.
   bench          Run Rally/Shaker on this OpenStack.
-  backup         Backup the environment
-  ssh-tunnel     Print configuration for port forwarding with horizon.
+  backup         Backup OpenStack/bench logs.
   tc             Enforce network constraints
   info           Show information of the actual deployment.
   destroy        Destroy the deployment and optionally the related resources.
-  deploy         Alias for enos up, then enos os and enos init.
   build          Build a reference image for later deployment.
   help           Show this help message.
 
-
-See 'enos <command> --help' for more information on a specific
-command.
-
+See 'enos help <command>' for more information on a specific command.
 """
 
+import sys
 import logging
 import pathlib
 import textwrap
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Callable, Dict
 
 import enos.task as t
 import enos.utils.constants as C
@@ -54,27 +52,25 @@ LOGGER = logging.getLogger(__name__)
 
 
 def up(**kwargs):
+    """\
+    USAGE:
+      enos up [-f CONFIG_FILE] [--force-deploy] [-t TAGS] [--pull] [-e ENV]
+
+      Get and setup resources on the testbed.
+
+    OPTIONS:
+      -f CONFIG_FILE   Path to the configuration file describing the
+                       deployment [default: ./reservation.yaml].
+      --force-deploy   Force deployment [default: False].
+      -t, --tags TAGS  Only run ansible tasks tagged with these values.
+      --pull           Only preinstall software (e.g pull docker images)
+                       [default: False].
+      -e, --env ENV    Path to the environment directory (Advanced option). Enos
+                       creates a directory to track the state of the
+                       experiment. Use this option to link enos with a different
+                       environment.
     """
-    usage: enos up  [-e ENV|--env=ENV][-f CONFIG_FILE] [--force-deploy]
-                    [-t TAGS|--tags=TAGS] [-s|--silent|-vv]
 
-    Get resources and install the docker registry.
-
-    Options:
-    -e ENV --env=ENV     Path to the environment directory. You should
-                         use this option when you want to link to a specific
-                         experiment. Do not specify it in other cases.
-    -f CONFIG_FILE       Path to the configuration file describing the
-                         deployment [default: ./reservation.yaml].
-    -h --help            Show this help message.
-    --force-deploy       Force deployment [default: False].
-    --pull               Only preinstall software (e.g pull docker images)
-                         [default: False].
-    -s --silent          Quiet mode.
-    -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
-    -vv                  Verbose mode.
-
-    """
     LOGGER.debug('phase[up]: args=%s' % kwargs)
 
     # Get parameters
@@ -107,77 +103,77 @@ def up(**kwargs):
 
 
 def os(**kwargs):
-    """Usage:
-      enos os [-e ENV|--env=ENV] [--reconfigure] [-t TAGS|--tags=TAGS]
-              [-s|--silent|-vv]
-      enos os [-e ENV|--env=ENV] [-s|--silent|-vv] -- <kolla-cmd> ...
+    """\
+    USAGE:
+      enos os [--reconfigure] [-t TAGS] [--pull] [-e ENV]
+      enos os [-e ENV] -- <kolla-cmd> ...
 
-    Install OpenStack with kolla-ansible.
+      Install OpenStack with kolla-ansible.
 
-    The second command falls back on kolla to run arbitrary commands, e.g.,
-    `enos os -- prechecks`, see `enos os -- -help` for an exhaustive list of
-    supported commands.
+      The second command falls back on kolla-ansible to run arbitrary commands,
+      e.g., `enos os -- prechecks`. See `enos os -- --help` for an exhaustive
+      list of supported commands.
 
-    Options:
-    -e ENV --env=ENV     Path to the environment directory. You should
-                         use this option when you want to link a specific
-                         experiment [default: current].
-    -h --help            Show this help message.
-    --reconfigure        Reconfigure the services after a deployment.
-    --pull               Only preinstall software (e.g pull docker images)
-                         [default: False].
-    -s --silent          Quiet mode.
-    -t TAGS --tags=TAGS  Only run ansible tasks tagged with these values.
-    -vv                  Verbose mode.
-
+    OPTIONS:
+      --reconfigure    Reconfigure the services after a deployment.
+      -t, --tags TAGS  Only run ansible tasks tagged with these values.
+      --pull           Only preinstall software (e.g pull docker images)
+                       [default: False].
+      -e, --env ENV    Path to the environment directory (Advanced option). Enos
+                       creates a directory to track the state of the experiment.
+                       Use this option to link enos with a different environment
+                       [default: ./current].
     """
-    LOGGER.debug(kwargs)
-    t.install_os(**kwargs)
+
+    LOGGER.debug('phase[os]: args=%s' % kwargs)
+    import enos.task as tasks
+    tasks.install_os(**kwargs)
 
 
 def init(**kwargs):
-    """
-    usage: enos init [-e ENV|--env=ENV] [-s|--silent|-vv] [--pull]
+    """\
+    USAGE:
+      enos init [--pull] [-e ENV]
 
-    Initialise OpenStack with the bare necessities:
-    - Install a 'member' role
-    - Download and install a cirros image
-    - Install default flavor (m1.tiny, ..., m1.xlarge)
-    - Install default network
+      Initialise OpenStack with the bare necessities:
+      - Install a 'member' role
+      - Download and install a cirros image
+      - Install default flavor (m1.tiny, ..., m1.xlarge)
+      - Install default network
 
-    Options:
-    -e ENV --env=ENV     Path to the environment directory. You should
-                         use this option when you want to link a specific
-                         experiment [default: current].
-    --pull               Only preinstall software (e.g pull docker images)
-                         [default: False].
-    -h --help            Show this help message.
-    -s --silent          Quiet mode.
-    -vv                  Verbose mode.
+    OPTIONS:
+      --pull         Only preinstall software (e.g pull docker images)
+                     [default: False].
+      -e, --env ENV  Path to the environment directory (Advanced option). Enos
+                     creates a directory to track the state of the experiment.
+                     Use this option to link enos with a different environment
+                     [default: ./current].
     """
-    LOGGER.debug(kwargs)
-    t.init_os(**kwargs)
+
+    LOGGER.debug('phase[init]: args=%s' % kwargs)
+    import enos.task as tasks
+    tasks.init_os(**kwargs)
 
 
 def deploy(**kwargs):
-    """
-    usage: enos deploy [-e ENV|--env=ENV] [-f CONFIG_FILE] [--force-deploy]
-                    [--pull] [-s|--silent|-vv]
+    """\
+    USAGE:
+      enos deploy [-f CONFIG_FILE] [--force-deploy] [--pull] [-e ENV]
 
-    Alias for enos up, then enos os, and finally enos init.
+      Alias for enos up, then enos os, and finally enos init.
 
-    Options:
-    -e ENV --env=ENV     Path to the environment directory. You should
-                         use this option when you want to link a specific
-                         experiment.
-    -f CONFIG_FILE       Path to the configuration file describing the
-                         deployment [default: ./reservation.yaml].
-    --force-deploy       Force deployment [default: False].
-    --pull               Only preinstall software (e.g pull docker images)
-                         [default: False].
-    -s --silent          Quiet mode.
-    -vv                  Verbose mode.
+    OPTIONS:
+      -f CONFIG_FILE  Path to the configuration file describing the
+                      deployment [default: ./reservation.yaml].
+      --force-deploy  Force deployment [default: False].
+      --pull          Only preinstall software (e.g pull docker images)
+                      [default: False].
+      -e, --env ENV   Path to the environment directory (Advanced option). Enos
+                      creates a directory to track the state of the
+                      experiment. Use this option to link enos with a different
+                      environment.
     """
+
     LOGGER.debug('phase[deploy]: args=%s' % kwargs)
 
     # --tags cannot be provided in 'deploy' but is mandatory for
@@ -198,64 +194,59 @@ def deploy(**kwargs):
 
 
 def bench(**kwargs):
-    """
-    usage: enos bench [-e ENV|--env=ENV] [-s|--silent|-vv]
-        [--workload=WORKLOAD] [--pull] [--reset]
+    """\
+    USAGE:
+      enos bench [--workload=WORKLOAD] [--reset] [--pull] [-e ENV]
 
-    Run Rally/Shaker on this OpenStack.
+      Run Rally/Shaker on this OpenStack.
 
-    Options:
-    -e ENV --env=ENV     Path to the environment directory. You should
-                         use this option when you want to link a specific
-                         experiment [default: current].
-    -h --help            Show this help message.
-    -s --silent          Quiet mode.
-    -vv                  Verbose mode.
-    --workload=WORKLOAD  Path to the workload directory.
-                         This directory must contain a run.yml file
-                         that contains the description of the different
-                         scenarios to launch [default: workload/].
-    --reset              Force the creation of benchmark environment.
-
-    --pull               Only preinstall software (e.g pull docker images)
-                         [default: False].
+    OPTIONS:
+      --workload=WORKLOAD  Path to the workload directory.
+                           This directory must contain a run.yml file
+                           that contains the description of the different
+                           scenarios to launch [default: workload/].
+      --reset              Force the creation of benchmark environment.
+      --pull               Only preinstall software (e.g pull docker images)
+                           [default: False].
+      -e, --env ENV        Path to the environment directory (Advanced option).
+                           Enos creates a directory to track the state of the
+                           experiment. Use this option to link enos with a
+                           different environment [default: ./current].
     """
     LOGGER.debug(kwargs)
     t.bench(**kwargs)
 
 
 def backup(**kwargs):
-    """
-    usage: enos backup [--backup_dir=BACKUP_DIR] [-e ENV|--env=ENV]
-                    [-s|--silent|-vv]
+    """\
+    USAGE:
+      enos backup [--backup_dir=BACKUP_DIR] [-e ENV]
 
-    Backup the environment
+      Backup the environment.
 
-    Options:
-    --backup_dir=BACKUP_DIR  Backup directory.
-    -e ENV --env=ENV     Path to the environment directory. You should
-                         use this option when you want to link a specific
-                         experiment [default: current].
-    -h --help            Show this help message.
-    -s --silent          Quiet mode.
-    -vv                  Verbose mode.
+    OPTIONS:
+      --backup_dir=BACKUP_DIR  Backup directory.
+      -e, --env ENV            Path to the environment directory (Advanced
+                               option). Enos creates a directory to track the
+                               state of the experiment. Use this option to
+                               link enos with a different environment
+                               [default: ./current].
     """
     LOGGER.debug(kwargs)
     t.backup(**kwargs)
 
 
 def new(**kwargs):
-    """
-    usage: enos new [--provider=TESTBED] [-s|--silent|-vv]
+    """\
+    USAGE:
+      enos new [-p TESTBED]
 
-    Create a basic reservation.yaml file in the current directory.
+      Create a basic reservation.yaml file in the current directory.
 
-    Options:
-    --provider=TESTBED  Targeted testbed. One of g5k, vagrant:virtualbox,
-                        vagrant:libvirt, chameleonkvm, chameleonbaremetal,
-                        openstack, vmong5k, static [default: g5k].
-    -s --silent         Quiet mode.
-    -vv                 Verbose mode.
+    OPTIONS:
+      -p, --provider TESTBED  Targeted testbed. One of g5k, vagrant:virtualbox,
+                              vagrant:libvirt, chameleonkvm, chameleonbaremetal,
+                              openstack, vmong5k, static [default: g5k].
     """
     LOGGER.debug(kwargs)
     provider = kwargs['--provider']
@@ -276,95 +267,91 @@ def new(**kwargs):
 
 
 def tc(**kwargs):
-    """
-    usage: enos tc [-e ENV|--env=ENV] [--test] [--reset] [-s|--silent|-vv]
+    """\
+    USAGE:
+      enos tc [--test] [--reset] [-e ENV]
 
-    Enforce network constraints
+      Enforce network constraints.
 
-    Options:
-    -e ENV --env=ENV     Path to the environment directory. You should
-                         use this option when you want to link a specific
-                         experiment [default: current].
-    -h --help            Show this help message.
-    -s --silent          Quiet mode.
-    --test               Test the rules by generating various reports.
-    --reset              Reset the constraints.
-    -vv                  Verbose mode.
+    OPTIONS:
+      --test         Test rule enforcement.  This generates various reports that
+                     you can get back on your machine with `enos backup`.
+      --reset        Reset the constraints.
+      -e, --env ENV  Path to the environment directory (Advanced option). Enos
+                     creates a directory to track the state of the experiment.
+                     Use this option to link enos with a different environment
+                     [default: ./current].
     """
     LOGGER.debug(kwargs)
     t.tc(**kwargs)
 
 
 def info(**kwargs):
+    """\
+    USAGE:
+      enos info [-o {json,yaml,pickle}] [-e ENV]
+
+      Show information of the `ENV` deployment.
+
+    OPTIONS:
+      -o, --out FORMAT  Output the result in either json, pickle or yaml
+                        FORMAT [default: json].
+      -e, --env ENV     Path to the environment directory (Advanced option).
+                        Enos creates a directory to track the state of the
+                        experiment. Use this option to link enos with a
+                        different environment [default: ./current].
     """
-    usage: enos info [-e ENV|--env=ENV] [--out={json,pickle,yaml}]
 
-    Show information of the `ENV` deployment.
-
-    Options:
-
-    -e ENV --env=ENV         Path to the environment directory. You should use
-                             this option when you want to link a
-                             specific experiment [default: current].
-
-    --out {json,pickle,yaml} Output the result in either json, pickle or
-                             yaml format [default: json].
-    """
     LOGGER.debug(kwargs)
     t.info(**kwargs)
 
 
 def destroy(**kwargs):
-    """
-    usage: enos destroy [-e ENV|--env=ENV] [-s|--silent|-vv] [--hard]
-                        [--include-images]
+    """\
+    USAGE:
+      enos destroy [--include-images] [--hard] [-e ENV]
 
-    Destroy the deployment.
+      Destroy the deployment.
 
-    Options:
-    -e ENV --env=ENV     Path to the environment directory. You should
-                         use this option when you want to link a specific
-                         experiment [default: current].
-    -h --help            Show this help message.
-    --hard               Destroy the underlying resources as well.
-    --include-images     Remove also all the docker images.
-    -s --silent          Quiet mode.
-    -vv                  Verbose mode.
+    OPTIONS:
+      --include-images  Remove also all the docker images.
+      --hard            Destroy the underlying resources as well.
+      -e, --env ENV     Path to the environment directory (Advanced option).
+                        Enos creates a directory to track the state of the
+                        experiment. Use this option to link enos with a
+                        different environment [default: ./current].
     """
     LOGGER.debug(kwargs)
     t.destroy(**kwargs)
 
 
 def build(**kwargs):
+    """\
+    USAGE:
+      enos build <provider> [options]
+
+      Build a reference image for later deployment.
+
+      The built is done for a given <provider> (vagrant, g5k or vmong5k). Some
+      options apply only to some providers, see below.
+
+    OPTIONS:
+      --backend BACKEND  Virtualization backend (vagrant).
+                         [default: virtualbox].
+      --base BASE        Base distribution for deployed virtual machines
+                         [default: centos].
+      --box BOX          Reference box for host virtual machines (vagrant)
+      --cluster CLUSTER  Cluster where the image is built (g5k and vmong5k)
+                         [default: parasilo].
+      --directory DIR    Directory in which the image will be baked (vmong5k)
+                         [default: ~/.enos].
+      --environment ENV  Reference environment for deployment (g5k)
+                         [default: debian10-x64-min].
+      --image IMAGE      Reference image path to bake on top of it (vmong5k)
+                         [default: /grid5000/virt-images/debian10-x64-base.qcow2].
+      --type TYPE        Installation type of the BASE distribution
+                         [default: binary].
     """
-    usage: enos build <provider> [options]
-
-    Build a reference image for later deployment.
-
-    The built is done for a given <provider> (vagrant, g5k or vmong5k). Some
-    options apply only to some providers, see below.
-
-    Options:
-
-    --backend BACKEND  Virtualization backend (vagrant).
-                       [default: virtualbox].
-    --base BASE        Base distribution for deployed virtual machines
-                       [default: centos].
-    --box BOX          Reference box for host virtual machines (vagrant)
-    --cluster CLUSTER  Cluster where the image is built (g5k and vmong5k)
-                       [default: parasilo].
-    --directory DIR    Directory in which the image will be baked (vmong5k)
-                       [default: ~/.enos].
-    --environment ENV  Reference environment for deployment (g5k)
-                       [default: debian10-x64-min].
-    --image IMAGE      Reference image path to bake on top of it (vmong5k)
-                       [default: /grid5000/virt-images/debian10-x64-base.qcow2].
-    --type TYPE        Installation type of the BASE distribution
-                       [default: binary].
-
-    -h --help          Show this help message.
-    -s --silent        Quiet mode.
-    -vv                Verbose mode.
 
     """
 
@@ -389,11 +376,40 @@ def build(**kwargs):
         arguments['distribution'] = kwargs['--type']
     t.build(provider, **arguments)
 
+
+def enos_help(**kwargs):
+    "USAGE: enos help [<command>]"
+
+    LOGGER.debug('phase[help]: args=%s' % kwargs)
+
+    cmd = kwargs.get("<command>")
+    if cmd:  # `enos help <cmd>`
+        print(textwrap.dedent(get_cmd_func(cmd).__doc__))
+    else:    # `enos help`
+        print(textwrap.dedent(__doc__))
+
+
+# Register enos commands' name and their function
+_COMMANDS = {
+    "new": new,
+    "up": up,
+    "os": os,
+    "init": init,
+    "deploy": deploy,
+    "bench": bench,
+    "backup": backup,
+    "tc": tc,
+    "info": info,
+    "destroy": destroy,
+    "build": build,
+    "help": enos_help,
+}
+
 
 # utils
 
 def _load_config(config_file: Path) -> Dict[str, Any]:
-    "Load the configuration yaml file"
+    "Load the yaml `config_file`"
 
     # Ensure `config_file` points to a file
     if not config_file.is_file():
@@ -408,47 +424,51 @@ def _load_config(config_file: Path) -> Dict[str, Any]:
         return config
 
 
-def _configure_logging(args):
-    if '-vv' in args['<args>']:
-        logging.basicConfig(level=logging.DEBUG)
-    elif '-s' in args['<args>']:
+def _set_logging_level(is_quiet: bool, verbose_level: int):
+    "Set the root logger level"
+
+    if is_quiet:
         logging.basicConfig(level=logging.ERROR)
-        args['<args>'].remove('-s')
-    elif '--silent' in args['<args>']:
-        logging.basicConfig(level=logging.ERROR)
-        args['<args>'].remove('--silent')
-    else:
+    elif verbose_level == 1:
         logging.basicConfig(level=logging.INFO)
+    elif verbose_level == 2:
+        logging.basicConfig(level=logging.DEBUG)
 
 
-def pushtask(ts, f):
-    ts.update({f.__name__: f})
+def get_cmd_func(name: str) -> Callable[..., Any]:
+    """Returns the function of an enos <command> or panic gracefully
+
+    If the name does not refer to an enos <command> that exits, this function
+    print an error message and exit.
+    """
+
+    try:
+        return _COMMANDS[name]
+    except KeyError:
+        cmd_names = ", ".join(_COMMANDS.keys())
+        LOGGER.error(textwrap.fill(
+            f"enos command '{name}' does not exist. "
+            f"Use one of these commands instead: {cmd_names}."))
+        sys.exit(1)
 
 
 def main():
-    args = docopt(__doc__,
-                  version=C.VERSION,
-                  options_first=True)
+    # Parse command arguments: `enos -vv help new`
+    # cli_args =
+    #  {'--help': False, '--quiet': False, '--verbose': 2, '--version': False,
+    #   '<command>': 'help','<args>': ['new'], }
+    enos_global_args = docopt(__doc__, version=C.VERSION, options_first=True,)
 
-    _configure_logging(args)
-    argv = [args['<command>']] + args['<args>']
+    # Set the logging level
+    _set_logging_level(
+        is_quiet=enos_global_args.pop('--quiet', False),
+        verbose_level=enos_global_args.pop('--verbose', 0))
 
-    if argv == ['help']:
-        print(__doc__)
-        return
+    # Get the command to execute and its associated function
+    enos_cmd = enos_global_args.pop('<command>')
+    enos_cmd_func = get_cmd_func(enos_cmd)
 
-    enostasks = {}
-    pushtask(enostasks, backup)
-    pushtask(enostasks, bench)
-    pushtask(enostasks, deploy)
-    pushtask(enostasks, destroy)
-    pushtask(enostasks, info)
-    pushtask(enostasks, init)
-    pushtask(enostasks, os)
-    pushtask(enostasks, new)
-    pushtask(enostasks, tc)
-    pushtask(enostasks, up)
-    pushtask(enostasks, build)
-
-    task = enostasks[args['<command>']]
-    task(**docopt(task.__doc__, argv=argv))
+    # Parse `enos <command>` arguments, and execute it
+    enos_cmd_args = docopt(doc=textwrap.dedent(enos_cmd_func.__doc__),
+                           argv=[enos_cmd] + enos_global_args['<args>'])
+    enos_cmd_func(**enos_cmd_args)
