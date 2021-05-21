@@ -6,9 +6,9 @@ from typing import Dict, Union, Any, Callable
 
 from enos.provider.provider import Provider
 import enos.utils.constants as C
-import enoslib.api as api
 from enos.utils.errors import (EnosFilePathError,
                                EnosUnknownProvider)
+import enoslib.api as elib_api
 from netaddr import IPRange
 
 # These roles are mandatory for the
@@ -43,7 +43,7 @@ def generate_inventory(roles, networks, base_inventory, dest):
         fake_interfaces = [C.FAKE_NEUTRON_EXTERNAL_INTERFACE]
         fake_networks = [C.NEUTRON_EXTERNAL_INTERFACE]
 
-    api.generate_inventory(
+    elib_api.generate_inventory(
         roles,
         networks,
         dest,

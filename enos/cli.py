@@ -40,9 +40,7 @@ import textwrap
 from pathlib import Path
 from typing import Any, Callable, Dict
 
-import enos.task as t
 import enos.utils.constants as C
-import enos.tasks as tt
 import yaml
 from docopt import docopt
 from enos.utils.errors import EnosFilePathError, EnosUnknownProvider
@@ -72,6 +70,7 @@ def up(**kwargs):
     """
 
     LOGGER.debug('phase[up]: args=%s' % kwargs)
+    import enos.tasks as tasks
 
     # Get parameters
     config_file = pathlib.Path(kwargs.get('-f', './reservation.yaml'))
@@ -82,7 +81,7 @@ def up(**kwargs):
     # Launch the *up* task
     try:
         config = _load_config(config_file)
-        tt.up(config, is_force_deploy, is_pull_only, tags)
+        tasks.up(config, is_force_deploy, is_pull_only, tags)
 
     # Display nice error messages for the user
     except EnosFilePathError as err:
@@ -127,6 +126,7 @@ def os(**kwargs):
 
     LOGGER.debug('phase[os]: args=%s' % kwargs)
     import enos.task as tasks
+
     tasks.install_os(**kwargs)
 
 
@@ -152,6 +152,7 @@ def init(**kwargs):
 
     LOGGER.debug('phase[init]: args=%s' % kwargs)
     import enos.task as tasks
+
     tasks.init_os(**kwargs)
 
 
@@ -213,8 +214,11 @@ def bench(**kwargs):
                            experiment. Use this option to link enos with a
                            different environment [default: ./current].
     """
-    LOGGER.debug(kwargs)
-    t.bench(**kwargs)
+
+    LOGGER.debug('phase[bench]: args=%s' % kwargs)
+    import enos.task as tasks
+
+    tasks.bench(**kwargs)
 
 
 def backup(**kwargs):
@@ -232,8 +236,11 @@ def backup(**kwargs):
                                link enos with a different environment
                                [default: ./current].
     """
-    LOGGER.debug(kwargs)
-    t.backup(**kwargs)
+
+    LOGGER.debug('phase[backup]: args=%s' % kwargs)
+    import enos.task as tasks
+
+    tasks.backup(**kwargs)
 
 
 def new(**kwargs):
@@ -248,11 +255,15 @@ def new(**kwargs):
                               vagrant:libvirt, chameleonkvm, chameleonbaremetal,
                               openstack, vmong5k, static [default: g5k].
     """
-    LOGGER.debug(kwargs)
+    LOGGER.debug('phase[new]: args=%s' % kwargs)
+    import enos.tasks as tasks
+
+    # Get parameters
     provider = kwargs['--provider']
 
+    # Launch the *new* task
     try:
-        tt.new(provider, Path('./reservation.yaml'))
+        tasks.new(provider, Path('./reservation.yaml'))
         LOGGER.info(textwrap.fill(
             'A `reservation.yaml` file has been placed in this directory.  '
             f'You are now ready to deploy OpenStack on {provider} with '
@@ -282,8 +293,11 @@ def tc(**kwargs):
                      Use this option to link enos with a different environment
                      [default: ./current].
     """
-    LOGGER.debug(kwargs)
-    t.tc(**kwargs)
+
+    LOGGER.debug('phase[tc]: args=%s' % kwargs)
+    import enos.task as tasks
+
+    tasks.tc(**kwargs)
 
 
 def info(**kwargs):
@@ -302,8 +316,10 @@ def info(**kwargs):
                         different environment [default: ./current].
     """
 
-    LOGGER.debug(kwargs)
-    t.info(**kwargs)
+    LOGGER.debug('phase[info]: args=%s' % kwargs)
+    import enos.task as tasks
+
+    tasks.info(**kwargs)
 
 
 def destroy(**kwargs):
@@ -321,8 +337,11 @@ def destroy(**kwargs):
                         experiment. Use this option to link enos with a
                         different environment [default: ./current].
     """
-    LOGGER.debug(kwargs)
-    t.destroy(**kwargs)
+
+    LOGGER.debug('phase[destroy]: args=%s' % kwargs)
+    import enos.task as tasks
+
+    tasks.destroy(**kwargs)
 
 
 def build(**kwargs):
@@ -336,26 +355,26 @@ def build(**kwargs):
       options apply only to some providers, see below.
 
     OPTIONS:
-      --backend BACKEND  Virtualization backend (vagrant).
-                         [default: virtualbox].
-      --base BASE        Base distribution for deployed virtual machines
-                         [default: centos].
-      --box BOX          Reference box for host virtual machines (vagrant)
-      --cluster CLUSTER  Cluster where the image is built (g5k and vmong5k)
-                         [default: parasilo].
-      --directory DIR    Directory in which the image will be baked (vmong5k)
-                         [default: ~/.enos].
-      --environment ENV  Reference environment for deployment (g5k)
-                         [default: debian10-x64-min].
-      --image IMAGE      Reference image path to bake on top of it (vmong5k)
-                         [default: /grid5000/virt-images/debian10-x64-base.qcow2].
-      --type TYPE        Installation type of the BASE distribution
-                         [default: binary].
+    --backend BACKEND  Virtualization backend (vagrant).
+                       [default: virtualbox].
+    --base BASE        Base distribution for deployed virtual machines
+                       [default: centos].
+    --box BOX          Reference box for host virtual machines (vagrant)
+    --cluster CLUSTER  Cluster where the image is built (g5k and vmong5k)
+                       [default: parasilo].
+    --directory DIR    Directory in which the image will be baked (vmong5k)
+                       [default: ~/.enos].
+    --environment ENV  Reference environment for deployment (g5k)
+                       [default: debian10-x64-min].
+    --image IMAGE      Reference image path to bake on top of it (vmong5k)
+                       [default: /grid5000/virt-images/debian10-x64-base.qcow2].
+    --type TYPE        Installation type of the BASE distribution
+                       [default: binary].
     """
 
-    """
+    LOGGER.debug('phase[build]: args=%s' % kwargs)
+    import enos.task as tasks
 
-    LOGGER.debug(kwargs)
     provider = kwargs.pop('<provider>')
     arguments = {}
     if '--backend' in kwargs:
@@ -374,7 +393,7 @@ def build(**kwargs):
         arguments['image'] = kwargs['--image']
     if '--type' in kwargs:
         arguments['distribution'] = kwargs['--type']
-    t.build(provider, **arguments)
+    tasks.build(provider, **arguments)
 
 
 def enos_help(**kwargs):

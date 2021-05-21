@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 from abc import ABCMeta, abstractmethod
+from typing import Any, Dict, List, MutableMapping, Tuple
+from enos.provider.host import Host
 
-from typing import Any, Dict, Tuple
-import enoslib.types as elib_t
+
+# XXX: We define Networks and Roles here explicitly, because importing
+# enoslib.type takes 2 seconds.
+Networks = List[Dict[Any, Any]]
+Roles = MutableMapping[str, List[Host]]
 
 
 class Provider:
@@ -11,7 +16,7 @@ class Provider:
     @abstractmethod
     def init(self,
              config: Dict[str, Any],
-             force: bool = False) -> Tuple[elib_t.Roles, elib_t.Networks]:
+             force: bool = False) -> Tuple[Roles, Networks]:
         """Provides resources and provisions the environment.
 
         The `config` parameter contains the client request (eg, number
