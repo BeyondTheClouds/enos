@@ -40,7 +40,8 @@ class Shaker():
         'Pulling the docker image of Shaker '
         logging.info("Pull: get docker image for Shaker")
 
-        with elib.play_on(roles={'all': agents},) as yaml:
+        with elib.play_on(roles={'all': agents},
+                          gather_facts=False) as yaml:
             yaml.docker_image(
                 **title(f'pulling docker image {IMG}'),
                 name=IMG, source='pull', state='present')
@@ -51,7 +52,8 @@ class Shaker():
 
         self._openstack_auth = openstack_auth.copy()
 
-        with elib.play_on(roles=self.rsc) as yaml:
+        with elib.play_on(roles=self.rsc,
+                          gather_facts=False) as yaml:
             if reset:  # Reset the environment
                 yaml.file(**title(f"delete HOME {self.home}"),
                           path=self.home, state="absent")
@@ -64,7 +66,9 @@ class Shaker():
         'Execute the Shaker `scenario`'
         logging.info(f"Running Shaker {scenario}")
 
-        with elib.play_on(roles=self.rsc, pattern_hosts=pattern_hosts) as yaml:
+        with elib.play_on(roles=self.rsc,
+                          pattern_hosts=pattern_hosts,
+                          gather_facts=False) as yaml:
             yaml.docker_container(
                 **title(f"run {scenario} (may take a while...)"),
                 name=str(uuid.uuid4()),
@@ -83,7 +87,9 @@ class Shaker():
         'Backup Shaker HOME'
         logging.info(f"Backup Shaker reports for home {self.home}")
 
-        with elib.play_on(roles=self.rsc, pattern_hosts=pattern_hosts) as yaml:
+        with elib.play_on(roles=self.rsc,
+                          pattern_hosts=pattern_hosts,
+                          gather_facts=False) as yaml:
             yaml.archive(
                 **title(f"archive HOME {self.home}"),
                 path=self.home,

@@ -50,7 +50,8 @@ class RallyOpenStack():
         logging.info("Pull: installing rally in a virtual environment")
 
         with elib.play_on(roles={'all': agents},
-                          priors=[elib.api.__python3__]) as yaml:
+                          priors=[elib.api.__python3__],
+                          gather_facts=False) as yaml:
             yaml.pip(**title(f'install virtualenv {VENV}'), name='virtualenv')
 
             # XXX: https://cryptography.io/en/3.4.7/installation.html#rust
@@ -72,7 +73,7 @@ class RallyOpenStack():
         'Deploying a Rally environment'
         logging.info(f"Deploy: Rally environment {self.env_name}")
 
-        with elib.play_on(roles=self.rsc) as yaml:
+        with elib.play_on(roles=self.rsc, gather_facts=False) as yaml:
             # Creates the rally database if it does not exist
             yaml.command(
                 f'{VENV}/bin/rally db ensure',
@@ -117,7 +118,8 @@ class RallyOpenStack():
         # Executing the scenario
         logging.debug(f'Executing scenario {scenario_name} with tag {_tag}...')
         with elib.play_on(roles=self.rsc,
-                          pattern_hosts=pattern_hosts) as yaml:
+                          pattern_hosts=pattern_hosts,
+                          gather_facts=False) as yaml:
             # Setup the scenario
             yaml.copy(
                 **title(f'copy {scenario_name}'),
@@ -166,7 +168,9 @@ class RallyOpenStack():
                 uuids = hosts_uuids.setdefault(host, [])
                 uuids.append(_uuid)
 
-        with elib.play_on(roles=self.rsc, pattern_hosts=pattern_hosts) as yaml:
+        with elib.play_on(roles=self.rsc,
+                          pattern_hosts=pattern_hosts,
+                          gather_facts=False) as yaml:
             # Generate html and json reports for all tasks
             for host, uuids in hosts_uuids.items():
                 yaml.command(
@@ -196,10 +200,12 @@ class RallyOpenStack():
     def env_exists(self) -> bool:
         'Test whether the Rally environment exists or not'
         try:
-            elib.run_command(
-                command=f"{VENV}/bin/rally env show '{self.env_name}'",
-                roles=self.rsc)
+            with elib.play_on(roles=self.rsc,
+                              gather_facts=False,
+                              on_error_continue=False) as yaml:
+                yaml.raw(f"{VENV}/bin/rally env show '{self.env_name}'")
         except elib.errors.EnosFailedHostsError:
+            logging.error('...ignoring')
             return False
         else:
             return True

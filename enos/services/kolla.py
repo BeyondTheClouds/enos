@@ -304,7 +304,7 @@ class KollaAnsible(object):
                 dest=(str(destination)
                       + '/{{ inventory_hostname }}-kolla-log+conf.tar.gz'))
 
-    def destroy(self, include_images=False, verbose=False):
+    def destroy(self, include_images: bool = False, verbose: bool = False):
         cmd = ['destroy', '--yes-i-really-really-mean-it']
 
         if include_images:
