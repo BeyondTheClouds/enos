@@ -7,7 +7,9 @@ from typing import Dict, Union, Any, Callable
 from enos.provider.provider import Provider
 import enos.utils.constants as C
 from enos.utils.errors import (EnosFilePathError,
-                               EnosUnknownProvider)
+                               EnosUnknownProvider,
+                               MissingEnvState)
+import enoslib as elib
 import enoslib.api as elib_api
 from netaddr import IPRange
 
@@ -49,8 +51,7 @@ def generate_inventory(roles, networks, base_inventory, dest):
         dest,
         check_networks=True,
         fake_interfaces=fake_interfaces,
-        fake_networks=fake_networks
-    )
+        fake_networks=fake_networks)
 
     with open(dest, 'a') as f:
         f.write("\n")
@@ -204,20 +205,14 @@ def setdefault_lazy(env, key: str, thunk_value: Callable[[], Any]):
         return value
 
 
-def check_env(fn):
-    """Decorator for an Enos Task.
+def eget(env: elib.Environment, key: str) -> Any:
+    """Read a value from the environment
 
-    This decorator checks if an environment file exists.
+    Returns a MissingEnvState if the key could not be found.
 
     """
-    def decorator(*args, **kwargs):
-        # If no directory is provided, set the default one
-        resultdir = kwargs.get('--env', C.SYMLINK_NAME)
-        # Check if the env file exists
-        env_path = os.path.join(resultdir, 'env')
-        if not os.path.isfile(env_path):
-            raise Exception("The file %s does not exist." % env_path)
 
-        # Proceeds with the function execution
-        return fn(*args, **kwargs)
-    return decorator
+    try:
+        return env[key]
+    except KeyError as err:
+        raise MissingEnvState(key) from err

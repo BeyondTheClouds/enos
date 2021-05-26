@@ -1,5 +1,4 @@
-import textwrap
-
+# -*- coding: utf-8 -*-
 
 class EnosError(Exception):
     pass
@@ -23,10 +22,17 @@ class EnosFilePathError(EnosError):
 
 class EnosUnknownProvider(EnosError):
     def __init__(self, provider_name):
-        super(self.__class__, self).__init__(textwrap.dedent(f''' \
-          The provider '{provider_name}' could not be found.
+        super(EnosUnknownProvider, self).__init__(
+            f"The provider '{provider_name}' could not be found.  "
+            "Please refer to https://beyondtheclouds.github.io/enos/provider/ "
+            "to use a provider that exists.")
 
-          Please refer to https://beyondtheclouds.github.io/enos/provider/
-          to use a provider that exists.
-        '''))
         self.provider_name = provider_name
+
+
+class MissingEnvState(EnosError):
+    def __init__(self, key):
+        super(MissingEnvState, self).__init__(
+            f"The key '{key}' does not appears in the enos environment.")
+
+        self.key = key
