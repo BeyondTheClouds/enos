@@ -9,6 +9,7 @@ from pathlib import Path
 from operator import methodcaller
 
 import enoslib as elib
+import enoslib.api as elib_api
 import enoslib.types as elib_t
 from enoslib.enos_inventory import EnosInventory
 
@@ -17,17 +18,16 @@ import enos.utils.constants as C
 from enos.utils.extra import (generate_inventory,
                               get_vip_pool, make_provider, pop_ip, seekpath)
 
-from typing import List, Optional, Dict, Any
+from typing import Optional, Dict, Any
 
 LOGGER = logging.getLogger(__name__)
 
 
-@elib.enostask(new=True)
-def up(config: Dict[str, Any],
+def up(env: elib.Environment,
+       config: Dict[str, Any],
        is_force_deploy: bool,
        is_pull_only: bool,
-       tags: Optional[List[str]],
-       env: elib.Environment = None):
+       tags: Optional[str]):
     """Get resources on the testbed and install dependencies.
 
     Args:
@@ -36,12 +36,13 @@ def up(config: Dict[str, Any],
         is_force_deploy: If true, start from a fresh environment.
         is_pull_only: Only pull dependencies. Do not install them.
         tags: Only run ansible tasks tagged with these values.
+        env: State for the current experiment
 
     Put into the env:
         config: Configuration (as a dict)
         inventory: Path to the inventory file
         rsc/networks: Enoslib rscs and networks
-        docker: The docker service
+        docker: The Docker service
         kolla-ansible: The kolla-ansible service
 
     Raises:
@@ -59,12 +60,12 @@ def up(config: Dict[str, Any],
     env['config'] = config
 
     # Call the provider to initialize resources
-    rsc, networks = provider.init(env['config'], is_force_deploy)
+    rsc, networks = provider.init(config, is_force_deploy)
     LOGGER.debug(f"Provider resources: {rsc}")
     LOGGER.debug(f"Provider network information: {networks}")
 
     # Generates inventory for ansible/kolla
-    inventory = os.path.join(str(env['resultdir']), 'multinode')
+    inventory = os.path.join(str(env.env_name), 'multinode')
     inventory_conf = env['config'].get('inventory')
     if not inventory_conf:
         LOGGER.debug("No inventory specified, using the sample.")
@@ -102,7 +103,7 @@ def up(config: Dict[str, Any],
         'vip':               pop_ip(vip_pool),
         'influx_vip':        pop_ip(vip_pool),
         'grafana_vip':       pop_ip(vip_pool),
-        'resultdir':         str(env['resultdir']),
+        'resultdir':         str(env.env_name),
         'rabbitmq_password': "demo",
         'database_password': "demo",
         'cwd':               str(Path.cwd()),
@@ -140,12 +141,12 @@ def up(config: Dict[str, Any],
     kolla_globals_values = {
         'kolla_internal_vip_address': env['config']['vip'],
         'influx_vip': env['config']['influx_vip'],
-        'resultdir': str(env['resultdir']),
+        'resultdir': str(env.env_name),
         'cwd':  os.getcwd()
     }
     kolla_globals_values.update(env['config'].get('kolla', {}))
     kolla_ansible = KollaAnsible(
-        config_dir=env['resultdir'],
+        config_dir=env.env_name,
         inventory_path=inventory,
         pip_package=env['config'].get('kolla-ansible'),
         globals_values=kolla_globals_values)
@@ -154,10 +155,11 @@ def up(config: Dict[str, Any],
     # enoslib previously.
     # https://github.com/openstack/kolla-ansible/blob/stable/ussuri/ansible/roles/baremetal/defaults/main.yml
     # https://docs.openstack.org/kolla-ansible/ussuri/reference/deployment-and-bootstrapping/bootstrap-servers.html
-    #
-    # TODO: give it tags if any
-    kolla_ansible.execute(['bootstrap-servers',
-                           '--extra enable_docker_repo=false'])
+    kolla_ansible.execute([
+        'bootstrap-servers',
+        '--extra enable_docker_repo=false',
+        ('--verbose' if logging.root.level <= logging.DEBUG else '')
+    ])
     env['kolla-ansible'] = kolla_ansible
 
     # Generates the admin-openrc, see
@@ -245,7 +247,7 @@ def build_rsc_with_inventory(
     '''
 
     inv = EnosInventory(sources=inventory_path)
-    rsc_by_name = {h.alias: h for h in elib.api.get_hosts(rsc, 'all')}
+    rsc_by_name = {h.alias: h for h in elib_api.get_hosts(rsc, 'all')}
 
     # Build a new rsc with all groups in it
     new_rsc = rsc.copy()
