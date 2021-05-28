@@ -33,20 +33,20 @@ COMMANDS:
 See 'enos help <command>' for more information on a specific command.
 """
 
-import sys
 import logging
 import pathlib
+import sys
 import textwrap
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional
 
 import enos.utils.constants as C
 import yaml
 from docopt import docopt
-from enos.utils.errors import EnosFilePathError, EnosUnknownProvider
-
-
-LOGGER = logging.getLogger(__name__)
+from enos.utils.cli import CLI
+from enos.utils.errors import (EnosFilePathError, EnosUnknownProvider,
+    MissingEnvState)
 
 
 def up(**kwargs):
@@ -59,18 +59,18 @@ def up(**kwargs):
     OPTIONS:
       -f CONFIG_FILE   Path to the configuration file describing the
                        deployment [default: ./reservation.yaml].
-      --force-deploy   Force deployment [default: False].
+      --force-deploy   Force deployment.
       -t, --tags TAGS  Only run ansible tasks tagged with these values.
-      --pull           Only preinstall software (e.g pull docker images)
-                       [default: False].
+      --pull           Only preinstall software (e.g pull docker images).
       -e, --env ENV    Path to the environment directory (Advanced option). Enos
                        creates a directory to track the state of the
                        experiment. Use this option to link enos with a different
                        environment.
     """
 
-    LOGGER.debug('phase[up]: args=%s' % kwargs)
-    import enos.tasks as tasks
+    logging.debug('phase[up]: args=%s' % kwargs)
+    from enos import tasks
+    from enos.utils.errors import EnosFilePathError
 
     # Get parameters
     config_file = pathlib.Path(kwargs.get('-f', './reservation.yaml'))
@@ -80,25 +80,34 @@ def up(**kwargs):
 
     # Launch the *up* task
     try:
-        config = _load_config(config_file)
-        tasks.up(config, is_force_deploy, is_pull_only, tags)
+        with _elib_open(kwargs.get('--env'), new=True) as env:
+            config = _load_config(config_file)
+            tasks.up(env, config, is_force_deploy, is_pull_only, tags)
 
-    # Display nice error messages for the user
+            CLI.print("""\
+            The setup of your testbed completed successfully.  You may proceed
+            with an `enos os` to deploy OpenStack on it.""")
+
+    # Nicely handle errors for the user
     except EnosFilePathError as err:
-        LOGGER.error(textwrap.fill(
-            f'The path "{err.filepath}" does not point to a regular file. '
-            'Please, ensure to link an existing file with the `-f` option '
-            'or first create a "reservation.yaml" file with `enos new`.'))
+        CLI.error(f"""\
+        The path "{err.filepath}" does not point to a regular file.  Please,
+        run `enos new` first or link to an existing configuration file with
+        `-f` option.  See `enos help up` for more information.""")
+        sys.exit(1)
     except yaml.YAMLError as err:
         error_loc = ""
         if hasattr(err, 'problem_mark'):
             loc = getattr(err, 'problem_mark')
             error_loc = f"at {loc.line+1}:{loc.column+1}"
-
-        LOGGER.error(f'Syntax error in the file {config_file} '
-                     + error_loc)
+        CLI.error(f'Syntax error in the file "{config_file}" ' + error_loc)
+        sys.exit(1)
     except EnosUnknownProvider as err:
-        LOGGER.error(textwrap.fill(str(err)))
+        CLI.error(str(err))
+        sys.exit(1)
+    except Exception as e:
+        CLI.critical(str(e))
+        sys.exit(1)
 
 
 def os(**kwargs):
@@ -114,20 +123,49 @@ def os(**kwargs):
       list of supported commands.
 
     OPTIONS:
-      --reconfigure    Reconfigure the services after a deployment.
+      --reconfigure    Only reconfigure the services (after a first deployment).
+      --pull           Only preinstall software (e.g pull docker images).
       -t, --tags TAGS  Only run ansible tasks tagged with these values.
-      --pull           Only preinstall software (e.g pull docker images)
-                       [default: False].
       -e, --env ENV    Path to the environment directory (Advanced option). Enos
                        creates a directory to track the state of the experiment.
                        Use this option to link enos with a different environment
                        [default: ./current].
     """
 
-    LOGGER.debug('phase[os]: args=%s' % kwargs)
-    import enos.task as tasks
+    logging.debug('phase[os]: args=%s' % kwargs)
+    from enos import tasks
 
-    tasks.install_os(**kwargs)
+    try:
+        with _elib_open(kwargs.get('--env')) as env:
+            if kwargs.get('--'):
+                # Directly call the kolla-ansible executable
+                kolla_cmd = kwargs.get('<kolla-cmd>', [])
+                tasks.kolla_ansible(env, kolla_cmd)
+            else:
+                # Launch the *install os* task
+                is_reconfigure = kwargs.get('--reconfigure', False)
+                is_pull_only = kwargs.get('--pull', False)
+                tags = kwargs.get('--tags', None)
+
+                tasks.install_os(env, is_reconfigure, is_pull_only, tags)
+
+                CLI.print("""\
+                The installation of OpenStack completed successfully.  You may
+                proceed with an `enos init` to install images and setup the
+                network.""")
+
+    # Nicely handle errors for the user
+    except MissingEnvState as err:
+        if err.key == 'kolla-ansible':
+            CLI.error("""\
+            kolla-ansible could not be found in your enos environment.  Did you
+            successfully run `enos up` first?""")
+        else:
+            CLI.critical(err)
+        sys.exit(1)
+    except Exception as e:
+        CLI.critical(str(e))
+        sys.exit(1)
 
 
 def init(**kwargs):
@@ -137,23 +175,47 @@ def init(**kwargs):
 
       Initialise OpenStack with the bare necessities:
       - Install a 'member' role
-      - Download and install a cirros image
+      - Download and install a cirros and a debian image
       - Install default flavor (m1.tiny, ..., m1.xlarge)
       - Install default network
 
     OPTIONS:
-      --pull         Only preinstall software (e.g pull docker images)
-                     [default: False].
+      --pull         Only preinstall software (e.g pull docker images).
       -e, --env ENV  Path to the environment directory (Advanced option). Enos
                      creates a directory to track the state of the experiment.
                      Use this option to link enos with a different environment
                      [default: ./current].
     """
 
-    LOGGER.debug('phase[init]: args=%s' % kwargs)
-    import enos.task as tasks
+    logging.debug('phase[init]: args=%s' % kwargs)
+    from enos import tasks
 
-    tasks.init_os(**kwargs)
+    # Get params and launch the *init* task
+    try:
+        with _elib_open(kwargs.get('--env')) as env:
+            is_pull_only = kwargs.get('--pull', False)
+            tasks.init_os(env, is_pull_only)
+
+            os_auth = env['kolla-ansible'].globals_values['openstack_auth']
+            CLI.print(f"""\
+            The initialization of OpenStack completed successfully.  You may
+            proceed with `source {env.env_name / 'admin-openrc'}` to then run
+            the openstack CLI.  You can also access the horizon dashboard at
+            http://{env['rsc']['horizon'][0].address} with user
+            "{os_auth['username']}" and password "{os_auth['password']}".""")
+
+    # Nicely handle errors for the user
+    except MissingEnvState as err:
+        if err.key in ['kolla-ansible', 'inventory', 'networks']:
+            CLI.error(f"""\
+            {err.key} could not be found in your enos environment.  Did you
+            successfully run `enos up` and `enos os` first?""")
+        else:
+            CLI.critical(err)
+        sys.exit(1)
+    except Exception as e:
+        CLI.critical(str(e))
+        sys.exit(1)
 
 
 def deploy(**kwargs):
@@ -166,16 +228,15 @@ def deploy(**kwargs):
     OPTIONS:
       -f CONFIG_FILE  Path to the configuration file describing the
                       deployment [default: ./reservation.yaml].
-      --force-deploy  Force deployment [default: False].
-      --pull          Only preinstall software (e.g pull docker images)
-                      [default: False].
+      --force-deploy  Force deployment.
+      --pull          Only preinstall software (e.g pull docker images).
       -e, --env ENV   Path to the environment directory (Advanced option). Enos
                       creates a directory to track the state of the
                       experiment. Use this option to link enos with a different
                       environment.
     """
 
-    LOGGER.debug('phase[deploy]: args=%s' % kwargs)
+    logging.debug('phase[deploy]: args=%s' % kwargs)
 
     # --tags cannot be provided in 'deploy' but is mandatory for
     # 'up'. Similarly, --reconfigure cannot be provided in 'deploy' but is
@@ -206,19 +267,60 @@ def bench(**kwargs):
                            This directory must contain a run.yml file
                            that contains the description of the different
                            scenarios to launch [default: workload/].
-      --reset              Force the creation of benchmark environment.
-      --pull               Only preinstall software (e.g pull docker images)
-                           [default: False].
+      --reset              Recreate the benchmark environment.
+      --pull               Only preinstall software (e.g pull docker images).
       -e, --env ENV        Path to the environment directory (Advanced option).
                            Enos creates a directory to track the state of the
                            experiment. Use this option to link enos with a
                            different environment [default: ./current].
     """
 
-    LOGGER.debug('phase[bench]: args=%s' % kwargs)
-    import enos.task as tasks
+    logging.debug('phase[bench]: args=%s' % kwargs)
+    from enos import tasks
+    from enos.utils.extra import seekpath
+    from enos.utils.errors import EnosFilePathError
 
-    tasks.bench(**kwargs)
+    # Get parameters
+    is_reset = kwargs.get('--reset', False)
+    is_pull_only = kwargs.get('--pull', False)
+    workload = pathlib.Path(
+        seekpath(kwargs.get('--workload', 'workload/'))).resolve()
+    CLI.debug(f"Use workload directory at {workload}")
+
+    # Launch the *bench* task
+    try:
+        with _elib_open(kwargs.get('--env')) as env:
+            tasks.bench(env, workload, is_reset, is_pull_only)
+
+            CLI.print("""\
+            The bench phase completed.  Generated reports could be downloaded
+            on your machine with `enos backup`.""")
+
+    # Nicely handle errors for the user
+    except EnosFilePathError as err:
+        CLI.error(f"""\
+        The path "{err.filepath}" does not point to a regular file.  Please,
+        ensure to link an existing file with the `--workload`.""")
+        sys.exit(1)
+    except MissingEnvState as err:
+        if err.key in ['kolla-ansible', 'inventory', 'networks']:
+            CLI.error(f"""\
+            {err.key} could not be found in your enos environment.  Did you
+            successfully run `enos up` and `enos os` first?""")
+        else:
+            CLI.critical(err)
+        sys.exit(1)
+    except yaml.YAMLError as err:
+        error_loc = ""
+        if hasattr(err, 'problem_mark'):
+            loc = getattr(err, 'problem_mark')
+            error_loc = f"at {loc.line+1}:{loc.column+1}"
+        CLI.error(f'Syntax error in the file "{workload / "run.yam"}" '
+                  + error_loc)
+        sys.exit(1)
+    except Exception as e:
+        CLI.critical(str(e))
+        sys.exit(1)
 
 
 def backup(**kwargs):
@@ -237,10 +339,27 @@ def backup(**kwargs):
                                [default: ./current].
     """
 
-    LOGGER.debug('phase[backup]: args=%s' % kwargs)
-    import enos.task as tasks
+    logging.debug('phase[backup]: args=%s' % kwargs)
+    from enos import tasks
 
-    tasks.backup(**kwargs)
+    try:
+        with _elib_open(kwargs.get('--env')) as env:
+            # Get parameters
+            backup_dir = pathlib.Path(
+                kwargs.get('--backup_dir') or env.env_name).resolve()
+            CLI.debug(f"Store backups at directory {backup_dir}")
+
+            # Launch the *bench* task
+            tasks.backup(env, backup_dir)
+
+            CLI.print(f"""\
+            The backup of the environment completed successfully.  Files has
+            been saved at {backup_dir}.""")
+
+    # Nicely handle errors for the user
+    except Exception as e:
+        CLI.critical(str(e))
+        sys.exit(1)
 
 
 def new(**kwargs):
@@ -255,8 +374,8 @@ def new(**kwargs):
                               vagrant:libvirt, chameleonkvm, chameleonbaremetal,
                               openstack, vmong5k, static [default: g5k].
     """
-    LOGGER.debug('phase[new]: args=%s' % kwargs)
-    import enos.tasks as tasks
+    logging.debug('phase[new]: args=%s' % kwargs)
+    from enos import tasks
 
     # Get parameters
     provider = kwargs['--provider']
@@ -264,17 +383,23 @@ def new(**kwargs):
     # Launch the *new* task
     try:
         tasks.new(provider, Path('./reservation.yaml'))
-        LOGGER.info(textwrap.fill(
-            'A `reservation.yaml` file has been placed in this directory.  '
-            f'You are now ready to deploy OpenStack on {provider} with '
-            '`enos deploy`.  Please read comments in the reservation.yaml '
-            'as well as the documentation on '
-            f'https://beyondtheclouds.github.io/enos/ '
-            'for more information on using enos.'))
+
+        CLI.print(f"""\
+        A `reservation.yaml` file has been placed in this directory.  You are
+        now ready to deploy OpenStack on {provider} with `enos deploy`.  Please
+        read comments in the reservation.yaml file as well as the documentation
+        on https://beyondtheclouds.github.io/enos/ for more information on
+        using enos.""")
+
+    # Nicely handle errors for the user
     except FileExistsError:
-        LOGGER.error(textwrap.fill(
-            'The `reservation.yaml` file already exists in this directory.  '
-            f'Remove it before running `enos new --provider={provider}`.'))
+        CLI.error(f"""\
+        The `reservation.yaml` file already exists in this directory.  Remove
+        it before running `enos new --provider={provider}`.""")
+        sys.exit(1)
+    except Exception as e:
+        CLI.critical(str(e))
+        sys.exit(1)
 
 
 def tc(**kwargs):
@@ -285,19 +410,47 @@ def tc(**kwargs):
       Enforce network constraints.
 
     OPTIONS:
-      --test         Test rule enforcement.  This generates various reports that
-                     you can get back on your machine with `enos backup`.
+      --test         Test network constraints enforcement.  This generates
+                     various reports that you can get back on your machine
+                     with `enos backup`.
       --reset        Reset the constraints.
       -e, --env ENV  Path to the environment directory (Advanced option). Enos
                      creates a directory to track the state of the experiment.
                      Use this option to link enos with a different environment
                      [default: ./current].
+
     """
 
-    LOGGER.debug('phase[tc]: args=%s' % kwargs)
-    import enos.task as tasks
+    logging.debug('phase[tc]: args=%s' % kwargs)
+    from enos import tasks
 
-    tasks.tc(**kwargs)
+    # Get parameters
+    validate = kwargs.get('--test', False)
+    is_reset = kwargs.get('--reset', False)
+
+    try:
+        # Launch the *tc* task
+        with _elib_open(kwargs.get('--env')) as env:
+            tasks.tc(env, validate, is_reset)
+
+            if validate:
+                CLI.print("""\
+                A test for network constraints enforcement has been done.
+                Generated reports could be downloaded on your machine with
+                `enos backup`.""")
+
+    # Nicely handle errors for the user
+    except MissingEnvState as err:
+        if err.key == 'config':
+            CLI.error(f"""\
+            {err.key} could not be found in your enos environment.  Did you
+            successfully run `enos up` and `enos os` first?""")
+        else:
+            CLI.critical(str(err))
+        sys.exit(1)
+    except Exception as e:
+        CLI.critical(str(e))
+        sys.exit(1)
 
 
 def info(**kwargs):
@@ -316,10 +469,31 @@ def info(**kwargs):
                         different environment [default: ./current].
     """
 
-    LOGGER.debug('phase[info]: args=%s' % kwargs)
-    import enos.task as tasks
+    logging.debug('phase[info]: args=%s' % kwargs)
+    import json
+    import pickle
 
-    tasks.info(**kwargs)
+    def json_encoder(o):
+        'Render pathlib.Path with str'
+        if isinstance(o, Path):
+            return str(o.resolve())
+        else:
+            return o.__dict__
+
+    # Get parameters
+    output_type = kwargs.get('--out', 'json')
+
+    # Display env
+    with _elib_open(kwargs.get('--env')) as env:
+        if output_type == 'json':
+            print(json.dumps(env.data, default=json_encoder, indent=True))
+        elif output_type == 'pickle':
+            print(pickle.dumps(env.data))
+        elif output_type == 'yaml':
+            print(yaml.dump(env.data))
+        else:
+            CLI.error(f"--out doesn't support {output_type} output format")
+            print(info.__doc__)
 
 
 def destroy(**kwargs):
@@ -331,17 +505,49 @@ def destroy(**kwargs):
 
     OPTIONS:
       --include-images  Remove also all the docker images.
-      --hard            Destroy the underlying resources as well.
+      --hard            Destroy the resources from the testbed.
       -e, --env ENV     Path to the environment directory (Advanced option).
                         Enos creates a directory to track the state of the
                         experiment. Use this option to link enos with a
                         different environment [default: ./current].
     """
 
-    LOGGER.debug('phase[destroy]: args=%s' % kwargs)
-    import enos.task as tasks
+    logging.debug('phase[destroy]: args=%s' % kwargs)
+    from enos import tasks
 
-    tasks.destroy(**kwargs)
+    # Get parameters
+    include_images = kwargs.get('--include-images', False)
+
+    try:
+        with _elib_open(kwargs.get('--env')) as env:
+            if kwargs.get('--hard', False):
+                # Destroy the entire infra
+                tasks.destroy_infra(env)
+
+                CLI.print("""\
+                Resources acquired from the testbed have been destroyed.  You
+                may get new ones with `enos up`.""")
+
+            else:
+                # Destroy OpenStack and deployed services
+                tasks.destroy_os(env, include_images)
+
+                CLI.print("""\
+                OpenStack has been destroyed from the testbed.  You may
+                redeployed a new one with `enos os`.""")
+
+    # Nicely handle errors for the user
+    except MissingEnvState as err:
+        if err.key in ['config', 'kolla-ansible', 'inventory']:
+            CLI.error(f"""\
+            {err.key} could not be found in your enos environment.  Did you run
+            `enos up` and `enos os` first?""")
+        else:
+            CLI.critical(str(err))
+        sys.exit(1)
+    except Exception as e:
+        CLI.critical(str(e))
+        sys.exit(1)
 
 
 def build(**kwargs):
@@ -372,8 +578,8 @@ def build(**kwargs):
                        [default: binary].
     """
 
-    LOGGER.debug('phase[build]: args=%s' % kwargs)
-    import enos.task as tasks
+    logging.debug('phase[build]: args=%s' % kwargs)
+    from enos import tasks
 
     provider = kwargs.pop('<provider>')
     arguments = {}
@@ -393,22 +599,28 @@ def build(**kwargs):
         arguments['image'] = kwargs['--image']
     if '--type' in kwargs:
         arguments['distribution'] = kwargs['--type']
-    tasks.build(provider, **arguments)
+
+    tasks.build(provider, arguments)
 
 
 def enos_help(**kwargs):
-    "USAGE: enos help [<command>]"
+    """\
+    USAGE:
+      enos help [<command>]
 
-    LOGGER.debug('phase[help]: args=%s' % kwargs)
+      Show the help message for <command>
+    """
+
+    logging.debug('phase[help]: args=%s' % kwargs)
 
     cmd = kwargs.get("<command>")
     if cmd:  # `enos help <cmd>`
-        print(textwrap.dedent(get_cmd_func(cmd).__doc__))
+        print(textwrap.dedent(_get_cmd_func(cmd).__doc__ or ""))
     else:    # `enos help`
         print(textwrap.dedent(__doc__))
 
 
-# Register enos commands' name and their function
+# Registry of enos commands (indexed by their name)
 _COMMANDS = {
     "new": new,
     "up": up,
@@ -427,6 +639,62 @@ _COMMANDS = {
 
 # utils
 
+@contextmanager
+def _elib_open(path: Optional[pathlib.Path], new: bool = False):
+    "Open and dump enoslib env"
+    from enoslib.task import get_or_create_env
+    from enoslib.errors import EnosFilePathError
+
+    try:
+        # Get the environment from the file system
+        env = get_or_create_env(new, path)
+
+        # Let the user update it
+        try:
+            yield env
+
+        # Save its changes on the file system
+        finally:
+            env.dump()
+
+    # Nicely handle errors for the user
+    except EnosFilePathError as err:
+        CLI.error(f"""\
+        The path "{err.filepath}" does not point to a regular file.  Please,
+        ensure to link an existing file with the `--env` option or first run
+        `enos up`.""")
+        sys.exit(1)
+
+
+def _get_cmd_func(name: str) -> Callable[..., Any]:
+    """Returns the function of an enos <command> or panic gracefully
+
+    If the name does not refer to an enos <command> that exists, this function
+    print an error message and exit.
+
+    """
+
+    # Get the function in charge of `enos <name>`
+    try:
+        return _COMMANDS[name]
+
+    # Command not found, exit with an error message
+    except KeyError:
+        from difflib import get_close_matches
+        possibilities = get_close_matches(name, _COMMANDS.keys())
+
+        if possibilities:
+            CLI.error(f"""\
+            enos command '{name}' does not exist.  The most similar command is
+            '{possibilities[0]}'.""")
+        else:
+            CLI.error(f"""\
+            enos command '{name}' does not exist.  See `enos --help` for a
+            complete list of supported commands.""")
+
+        sys.exit(1)
+
+
 def _load_config(config_file: Path) -> Dict[str, Any]:
     "Load the yaml `config_file`"
 
@@ -439,7 +707,7 @@ def _load_config(config_file: Path) -> Dict[str, Any]:
     # Parse it
     with open(config_file, 'r') as yaml_file:
         config = yaml.safe_load(yaml_file)
-        LOGGER.info(f"Loaded configuration file {config_file}")
+        CLI.info(f"Loaded the configuration file '{config_file}'")
         return config
 
 
@@ -448,27 +716,13 @@ def _set_logging_level(is_quiet: bool, verbose_level: int):
 
     if is_quiet:
         logging.basicConfig(level=logging.ERROR)
+        CLI.setLevel(logging.ERROR)
     elif verbose_level == 1:
         logging.basicConfig(level=logging.INFO)
+        CLI.setLevel(logging.INFO)
     elif verbose_level == 2:
         logging.basicConfig(level=logging.DEBUG)
-
-
-def get_cmd_func(name: str) -> Callable[..., Any]:
-    """Returns the function of an enos <command> or panic gracefully
-
-    If the name does not refer to an enos <command> that exits, this function
-    print an error message and exit.
-    """
-
-    try:
-        return _COMMANDS[name]
-    except KeyError:
-        cmd_names = ", ".join(_COMMANDS.keys())
-        LOGGER.error(textwrap.fill(
-            f"enos command '{name}' does not exist. "
-            f"Use one of these commands instead: {cmd_names}."))
-        sys.exit(1)
+        CLI.setLevel(logging.DEBUG)
 
 
 def main():
@@ -485,9 +739,9 @@ def main():
 
     # Get the command to execute and its associated function
     enos_cmd = enos_global_args.pop('<command>')
-    enos_cmd_func = get_cmd_func(enos_cmd)
+    enos_cmd_func = _get_cmd_func(enos_cmd)
 
     # Parse `enos <command>` arguments, and execute it
-    enos_cmd_args = docopt(doc=textwrap.dedent(enos_cmd_func.__doc__),
+    enos_cmd_args = docopt(doc=textwrap.dedent(enos_cmd_func.__doc__ or ""),
                            argv=[enos_cmd] + enos_global_args['<args>'])
     enos_cmd_func(**enos_cmd_args)
