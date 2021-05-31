@@ -305,39 +305,40 @@ source venv/bin/activate
 #+END_SRC
 #+END_note
 
-Before going further, check EnOS works by typing ~enos --help~:
+Before going further, check EnOS works by typing ~enos help~:
 
 #+BEGIN_EXAMPLE
-Enos: Monitor and test your OpenStack.
-[<args> ...] [-e ENV|--env=ENV]
-            [-h|--help] [-v|--version] [-s|--silent|--vv]
+Enos: Deploy and test your OpenStack.
 
-General options:
-  -e ENV --env=ENV  Path to the environment directory. You should
-                    use this option when you want to link to a specific
-                    experiment. Not specifying this value will
-                    discard the loading of the environment (it
-                    makes sense for `up`).
-  -h --help         Show this help message.
-  -s --silent       Quiet mode.
-  -v --version      Show version number.
-  -vv               Verbose mode.
+USAGE:
+  enos [-h] [-q|-v|-vv] [-V] <command> [<args> ...]
 
-Commands:
-  new            Print a reservation.yaml example
-  up             Get resources and install the docker registry.
-  os             Run kolla and install OpenStack.
+ARGUMENTS:
+  <command>      The command to execute.
+  <args>         The arguments of the command.
+
+GLOBAL OPTIONS:
+  -h --help      Show this help message.
+  -q --quiet     Do not output any message.
+  -v --verbose   Increase the verbosity of messages: '-v' for verbose output,
+                 '-vv' for debug.
+  -V --version   Show version number.
+
+COMMANDS:
+  new            Create a reservation.yaml file in the current directory.
+  up             Get and setup resources on the testbed.
+  os             Install OpenStack.
   init           Initialise OpenStack with the bare necessities.
-  bench          Run rally on this OpenStack.
-  backup         Backup the environment
-  ssh-tunnel     Print configuration for port forwarding with horizon.
+  deploy         Alias for enos up, then enos os and finally enos init.
+  bench          Run Rally/Shaker on this OpenStack.
+  backup         Backup OpenStack/bench logs.
   tc             Enforce network constraints
   info           Show information of the actual deployment.
   destroy        Destroy the deployment and optionally the related resources.
-  deploy         Shortcut for enos up, then enos os and enos config.
-  kolla          Runs arbitrary kolla command on nodes
-See 'enos <command> --help' for more information on a specific
-command.
+  build          Build a reference image for later deployment.
+  help           Show this help message.
+
+See 'enos help <command>' for more information on a specific command.
 #+END_EXAMPLE
 
 * Deploy OpenStack using EnOS
@@ -473,7 +474,7 @@ your deployment by typing:
 
 #+BEGIN_SRC sh
 # (venv) enos:~/enos-myxp$
-enos info
+enos info | less
 #+END_SRC
 
 In particular, you should see the IP address of the deployed nodes.
@@ -515,7 +516,7 @@ new terminal and type the following:
 1. Find the control node address using EnOS:
    #+BEGIN_SRC sh  :tangle ../../tests/functionnal/tests/tutorial/enos-node.sh
    # (venv) enos:~/enos-myxp$
-   enos info
+   enos info | less
    # (venv) enos:~/enos-myxp$
    enos info --out json | jq -r '.rsc.control[0].address'
    #+END_SRC
@@ -962,18 +963,9 @@ enos backup --backup_dir=benchresults
 #+END_SRC
 
 The argument ~backup_dir~ tells where to store backup archives. If you
-look into this directory, you will see, among others, an archive named
-~<controler-node>-rally.tar.gz~. Concretely, this archive contains a
-backup of Rally database with all raw data and the Rally reports. You
-can extract the Rally report of the /Nova boot and list servers/
-scenario with the following command and then open it in your favorite
-browser:
-#+BEGIN_SRC sh :tangle ../../tests/functionnal/tests/tutorial/enos-node.sh
-# (venv) enos:~/enos-myxp$
-tar --file benchresults/*-rally.tar.gz\
-    --get $(tar --file benchresults/*-rally.tar.gz\
-                --list | grep "root/rally_home/report-nova-boot-list-cc.yml-.*.html")
-#+END_SRC
+look into this directory, you will see, among others, files named
+~<controler-node>-rally-report.html~ that contain the result of all
+rally executions.
 
 For those interested in playing with deploying applications on top of
 OpenStack, you can jump to another workshop involving Heat: the

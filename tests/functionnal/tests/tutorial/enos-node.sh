@@ -48,7 +48,7 @@ enos deploy -f reservation.yaml
 # 1. Find the control node address using EnOS:
 
    # (venv) enos:~/enos-myxp$
-   enos info
+   enos info | less
    # (venv) enos:~/enos-myxp$
    enos info --out json | jq -r '.rsc.control[0].address'
 
@@ -269,21 +269,6 @@ enos bench --workload=workload
 
 # (venv) enos:~/enos-myxp$
 enos backup --backup_dir=benchresults
-
-
-
-# The argument ~backup_dir~ tells where to store backup archives. If you
-# look into this directory, you will see, among others, an archive named
-# ~<controler-node>-rally.tar.gz~. Concretely, this archive contains a
-# backup of Rally database with all raw data and the Rally reports. You
-# can extract the Rally report of the /Nova boot and list servers/
-# scenario with the following command and then open it in your favorite
-# browser:
-
-# (venv) enos:~/enos-myxp$
-tar --file benchresults/*-rally.tar.gz\
-    --get $(tar --file benchresults/*-rally.tar.gz\
-                --list | grep "root/rally_home/report-nova-boot-list-cc.yml-.*.html")
 
 # Bash tests                                                     :noexport:
 # Reconfigure EnOS to use that new topology and check network
