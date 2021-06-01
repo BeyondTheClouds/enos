@@ -483,37 +483,38 @@ ssh rennes.g5k
 </pre></div>
 </div>
 </div>
-<p>Before going further, check EnOS works by typing <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">--help</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Enos: Monitor and test your OpenStack.
-[&lt;args&gt; ...] [-e ENV|--env=ENV]
-            [-h|--help] [-v|--version] [-s|--silent|--vv]
+<p>Before going further, check EnOS works by typing <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">help</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Enos</span><span class="p">:</span> <span class="n">Deploy</span> <span class="ow">and</span> <span class="n">test</span> <span class="n">your</span> <span class="n">OpenStack</span><span class="o">.</span>
 
-General options:
-  -e ENV --env=ENV  Path to the environment directory. You should
-                    use this option when you want to link to a specific
-                    experiment. Not specifying this value will
-                    discard the loading of the environment (it
-                    makes sense for `up`).
-  -h --help         Show this help message.
-  -s --silent       Quiet mode.
-  -v --version      Show version number.
-  -vv               Verbose mode.
+<span class="n">USAGE</span><span class="p">:</span>
+  <span class="n">enos</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">q</span><span class="o">|-</span><span class="n">v</span><span class="o">|-</span><span class="n">vv</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">V</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">command</span><span class="o">&gt;</span> <span class="p">[</span><span class="o">&lt;</span><span class="n">args</span><span class="o">&gt;</span> <span class="o">...</span><span class="p">]</span>
 
-Commands:
-  new            Print a reservation.yaml example
-  up             Get resources and install the docker registry.
-  os             Run kolla and install OpenStack.
-  init           Initialise OpenStack with the bare necessities.
-  bench          Run rally on this OpenStack.
-  backup         Backup the environment
-  ssh-tunnel     Print configuration for port forwarding with horizon.
-  tc             Enforce network constraints
-  info           Show information of the actual deployment.
-  destroy        Destroy the deployment and optionally the related resources.
-  deploy         Shortcut for enos up, then enos os and enos config.
-  kolla          Runs arbitrary kolla command on nodes
-See &#39;enos &lt;command&gt; --help&#39; for more information on a specific
-command.
+<span class="n">ARGUMENTS</span><span class="p">:</span>
+  <span class="o">&lt;</span><span class="n">command</span><span class="o">&gt;</span>      <span class="n">The</span> <span class="n">command</span> <span class="n">to</span> <span class="n">execute</span><span class="o">.</span>
+  <span class="o">&lt;</span><span class="n">args</span><span class="o">&gt;</span>         <span class="n">The</span> <span class="n">arguments</span> <span class="n">of</span> <span class="n">the</span> <span class="n">command</span><span class="o">.</span>
+
+<span class="n">GLOBAL</span> <span class="n">OPTIONS</span><span class="p">:</span>
+  <span class="o">-</span><span class="n">h</span> <span class="o">--</span><span class="n">help</span>      <span class="n">Show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">q</span> <span class="o">--</span><span class="n">quiet</span>     <span class="n">Do</span> <span class="ow">not</span> <span class="n">output</span> <span class="nb">any</span> <span class="n">message</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">v</span> <span class="o">--</span><span class="n">verbose</span>   <span class="n">Increase</span> <span class="n">the</span> <span class="n">verbosity</span> <span class="n">of</span> <span class="n">messages</span><span class="p">:</span> <span class="s1">&#39;-v&#39;</span> <span class="k">for</span> <span class="n">verbose</span> <span class="n">output</span><span class="p">,</span>
+                 <span class="s1">&#39;-vv&#39;</span> <span class="k">for</span> <span class="n">debug</span><span class="o">.</span>
+  <span class="o">-</span><span class="n">V</span> <span class="o">--</span><span class="n">version</span>   <span class="n">Show</span> <span class="n">version</span> <span class="n">number</span><span class="o">.</span>
+
+<span class="n">COMMANDS</span><span class="p">:</span>
+  <span class="n">new</span>            <span class="n">Create</span> <span class="n">a</span> <span class="n">reservation</span><span class="o">.</span><span class="n">yaml</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">current</span> <span class="n">directory</span><span class="o">.</span>
+  <span class="n">up</span>             <span class="n">Get</span> <span class="ow">and</span> <span class="n">setup</span> <span class="n">resources</span> <span class="n">on</span> <span class="n">the</span> <span class="n">testbed</span><span class="o">.</span>
+  <span class="n">os</span>             <span class="n">Install</span> <span class="n">OpenStack</span><span class="o">.</span>
+  <span class="n">init</span>           <span class="n">Initialise</span> <span class="n">OpenStack</span> <span class="k">with</span> <span class="n">the</span> <span class="n">bare</span> <span class="n">necessities</span><span class="o">.</span>
+  <span class="n">deploy</span>         <span class="n">Alias</span> <span class="k">for</span> <span class="n">enos</span> <span class="n">up</span><span class="p">,</span> <span class="n">then</span> <span class="n">enos</span> <span class="n">os</span> <span class="ow">and</span> <span class="k">finally</span> <span class="n">enos</span> <span class="n">init</span><span class="o">.</span>
+  <span class="n">bench</span>          <span class="n">Run</span> <span class="n">Rally</span><span class="o">/</span><span class="n">Shaker</span> <span class="n">on</span> <span class="n">this</span> <span class="n">OpenStack</span><span class="o">.</span>
+  <span class="n">backup</span>         <span class="n">Backup</span> <span class="n">OpenStack</span><span class="o">/</span><span class="n">bench</span> <span class="n">logs</span><span class="o">.</span>
+  <span class="n">tc</span>             <span class="n">Enforce</span> <span class="n">network</span> <span class="n">constraints</span>
+  <span class="n">info</span>           <span class="n">Show</span> <span class="n">information</span> <span class="n">of</span> <span class="n">the</span> <span class="n">actual</span> <span class="n">deployment</span><span class="o">.</span>
+  <span class="n">destroy</span>        <span class="n">Destroy</span> <span class="n">the</span> <span class="n">deployment</span> <span class="ow">and</span> <span class="n">optionally</span> <span class="n">the</span> <span class="n">related</span> <span class="n">resources</span><span class="o">.</span>
+  <span class="n">build</span>          <span class="n">Build</span> <span class="n">a</span> <span class="n">reference</span> <span class="n">image</span> <span class="k">for</span> <span class="n">later</span> <span class="n">deployment</span><span class="o">.</span>
+  <span class="n">help</span>           <span class="n">Show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span><span class="o">.</span>
+
+<span class="n">See</span> <span class="s1">&#39;enos help &lt;command&gt;&#39;</span> <span class="k">for</span> <span class="n">more</span> <span class="n">information</span> <span class="n">on</span> <span class="n">a</span> <span class="n">specific</span> <span class="n">command</span><span class="o">.</span>
 </pre></div>
 </div>
 </div>
@@ -693,7 +694,7 @@ enos deploy -f reservation.yaml
 OpenStack services on them, and you can display information regarding
 your deployment by typing:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
-enos info
+enos info <span class="p">|</span> less
 </pre></div>
 </div>
 <p>In particular, you should see the IP address of the deployed nodes.</p>
@@ -735,7 +736,7 @@ new terminal and type the following:</p>
 <ol class="arabic">
 <li><p>Find the control node address using EnOS:</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
-enos info
+enos info <span class="p">|</span> less
 <span class="c1"># (venv) enos:~/enos-myxp$</span>
 enos info --out json <span class="p">|</span> jq -r <span class="s1">&#39;.rsc.control[0].address&#39;</span>
 </pre></div>
@@ -1140,18 +1141,9 @@ enos backup --backup_dir<span class="o">=</span>benchresults
 </pre></div>
 </div>
 <p>The argument <code class="docutils literal notranslate"><span class="pre">backup_dir</span></code> tells where to store backup archives. If you
-look into this directory, you will see, among others, an archive named
-<code class="docutils literal notranslate"><span class="pre">&lt;controler-node&gt;-rally.tar.gz</span></code>. Concretely, this archive contains a
-backup of Rally database with all raw data and the Rally reports. You
-can extract the Rally report of the <em>Nova boot and list servers</em>
-scenario with the following command and then open it in your favorite
-browser:</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># (venv) enos:~/enos-myxp$</span>
-tar --file benchresults/*-rally.tar.gz<span class="se">\</span>
-    --get <span class="k">$(</span>tar --file benchresults/*-rally.tar.gz<span class="se">\</span>
-                --list <span class="p">|</span> grep <span class="s2">&quot;root/rally_home/report-nova-boot-list-cc.yml-.*.html&quot;</span><span class="k">)</span>
-</pre></div>
-</div>
+look into this directory, you will see, among others, files named
+<code class="docutils literal notranslate"><span class="pre">&lt;controler-node&gt;-rally-report.html</span></code> that contain the result of all
+rally executions.</p>
 <p>For those interested in playing with deploying applications on top of
 OpenStack, you can jump to another workshop involving Heat: the
 OpenStack Orchestration service <a class="reference external" href="http://enos.irisa.fr/tp-g5k/HEAT-SUBJECT.html">here</a>.</p>
