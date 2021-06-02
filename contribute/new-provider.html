@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Write a new provider &mdash; Enos 7.0.1 documentation</title>
+  <title>Write a new provider &mdash; Enos 7.1.0 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                7.0.1
+                7.1.0
               </div>
             
           
@@ -191,9 +191,9 @@
 <a class="reference internal" href="../provider/vagrant.html#vagrant-provider"><span class="std std-ref">Vagrant</span></a>, <a class="reference internal" href="../provider/grid5000.html#grid5000"><span class="std std-ref">Grid’5000</span></a> and <a class="reference internal" href="../provider/openstack.html#openstack"><span class="std std-ref">Openstack</span></a> itself. If
 you want to support another testbed, then implementing a new provider
 is easy as 500 lines of Python code.</p>
-<p>The new provider should follow the <a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/69110fe/enos/provider/provider.py">provider.py</a> interface which consists in three
+<p>The new provider should follow the <a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/bdf4ae2/enos/provider/provider.py">provider.py</a> interface which consists in three
 methods: <code class="docutils literal notranslate"><span class="pre">init</span></code>, <code class="docutils literal notranslate"><span class="pre">destroy</span></code> and <code class="docutils literal notranslate"><span class="pre">default_config</span></code>. Another good
-starting point is the simple <a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/69110fe/enos/provider/static.py">static implementation</a>.</p>
+starting point is the simple <a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/bdf4ae2/enos/provider/static.py">static implementation</a>.</p>
 <div class="section" id="init-method">
 <h2>Init Method<a class="headerlink" href="#init-method" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">init</span></code> method provides resources and provisions the environment.
@@ -207,7 +207,7 @@ with:</p>
 </pre></div>
 </div>
 <p>At the end of the <code class="docutils literal notranslate"><span class="pre">init</span></code>, the provider should return a list of
-<a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/69110fe/enos/provider/host.py">host.py</a> that Enos can SSH on,
+<a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/bdf4ae2/enos/provider/host.py">host.py</a> that Enos can SSH on,
 together with a pool of available IP for OpenStack Network.</p>
 </div>
 <div class="section" id="destroy-method">
