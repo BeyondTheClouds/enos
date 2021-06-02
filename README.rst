@@ -24,8 +24,8 @@ tested with python3.7+::
 Quick Start
 ===========
 
-For the quick-start, we will bring up an OpenStack on VirtualBox
-because it is free and works on all major platforms.  Enos can,
+For the quick-start, we will bring up an OpenStack on VirtualBox.
+VirtualBox is free and works on all major platforms.  Enos can,
 however, work with many testbeds including `Grid'5000
 <https://beyondtheclouds.github.io/enos/provider/grid5000.html>`__ and
 `Chameleon
@@ -38,7 +38,7 @@ you have at least 10 GiB of memory.
 
 To deploy your fist OpenStack with enos::
 
-  enos new --provider=vagrant:virtualbox
+  enos new --provider=vagrant:virtualbox  # Generate a `reservation.yaml` file
   enos deploy
 
 Enos starts three virtual machines and configures Kolla Ansible to
