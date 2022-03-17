@@ -76,9 +76,9 @@ To follow the lab you’ll need :
 - A Web browser ({{{eg}}} Firefox)
 - A Grid’5000 account
 - An SSH client ({{{eg}}} OpenSSH on Linux/Mac, Putty on Windows)
-  + Follow the [[https://www.grid5000.fr/mediawiki/index.php/SSH#Setting_up_a_user_config_file][G5K’s recommendations]] and edit your =~/.ssh/config=
+  + Follow the [[https://www.grid5000.fr/w/SSH#Using_SSH_ProxyCommand_feature_to_ease_the_access_to_hosts_inside_Grid.275000][G5K’s recommendations]] and edit your =~/.ssh/config=
     file to configure SSH for Grid’5000.
-  + Be sure your configuration works by typing =ssh rennes.g5k= for
+  + Make sure your configuration works by typing =ssh rennes.g5k= for
     instance.
 
 * Presentation
@@ -103,10 +103,10 @@ infrastructure management. Among the various projects (30+), here is a
 selection corresponding to the bare necessities to operate
 infrastructure:
 
-- Nova     :: the compute resource manager ({{{ie}}}
+- Nova :: the compute resource manager ({{{ie}}}
               virtual/bare-metal machines and containers)
-- Glance   :: the image store
-- Neutron  :: the network manager for compute resources
+- Glance :: the image store
+- Neutron :: the network manager for compute resources
               interconnection
 - Keystone :: the authentication/authorization manager
 
@@ -128,9 +128,9 @@ interfaces are configured by neutron, supposing keystone authorized
 the operation. Such cooperation is possible through three
 communication channels:
 
-- REST APIs                :: used for inter-project communications
+- REST APIs :: used for inter-project communications
 - Message queue (RabbitMQ) :: used for intra-project communications
-- Database (MariaDB)       :: used to store project states
+- Database (MariaDB) :: used to store project states
 
 From the user viewpoint, OpenStack can be operated by three ways:
 
@@ -210,7 +210,7 @@ will host the ~nova-compute~ and ~nova-libvirt~ containers to provide
 VM hypervisor mechanisms.
 
 #+BEGIN_note
-To run EnOS and deploy OpenStack on G5K we need a dedicated because it
+To run EnOS and deploy OpenStack on G5K we need a dedicated host because it
 is discouraged to run experiments from the frontend. This restriction
 is meant to avoid disturbing other users that are logged, since the
 frontend node has limited resources.  EnOS could also be run directly
@@ -235,8 +235,8 @@ you can adapt the time of your reservation afterward, using the
 ~oarwalltime~ command[fn:oarwalltime]. Find a cluster with at least
 four nodes available before going further. Once it is done, reach the
 cluster’s site first, and then, get a new machine which we will use as
-our /enos/ node. In this document, we target the parapide cluster,
-located in the Rennes site:
+our /enos/ node. In this document, we will use any available node in
+the Rennes site:
 
 #+BEGIN_SRC sh
 # fnantes:~$
@@ -244,13 +244,12 @@ ssh rennes
 # frennes:~$ -- Not mandatory, but recommended
 tmux
 # frennes:~$ -- Let's connect to the enos node
-oarsub -I -l "nodes=1,walltime=4:00:00" -p "cluster='parapide'"
+oarsub -I -l "nodes=1,walltime=4:00:00"
 #+END_SRC
 
-Here, we get a new machine in interactive mode ({{{ie}}}
-~-I~) for the next four hours from the parapide cluster. If it
-succeeds you should be directly connected to this node (check your
-prompt).
+Here, we get a new machine in interactive mode ({{{ie}}} ~-I~) for the
+next four hours from any cluster. If it succeeds you should be directly
+connected to a node (check your prompt).
 
 #+BEGIN_note
 Note that we created a ~tmux~ session in order to be resilient to any
@@ -360,9 +359,10 @@ of this configuration file are interested for a simple use of EnOS:
 - ~provider~ section (l. [[(provider-sec)]]): Defines on which testbed to
   deploy OpenStack ({{{ie}}} G5k, Chameleon, Vagrant, ...).
 - ~resources~ section (l. [[(rsc-sec)]]): Defines the number and role of
-  machines to deploy on the testbed ({{{eg}}} book 3 nodes on
-  ~paravance~ with 1 ~control~ node, 1 ~network~ node and 1 ~compute~
-  node).
+  machines to deploy on the testbed ({{{eg}}} book 3 nodes on ~paravance~
+  with 1 ~control~ node, 1 ~network~ node and 1 ~compute~ node). If you
+  run this tutorial on another Grid'5000 site, you need to specify a
+  cluster belonging to this site instead of ~paravance~.
 - ~kolla~ section (l. [[(kolla-sec)]]): Defines the OpenStack
   configuration, for instance:
   + Which OpenStack version to deploy ({{{eg}}} ~kolla-ansible:
@@ -437,7 +437,7 @@ another. For instance, Grid'5000 and Chameleon are research testbed
 were resources have to be booked, thus the configuration includes a
 ~walltime~ to define the time of your reservation. Conversely, the
 Vagrant provider starts VM with VirtualBox on your local machine, and
-thus doesn't include such a option. Please, refer to the EnOS provider
+thus doesn't include such a option. Please refer to the EnOS provider
 documentation[fn:enos-provider] to find the configuration parameters
 depending on the testbed. For the sake of this lab we are going to use
 the Grid’5000 provider ({{{ie}}} ~type: g5k~). Note that a ~walltime~
@@ -445,13 +445,13 @@ of 3 hours is enough for the first part of this workshop. If you plan
 to stay for the second part you should set 5 hours
 
 The ~resources~ key contains the description of the desired resources
-and their topology. Once again, way you describe your topology may
-vary a little bit depending on the testbed you target. Please, refer
+and their topology. Once again, the way you describe your topology may
+vary a little bit depending on the testbed you target. Please refer
 to the EnOS provider documentation[fn:enos-provider] to find examples
 of resources description depending on the testbed. Here we declare the
 G5K cluster we target ({{{eg}}} ~paravance~), as well as the resources
 we want to deploy on: a ~control~, a ~network~ and a ~compute~ node on
-which will be deployed all the required OpenStack services.
+which all the required OpenStack services will be deployed.
 
 ** Deploy OpenStack
 EnOS manages all the aspects of an OpenStack deployment by calling
@@ -467,8 +467,26 @@ Launch the deployment with:
 enos deploy -f reservation.yaml
 #+END_SRC
 
+#+BEGIN_note
+If you run into connection errors, you probably need to configure
+python-grid5000.  For a configuration that works both from the frontend
+and from the /enos/ node, you can setup your credentials like this:
+
+#+BEGIN_SRC sh
+# (venv) enos:~/enos-myxp$
+$ echo '
+username: MYLOGIN
+password: MYPASSWORD
+verify_ssl: /etc/ssl/certs/ca-certificates.crt
+' > ~/.python-grid5000.yaml
+$ chmod 600 ~/.python-grid5000.yaml
+#+END_SRC
+
+Refer to the [[https://beyondtheclouds.github.io/enos/provider/grid5000.html][Grid'5000 provider documentation]] for more details.
+#+END_note
+
 EnOS is now provisioning three machines on the cluster targeted by the
-~reservation.yaml~. Once the machines are provisioned, EnOS deploy
+~reservation.yaml~ file. Once the machines are provisioned, EnOS deploys
 OpenStack services on them, and you can display information regarding
 your deployment by typing:
 
@@ -509,8 +527,8 @@ The last service deployed is the OpenStack dashboard (Horizon). Once
 the deployment process is finished, Horizon is reachable from G5k.
 More precisely, Horizon runs in a Docker container on the control
 node, and listens on port 80. To access Horizon from your own web
-browser (from your laptop), you can create an SSH tunnel from your
-laptop to control node, located in G5K. To that end, you first need
+browser (from your laptop), you can either use the [[https://www.grid5000.fr/w/VPN][Grid'5000 VPN]], or create a SSH tunnel from your
+laptop to the control node located in G5K. For this second solution, you need
 to get control node’s IP address, and then create the tunnel. Open a
 new terminal and type the following:
 1. Find the control node address using EnOS:
@@ -523,16 +541,17 @@ new terminal and type the following:
 2. Create the tunnel from your laptop:
    #+BEGIN_SRC sh eval :no
    # laptop:~$ -- `ssh -NL 8000:<g5k-control>:80 <g5k-site>.g5k`, e.g.,
-   ssh -NL 8000:paravance-14-kavlan-4.nantes.grid5000.fr:80 rennes.g5k
+   ssh -NL 8000:paravance-14-kavlan-4.rennes.grid5000.fr:80 rennes.g5k
    #+END_SRC
 
 #+BEGIN_note
 This lab has been designed to *run on a cluster where nodes have two
 network interfaces*. *If you plan to run the lab on a cluster with a
-single network interface*, *please run the following script on the
-network node*. You can check how many network interfaces are
-associated to a cluster by consulting the [[https://www.grid5000.fr/mediawiki/images/G5k_cheat_sheet.pdf][G5k Cheatsheet]]. If you are
-concerned, connect to the network node as root with:
+single network interface*, *please run the following script on the network
+node*. You can check how many network interfaces are associated to a
+cluster by consulting the [[https://www.grid5000.fr/w/Rennes:Hardware][Hardware page for the site you're using]]. If your
+cluster has a single network interface, connect to the network node as
+root with:
 #+BEGIN_SRC sh
 # (venv) enos:~/enos-myxp$
 ssh -l root $(enos info --out json | jq -r '.rsc.network[0].address')
@@ -602,7 +621,7 @@ Load the OpenStack credentials:
 . current/admin-openrc
 #+END_SRC
 
-You can then check that your environment is correctly set executing
+You can then check that your environment is correctly set by executing
 the following command that should output something similar to the
 listing [[lst:env-os]]:
 #+BEGIN_SRC sh :tangle ../../tests/functionnal/tests/tutorial/enos-node.sh
@@ -828,7 +847,7 @@ laptop:
 
 #+BEGIN_SRC sh
 # laptop:~$ -- `ssh -NL 3000:<g5k-control>:3000 <g5k-site>.g5k`, e.g.,
-ssh -NL 3000:paravance-14-kavlan-4.nantes.grid5000.fr:3000 nantes.g5k
+ssh -NL 3000:paravance-14-kavlan-4.rennes.grid5000.fr:3000 rennes.g5k
 #+END_SRC
 
 You can then access Grafana at http://localhost:3000 with the
@@ -1267,7 +1286,7 @@ elisp code.
 [fn:os-k8s] https://github.com/stackanetes/stackanetes
 [fn:os-juju] https://jujucharms.com/openstack
 
-[fn:oarwalltime] https://www.grid5000.fr/mediawiki/index.php/Advanced_OAR#Changing_the_walltime_of_a_running_job
+[fn:oarwalltime] https://www.grid5000.fr/w/Advanced_OAR#Changing_the_walltime_of_a_running_job_.28oarwalltime.29
 
 [fn:enos-provider] [[https://beyondtheclouds.github.io/enos/provider/]]
 [fn:enos-internal-registry] https://beyondtheclouds.github.io/enos/customization/index.html#internal-registry
