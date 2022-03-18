@@ -617,7 +617,7 @@ def enos_help(**kwargs):
     if cmd:  # `enos help <cmd>`
         print(textwrap.dedent(_get_cmd_func(cmd).__doc__ or ""))
     else:    # `enos help`
-        print(textwrap.dedent(__doc__))
+        print(textwrap.dedent(__doc__ or ""))
 
 
 # Registry of enos commands (indexed by their name)
@@ -730,7 +730,9 @@ def main():
     # cli_args =
     #  {'--help': False, '--quiet': False, '--verbose': 2, '--version': False,
     #   '<command>': 'help','<args>': ['new'], }
-    enos_global_args = docopt(__doc__, version=C.VERSION, options_first=True,)
+    enos_global_args = docopt(__doc__ or "",
+                              version=C.VERSION,
+                              options_first=True,)
 
     # Set the logging level
     _set_logging_level(
