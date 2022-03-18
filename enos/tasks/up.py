@@ -132,6 +132,10 @@ def up(env: elib.Environment,
                              registry_opts={
                                  'type': 'internal',
                                  'port': docker_port})
+    else:
+        error_msg = (f"Docker registry mirror of type \"{docker_type}\" "
+                     "is not supported")
+        raise Exception(error_msg)
 
     LOGGER.info(f'Deploying docker service as {docker.registry_opts}')
     docker.deploy()
