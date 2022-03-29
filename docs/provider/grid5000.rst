@@ -56,6 +56,13 @@ are ready for the deployment of OpenStack.
    environment.  Refer to the :ref:`installation` section for more
    information.
 
+
+Grid'5000 tutorial
+------------------
+
+We provide a step-by-step tutorial explaining in details how to run Enos
+on Grid'5000: :ref:`EnOS Tutorial on top of Grid’5000`.
+
 Provider configuration
 ----------------------
 

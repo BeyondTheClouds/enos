@@ -56,7 +56,7 @@ A typical experiment using Enos is the sequence of several phases:
 Why Enos ?
 -----------
 
-https://en.wikipedia.org/wiki/Enos_(chimpanzee)
+See `Wikipedia <https://en.wikipedia.org/wiki/Enos_(chimpanzee)>`_.
 
 
 License

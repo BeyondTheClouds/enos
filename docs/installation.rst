@@ -3,6 +3,12 @@
 Getting Started
 ================
 
+.. note::
+
+   Looking for a step-by-step tutorial?  We have a :ref:`full
+   tutorial<grid5000-tuto>` explaining how to run Enos
+   on the `Grid'5000 platform <https://www.grid5000.fr>`_.
+
 Installation
 ------------
 

@@ -1259,6 +1259,8 @@ This is an org mode file written to:
       (replace-match ""))
     (save-buffer))
   #+END_SRC
+  In addition, the anchor in the first line of the rst file needs to
+  be added manually.
 - Produce bash scripts to test the tutorial. To generate the bash
   scripts and yaml configuration file do ~C-c C-v t~ or ~M-x
   org-babel-tangle~. The bash script and configuration files will be
