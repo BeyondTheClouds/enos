@@ -1,74 +1,37 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Jenkins &mdash; Enos 7.1.0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Tutorials" href="../tutorial/index.html" />
     <link rel="prev" title="Write a new provider" href="../contribute/new-provider.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html" class="icon icon-home"> Enos
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 7.1.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -76,19 +39,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../provider/index.html">Provider</a></li>
@@ -109,79 +61,38 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Tutorials</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">Enos</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Jenkins</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/jenkins/index.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="jenkins">
+             
+  <section id="jenkins">
 <span id="id1"></span><h1>Jenkins<a class="headerlink" href="#jenkins" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="jobs">
+<section id="jobs">
 <h2>Jobs<a class="headerlink" href="#jobs" title="Permalink to this headline">¶</a></h2>
 <p>We provide here an overview of the jobs that can be runned by our <a class="reference external" href="https://ci.inria.fr/beyondtheclouds">continuous
 integration server</a>.</p>
-</div>
-<div class="section" id="grid5000">
+</section>
+<section id="grid5000">
 <h2>Grid5000<a class="headerlink" href="#grid5000" title="Permalink to this headline">¶</a></h2>
 <p>Workflow:</p>
 <ul class="simple">
@@ -190,31 +101,31 @@ integration server</a>.</p>
 </ul>
 <div class="literal-block-wrapper docutils container" id="basic-01-yaml">
 <div class="code-block-caption"><span class="caption-text">Configuration</span><a class="headerlink" href="#basic-01-yaml" title="Permalink to this code">¶</a></div>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">enable_monitoring</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="nt">inventory</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span>
-<span class="nt">kolla</span><span class="p">:</span>
-  <span class="nt">enable_heat</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
-  <span class="nt">kolla_base_distro</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">centos</span>
-  <span class="nt">kolla_install_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">source</span>
-<span class="nt">kolla_ref</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">stable/stein</span>
-<span class="nt">kolla_repo</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span>
-<span class="nt">provider</span><span class="p">:</span>
-  <span class="nt">job_name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">enos-jenkins</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">g5k</span>
-  <span class="nt">walltime</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">02:00:00</span>
-<span class="nt">registry</span><span class="p">:</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">internal</span>
-<span class="nt">resources</span><span class="p">:</span>
-  <span class="nt">parasilo</span><span class="p">:</span>
-    <span class="nt">control</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
-  <span class="nt">paravance</span><span class="p">:</span>
-    <span class="nt">compute</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
-    <span class="nt">network</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">enable_monitoring</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
+<span class="nt">inventory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span><span class="w"></span>
+<span class="nt">kolla</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">enable_heat</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
+<span class="w">  </span><span class="nt">kolla_base_distro</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">centos</span><span class="w"></span>
+<span class="w">  </span><span class="nt">kolla_install_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span><span class="w"></span>
+<span class="nt">kolla_ref</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stable/stein</span><span class="w"></span>
+<span class="nt">kolla_repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span><span class="w"></span>
+<span class="nt">provider</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enos-jenkins</span><span class="w"></span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">g5k</span><span class="w"></span>
+<span class="w">  </span><span class="nt">walltime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">02:00:00</span><span class="w"></span>
+<span class="nt">registry</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">internal</span><span class="w"></span>
+<span class="nt">resources</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">parasilo</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">control</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<span class="w">  </span><span class="nt">paravance</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">compute</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<span class="w">    </span><span class="nt">network</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="grid-5000-environment">
+</section>
+<section id="grid-5000-environment">
 <h2>Grid’5000 environment<a class="headerlink" href="#grid-5000-environment" title="Permalink to this headline">¶</a></h2>
 <p>Workflow:</p>
 <ul class="simple">
@@ -223,51 +134,51 @@ integration server</a>.</p>
 </ul>
 <div class="literal-block-wrapper docutils container" id="reservation-yaml">
 <div class="code-block-caption"><span class="caption-text">Configuration</span><a class="headerlink" href="#reservation-yaml" title="Permalink to this code">¶</a></div>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">enable_monitoring</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="nt">hosts</span><span class="p">:</span>
-  <span class="nt">1</span><span class="p">:</span> <span class="nl">&amp;id001</span>
-    <span class="nt">address</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">127.0.0.1</span>
-    <span class="nt">alias</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">enos-node</span>
-    <span class="nt">user</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">root</span>
-<span class="nt">inventory</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span>
-<span class="nt">kolla</span><span class="p">:</span>
-  <span class="nt">enable_heat</span><span class="p">:</span> <span class="s">&#39;no&#39;</span>
-  <span class="nt">kolla_base_distro</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">centos</span>
-  <span class="nt">kolla_install_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">source</span>
-  <span class="nt">node_custom_config</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">patch/</span>
-<span class="nt">kolla_ref</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">stable/stein</span>
-<span class="nt">kolla_repo</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span>
-<span class="nt">provider</span><span class="p">:</span>
-  <span class="nt">eths</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">eth1</span>
-  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">eth2</span>
-  <span class="nt">network</span><span class="p">:</span>
-    <span class="nt">cidr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">192.168.143.0/24</span>
-    <span class="nt">dns</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8.8.8.8</span>
-    <span class="nt">end</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">192.168.143.119</span>
-    <span class="nt">extra_ips</span><span class="p">:</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">192.168.142.100</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">192.168.142.101</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">192.168.142.102</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">192.168.142.103</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">192.168.142.104</span>
-    <span class="nt">gateway</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">192.168.143.1</span>
-    <span class="nt">start</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">192.168.143.3</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">static</span>
-<span class="nt">registry</span><span class="p">:</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">none</span>
-<span class="nt">resources</span><span class="p">:</span>
-  <span class="nt">compute</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="nv">*id001</span>
-  <span class="nt">control</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="nv">*id001</span>
-  <span class="nt">network</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="nv">*id001</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">enable_monitoring</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
+<span class="nt">hosts</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">1</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;id001</span><span class="w"></span>
+<span class="w">    </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1</span><span class="w"></span>
+<span class="w">    </span><span class="nt">alias</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enos-node</span><span class="w"></span>
+<span class="w">    </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">root</span><span class="w"></span>
+<span class="nt">inventory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span><span class="w"></span>
+<span class="nt">kolla</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">enable_heat</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;no&#39;</span><span class="w"></span>
+<span class="w">  </span><span class="nt">kolla_base_distro</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">centos</span><span class="w"></span>
+<span class="w">  </span><span class="nt">kolla_install_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span><span class="w"></span>
+<span class="w">  </span><span class="nt">node_custom_config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">patch/</span><span class="w"></span>
+<span class="nt">kolla_ref</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stable/stein</span><span class="w"></span>
+<span class="nt">kolla_repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span><span class="w"></span>
+<span class="nt">provider</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">eths</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">eth1</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">eth2</span><span class="w"></span>
+<span class="w">  </span><span class="nt">network</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">cidr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.0/24</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dns</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8.8.8.8</span><span class="w"></span>
+<span class="w">    </span><span class="nt">end</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.119</span><span class="w"></span>
+<span class="w">    </span><span class="nt">extra_ips</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.100</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.101</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.102</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.103</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.104</span><span class="w"></span>
+<span class="w">    </span><span class="nt">gateway</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.1</span><span class="w"></span>
+<span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.3</span><span class="w"></span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">static</span><span class="w"></span>
+<span class="nt">registry</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
+<span class="nt">resources</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">compute</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nv">*id001</span><span class="w"></span>
+<span class="w">  </span><span class="nt">control</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nv">*id001</span><span class="w"></span>
+<span class="w">  </span><span class="nt">network</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nv">*id001</span><span class="w"></span>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="packaging">
+</section>
+<section id="packaging">
 <h2>Packaging<a class="headerlink" href="#packaging" title="Permalink to this headline">¶</a></h2>
 <p>Workflow:</p>
 <ul class="simple">
@@ -279,50 +190,50 @@ box.</p></li>
 </ul>
 <div class="literal-block-wrapper docutils container" id="id2">
 <div class="code-block-caption"><span class="caption-text">Configuration</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">enable_monitoring</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="nt">hosts</span><span class="p">:</span>
-  <span class="nt">1</span><span class="p">:</span> <span class="nl">&amp;id001</span>
-    <span class="nt">address</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">127.0.0.1</span>
-    <span class="nt">alias</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">enos-node</span>
-    <span class="nt">user</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">root</span>
-<span class="nt">inventory</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span>
-<span class="nt">kolla</span><span class="p">:</span>
-  <span class="nt">kolla_base_distro</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">centos</span>
-  <span class="nt">kolla_install_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">source</span>
-  <span class="nt">nova_compute_virt_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">qemu</span>
-<span class="nt">kolla_ref</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">stable/stein</span>
-<span class="nt">kolla_repo</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span>
-<span class="nt">provider</span><span class="p">:</span>
-  <span class="nt">networks</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="nt">cidr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">192.168.143.0/24</span>
-    <span class="nt">dns</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8.8.8.8</span>
-    <span class="nt">end</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">192.168.143.119</span>
-    <span class="nt">gateway</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">192.168.143.1</span>
-    <span class="nt">roles</span><span class="p">:</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">network_interface</span>
-    <span class="nt">start</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">192.168.143.3</span>
-  <span class="p p-Indicator">-</span> <span class="nt">cidr</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">192.168.142.0/24</span>
-    <span class="nt">dns</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8.8.8.8</span>
-    <span class="nt">end</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">192.168.142.119</span>
-    <span class="nt">gateway</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">192.168.142.1</span>
-    <span class="nt">roles</span><span class="p">:</span>
-    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">neutron_external_interface</span>
-    <span class="nt">start</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">192.168.142.3</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">static</span>
-<span class="nt">registry</span><span class="p">:</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">none</span>
-<span class="nt">resources</span><span class="p">:</span>
-  <span class="nt">compute</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="nv">*id001</span>
-  <span class="nt">control</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="nv">*id001</span>
-  <span class="nt">network</span><span class="p">:</span>
-  <span class="p p-Indicator">-</span> <span class="nv">*id001</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">enable_monitoring</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
+<span class="nt">hosts</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">1</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;id001</span><span class="w"></span>
+<span class="w">    </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">127.0.0.1</span><span class="w"></span>
+<span class="w">    </span><span class="nt">alias</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enos-node</span><span class="w"></span>
+<span class="w">    </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">root</span><span class="w"></span>
+<span class="nt">inventory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span><span class="w"></span>
+<span class="nt">kolla</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">kolla_base_distro</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">centos</span><span class="w"></span>
+<span class="w">  </span><span class="nt">kolla_install_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span><span class="w"></span>
+<span class="w">  </span><span class="nt">nova_compute_virt_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">qemu</span><span class="w"></span>
+<span class="nt">kolla_ref</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stable/stein</span><span class="w"></span>
+<span class="nt">kolla_repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span><span class="w"></span>
+<span class="nt">provider</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cidr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.0/24</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dns</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8.8.8.8</span><span class="w"></span>
+<span class="w">    </span><span class="nt">end</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.119</span><span class="w"></span>
+<span class="w">    </span><span class="nt">gateway</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.1</span><span class="w"></span>
+<span class="w">    </span><span class="nt">roles</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">network_interface</span><span class="w"></span>
+<span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.3</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cidr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.0/24</span><span class="w"></span>
+<span class="w">    </span><span class="nt">dns</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8.8.8.8</span><span class="w"></span>
+<span class="w">    </span><span class="nt">end</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.119</span><span class="w"></span>
+<span class="w">    </span><span class="nt">gateway</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.1</span><span class="w"></span>
+<span class="w">    </span><span class="nt">roles</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">neutron_external_interface</span><span class="w"></span>
+<span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.3</span><span class="w"></span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">static</span><span class="w"></span>
+<span class="nt">registry</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
+<span class="nt">resources</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">compute</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nv">*id001</span><span class="w"></span>
+<span class="w">  </span><span class="nt">control</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nv">*id001</span><span class="w"></span>
+<span class="w">  </span><span class="nt">network</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nv">*id001</span><span class="w"></span>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="topology">
+</section>
+<section id="topology">
 <h2>Topology<a class="headerlink" href="#topology" title="Permalink to this headline">¶</a></h2>
 <p>Workflow:</p>
 <ul class="simple">
@@ -331,83 +242,66 @@ box.</p></li>
 </ul>
 <div class="literal-block-wrapper docutils container" id="topology-yaml">
 <div class="code-block-caption"><span class="caption-text">Configuration</span><a class="headerlink" href="#topology-yaml" title="Permalink to this code">¶</a></div>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">enable_monitoring</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="nt">inventory</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span>
-<span class="nt">kolla</span><span class="p">:</span>
-  <span class="nt">enable_heat</span><span class="p">:</span> <span class="s">&#39;no&#39;</span>
-  <span class="nt">kolla_base_distro</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">centos</span>
-  <span class="nt">kolla_install_type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">source</span>
-<span class="nt">kolla_ref</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">stable/stein</span>
-<span class="nt">kolla_repo</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span>
-<span class="nt">network_constraints</span><span class="p">:</span>
-  <span class="nt">default_delay</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10ms</span>
-  <span class="nt">default_loss</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
-  <span class="nt">default_rate</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">100mbit</span>
-  <span class="nt">enable</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="nt">provider</span><span class="p">:</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">vagrant</span>
-<span class="nt">registry</span><span class="p">:</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">none</span>
-<span class="nt">topology</span><span class="p">:</span>
-  <span class="nt">grp1</span><span class="p">:</span>
-    <span class="nt">extra-large</span><span class="p">:</span>
-      <span class="nt">control</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
-  <span class="nt">grp2</span><span class="p">:</span>
-    <span class="nt">medium</span><span class="p">:</span>
-      <span class="nt">compute</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
-      <span class="nt">network</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">enable_monitoring</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
+<span class="nt">inventory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span><span class="w"></span>
+<span class="nt">kolla</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">enable_heat</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;no&#39;</span><span class="w"></span>
+<span class="w">  </span><span class="nt">kolla_base_distro</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">centos</span><span class="w"></span>
+<span class="w">  </span><span class="nt">kolla_install_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span><span class="w"></span>
+<span class="nt">kolla_ref</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stable/stein</span><span class="w"></span>
+<span class="nt">kolla_repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span><span class="w"></span>
+<span class="nt">network_constraints</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">default_delay</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10ms</span><span class="w"></span>
+<span class="w">  </span><span class="nt">default_loss</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"></span>
+<span class="w">  </span><span class="nt">default_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100mbit</span><span class="w"></span>
+<span class="w">  </span><span class="nt">enable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"></span>
+<span class="nt">provider</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vagrant</span><span class="w"></span>
+<span class="nt">registry</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
+<span class="nt">topology</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">grp1</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">extra-large</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">control</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<span class="w">  </span><span class="nt">grp2</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">medium</span><span class="p">:</span><span class="w"></span>
+<span class="w">      </span><span class="nt">compute</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<span class="w">      </span><span class="nt">network</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
 </pre></div>
 </div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../tutorial/index.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../contribute/new-provider.html" class="btn btn-neutral float-left" title="Write a new provider" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../tutorial/index.html" class="btn btn-neutral float-right" title="Tutorials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, discovery.
-
-    </p>
+    <p>&#169; Copyright 2021, discovery.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

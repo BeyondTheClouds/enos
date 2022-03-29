@@ -1,74 +1,37 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
-  
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>Customizations &mdash; Enos 7.1.0 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Network Emulation" href="../network-emulation/index.html" />
     <link rel="prev" title="Benchmarks" href="../benchmarks/index.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html" class="icon icon-home"> Enos
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 7.1.0
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -76,19 +39,8 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../provider/index.html">Provider</a></li>
@@ -118,139 +70,98 @@
 <li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Tutorials</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">Enos</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
       <li>Customizations</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/customization/index.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
-  <div class="section" id="customizations">
+             
+  <section id="customizations">
 <span id="id1"></span><h1>Customizations<a class="headerlink" href="#customizations" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="changing-kolla-version">
+<section id="changing-kolla-version">
 <h2>Changing Kolla version<a class="headerlink" href="#changing-kolla-version" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">kolla-ansible</span></code> parameter in the configuration file refers to
 the package to install (with <code class="docutils literal notranslate"><span class="pre">pip</span></code>).  All the following are valid
 values:
 * a PyPi package</p>
 <blockquote>
-<div><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">kolla-ansible~=10.0</span>
+<div><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kolla-ansible~=10.0</span><span class="w"></span>
 </pre></div>
 </div>
 </div></blockquote>
 <ul>
 <li><p>a git repository to the Ussuri specific version of OpenStack</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">git+https://github.com/openstack/kolla-ansible.git@stable/ussuri</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">git+https://github.com/openstack/kolla-ansible.git@stable/ussuri</span><span class="w"></span>
 </pre></div>
 </div>
 </li>
 <li><p>an editable version of the latest kolla-ansible code (bleeding edge)</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-e git+https://opendev.org/openstack/kolla-ansible.git@master</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-e git+https://opendev.org/openstack/kolla-ansible.git@master</span><span class="w"></span>
 </pre></div>
 </div>
 </li>
 <li><p>an editable version to a local directory that contains the
 kolla-ansible source code (best to patch kolla-ansible)</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-e ~/path/to/loca/kolla-ansible</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-e ~/path/to/loca/kolla-ansible</span><span class="w"></span>
 </pre></div>
 </div>
 </li>
 </ul>
-</div>
-<div class="section" id="customize-kolla-variables">
+</section>
+<section id="customize-kolla-variables">
 <h2>Customize Kolla variables<a class="headerlink" href="#customize-kolla-variables" title="Permalink to this headline">¶</a></h2>
 <p>Custom kolla-ansible parameters can be put in the configuration file
 under the key <code class="docutils literal notranslate"><span class="pre">kolla</span></code>. For instance, Kolla enables Heat by default
 through the <code class="docutils literal notranslate"><span class="pre">enable_heat</span></code> parameter.  Enos tells Kolla to <strong>not</strong>
 deploy Heat by overriding the default parameter as following:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla</span><span class="p">:</span>
-  <span class="nt">enable_heat</span><span class="p">:</span> <span class="s">&quot;no&quot;</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">enable_heat</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;no&quot;</span><span class="w"></span>
 </pre></div>
 </div>
 <p>The complete list of kolla-ansible variables can be found <a class="reference external" href="https://opendev.org/openstack/kolla-ansible/src/branch/master/etc/kolla/globals.yml">here</a>.</p>
-<div class="section" id="note-on-the-network-interfaces">
+<section id="note-on-the-network-interfaces">
 <h3>Note on the network interfaces:<a class="headerlink" href="#note-on-the-network-interfaces" title="Permalink to this headline">¶</a></h3>
 <p>Providers do their best to configure the network decently. This probably doesn’t
 cover all the possible use cases. But, if you know what interfaces are configured by
 the provider you can specify a more precise allocation under the <code class="docutils literal notranslate"><span class="pre">kolla</span></code> key.
 For instance:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla</span><span class="p">:</span>
-  <span class="nt">network_interface</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">eth1</span>
-  <span class="nt">neutron_external_interface</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">eth2</span>
-  <span class="nt">tunnel_interface</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">eth3</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">network_interface</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">eth1</span><span class="w"></span>
+<span class="w">  </span><span class="nt">neutron_external_interface</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">eth2</span><span class="w"></span>
+<span class="w">  </span><span class="nt">tunnel_interface</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">eth3</span><span class="w"></span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="changing-the-topology">
+</section>
+</section>
+<section id="changing-the-topology">
 <h2>Changing the topology<a class="headerlink" href="#changing-the-topology" title="Permalink to this headline">¶</a></h2>
 <p>Let’s assume you want to run the <code class="docutils literal notranslate"><span class="pre">nova-conductor</span></code> in a dedicated node:</p>
 <ol class="arabic simple">
 <li><p>Add a new node reservation in the configuration file:</p></li>
 </ol>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">paravance</span><span class="p">:</span>
-  <span class="nt">control</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
-  <span class="nt">network</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
-  <span class="nt">compute</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
-  <span class="nt">conductor-node</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">paravance</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">control</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<span class="w">  </span><span class="nt">network</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<span class="w">  </span><span class="nt">compute</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<span class="w">  </span><span class="nt">conductor-node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
 </pre></div>
 </div>
 <p>2. Create an new inventory file in the <code class="docutils literal notranslate"><span class="pre">inventories</span></code> subdirectory
@@ -264,42 +175,42 @@ conductor-node
 inventory.</p>
 <p>4. Launch the deployment as usual, and you’ll get the <code class="docutils literal notranslate"><span class="pre">nova-conductor</span></code>
 on a dedicated node.</p>
-</div>
-<div class="section" id="ansible-configuration">
+</section>
+<section id="ansible-configuration">
 <h2>Ansible configuration<a class="headerlink" href="#ansible-configuration" title="Permalink to this headline">¶</a></h2>
 <p>By default, Enos loads its own <code class="docutils literal notranslate"><span class="pre">ansible.cfg</span></code>. To use another Ansible
 configuration file, the <code class="docutils literal notranslate"><span class="pre">ANSIBLE_CONFIG</span></code> environment variable can be used.
 Further information can be found : <a class="reference external" href="http://docs.ansible.com/ansible/intro_configuration.html">see here</a>.</p>
-</div>
-<div class="section" id="docker-registry-mirror-configuration">
+</section>
+<section id="docker-registry-mirror-configuration">
 <h2>Docker registry mirror configuration<a class="headerlink" href="#docker-registry-mirror-configuration" title="Permalink to this headline">¶</a></h2>
 <p>EnOS can deploy a docker registry mirror in different ways. This is controlled
 by the configuration file.</p>
-<div class="section" id="no-registry-mirror">
+<section id="no-registry-mirror">
 <h3>No Registry mirror<a class="headerlink" href="#no-registry-mirror" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">none</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
 </pre></div>
 </div>
 <p>With the above configuration, EnOS won’t deploy any registry mirror. Any docker
 agent in the deployment will use Docker Hub.</p>
-</div>
-<div class="section" id="internal-registry-mirror">
+</section>
+<section id="internal-registry-mirror">
 <h3>Internal Registry mirror<a class="headerlink" href="#internal-registry-mirror" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">internal</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">internal</span><span class="w"></span>
 </pre></div>
 </div>
 <p>With the above configuration, EnOS deploys a fresh registry that acts as a
 private docker registry mirroring the official one and cache images close to
 your deployment resources.</p>
-</div>
-<div class="section" id="external-registry-mirror">
+</section>
+<section id="external-registry-mirror">
 <h3>External Registry mirror<a class="headerlink" href="#external-registry-mirror" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">external</span>
-  <span class="nt">ip</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">192.168.142.253</span>
-  <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">5000</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">external</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.253</span><span class="w"></span>
+<span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5000</span><span class="w"></span>
 </pre></div>
 </div>
 <p>With the above configuration, EnOS will configure all the docker agents to access
@@ -316,67 +227,50 @@ speed up the deployment.</p>
 <p class="admonition-title">Note</p>
 <p>With the Grid’5000 provider we recommend to use the Grid’5000
 mirror.</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span>
-  <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">external</span>
-  <span class="nt">ip</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">docker-cache.grid5000.fr</span>
-  <span class="nt">port</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">80</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span><span class="w"></span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">external</span><span class="w"></span>
+<span class="w">  </span><span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">docker-cache.grid5000.fr</span><span class="w"></span>
+<span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span><span class="w"></span>
 </pre></div>
 </div>
 </div>
-</div>
-</div>
-<div class="section" id="single-interface-deployment">
+</section>
+</section>
+<section id="single-interface-deployment">
 <h2>Single interface deployment<a class="headerlink" href="#single-interface-deployment" title="Permalink to this headline">¶</a></h2>
 <p>Please refer to this discussion :  <a class="reference external" href="https://github.com/BeyondTheClouds/enos/issues/227">https://github.com/BeyondTheClouds/enos/issues/227</a></p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../network-emulation/index.html" class="btn btn-neutral float-right" title="Network Emulation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../benchmarks/index.html" class="btn btn-neutral float-left" title="Benchmarks" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../network-emulation/index.html" class="btn btn-neutral float-right" title="Network Emulation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, discovery.
-
-    </p>
+    <p>&#169; Copyright 2021, discovery.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
