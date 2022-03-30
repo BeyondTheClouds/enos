@@ -132,6 +132,10 @@ def up(env: elib.Environment,
                              registry_opts={
                                  'type': 'internal',
                                  'port': docker_port})
+    else:
+        error_msg = (f"Docker registry mirror of type \"{docker_type}\" "
+                     "is not supported")
+        raise Exception(error_msg)
 
     LOGGER.info(f'Deploying docker service as {docker.registry_opts}')
     docker.deploy()
@@ -142,6 +146,7 @@ def up(env: elib.Environment,
         'kolla_internal_vip_address': env['config']['vip'],
         'influx_vip': env['config']['influx_vip'],
         'resultdir': str(env.env_name),
+        'docker_custom_config': mk_kolla_docker_custom_config(docker),
         'cwd':  os.getcwd()
     }
     kolla_globals_values.update(env['config'].get('kolla', {}))
@@ -232,6 +237,31 @@ def title(title: str) -> Dict[str, str]:
     "A title for an ansible yaml commands"
 
     return {"display_name": "enos up : " + title}
+
+
+def mk_kolla_docker_custom_config(docker: elib.Docker) -> Dict[str, Any]:
+    '''Docker daemon conf for kolla-ansible that reflects elib.Docker
+
+    Kolla-ansible overwrites the Docker daemon configuration that is setup by
+    enoslib.  This function makes a specific Docker custom config for
+    kolla-ansible that reflects enoslib setup.
+
+    See https://github.com/BeyondTheClouds/enos/issues/345
+
+    '''
+    docker_custom_config: Dict[str, Any] = {'debug': True}
+
+    if 'ip' in docker.registry_opts:
+        ip = docker.registry_opts["ip"]
+        port = docker.registry_opts["port"]
+        mirror = f"http://{ip}:{port}"
+
+        docker_custom_config.update({
+            'registry-mirrors': [mirror],
+            'insecure-registries': [mirror],
+        })
+
+    return docker_custom_config
 
 
 def build_rsc_with_inventory(

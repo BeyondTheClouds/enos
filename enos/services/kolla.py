@@ -343,7 +343,10 @@ class KollaAnsible(object):
             yaml.local_action(
                 **title(f'Install {pip_package} in {venv}'),
                 module="pip",
-                name=[ANSIBLE_PKG, 'influxdb', pip_package],
+                # Pin Jinja2 version to fix the renaming of `contextfilter`
+                # into `pass_context.evalcontextfilter`.
+                # See https://github.com/BeyondTheClouds/enos/pull/346#issuecomment-1080851796
+                name=[ANSIBLE_PKG, 'influxdb', 'Jinja2==3.0.3', pip_package],
                 virtualenv=str(venv),
                 virtualenv_python=PY_VERSION)
 
