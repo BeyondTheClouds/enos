@@ -53,9 +53,9 @@ mock = "^4.0.3"
 ddt = "^1.4.2"
 # doc
 GitPython = ">=2.1.5"
-Sphinx = "^3.5.3"
+Sphinx = "^4.5.0"
 sphinx-autobuild = "^2021.3.14"
-sphinx-rtd-theme = "^0.5.2"
+sphinx-rtd-theme = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
