@@ -60,25 +60,6 @@ def up(env: elib.Environment,
 
     # Call the provider to initialize resources
     rsc, networks = provider.init(config, is_force_deploy)
-    LOGGER.debug(f"Provider resources: {rsc}")
-    LOGGER.debug(f"Provider network information: {networks}")
-
-    # Generates inventory for ansible/kolla
-    inventory = os.path.join(str(env.env_name), 'multinode')
-    inventory_conf = env['config'].get('inventory')
-    if not inventory_conf:
-        LOGGER.debug("No inventory specified, using the sample.")
-        base_inventory = os.path.join(C.RSCS_DIR, 'inventory.sample')
-    else:
-        base_inventory = seekpath(inventory_conf)
-    generate_inventory(rsc, networks, base_inventory, inventory)
-    LOGGER.info('Generates inventory %s' % inventory)
-    env['inventory'] = inventory
-
-    # Fills rsc with information such as network_interface and then
-    # ensures rsc contains all groups defined by the inventory (e.g.,
-    # 'enos/registry', 'enos/influx', 'haproxy', ...).
-    #
     # Note(rcherrueau): I keep track of this extra information for a
     # futur migration to enoslib-v6:
     # > enos-0 ansible_host=192.168.121.128 ansible_port='22'
@@ -92,6 +73,35 @@ def up(env: elib.Environment,
     # > neutron_external_interface_dev='eth2'
     # > neutron_external_interface_ip='192.168.43.245'
     rsc = elib.sync_info(rsc, networks)
+    LOGGER.debug(f"Provider resources: {rsc}")
+    LOGGER.debug(f"Provider network information: {networks}")
+
+    # Configure node-specific variables such as "network_interface".
+    # Enoslib will then include these variables in the inventory so that
+    # Kolla will be able to use them.
+    for host in rsc.all():
+        for network_name in [C.NETWORK_INTERFACE, C.API_INTERFACE,
+                             C.NEUTRON_EXTERNAL_INTERFACE]:
+            if networks[network_name]:
+                physical_interfaces = host.filter_interfaces(networks[network_name]) # noqa
+                if physical_interfaces:
+                    host.set_extra(**{network_name: physical_interfaces[0]})
+
+    # Generates inventory for ansible/kolla
+    inventory = os.path.join(str(env.env_name), 'multinode')
+    inventory_conf = env['config'].get('inventory')
+    if not inventory_conf:
+        LOGGER.debug("No inventory specified, using the sample.")
+        base_inventory = os.path.join(C.RSCS_DIR, 'inventory.sample')
+    else:
+        base_inventory = seekpath(inventory_conf)
+    generate_inventory(rsc, networks, base_inventory, inventory)
+    LOGGER.info('Generates inventory %s' % inventory)
+    env['inventory'] = inventory
+
+    # Ensures rsc contains all groups defined by the inventory (e.g.,
+    # 'enos/registry', 'enos/influx', 'haproxy', ...).
+    #
     rsc = build_rsc_with_inventory(rsc, env['inventory'])
     env['rsc'] = rsc
     env['networks'] = networks
