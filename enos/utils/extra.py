@@ -2,7 +2,8 @@
 import importlib
 import logging
 import os
-from typing import Dict, Union, Any, Callable
+import re
+from typing import Dict, Union, Any, Callable, Iterable
 
 from enos.provider.provider import Provider
 import enos.utils.constants as C
@@ -11,7 +12,6 @@ from enos.utils.errors import (EnosFilePathError,
                                MissingEnvState)
 import enoslib as elib
 import enoslib.api as elib_api
-from netaddr import IPRange
 
 # These roles are mandatory for the
 # the original inventory to be valid
@@ -33,25 +33,16 @@ def generate_inventory(roles, networks, base_inventory, dest):
     concatenate them with the base_inventory file.
     The generated inventory is written in dest
     """
-    # NOTE(msimonin): if len(networks) is <= 1
-    # provision a fake one that will map the external network
-
-    fake_interfaces = []
-    fake_networks = []
     provider_net = lookup_network(networks, [C.NEUTRON_EXTERNAL_INTERFACE])
     if not provider_net:
-        logging.error(f"The {C.NEUTRON_EXTERNAL_INTERFACE} network is missing")
-        logging.error("EnOS will try to fix that ....")
-        fake_interfaces = [C.FAKE_NEUTRON_EXTERNAL_INTERFACE]
-        fake_networks = [C.NEUTRON_EXTERNAL_INTERFACE]
+        msg = f"The {C.NEUTRON_EXTERNAL_INTERFACE} network is missing"
+        raise ValueError(msg)
 
     elib_api.generate_inventory(
         roles,
         networks,
         dest,
-        check_networks=True,
-        fake_interfaces=fake_interfaces,
-        fake_networks=fake_networks)
+        check_networks=False)
 
     with open(dest, 'a') as f:
         f.write("\n")
@@ -73,9 +64,8 @@ def lookup_network(networks, roles):
     We assume that one role can't be found in two different networks
     """
     for role in roles:
-        for network in networks:
-            if role in network["roles"]:
-                return network
+        if networks[role]:
+            return networks[role][0]
     return None
 
 
@@ -94,30 +84,12 @@ def get_vip_pool(networks):
     raise Exception(msg)
 
 
-def pop_ip(provider_net):
-    """Picks an ip from the provider_net
-    It will first take ips in the extra_ips if possible.
-    extra_ips is a list of isolated ips whereas ips described
-    by the [provider_net.start, provider.end] range is a continuous
-    list of ips.
+def ip_generator(provider_net) -> Iterable[str]:
+    """Iterator that picks successive IP addresses from the provider_net.
     """
-    # Construct the pool of ips
-    extra_ips = provider_net.get('extra_ips', [])
-    if len(extra_ips) > 0:
-        ip = extra_ips.pop()
-        provider_net['extra_ips'] = extra_ips
-        return ip
-
-    ips = list(IPRange(provider_net['start'],
-                       provider_net['end']))
-
-    # Get the next ip
-    ip = str(ips.pop())
-
-    # Remove this ip from the env
-    provider_net['end'] = str(ips.pop())
-
-    return ip
+    # This is an iterator that returns ipaddress.IPv4Address objects
+    for ip in provider_net.free_ips:
+        yield str(ip)
 
 
 def make_provider(provider_conf: Union[str, Dict[str, Any]]) -> Provider:
@@ -165,6 +137,31 @@ def gen_enoslib_roles(resources_or_topology):
                        "role": k2,
                        "flavor": k1,
                        "number": v2}
+
+
+def expand_groups(grp):
+    """Expand group names.
+
+     Args:
+        grp (string): group names to expand
+
+    Returns:
+        list of groups
+
+    Examples:
+
+        * grp[1-3] will be expanded to [grp1, grp2, grp3]
+        * grp1 will be expanded to [grp1]
+    """
+    p = re.compile(r"(?P<name>.+)\[(?P<start>\d+)-(?P<end>\d+)\]")
+    m = p.match(grp)
+    if m is not None:
+        s = int(m.group("start"))
+        e = int(m.group("end"))
+        n = m.group("name")
+        return list(map(lambda x: n + str(x), range(s, e + 1)))
+    else:
+        return [grp]
 
 
 def seekpath(path):

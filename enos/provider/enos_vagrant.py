@@ -2,11 +2,10 @@ import copy
 import logging
 
 from enos.provider.provider import Provider
-from enos.utils.extra import gen_enoslib_roles
+from enos.utils.extra import expand_groups, gen_enoslib_roles
 
 import enoslib.infra.enos_vagrant.provider as enoslib_vagrant
 from enoslib.infra.enos_vagrant.configuration import Configuration
-from enoslib.service.netem.netem import expand_groups
 
 # - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {

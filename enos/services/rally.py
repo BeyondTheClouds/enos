@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import enoslib as elib
-import enoslib.types as elib_t
 
 # Virtual environment path for Rally on the remote machine
 VENV = '~/rally-venv'
@@ -19,7 +18,7 @@ PKG = 'rally-openstack~=2.1.0'
 
 class RallyOpenStack():
     # Resources with agents that have Rally
-    rsc: elib_t.Roles
+    rsc: elib.Roles
 
     # Name of the rally deployment
     name: str
@@ -28,7 +27,7 @@ class RallyOpenStack():
     _tasks: List[Tuple[str, Dict[str, str]]]
 
     def __init__(self,
-                 agents: List[elib_t.Host],
+                 agents: List[elib.Host],
                  environment_name: str = 'enos'):
         """Deploy Rally OpenStack on a list of agents.
 
@@ -45,7 +44,7 @@ class RallyOpenStack():
         RallyOpenStack.pull(agents)
 
     @staticmethod
-    def pull(agents: List[elib_t.Host]):
+    def pull(agents: List[elib.Host]):
         'Installs Rally OpenStack'
         logging.info("Pull: installing rally in a virtual environment")
 
@@ -213,4 +212,4 @@ class RallyOpenStack():
 
 def title(title: str) -> Dict[str, str]:
     "A title for ansible yaml commands"
-    return {"display_name": "Rally : " + title}
+    return {"task_name": "Rally : " + title}

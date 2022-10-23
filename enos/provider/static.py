@@ -2,11 +2,11 @@
 import copy
 import logging
 
-from enoslib.service.netem.netem import expand_groups
 import enoslib.infra.enos_static.provider as enos_static
 from enoslib.infra.enos_static.configuration import Configuration
 
 from enos.provider.provider import Provider
+from enos.utils.extra import expand_groups
 
 # - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {'type': 'static'}

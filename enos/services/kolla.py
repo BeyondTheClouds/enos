@@ -355,4 +355,4 @@ class KollaAnsible(object):
 
 def title(title: str) -> Dict[str, str]:
     "A title for an ansible yaml commands"
-    return {"display_name": "Kolla : " + title}
+    return {"task_name": "Kolla : " + title}

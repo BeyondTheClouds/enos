@@ -10,13 +10,12 @@ from operator import methodcaller
 
 import enoslib as elib
 import enoslib.api as elib_api
-import enoslib.types as elib_t
 from enoslib.enos_inventory import EnosInventory
 
 from enos.services import KollaAnsible
 import enos.utils.constants as C
-from enos.utils.extra import (generate_inventory,
-                              get_vip_pool, make_provider, pop_ip, seekpath)
+from enos.utils.extra import (generate_inventory, get_vip_pool,
+                              make_provider, ip_generator, seekpath)
 
 from typing import Optional, Dict, Any
 
@@ -92,17 +91,18 @@ def up(env: elib.Environment,
     # > neutron_external_interface='eth2'
     # > neutron_external_interface_dev='eth2'
     # > neutron_external_interface_ip='192.168.43.245'
-    rsc = elib.discover_networks(rsc, networks)
+    rsc = elib.sync_info(rsc, networks)
     rsc = build_rsc_with_inventory(rsc, env['inventory'])
     env['rsc'] = rsc
     env['networks'] = networks
 
     # Get variables required by the application
     vip_pool = get_vip_pool(networks)
+    ips = ip_generator(vip_pool)
     env['config'].update({
-        'vip':               pop_ip(vip_pool),
-        'influx_vip':        pop_ip(vip_pool),
-        'grafana_vip':       pop_ip(vip_pool),
+        'vip':               next(ips),
+        'influx_vip':        next(ips),
+        'grafana_vip':       next(ips),
         'resultdir':         str(env.env_name),
         'rabbitmq_password': "demo",
         'database_password': "demo",
@@ -236,7 +236,7 @@ def up(env: elib.Environment,
 def title(title: str) -> Dict[str, str]:
     "A title for an ansible yaml commands"
 
-    return {"display_name": "enos up : " + title}
+    return {"task_name": "enos up : " + title}
 
 
 def mk_kolla_docker_custom_config(docker: elib.Docker) -> Dict[str, Any]:
@@ -265,7 +265,7 @@ def mk_kolla_docker_custom_config(docker: elib.Docker) -> Dict[str, Any]:
 
 
 def build_rsc_with_inventory(
-        rsc: elib_t.Roles, inventory_path: str) -> elib_t.Roles:
+        rsc: elib.Roles, inventory_path: str) -> elib.Roles:
     '''Return a new `rsc` with roles from the inventory.
 
     In enos, we have a strong binding between enoslib roles and kolla-ansible
