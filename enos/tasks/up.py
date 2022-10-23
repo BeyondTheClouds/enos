@@ -179,6 +179,7 @@ def up(env: elib.Environment,
 
     # Set up machines with bare dependencies
     with elib.play_on(inventory_path=inventory, pattern_hosts='baremetal',
+                      gather_facts=True,
                       extra_vars=kolla_ansible.globals_values) as yml:
         # Remove IP on the external interface if any
         yml.shell(
