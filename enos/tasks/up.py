@@ -200,7 +200,7 @@ def up(env: elib.Environment,
         # nscd prevents kolla-toolbox to start. See,
         # https://bugs.launchpad.net/kolla-ansible/+bug/1680139
         yml.systemd(
-            **title('Install the bare necessities (pip)'),
+            **title('Stop nscd to prevent kolla-toolbox error'),
             name='nscd', state='stopped', ignore_errors=True)
 
         # Break RabbitMQ, which expects the hostname to resolve to the
