@@ -2,7 +2,7 @@
 
 set -x
 
-DNS_NAMESERVER={{ provider_net.dns }}
+DNS_NAMESERVER={{ provider_net.dns|default("9.9.9.9", true) }}
 SUBNET_RANGE={{ provider_net.network }}
 GATEWAY={{ provider_net.gateway }}
 
