@@ -571,7 +571,7 @@ def build(**kwargs):
     --directory DIR    Directory in which the image will be baked (vmong5k)
                        [default: ~/.enos].
     --environment ENV  Reference environment for deployment (g5k)
-                       [default: debian10-x64-min].
+                       [default: debian10-min].
     --image IMAGE      Reference image path to bake on top of it (vmong5k)
                        [default: /grid5000/virt-images/debian10-x64-base.qcow2].
     --type TYPE        Installation type of the BASE distribution

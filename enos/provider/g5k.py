@@ -19,7 +19,7 @@ DEFAULT_CONFIG = {
     'type': 'g5k',                   # Name of the provider
     'job_name': 'enos',              # Job name in oarstat/gant
     'walltime': '02:00:00',          # Reservation duration time
-    'env_name': 'debian10-x64-min',  # Environment to deploy (see `kaenv3 -l`)
+    'env_name': 'debian10-min',      # Environment to deploy (see `kaenv3 -l`)
     'job_type': 'deploy',            # deploy, besteffort, ...
     'queue': 'default'               # default, production, testing
 }
