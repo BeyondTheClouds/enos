@@ -110,7 +110,7 @@ def new(provider_name: str, output_path: Path):
     if provider == 'g5k':
         resources_conf = G5K_RSC
         registry_conf = G5K_EXTERNAL_REG
-        provider_required_keys += ['walltime', 'job_name']
+        provider_required_keys += ['job_name', 'job_type', 'env_name', 'walltime'] # noqa
     elif provider == 'vagrant':
         provider_conf.update(backend=backend)
         resources_conf = VAGRANT_RSC
@@ -139,7 +139,7 @@ def new(provider_name: str, output_path: Path):
     elif provider == 'vmong5k':
         resources_conf = VMONG5K_RSC
         registry_conf = INTERNAL_REG
-        provider_required_keys += ['walltime', 'job_name']
+        provider_required_keys += ['walltime', 'job_name', 'env_name']
     elif provider == 'static':
         resources_conf = STATIC_RSC
         registry_conf = INTERNAL_REG
