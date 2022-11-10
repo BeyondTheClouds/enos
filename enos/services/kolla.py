@@ -15,8 +15,8 @@ import yaml
 from ansible.plugins.loader import filter_loader as ansible_filter_loader
 from enos.utils import constants as C
 
-# Default kolla-ansible package to install (OpenStack ussuri)
-KOLLA_PKG = 'kolla-ansible~=10.0'
+# Default kolla-ansible package to install (OpenStack Wallaby)
+KOLLA_PKG = 'kolla-ansible~=12.0'
 
 # Kolla recommends installing ansible manually.  Currently 2.9 is supported.
 # Refers to the kolla-ansible User Guides for future versions. See,
