@@ -16,12 +16,13 @@ LOGGER = logging.getLogger(__name__)
 
 # - SPHINX_DEFAULT_CONFIG
 DEFAULT_CONFIG = {
-    'type': 'g5k',                   # Name of the provider
-    'job_name': 'enos',              # Job name in oarstat/gant
-    'walltime': '02:00:00',          # Reservation duration time
-    'env_name': 'debian11-min',      # Environment to deploy (see `kaenv3 -l`)
-    'job_type': 'deploy',            # deploy, besteffort, ...
-    'queue': 'default'               # default, production, testing
+    'type': 'g5k',                      # Name of the provider
+    'job_name': 'enos',                 # Job name in oarstat/gant
+    'walltime': '02:00:00',             # Reservation duration time
+    'env_name': 'debian11-min',         # Environment to deploy (see `kaenv3 -l`)
+    'job_type': 'deploy',               # deploy, besteffort, ...
+    'reservation': '2023-04-14 19:00',  # Optional start time
+    'queue': 'default'                  # default, production, testing
 }
 # + SPHINX_DEFAULT_CONFIG
 
