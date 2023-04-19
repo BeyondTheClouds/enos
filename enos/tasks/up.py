@@ -157,7 +157,9 @@ def up(env: elib.Environment,
         'influx_vip': env['config']['influx_vip'],
         'resultdir': str(env.env_name),
         'docker_custom_config': mk_kolla_docker_custom_config(docker),
-        'cwd':  os.getcwd()
+        'docker_disable_default_iptables_rules': False,
+        'docker_disable_default_network': False,
+        'cwd': os.getcwd()
     }
     kolla_globals_values.update(env['config'].get('kolla', {}))
     kolla_ansible = KollaAnsible(
