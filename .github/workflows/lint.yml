@@ -1,0 +1,30 @@
+name: lint
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  # Trigger manually from the "Actions" tab
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install Poetry
+      uses: Gr1N/setup-poetry@v8
+
+    - name: Install Enos and run lint steps
+      run: |
+        poetry install
+        poetry run tox -e pep8
+

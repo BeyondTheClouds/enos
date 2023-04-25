@@ -1,0 +1,56 @@
+name: install-and-run
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  # Trigger manually from the "Actions" tab
+  workflow_dispatch:
+
+jobs:
+  install-run:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Poetry
+      uses: Gr1N/setup-poetry@v8
+
+    - name: Install Enos through poetry
+      run: |
+        poetry install
+
+    - name: Basic Enos invocation through poetry
+      run: |
+        poetry run enos help
+
+    - name: Build pip package
+      run: |
+        poetry build
+
+    - name: Prepare virtualenv
+      run: |
+        python3 -m venv virtualenv
+        source virtualenv/bin/activate
+        pip install --upgrade pip
+
+    - name: Install pip package in virtualenv
+      run: |
+        pip install dist/*.whl
+
+    - name: Basic Enos invocation from virtualenv
+      run: |
+        source virtualenv/bin/activate
+        enos help
