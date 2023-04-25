@@ -27,14 +27,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Enos
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Enos
           </a>
               <div class="version">
                 7.1.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -77,8 +81,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Contribute</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Contribute</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/contribute/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -95,32 +99,32 @@ For any questions, feature requests, issues please use the <a class="reference e
 <section id="install-from-sources-and-make-them-editable">
 <h2>Install from sources and make them editable<a class="headerlink" href="#install-from-sources-and-make-them-editable" title="Permalink to this headline">¶</a></h2>
 <p>Developing with enos requires <a class="reference external" href="https://python-poetry.org/">poetry</a>.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/BeyondTheClouds/enos.git
-$ <span class="nb">cd</span> enos
-$ poetry install
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/BeyondTheClouds/enos.git
+$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>enos
+$<span class="w"> </span>poetry<span class="w"> </span>install
 </pre></div>
 </div>
 <p>Then, execute enos from poetry.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ poetry run enos <span class="nb">help</span>
-$ poetry run enos deploy
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </span>enos<span class="w"> </span><span class="nb">help</span>
+$<span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </span>enos<span class="w"> </span>deploy
 </pre></div>
 </div>
 </section>
 <section id="running-the-tests">
 <h2>Running the tests<a class="headerlink" href="#running-the-tests" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ poetry run tox
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </span>tox
 </pre></div>
 </div>
 </section>
 <section id="running-syntax-checker">
 <h2>Running syntax checker<a class="headerlink" href="#running-syntax-checker" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ poetry run tox -e pep8
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>pep8
 </pre></div>
 </div>
 </section>
 <section id="generate-the-documentation">
 <h2>Generate the documentation<a class="headerlink" href="#generate-the-documentation" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ poetry run tox -e docs
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>docs
 </pre></div>
 </div>
 </section>

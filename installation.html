@@ -27,14 +27,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> Enos
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Enos
           </a>
               <div class="version">
                 7.1.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -72,8 +76,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Getting Started</li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Getting Started</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -93,18 +97,18 @@ on the <a class="reference external" href="https://www.grid5000.fr">Grid’5000 
 </div>
 <section id="id1">
 <h2>Installation<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ pip install -U enos
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>enos
 </pre></div>
 </div>
 <p>You may prefer to go with a virtualenv. Please refer to the
 <a class="reference external" href="https://virtualenv.pypa.io/en/stable/">virtualenv</a> documentation
 and the rest of this section for further information.</p>
 <p>Then install enos inside a virtualenv (python3.7+ required):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ mkdir my-experiment <span class="o">&amp;&amp;</span> <span class="nb">cd</span> my-experiment
-$ virtualenv -p python3 venv
-$ <span class="nb">source</span> venv/bin/activate
-<span class="o">(</span>venv<span class="o">)</span> $ pip install -U pip
-<span class="o">(</span>venv<span class="o">)</span> $ pip install enos
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>mkdir<span class="w"> </span>my-experiment<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>my-experiment
+$<span class="w"> </span>virtualenv<span class="w"> </span>-p<span class="w"> </span>python3<span class="w"> </span>venv
+$<span class="w"> </span><span class="nb">source</span><span class="w"> </span>venv/bin/activate
+<span class="o">(</span>venv<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>pip
+<span class="o">(</span>venv<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>enos
 </pre></div>
 </div>
 <div class="admonition note">
@@ -144,7 +148,7 @@ associated <code class="docutils literal notranslate"><span class="pre">resource
 <section id="deployment">
 <h2>Deployment<a class="headerlink" href="#deployment" title="Permalink to this headline">¶</a></h2>
 <p>Once your configuration is done, you can launch the deployment:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>venv<span class="o">)</span> $ enos deploy
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>venv<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>enos<span class="w"> </span>deploy
 </pre></div>
 </div>
 <p>The deployment is the combination of the following three phases:</p>
@@ -165,7 +169,7 @@ perform this phase by calling <code class="docutils literal notranslate"><span c
 <p class="admonition-title">Note</p>
 <p>If you don’t provide an <code class="docutils literal notranslate"><span class="pre">inventory</span></code> in your current working
 directory, then Enos uses a default one. You can view it on
-GitHub at <a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/b3acdeb/enos/resources/inventory.sample">enos/resources/inventory.sample</a>. Note
+GitHub at <a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/ecb3f0a/enos/resources/inventory.sample">enos/resources/inventory.sample</a>. Note
 that the produced file is available at <code class="docutils literal notranslate"><span class="pre">cwd/current/multinode</span></code>
 (with <code class="docutils literal notranslate"><span class="pre">cwd</span></code> referencing to your current working directory).</p>
 </div>
@@ -176,8 +180,8 @@ has been installed. Since it is not compatible with Kolla-Ansible,
 it leads to failures during the second phase of Enos. macOS users
 should first install the GNU version of <cite>docopt</cite>, and call <code class="docutils literal notranslate"><span class="pre">enos</span>
 <span class="pre">deploy</span></code> or <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">os</span></code> with an appropriate PATH environment variable:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>venv<span class="o">)</span> $ brew install gnu-docopt
-<span class="o">(</span>venv<span class="o">)</span> $ <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/usr/local/opt/gnu-getopt/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span> enos deploy
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>venv<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>brew<span class="w"> </span>install<span class="w"> </span>gnu-docopt
+<span class="o">(</span>venv<span class="o">)</span><span class="w"> </span>$<span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/usr/local/opt/gnu-getopt/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span><span class="w"> </span>enos<span class="w"> </span>deploy
 </pre></div>
 </div>
 </div>

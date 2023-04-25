@@ -26,14 +26,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Enos
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Enos
           </a>
               <div class="version">
                 7.1.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -70,9 +74,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Tutorials</a> &raquo;</li>
-      <li>OpenStack SDK</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">OpenStack SDK</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/tutorial/openstacksdk.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -91,13 +95,13 @@ and then programmatically create a project, users and networks. It
 assumes Enos has already deployed an OpenStack and your are in the
 virtual environment if you have created one.</p>
 <p>First install the OpenStack SDK.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>venv<span class="o">)</span> $ pip install python-openstacksdk
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>venv<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>python-openstacksdk
 </pre></div>
 </div>
 <p>Then asks enos where is your <code class="docutils literal notranslate"><span class="pre">admin-openrc</span></code>, source it and check
 everything is OK.</p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>venv<span class="o">)</span> $ <span class="nb">source</span> <span class="k">$(</span>enos info --out json<span class="p">|</span>jq -r <span class="s1">&#39;.resultdir&#39;</span><span class="k">)</span>/admin-openrc
-<span class="o">(</span>vnev<span class="o">)</span> $ env<span class="p">|</span>fgrep OS<span class="p">|</span>sort
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>venv<span class="o">)</span><span class="w"> </span>$<span class="w"> </span><span class="nb">source</span><span class="w"> </span><span class="k">$(</span>enos<span class="w"> </span>info<span class="w"> </span>--out<span class="w"> </span>json<span class="p">|</span>jq<span class="w"> </span>-r<span class="w"> </span><span class="s1">&#39;.resultdir&#39;</span><span class="k">)</span>/admin-openrc
+<span class="o">(</span>vnev<span class="o">)</span><span class="w"> </span>$<span class="w"> </span>env<span class="p">|</span>fgrep<span class="w"> </span>OS<span class="p">|</span>sort
 <span class="nv">OS_AUTH_PLUGIN</span><span class="o">=</span>password
 <span class="nv">OS_AUTH_URL</span><span class="o">=</span>http://10.24.189.255:35357/v3
 <span class="nv">OS_IDENTITY_API_VERSION</span><span class="o">=</span><span class="m">3</span>
@@ -128,7 +132,7 @@ REST client. Executes it with <code class="docutils literal notranslate"><span c
 
 
 <span class="k">def</span> <span class="nf">make_cloud</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;Connects to OpenStack cloud using environment variables</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Connects to OpenStack cloud using environment variables</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        An new openstack.connection.Connection</span>
@@ -141,7 +145,7 @@ REST client. Executes it with <code class="docutils literal notranslate"><span c
 
 
 <span class="k">def</span> <span class="nf">make_account</span><span class="p">(</span><span class="n">identity</span><span class="p">,</span> <span class="n">users</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create a new project an put `users` in it.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a new project an put `users` in it.</span>
 
 <span class="sd">    Create a new project if it doesn&#39;t exists and put</span>
 <span class="sd">    users `users` in it. Then assigne member and heat roles</span>
@@ -193,7 +197,7 @@ REST client. Executes it with <code class="docutils literal notranslate"><span c
 
 
 <span class="k">def</span> <span class="nf">make_private_net</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">project</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Create a new private network only visible by members of `project`.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a new private network only visible by members of `project`.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        net: Proxy for network aka neutron [1]</span>
@@ -238,7 +242,7 @@ REST client. Executes it with <code class="docutils literal notranslate"><span c
 
 
 <span class="k">def</span> <span class="nf">make_router</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">project</span><span class="p">,</span> <span class="n">priv_snet</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Make a router for communications between private and public net.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Make a router for communications between private and public net.</span>
 
 <span class="sd">    Enos comes with a public network setup in a KaVLAN. This function</span>
 <span class="sd">    makes a router between the public network and a `priv_sunet`.</span>
@@ -277,7 +281,7 @@ REST client. Executes it with <code class="docutils literal notranslate"><span c
 
 
 <span class="k">def</span> <span class="nf">make_sec_group_rule</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">project</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Enable every kind of communication (icmp, http, ssh) in `project`.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enable every kind of communication (icmp, http, ssh) in `project`.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        net: Proxy for network aka neutron [1]</span>

@@ -27,14 +27,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Enos
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Enos
           </a>
               <div class="version">
                 7.1.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -81,9 +85,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Provider</a> &raquo;</li>
-      <li>Static</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Provider</a></li>
+      <li class="breadcrumb-item active">Static</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/provider/static.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -100,8 +104,8 @@ deploy OpenStack on.</p>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>Refer to the <a class="reference internal" href="../installation.html#installation"><span class="std std-ref">Getting Started</span></a> section to install Enos. Then do:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ enos new --provider<span class="o">=</span>static
-$ enos deploy
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>enos<span class="w"> </span>new<span class="w"> </span>--provider<span class="o">=</span>static
+$<span class="w"> </span>enos<span class="w"> </span>deploy
 </pre></div>
 </div>
 </section>
@@ -112,56 +116,54 @@ OpenStack on. Information in the provider description tells Enos where
 these resources are and how to access to them.</p>
 <p>The following shows an example of possible description. It can serve as basis to
 build your own configuration that will fit your environment.</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="nt">enable_monitoring</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
-<span class="linenos"> 2</span><span class="nt">hosts</span><span class="p">:</span><span class="w"></span>
-<span class="linenos"> 3</span><span class="w">  </span><span class="nt">1</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;id002</span><span class="w"></span>
-<span class="linenos"> 4</span><span class="w">    </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.245</span><span class="w"></span>
-<span class="linenos"> 5</span><span class="w">    </span><span class="nt">alias</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enos-0</span><span class="w"></span>
-<span class="linenos"> 6</span><span class="w">    </span><span class="nt">keyfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.vagrant/machines/enos-0/libvirt/private_key</span><span class="w"></span>
-<span class="linenos"> 7</span><span class="w">    </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">root</span><span class="w"></span>
-<span class="linenos"> 8</span><span class="w">  </span><span class="nt">2</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;id003</span><span class="w"></span>
-<span class="linenos"> 9</span><span class="w">    </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.244</span><span class="w"></span>
-<span class="linenos">10</span><span class="w">    </span><span class="nt">alias</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enos-1</span><span class="w"></span>
-<span class="linenos">11</span><span class="w">    </span><span class="nt">keyfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.vagrant/machines/enos-1/libvirt/private_key</span><span class="w"></span>
-<span class="linenos">12</span><span class="w">    </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">root</span><span class="w"></span>
-<span class="linenos">13</span><span class="w">  </span><span class="nt">3</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;id001</span><span class="w"></span>
-<span class="linenos">14</span><span class="w">    </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.243</span><span class="w"></span>
-<span class="linenos">15</span><span class="w">    </span><span class="nt">alias</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enos-2</span><span class="w"></span>
-<span class="linenos">16</span><span class="w">    </span><span class="nt">keyfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.vagrant/machines/enos-2/libvirt/private_key</span><span class="w"></span>
-<span class="linenos">17</span><span class="w">    </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">root</span><span class="w"></span>
-<span class="linenos">18</span><span class="nt">inventory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span><span class="w"></span>
-<span class="linenos">19</span><span class="nt">kolla</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">20</span><span class="w">  </span><span class="nt">kolla_base_distro</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">centos</span><span class="w"></span>
-<span class="linenos">21</span><span class="w">  </span><span class="nt">kolla_install_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span><span class="w"></span>
-<span class="linenos">22</span><span class="w">  </span><span class="nt">nova_compute_virt_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">qemu</span><span class="w"></span>
-<span class="linenos">23</span><span class="nt">kolla_ref</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stable/stein</span><span class="w"></span>
-<span class="linenos">24</span><span class="nt">kolla_repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span><span class="w"></span>
-<span class="linenos">25</span><span class="nt">provider</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">26</span><span class="w">  </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">27</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cidr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.0/24</span><span class="w"></span>
-<span class="linenos">28</span><span class="w">    </span><span class="nt">dns</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8.8.8.8</span><span class="w"></span>
-<span class="linenos">29</span><span class="w">    </span><span class="nt">end</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.119</span><span class="w"></span>
-<span class="linenos">30</span><span class="w">    </span><span class="nt">gateway</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.1</span><span class="w"></span>
-<span class="linenos">31</span><span class="w">    </span><span class="nt">roles</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">32</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">network_interface</span><span class="w"></span>
-<span class="linenos">33</span><span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.3</span><span class="w"></span>
-<span class="linenos">34</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cidr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.0/24</span><span class="w"></span>
-<span class="linenos">35</span><span class="w">    </span><span class="nt">dns</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8.8.8.8</span><span class="w"></span>
-<span class="linenos">36</span><span class="w">    </span><span class="nt">end</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.119</span><span class="w"></span>
-<span class="linenos">37</span><span class="w">    </span><span class="nt">gateway</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.1</span><span class="w"></span>
-<span class="linenos">38</span><span class="w">    </span><span class="nt">roles</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">39</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">neutron_external_interface</span><span class="w"></span>
-<span class="linenos">40</span><span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.3</span><span class="w"></span>
-<span class="linenos">41</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">static</span><span class="w"></span>
-<span class="linenos">42</span><span class="nt">registry</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">43</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
-<span class="linenos">44</span><span class="nt">resources</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">45</span><span class="w">  </span><span class="nt">compute</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">46</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nv">*id001</span><span class="w"></span>
-<span class="linenos">47</span><span class="w">  </span><span class="nt">control</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">48</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nv">*id002</span><span class="w"></span>
-<span class="linenos">49</span><span class="w">  </span><span class="nt">network</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">50</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nv">*id003</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="nt">enable_monitoring</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="linenos"> 2</span><span class="nt">hosts</span><span class="p">:</span>
+<span class="linenos"> 3</span><span class="w">  </span><span class="nt">1</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;id002</span>
+<span class="linenos"> 4</span><span class="w">    </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.245</span>
+<span class="linenos"> 5</span><span class="w">    </span><span class="nt">alias</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enos-0</span>
+<span class="linenos"> 6</span><span class="w">    </span><span class="nt">keyfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.vagrant/machines/enos-0/libvirt/private_key</span>
+<span class="linenos"> 7</span><span class="w">    </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">root</span>
+<span class="linenos"> 8</span><span class="w">  </span><span class="nt">2</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;id003</span>
+<span class="linenos"> 9</span><span class="w">    </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.244</span>
+<span class="linenos">10</span><span class="w">    </span><span class="nt">alias</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enos-1</span>
+<span class="linenos">11</span><span class="w">    </span><span class="nt">keyfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.vagrant/machines/enos-1/libvirt/private_key</span>
+<span class="linenos">12</span><span class="w">    </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">root</span>
+<span class="linenos">13</span><span class="w">  </span><span class="nt">3</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;id001</span>
+<span class="linenos">14</span><span class="w">    </span><span class="nt">address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.243</span>
+<span class="linenos">15</span><span class="w">    </span><span class="nt">alias</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enos-2</span>
+<span class="linenos">16</span><span class="w">    </span><span class="nt">keyfile</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.vagrant/machines/enos-2/libvirt/private_key</span>
+<span class="linenos">17</span><span class="w">    </span><span class="nt">user</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">root</span>
+<span class="linenos">18</span><span class="nt">inventory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span>
+<span class="linenos">19</span><span class="nt">kolla</span><span class="p">:</span>
+<span class="linenos">20</span><span class="w">  </span><span class="nt">kolla_base_distro</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">centos</span>
+<span class="linenos">21</span><span class="w">  </span><span class="nt">kolla_install_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="linenos">22</span><span class="w">  </span><span class="nt">nova_compute_virt_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">qemu</span>
+<span class="linenos">23</span><span class="nt">provider</span><span class="p">:</span>
+<span class="linenos">24</span><span class="w">  </span><span class="nt">networks</span><span class="p">:</span>
+<span class="linenos">25</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cidr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.0/24</span>
+<span class="linenos">26</span><span class="w">    </span><span class="nt">dns</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8.8.8.8</span>
+<span class="linenos">27</span><span class="w">    </span><span class="nt">end</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.119</span>
+<span class="linenos">28</span><span class="w">    </span><span class="nt">gateway</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.1</span>
+<span class="linenos">29</span><span class="w">    </span><span class="nt">roles</span><span class="p">:</span>
+<span class="linenos">30</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">network_interface</span>
+<span class="linenos">31</span><span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.3</span>
+<span class="linenos">32</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cidr</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.0/24</span>
+<span class="linenos">33</span><span class="w">    </span><span class="nt">dns</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8.8.8.8</span>
+<span class="linenos">34</span><span class="w">    </span><span class="nt">end</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.119</span>
+<span class="linenos">35</span><span class="w">    </span><span class="nt">gateway</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.1</span>
+<span class="linenos">36</span><span class="w">    </span><span class="nt">roles</span><span class="p">:</span>
+<span class="linenos">37</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">neutron_external_interface</span>
+<span class="linenos">38</span><span class="w">    </span><span class="nt">start</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.143.3</span>
+<span class="linenos">39</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">static</span>
+<span class="linenos">40</span><span class="nt">registry</span><span class="p">:</span>
+<span class="linenos">41</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
+<span class="linenos">42</span><span class="nt">resources</span><span class="p">:</span>
+<span class="linenos">43</span><span class="w">  </span><span class="nt">compute</span><span class="p">:</span>
+<span class="linenos">44</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nv">*id001</span>
+<span class="linenos">45</span><span class="w">  </span><span class="nt">control</span><span class="p">:</span>
+<span class="linenos">46</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nv">*id002</span>
+<span class="linenos">47</span><span class="w">  </span><span class="nt">network</span><span class="p">:</span>
+<span class="linenos">48</span><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nv">*id003</span>
 </pre></div>
 </div>
 <p>Note that the above example is based on running machines given by vagrant and

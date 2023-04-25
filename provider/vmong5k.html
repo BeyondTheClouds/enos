@@ -27,14 +27,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Enos
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Enos
           </a>
               <div class="version">
                 7.1.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -84,9 +88,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Provider</a> &raquo;</li>
-      <li>Virtual Machines on Grid’5000</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Provider</a></li>
+      <li class="breadcrumb-item active">Virtual Machines on Grid’5000</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/provider/vmong5k.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -116,26 +120,24 @@ machine sizes of the Vagrant provider to describe resources.</p>
 <a class="reference external" href="https://pypi.org/project/python-grid5000/">python-grid5000</a>. Please refer to
 the corresponding documentation</p>
 <p>The following is a valid resource description:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="nt">enable_monitoring</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
-<span class="linenos"> 2</span><span class="nt">inventory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span><span class="w"></span>
-<span class="linenos"> 3</span><span class="nt">kolla</span><span class="p">:</span><span class="w"></span>
-<span class="linenos"> 4</span><span class="w">  </span><span class="nt">enable_heat</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
-<span class="linenos"> 5</span><span class="w">  </span><span class="nt">kolla_base_distro</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">centos</span><span class="w"></span>
-<span class="linenos"> 6</span><span class="w">  </span><span class="nt">kolla_install_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span><span class="w"></span>
-<span class="linenos"> 7</span><span class="nt">kolla_ref</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stable/stein</span><span class="w"></span>
-<span class="linenos"> 8</span><span class="nt">kolla_repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span><span class="w"></span>
-<span class="linenos"> 9</span><span class="nt">provider</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">10</span><span class="w">  </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enos-jenkins</span><span class="w"></span>
-<span class="linenos">11</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vmong5k</span><span class="w"></span>
-<span class="linenos">12</span><span class="w">  </span><span class="nt">walltime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">01:00:00</span><span class="w"></span>
-<span class="linenos">13</span><span class="nt">registry</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">14</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">internal</span><span class="w"></span>
-<span class="linenos">15</span><span class="nt">resources</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">16</span><span class="w">  </span><span class="nt">parapluie</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">17</span><span class="w">    </span><span class="nt">compute</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
-<span class="linenos">18</span><span class="w">    </span><span class="nt">control</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
-<span class="linenos">19</span><span class="w">  </span><span class="nt">paravance</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">20</span><span class="w">    </span><span class="nt">network</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="nt">enable_monitoring</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="linenos"> 2</span><span class="nt">inventory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span>
+<span class="linenos"> 3</span><span class="nt">kolla</span><span class="p">:</span>
+<span class="linenos"> 4</span><span class="w">  </span><span class="nt">enable_heat</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="linenos"> 5</span><span class="w">  </span><span class="nt">kolla_base_distro</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">centos</span>
+<span class="linenos"> 6</span><span class="w">  </span><span class="nt">kolla_install_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="linenos"> 7</span><span class="nt">provider</span><span class="p">:</span>
+<span class="linenos"> 8</span><span class="w">  </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enos-jenkins</span>
+<span class="linenos"> 9</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vmong5k</span>
+<span class="linenos">10</span><span class="w">  </span><span class="nt">walltime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">01:00:00</span>
+<span class="linenos">11</span><span class="nt">registry</span><span class="p">:</span>
+<span class="linenos">12</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">internal</span>
+<span class="linenos">13</span><span class="nt">resources</span><span class="p">:</span>
+<span class="linenos">14</span><span class="w">  </span><span class="nt">parapluie</span><span class="p">:</span>
+<span class="linenos">15</span><span class="w">    </span><span class="nt">compute</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="linenos">16</span><span class="w">    </span><span class="nt">control</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="linenos">17</span><span class="w">  </span><span class="nt">paravance</span><span class="p">:</span>
+<span class="linenos">18</span><span class="w">    </span><span class="nt">network</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 </pre></div>
 </div>
 </section>
@@ -145,8 +147,8 @@ the corresponding documentation</p>
 deployments). To reserve a node prior the deployment and launch the deployment
 you can execute the commands after creating a valid configuration file and
 setting up the appropriate execution environment for EnOS:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>frontend&gt; oarsub -I -l <span class="s1">&#39;walltime=2:00:00&#39;</span>
-node&gt; enos deploy
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>frontend&gt;<span class="w"> </span>oarsub<span class="w"> </span>-I<span class="w"> </span>-l<span class="w"> </span><span class="s1">&#39;walltime=2:00:00&#39;</span>
+node&gt;<span class="w"> </span>enos<span class="w"> </span>deploy
 </pre></div>
 </div>
 </section>
@@ -177,42 +179,40 @@ providers involved in the deployment and execution.</p>
 <h2>Advanced Configurations<a class="headerlink" href="#advanced-configurations" title="Permalink to this headline">¶</a></h2>
 <p>A configuration equivalent to the basic one presented before shows a finer and
 more explicit definition of the resources:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="nt">enable_monitoring</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
-<span class="linenos"> 2</span><span class="nt">inventory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span><span class="w"></span>
-<span class="linenos"> 3</span><span class="nt">kolla</span><span class="p">:</span><span class="w"></span>
-<span class="linenos"> 4</span><span class="w">  </span><span class="nt">enable_heat</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"></span>
-<span class="linenos"> 5</span><span class="w">  </span><span class="nt">kolla_base_distro</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">centos</span><span class="w"></span>
-<span class="linenos"> 6</span><span class="w">  </span><span class="nt">kolla_install_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span><span class="w"></span>
-<span class="linenos"> 7</span><span class="nt">kolla_ref</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">stable/stein</span><span class="w"></span>
-<span class="linenos"> 8</span><span class="nt">kolla_repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">https://git.openstack.org/openstack/kolla-ansible</span><span class="w"></span>
-<span class="linenos"> 9</span><span class="nt">provider</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">10</span><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/grid5000/virt-images/debian9-x64-base.qcow2</span><span class="w"></span>
-<span class="linenos">11</span><span class="w">  </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enos-jenkins</span><span class="w"></span>
-<span class="linenos">12</span><span class="w">  </span><span class="nt">resources</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">13</span><span class="w">    </span><span class="nt">machines</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">14</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">parapluie</span><span class="w"></span>
-<span class="linenos">15</span><span class="w">      </span><span class="nt">flavour</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">medium</span><span class="w"></span>
-<span class="linenos">16</span><span class="w">      </span><span class="nt">nodes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
-<span class="linenos">17</span><span class="w">      </span><span class="nt">roles</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">18</span><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">compute</span><span class="w"></span>
-<span class="linenos">19</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">parapluie</span><span class="w"></span>
-<span class="linenos">20</span><span class="w">      </span><span class="nt">flavour</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">extra-large</span><span class="w"></span>
-<span class="linenos">21</span><span class="w">      </span><span class="nt">nodes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
-<span class="linenos">22</span><span class="w">      </span><span class="nt">roles</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">23</span><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">control</span><span class="w"></span>
-<span class="linenos">24</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">paravance</span><span class="w"></span>
-<span class="linenos">25</span><span class="w">      </span><span class="nt">flavour_desc</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">26</span><span class="w">        </span><span class="nt">core</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span><span class="w"></span>
-<span class="linenos">27</span><span class="w">        </span><span class="nt">mem</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4096</span><span class="w"></span>
-<span class="linenos">28</span><span class="w">      </span><span class="nt">nodes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
-<span class="linenos">29</span><span class="w">      </span><span class="nt">roles</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">30</span><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">network</span><span class="w"></span>
-<span class="linenos">31</span><span class="w">    </span><span class="nt">networks</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">32</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">network_interface</span><span class="w"></span>
-<span class="linenos">33</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vmong5k</span><span class="w"></span>
-<span class="linenos">34</span><span class="w">  </span><span class="nt">walltime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">01:00:00</span><span class="w"></span>
-<span class="linenos">35</span><span class="nt">registry</span><span class="p">:</span><span class="w"></span>
-<span class="linenos">36</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">internal</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="nt">enable_monitoring</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="linenos"> 2</span><span class="nt">inventory</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">inventories/inventory.sample</span>
+<span class="linenos"> 3</span><span class="nt">kolla</span><span class="p">:</span>
+<span class="linenos"> 4</span><span class="w">  </span><span class="nt">enable_heat</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="linenos"> 5</span><span class="w">  </span><span class="nt">kolla_base_distro</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">centos</span>
+<span class="linenos"> 6</span><span class="w">  </span><span class="nt">kolla_install_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">source</span>
+<span class="linenos"> 7</span><span class="nt">provider</span><span class="p">:</span>
+<span class="linenos"> 8</span><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/grid5000/virt-images/debian9-x64-base.qcow2</span>
+<span class="linenos"> 9</span><span class="w">  </span><span class="nt">job_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">enos-jenkins</span>
+<span class="linenos">10</span><span class="w">  </span><span class="nt">resources</span><span class="p">:</span>
+<span class="linenos">11</span><span class="w">    </span><span class="nt">machines</span><span class="p">:</span>
+<span class="linenos">12</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">parapluie</span>
+<span class="linenos">13</span><span class="w">      </span><span class="nt">flavour</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">medium</span>
+<span class="linenos">14</span><span class="w">      </span><span class="nt">nodes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="linenos">15</span><span class="w">      </span><span class="nt">roles</span><span class="p">:</span>
+<span class="linenos">16</span><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">compute</span>
+<span class="linenos">17</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">parapluie</span>
+<span class="linenos">18</span><span class="w">      </span><span class="nt">flavour</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">extra-large</span>
+<span class="linenos">19</span><span class="w">      </span><span class="nt">nodes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="linenos">20</span><span class="w">      </span><span class="nt">roles</span><span class="p">:</span>
+<span class="linenos">21</span><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">control</span>
+<span class="linenos">22</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">cluster</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">paravance</span>
+<span class="linenos">23</span><span class="w">      </span><span class="nt">flavour_desc</span><span class="p">:</span>
+<span class="linenos">24</span><span class="w">        </span><span class="nt">core</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+<span class="linenos">25</span><span class="w">        </span><span class="nt">mem</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4096</span>
+<span class="linenos">26</span><span class="w">      </span><span class="nt">nodes</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="linenos">27</span><span class="w">      </span><span class="nt">roles</span><span class="p">:</span>
+<span class="linenos">28</span><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">network</span>
+<span class="linenos">29</span><span class="w">    </span><span class="nt">networks</span><span class="p">:</span>
+<span class="linenos">30</span><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">network_interface</span>
+<span class="linenos">31</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vmong5k</span>
+<span class="linenos">32</span><span class="w">  </span><span class="nt">walltime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">01:00:00</span>
+<span class="linenos">33</span><span class="nt">registry</span><span class="p">:</span>
+<span class="linenos">34</span><span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">internal</span>
 </pre></div>
 </div>
 <p>Other possibilities includes the customization of the topology, networking, etc.
@@ -239,9 +239,9 @@ Rename this file and placed it in a permanent location visible on Grid’5000 su
 as <code class="docutils literal notranslate"><span class="pre">~/public/enos-openstack-image.qcow2</span></code>, then the configuration can reuse that
 image setting the image as follows:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>provider:
-  type: vmong5k
-  image: ~/public/enos-openstack-image.qcow2
-  ...
+<span class="w">  </span>type:<span class="w"> </span>vmong5k
+<span class="w">  </span>image:<span class="w"> </span>~/public/enos-openstack-image.qcow2
+<span class="w">  </span>...
 </pre></div>
 </div>
 </section>

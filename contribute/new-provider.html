@@ -27,14 +27,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Enos
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Enos
           </a>
               <div class="version">
                 7.1.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -83,9 +87,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index.html">Contribute</a> &raquo;</li>
-      <li>Write a new provider</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Contribute</a></li>
+      <li class="breadcrumb-item active">Write a new provider</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/contribute/new-provider.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -101,9 +105,9 @@
 <a class="reference internal" href="../provider/vagrant.html#vagrant-provider"><span class="std std-ref">Vagrant</span></a>, <a class="reference internal" href="../provider/grid5000.html#grid5000"><span class="std std-ref">Grid’5000</span></a> and <a class="reference internal" href="../provider/openstack.html#openstack"><span class="std std-ref">Openstack</span></a> itself. If
 you want to support another testbed, then implementing a new provider
 is easy as 500 lines of Python code.</p>
-<p>The new provider should follow the <a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/b3acdeb/enos/provider/provider.py">provider.py</a> interface which consists in three
+<p>The new provider should follow the <a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/ecb3f0a/enos/provider/provider.py">provider.py</a> interface which consists in three
 methods: <code class="docutils literal notranslate"><span class="pre">init</span></code>, <code class="docutils literal notranslate"><span class="pre">destroy</span></code> and <code class="docutils literal notranslate"><span class="pre">default_config</span></code>. Another good
-starting point is the simple <a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/b3acdeb/enos/provider/static.py">static implementation</a>.</p>
+starting point is the simple <a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/ecb3f0a/enos/provider/static.py">static implementation</a>.</p>
 <section id="init-method">
 <h2>Init Method<a class="headerlink" href="#init-method" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">init</span></code> method provides resources and provisions the environment.
@@ -117,7 +121,7 @@ with:</p>
 </pre></div>
 </div>
 <p>At the end of the <code class="docutils literal notranslate"><span class="pre">init</span></code>, the provider should return a list of
-<a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/b3acdeb/enos/provider/host.py">host.py</a> that Enos can SSH on,
+<a class="reference external" href="https://github.com/BeyondTheClouds/enos/blob/ecb3f0a/enos/provider/host.py">host.py</a> that Enos can SSH on,
 together with a pool of available IP for OpenStack Network.</p>
 </section>
 <section id="destroy-method">
@@ -141,7 +145,7 @@ reservation file.</p>
 <p>Enos automatically instantiates a provider based on the name specified
 in the <code class="docutils literal notranslate"><span class="pre">reservation.yaml</span></code>. For instance, based on the following
 reservation file,</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-provider&quot;</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-provider&quot;</span>
 </pre></div>
 </div>
 <p>Enos seeks for a file called <code class="docutils literal notranslate"><span class="pre">my-provider.py</span></code> into <code class="docutils literal notranslate"><span class="pre">enos/provider</span></code>
@@ -149,10 +153,10 @@ and instantiates its main class. But sometimes, the provider requires
 extra information for its initialisation. The good place for this
 information is to put it under the provider key. In this case, the
 provider name should be accessible throughout the <code class="docutils literal notranslate"><span class="pre">type</span></code> key:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">provider</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-provider&quot;</span><span class="w"></span>
-<span class="w">  </span><span class="nt">extra-var</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
-<span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">provider</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;my-provider&quot;</span>
+<span class="w">  </span><span class="nt">extra-var</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">...</span>
+<span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">...</span>
 </pre></div>
 </div>
 <p>Then the provider can access <code class="docutils literal notranslate"><span class="pre">extra-var</span></code> with

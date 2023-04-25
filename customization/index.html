@@ -27,14 +27,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> Enos
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Enos
           </a>
               <div class="version">
                 7.1.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -83,8 +87,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Customizations</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Customizations</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/customization/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -103,24 +107,24 @@ the package to install (with <code class="docutils literal notranslate"><span cl
 values:
 * a PyPi package</p>
 <blockquote>
-<div><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kolla-ansible~=10.0</span><span class="w"></span>
+<div><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kolla-ansible~=10.0</span>
 </pre></div>
 </div>
 </div></blockquote>
 <ul>
 <li><p>a git repository to the Ussuri specific version of OpenStack</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">git+https://github.com/openstack/kolla-ansible.git@stable/ussuri</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">git+https://github.com/openstack/kolla-ansible.git@stable/ussuri</span>
 </pre></div>
 </div>
 </li>
 <li><p>an editable version of the latest kolla-ansible code (bleeding edge)</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-e git+https://opendev.org/openstack/kolla-ansible.git@master</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-e git+https://opendev.org/openstack/kolla-ansible.git@master</span>
 </pre></div>
 </div>
 </li>
 <li><p>an editable version to a local directory that contains the
 kolla-ansible source code (best to patch kolla-ansible)</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-e ~/path/to/loca/kolla-ansible</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-e ~/path/to/loca/kolla-ansible</span>
 </pre></div>
 </div>
 </li>
@@ -132,8 +136,8 @@ kolla-ansible source code (best to patch kolla-ansible)</p>
 under the key <code class="docutils literal notranslate"><span class="pre">kolla</span></code>. For instance, Kolla enables Heat by default
 through the <code class="docutils literal notranslate"><span class="pre">enable_heat</span></code> parameter.  Enos tells Kolla to <strong>not</strong>
 deploy Heat by overriding the default parameter as following:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">enable_heat</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;no&quot;</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enable_heat</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;no&quot;</span>
 </pre></div>
 </div>
 <p>The complete list of kolla-ansible variables can be found <a class="reference external" href="https://opendev.org/openstack/kolla-ansible/src/branch/master/etc/kolla/globals.yml">here</a>.</p>
@@ -143,10 +147,10 @@ deploy Heat by overriding the default parameter as following:</p>
 cover all the possible use cases. But, if you know what interfaces are configured by
 the provider you can specify a more precise allocation under the <code class="docutils literal notranslate"><span class="pre">kolla</span></code> key.
 For instance:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">network_interface</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">eth1</span><span class="w"></span>
-<span class="w">  </span><span class="nt">neutron_external_interface</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">eth2</span><span class="w"></span>
-<span class="w">  </span><span class="nt">tunnel_interface</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">eth3</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">network_interface</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">eth1</span>
+<span class="w">  </span><span class="nt">neutron_external_interface</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">eth2</span>
+<span class="w">  </span><span class="nt">tunnel_interface</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">eth3</span>
 </pre></div>
 </div>
 </section>
@@ -157,11 +161,11 @@ For instance:</p>
 <ol class="arabic simple">
 <li><p>Add a new node reservation in the configuration file:</p></li>
 </ol>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">paravance</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">control</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
-<span class="w">  </span><span class="nt">network</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
-<span class="w">  </span><span class="nt">compute</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
-<span class="w">  </span><span class="nt">conductor-node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">paravance</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">control</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">  </span><span class="nt">network</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">  </span><span class="nt">compute</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">  </span><span class="nt">conductor-node</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
 </pre></div>
 </div>
 <p>2. Create an new inventory file in the <code class="docutils literal notranslate"><span class="pre">inventories</span></code> subdirectory
@@ -188,8 +192,8 @@ Further information can be found : <a class="reference external" href="http://do
 by the configuration file.</p>
 <section id="no-registry-mirror">
 <h3>No Registry mirror<a class="headerlink" href="#no-registry-mirror" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
 </pre></div>
 </div>
 <p>With the above configuration, EnOS won’t deploy any registry mirror. Any docker
@@ -197,8 +201,8 @@ agent in the deployment will use Docker Hub.</p>
 </section>
 <section id="internal-registry-mirror">
 <h3>Internal Registry mirror<a class="headerlink" href="#internal-registry-mirror" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">internal</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">internal</span>
 </pre></div>
 </div>
 <p>With the above configuration, EnOS deploys a fresh registry that acts as a
@@ -207,10 +211,10 @@ your deployment resources.</p>
 </section>
 <section id="external-registry-mirror">
 <h3>External Registry mirror<a class="headerlink" href="#external-registry-mirror" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">external</span><span class="w"></span>
-<span class="w">  </span><span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.253</span><span class="w"></span>
-<span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5000</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">external</span>
+<span class="w">  </span><span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">192.168.142.253</span>
+<span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5000</span>
 </pre></div>
 </div>
 <p>With the above configuration, EnOS will configure all the docker agents to access
@@ -227,10 +231,10 @@ speed up the deployment.</p>
 <p class="admonition-title">Note</p>
 <p>With the Grid’5000 provider we recommend to use the Grid’5000
 mirror.</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span><span class="w"></span>
-<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">external</span><span class="w"></span>
-<span class="w">  </span><span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">docker-cache.grid5000.fr</span><span class="w"></span>
-<span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span><span class="w"></span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">registry</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">external</span>
+<span class="w">  </span><span class="nt">ip</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">docker-cache.grid5000.fr</span>
+<span class="w">  </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">80</span>
 </pre></div>
 </div>
 </div>
