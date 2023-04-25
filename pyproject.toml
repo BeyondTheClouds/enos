@@ -13,9 +13,10 @@ classifiers = [
   'Intended Audience :: System Administrators',
   'Intended Audience :: Science/Research',
   'Operating System :: POSIX :: Linux',
-  'Programming Language :: Python :: 3.7',
   'Programming Language :: Python :: 3.8',
   'Programming Language :: Python :: 3.9',
+  'Programming Language :: Python :: 3.10',
+  'Programming Language :: Python :: 3.11',
 ]
 include = [
   'README.rst',
@@ -27,13 +28,16 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
-enoslib = { version = "~5.6", extras = [ "chameleon" ] }
+python = "^3.8"
 # enoslib = { path = '../enoslib', develop = true, extras = [ "chameleon" ]  }
+enoslib = { version = "^8.1.2", extras = [ "chameleon" ] }
+# Our ansible_filter_loader hack (to load Jinja context filters from Kolla)
+# no longer works with recent versions of Ansible, so let's stick to 2.9 for now.
+ansible = { version = "~2.9" }
 docopt = ">=0.6.2,<0.7.0"
 virtualenv = "^20.4.3"
-python-openstackclient = "^5.5.0"
-python-heatclient = "^2.3.0"
+python-openstackclient = "^6.0.0"
+python-heatclient = "^2.5.0"
 influxdb = { version = "4.0.0", optional = true }
 
 [tool.poetry.extras]

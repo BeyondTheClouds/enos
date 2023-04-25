@@ -10,13 +10,12 @@ from operator import methodcaller
 
 import enoslib as elib
 import enoslib.api as elib_api
-import enoslib.types as elib_t
 from enoslib.enos_inventory import EnosInventory
 
 from enos.services import KollaAnsible
 import enos.utils.constants as C
-from enos.utils.extra import (generate_inventory,
-                              get_vip_pool, make_provider, pop_ip, seekpath)
+from enos.utils.extra import (generate_inventory, get_vip_pool,
+                              make_provider, ip_generator, seekpath)
 
 from typing import Optional, Dict, Any
 
@@ -61,8 +60,32 @@ def up(env: elib.Environment,
 
     # Call the provider to initialize resources
     rsc, networks = provider.init(config, is_force_deploy)
+    # Note(rcherrueau): I keep track of this extra information for a
+    # futur migration to enoslib-v6:
+    # > enos-0 ansible_host=192.168.121.128 ansible_port='22'
+    # > ansible_ssh_common_args='-o StrictHostKeyChecking=no -o
+    # > UserKnownHostsFile=/dev/null'
+    # > ansible_ssh_private_key_file='/home/rfish/prog/enos/.vagrant/machines/enos-0/libvirt/private_key' # noqa
+    # > ansible_ssh_user='root' enos_devices="['eth1','eth2']"
+    # > network_interface='eth1' network_interface_dev='eth1'
+    # > network_interface_ip='192.168.42.245'
+    # > neutron_external_interface='eth2'
+    # > neutron_external_interface_dev='eth2'
+    # > neutron_external_interface_ip='192.168.43.245'
+    rsc = elib.sync_info(rsc, networks)
     LOGGER.debug(f"Provider resources: {rsc}")
     LOGGER.debug(f"Provider network information: {networks}")
+
+    # Configure node-specific variables such as "network_interface".
+    # Enoslib will then include these variables in the inventory so that
+    # Kolla will be able to use them.
+    for host in rsc.all():
+        for network_name in [C.NETWORK_INTERFACE, C.API_INTERFACE,
+                             C.NEUTRON_EXTERNAL_INTERFACE]:
+            if networks[network_name]:
+                physical_interfaces = host.filter_interfaces(networks[network_name]) # noqa
+                if physical_interfaces:
+                    host.set_extra(**{network_name: physical_interfaces[0]})
 
     # Generates inventory for ansible/kolla
     inventory = os.path.join(str(env.env_name), 'multinode')
@@ -76,33 +99,20 @@ def up(env: elib.Environment,
     LOGGER.info('Generates inventory %s' % inventory)
     env['inventory'] = inventory
 
-    # Fills rsc with information such as network_interface and then
-    # ensures rsc contains all groups defined by the inventory (e.g.,
+    # Ensures rsc contains all groups defined by the inventory (e.g.,
     # 'enos/registry', 'enos/influx', 'haproxy', ...).
     #
-    # Note(rcherrueau): I keep track of this extra information for a
-    # futur migration to enoslib-v6:
-    # > enos-0 ansible_host=192.168.121.128 ansible_port='22'
-    # > ansible_ssh_common_args='-o StrictHostKeyChecking=no -o
-    # > UserKnownHostsFile=/dev/null'
-    # > ansible_ssh_private_key_file='/home/rfish/prog/enos/.vagrant/machines/enos-0/libvirt/private_key' # noqa
-    # > ansible_ssh_user='root' enos_devices="['eth1','eth2']"
-    # > network_interface='eth1' network_interface_dev='eth1'
-    # > network_interface_ip='192.168.42.245'
-    # > neutron_external_interface='eth2'
-    # > neutron_external_interface_dev='eth2'
-    # > neutron_external_interface_ip='192.168.43.245'
-    rsc = elib.discover_networks(rsc, networks)
     rsc = build_rsc_with_inventory(rsc, env['inventory'])
     env['rsc'] = rsc
     env['networks'] = networks
 
     # Get variables required by the application
     vip_pool = get_vip_pool(networks)
+    ips = ip_generator(vip_pool)
     env['config'].update({
-        'vip':               pop_ip(vip_pool),
-        'influx_vip':        pop_ip(vip_pool),
-        'grafana_vip':       pop_ip(vip_pool),
+        'vip':               next(ips),
+        'influx_vip':        next(ips),
+        'grafana_vip':       next(ips),
         'resultdir':         str(env.env_name),
         'rabbitmq_password': "demo",
         'database_password': "demo",
@@ -147,7 +157,9 @@ def up(env: elib.Environment,
         'influx_vip': env['config']['influx_vip'],
         'resultdir': str(env.env_name),
         'docker_custom_config': mk_kolla_docker_custom_config(docker),
-        'cwd':  os.getcwd()
+        'docker_disable_default_iptables_rules': False,
+        'docker_disable_default_network': False,
+        'cwd': os.getcwd()
     }
     kolla_globals_values.update(env['config'].get('kolla', {}))
     kolla_ansible = KollaAnsible(
@@ -179,6 +191,7 @@ def up(env: elib.Environment,
 
     # Set up machines with bare dependencies
     with elib.play_on(inventory_path=inventory, pattern_hosts='baremetal',
+                      gather_facts=True,
                       extra_vars=kolla_ansible.globals_values) as yml:
         # Remove IP on the external interface if any
         yml.shell(
@@ -200,7 +213,7 @@ def up(env: elib.Environment,
         # nscd prevents kolla-toolbox to start. See,
         # https://bugs.launchpad.net/kolla-ansible/+bug/1680139
         yml.systemd(
-            **title('Install the bare necessities (pip)'),
+            **title('Stop nscd to prevent kolla-toolbox error'),
             name='nscd', state='stopped', ignore_errors=True)
 
         # Break RabbitMQ, which expects the hostname to resolve to the
@@ -236,7 +249,7 @@ def up(env: elib.Environment,
 def title(title: str) -> Dict[str, str]:
     "A title for an ansible yaml commands"
 
-    return {"display_name": "enos up : " + title}
+    return {"task_name": "enos up : " + title}
 
 
 def mk_kolla_docker_custom_config(docker: elib.Docker) -> Dict[str, Any]:
@@ -265,7 +278,7 @@ def mk_kolla_docker_custom_config(docker: elib.Docker) -> Dict[str, Any]:
 
 
 def build_rsc_with_inventory(
-        rsc: elib_t.Roles, inventory_path: str) -> elib_t.Roles:
+        rsc: elib.Roles, inventory_path: str) -> elib.Roles:
     '''Return a new `rsc` with roles from the inventory.
 
     In enos, we have a strong binding between enoslib roles and kolla-ansible

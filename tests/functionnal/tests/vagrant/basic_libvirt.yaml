@@ -5,8 +5,6 @@ kolla:
   kolla_base_distro: centos
   kolla_install_type: source
   nova_compute_virt_type: qemu
-kolla_ref: stable/stein
-kolla_repo: https://git.openstack.org/openstack/kolla-ansible
 provider:
   backend: libvirt
   box: generic/debian9

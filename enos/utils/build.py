@@ -12,8 +12,6 @@ BASE_TEMPLATE = {
         'kolla_install_type': '{{ distribution }}',
         'nova_compute_virt_type': 'qemu'
     },
-    'kolla_ref': 'stable/rocky',
-    'kolla_repo': 'https://git.openstack.org/openstack/kolla-ansible',
     'registry': {
         'type': 'internal'
     },

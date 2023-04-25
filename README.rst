@@ -1,4 +1,4 @@
-|Build Status| |Doc Status| |Pypi| |Code style| |License|
+|Doc Status| |Pypi| |Code style| |License|
 
 Join us on gitter :  |Join the chat at
 https://gitter.im/BeyondTheClouds/enos|
@@ -69,8 +69,6 @@ Links
 -  Discovery - https://beyondtheclouds.github.io/
 -  Docker - https://hub.docker.com/r/beyondtheclouds/
 
-.. |Build Status| image:: https://travis-ci.org/BeyondTheClouds/enos.svg?branch=master
-   :target: https://travis-ci.org/BeyondTheClouds/enos
 .. |Join the chat at https://gitter.im/BeyondTheClouds/enos| image:: https://badges.gitter.im/BeyondTheClouds/enos.svg
    :target: https://gitter.im/BeyondTheClouds/enos?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 .. |Code style| image:: https://api.codacy.com/project/badge/Grade/87536e9c0f0d47e08d1b9e0950c9d14b

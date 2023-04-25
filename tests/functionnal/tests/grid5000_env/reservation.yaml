@@ -10,8 +10,6 @@ kolla:
   kolla_base_distro: centos
   kolla_install_type: source
   node_custom_config: patch/
-kolla_ref: stable/stein
-kolla_repo: https://git.openstack.org/openstack/kolla-ansible
 provider:
   eths:
   - eth1

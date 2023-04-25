@@ -2,12 +2,12 @@
 import copy
 import logging
 
-from enoslib.service.netem.netem import expand_groups
-from enoslib.infra.enos_g5k import (provider, g5k_api_utils, remote)
+from enoslib import run_command
+from enoslib.infra.enos_g5k import (provider, g5k_api_utils)
 from enoslib.infra.enos_g5k.configuration import Configuration
 
 from enos.provider.provider import Provider
-from enos.utils.extra import gen_enoslib_roles
+from enos.utils.extra import expand_groups, gen_enoslib_roles
 from enos.utils.constants import (NETWORK_INTERFACE,
                                   NEUTRON_EXTERNAL_INTERFACE)
 
@@ -19,8 +19,7 @@ DEFAULT_CONFIG = {
     'type': 'g5k',                   # Name of the provider
     'job_name': 'enos',              # Job name in oarstat/gant
     'walltime': '02:00:00',          # Reservation duration time
-    'env_name': 'debian10-x64-min',  # Environment to deploy (see `kaenv3 -l`)
-    'reservation': '',               # Reservation date
+    'env_name': 'debian11-min',      # Environment to deploy (see `kaenv3 -l`)
     'job_type': 'deploy',            # deploy, besteffort, ...
     'queue': 'default'               # default, production, testing
 }
@@ -121,42 +120,34 @@ def _build_enoslib_conf(config):
 
 
 def _provision(roles):
-    nodes = []
-    for value in roles.values():
-        nodes.extend(value)
-
-    # remove duplicate hosts
-    # Note(jrbalderrama): do we have to implement hash/equals in Host?
-    nodes = set([node.address for node in nodes])
-
     # Provision nodes so we can run Ansible on it
-    remote.exec_command_on_nodes(
-        nodes,
+    run_command(
         'apt-get update && apt-get -y --force-yes install python',
-        'Installing python...')
+        task_name='Installing python...',
+        roles=roles)
 
     # Bind volumes of docker in /tmp (free storage location on G5k)
-    remote.exec_command_on_nodes(
-        nodes,
+    run_command(
         ('mkdir -p /tmp/docker/volumes; '
          'mkdir -p /var/lib/docker/volumes'),
-        'Creating docker volumes directory in /tmp')
-    remote.exec_command_on_nodes(
-        nodes,
+        task_name='Creating docker volumes directory in /tmp',
+        roles=roles)
+    run_command(
         ('(mount | grep /tmp/docker/volumes) || '
          'mount --bind /tmp/docker/volumes /var/lib/docker/volumes'),
-        'Bind mount')
+        task_name='Bind mount',
+        roles=roles)
 
     # Bind nova local storage in /tmp
-    remote.exec_command_on_nodes(
-        nodes,
+    run_command(
         'mkdir -p /tmp/nova ; mkdir -p /var/lib/nova',
-        'Creating nova directory in /tmp')
-    remote.exec_command_on_nodes(
-        nodes,
+        task_name='Creating nova directory in /tmp',
+        roles=roles)
+    run_command(
         ('(mount | grep /tmp/nova) || '
          'mount --bind /tmp/nova /var/lib/nova'),
-        'Bind mount')
+        task_name='Bind mount',
+        roles=roles)
 
 
 class G5k(Provider):

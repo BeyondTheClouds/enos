@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Dict, List
 
 import enoslib as elib
-import enoslib.types as elib_t
 
 # Docker image for Shaker
 IMG = 'performa/shaker:latest'
@@ -14,7 +13,7 @@ IMG = 'performa/shaker:latest'
 
 class Shaker():
     # Resources with agents that have Shaker
-    rsc: elib_t.Roles
+    rsc: elib.Roles
 
     # Directory that is mount in the docker as Shaker home
     home: str
@@ -22,7 +21,7 @@ class Shaker():
     # Authentication variables for OpenStack (as in openrc)
     _openstack_auth: Dict[str, str] = {}
 
-    def __init__(self, agents: List[elib_t.Host]):
+    def __init__(self, agents: List[elib.Host]):
         """Deploy Shaker OpenStack on a list of agents.
 
         Args:
@@ -36,7 +35,7 @@ class Shaker():
         Shaker.pull(agents)
 
     @staticmethod
-    def pull(agents: List[elib_t.Host]):
+    def pull(agents: List[elib.Host]):
         'Pulling the docker image of Shaker '
         logging.info("Pull: get docker image for Shaker")
 
@@ -107,4 +106,4 @@ class Shaker():
 
 def title(title: str) -> Dict[str, str]:
     "A title for an ansible yaml commands"
-    return {"display_name": "Shaker : " + title}
+    return {"task_name": "Shaker : " + title}

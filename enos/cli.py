@@ -571,7 +571,7 @@ def build(**kwargs):
     --directory DIR    Directory in which the image will be baked (vmong5k)
                        [default: ~/.enos].
     --environment ENV  Reference environment for deployment (g5k)
-                       [default: debian10-x64-min].
+                       [default: debian10-min].
     --image IMAGE      Reference image path to bake on top of it (vmong5k)
                        [default: /grid5000/virt-images/debian10-x64-base.qcow2].
     --type TYPE        Installation type of the BASE distribution
@@ -733,6 +733,11 @@ def main():
     enos_global_args = docopt(__doc__ or "",
                               version=C.VERSION,
                               options_first=True,)
+    # Set global enoslib options
+    import enoslib
+    # Use the "old-style" Ansible output in order to get more detailed
+    # output, useful in case of errors.
+    enoslib.set_config(ansible_stdout="classic")
 
     # Set the logging level
     _set_logging_level(

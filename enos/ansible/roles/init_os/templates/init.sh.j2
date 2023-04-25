@@ -2,10 +2,8 @@
 
 set -x
 
-DNS_NAMESERVER={{ provider_net.dns }}
-SUBNET_RANGE={{ provider_net.cidr }}
-ALLOCATION_POOL_START={{ provider_net.start }}
-ALLOCATION_POOL_END={{ provider_net.end }}
+DNS_NAMESERVER={{ provider_net.dns|default("9.9.9.9", true) }}
+SUBNET_RANGE={{ provider_net.network }}
 GATEWAY={{ provider_net.gateway }}
 
 ## Images
@@ -32,7 +30,7 @@ openstack subnet show private-subnet || openstack subnet create private-subnet -
 openstack network show public || openstack network create public --share --provider-physical-network physnet1 --provider-network-type flat --external
 
 ### public-subnet
-openstack subnet show public-subnet || openstack subnet create public-subnet --network public --subnet-range $SUBNET_RANGE --no-dhcp --allocation-pool start=$ALLOCATION_POOL_START,end=$ALLOCATION_POOL_END --gateway $GATEWAY --dns-nameserver $DNS_NAMESERVER --ip-version 4
+openstack subnet show public-subnet || openstack subnet create public-subnet --network public --subnet-range $SUBNET_RANGE --no-dhcp --gateway $GATEWAY --dns-nameserver $DNS_NAMESERVER --ip-version 4
 
 
 # Router
