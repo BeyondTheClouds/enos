@@ -43,6 +43,7 @@ A typical experiment using Enos is the sequence of several phases:
     :caption: Contents:
 
     installation
+    releasenotes
     provider/index
     cli/index
     benchmarks/index
