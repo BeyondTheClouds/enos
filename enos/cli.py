@@ -474,11 +474,16 @@ def info(**kwargs):
     import pickle
 
     def json_encoder(o):
-        'Render pathlib.Path with str'
+        # Render pathlib.Path with str
         if isinstance(o, Path):
             return str(o.resolve())
-        else:
+        # Specific serializing method for some Enoslib objects
+        if hasattr(o, "to_dict"):
+            return o.to_dict()
+        if hasattr(o, "__dict__"):
             return o.__dict__
+        if hasattr(o, "__iter__"):
+            return sorted(list(o))
 
     # Get parameters
     output_type = kwargs.get('--out', 'json')
