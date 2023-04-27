@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; Enos 8.0.0a1 documentation</title>
+  <title>Release notes &mdash; Enos 8.0.0a1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -15,8 +16,10 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
     <script src="_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="#" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Provider" href="provider/index.html" />
+    <link rel="prev" title="Getting Started" href="installation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,9 +45,15 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="releasenotes.html">Release notes</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Release notes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#unreleased">8.0.0 (unreleased)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#v7-1-1">7.1.1 (2022-03-30)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#v7-1-0">7.1.0 (2021-06-02)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#older-releases">Older releases</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="provider/index.html">Provider</a></li>
 <li class="toctree-l1"><a class="reference internal" href="cli/index.html">Enos command line</a></li>
 <li class="toctree-l1"><a class="reference internal" href="benchmarks/index.html">Benchmarks</a></li>
@@ -70,8 +79,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Index</li>
+      <li class="breadcrumb-item active">Release notes</li>
       <li class="wy-breadcrumbs-aside">
+            <a href="_sources/releasenotes.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -79,17 +89,50 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-
-<h1 id="index">Index</h1>
-
-<div class="genindex-jumpbox">
- 
-</div>
+  <section id="release-notes">
+<span id="releasenotes"></span><h1>Release notes<a class="headerlink" href="#release-notes" title="Permalink to this headline">¶</a></h1>
+<section id="unreleased">
+<span id="v8-0-0"></span><h2>8.0.0 (unreleased)<a class="headerlink" href="#unreleased" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Breaking change:</strong> the format of <code class="docutils literal notranslate"><span class="pre">enos</span> <span class="pre">info</span></code> has changed</p></li>
+<li><p>Fix Docker installation</p></li>
+<li><p>Add support for kolla-ansible 12 (Openstack Wallaby), which is now the default</p></li>
+<li><p>Add support for Debian 11 base image</p></li>
+<li><p>Add support for Python 3.10 and 3.11</p></li>
+<li><p>Drop support for Python 3.7</p></li>
+<li><p>Update to Enoslib 8</p></li>
+<li><p>When creating a configuration template, use a fixed version of kolla-ansible (so that templates are not affected when future versions of Enos update the default version of kolla-ansible)</p></li>
+</ul>
+</section>
+<section id="v7-1-1">
+<span id="id1"></span><h2>7.1.1 (2022-03-30)<a class="headerlink" href="#v7-1-1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Fix Docker registry mirror configuration</p></li>
+<li><p>Pin Jinja2 version to avoid breaking kolla-ansible filters</p></li>
+<li><p>Update Grid’5000 tutorial</p></li>
+</ul>
+</section>
+<section id="v7-1-0">
+<span id="id2"></span><h2>7.1.0 (2021-06-02)<a class="headerlink" href="#v7-1-0" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Modularization of tasks. Task can now be imported in another python project to build upon enos.</p></li>
+<li><p>Enhance the cli with new error messages and colors.</p></li>
+<li><p>Lazy load enoslib to speed up the print of help messages.</p></li>
+</ul>
+</section>
+<section id="older-releases">
+<h2>Older releases<a class="headerlink" href="#older-releases" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference external" href="https://github.com/BeyondTheClouds/enos/releases">https://github.com/BeyondTheClouds/enos/releases</a></p>
+</section>
+</section>
 
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="provider/index.html" class="btn btn-neutral float-right" title="Provider" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
