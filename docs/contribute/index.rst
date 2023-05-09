@@ -51,6 +51,29 @@ Generate the documentation
     $ poetry run tox -e docs
 
 
+Release a new version
+---------------------
+
+As a pre-requisite, you will have to generate a token on pypi and configure poetry to use it:
+
+.. code-block:: bash
+
+    $ poetry config pypi-token.pypi XXXXXXX
+
+Before making a new release, make sure that tests and pep8 are happy, and write
+some appropriate changelog entries.
+
+Then, git tag, build a wheel with poetry, and upload it to pypi:
+
+.. code-block:: bash
+
+    $ git tag v8.0.0a2
+    $ poetry build
+    $ poetry publish
+    $ git push --tags
+
+Finally, create a release on github and copy-paste the changelog entries.
+
 Other Topics
 ------------
 
