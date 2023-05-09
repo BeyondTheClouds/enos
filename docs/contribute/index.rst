@@ -63,6 +63,8 @@ As a pre-requisite, you will have to generate a token on pypi and configure poet
 Before making a new release, make sure that tests and pep8 are happy, and write
 some appropriate changelog entries.
 
+First, update the version in ``enos/utils/constants.py`` and ``pyproject.toml``.
+
 Then, git tag, build a wheel with poetry, and upload it to pypi:
 
 .. code-block:: bash
