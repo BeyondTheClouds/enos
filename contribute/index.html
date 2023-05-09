@@ -59,6 +59,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#running-the-tests">Running the tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running-syntax-checker">Running syntax checker</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#generate-the-documentation">Generate the documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#release-a-new-version">Release a new version</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#other-topics">Other Topics</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="new-provider.html">Write a new provider</a></li>
 </ul>
@@ -128,6 +129,23 @@ $<span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </spa
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </span>tox<span class="w"> </span>-e<span class="w"> </span>docs
 </pre></div>
 </div>
+</section>
+<section id="release-a-new-version">
+<h2>Release a new version<a class="headerlink" href="#release-a-new-version" title="Permalink to this headline">¶</a></h2>
+<p>As a pre-requisite, you will have to generate a token on pypi and configure poetry to use it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>poetry<span class="w"> </span>config<span class="w"> </span>pypi-token.pypi<span class="w"> </span>XXXXXXX
+</pre></div>
+</div>
+<p>Before making a new release, make sure that tests and pep8 are happy, and write
+some appropriate changelog entries.</p>
+<p>Then, git tag, build a wheel with poetry, and upload it to pypi:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>tag<span class="w"> </span>v8.0.0a2
+$<span class="w"> </span>poetry<span class="w"> </span>build
+$<span class="w"> </span>poetry<span class="w"> </span>publish
+$<span class="w"> </span>git<span class="w"> </span>push<span class="w"> </span>--tags
+</pre></div>
+</div>
+<p>Finally, create a release on github and copy-paste the changelog entries.</p>
 </section>
 <section id="other-topics">
 <h2>Other Topics<a class="headerlink" href="#other-topics" title="Permalink to this headline">¶</a></h2>
