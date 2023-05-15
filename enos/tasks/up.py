@@ -205,9 +205,10 @@ def up(env: elib.Environment,
             **title('Install the bare necessities (apt)'),
             name=['sudo', 'git', 'qemu-kvm'],
             update_cache=True)
+        # requests/urllib3 bug: https://github.com/docker/docker-py/issues/3113
         yml.pip(
             **title('Install the bare necessities (pip)'),
-            name=['docker', 'influxdb'],
+            name=['docker', 'requests==2.28.2', 'urllib3<2', 'influxdb'],
             executable='pip3')
 
         # nscd prevents kolla-toolbox to start. See,

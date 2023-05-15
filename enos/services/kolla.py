@@ -346,7 +346,9 @@ class KollaAnsible(object):
                 # Pin Jinja2 version to fix the renaming of `contextfilter`
                 # into `pass_context.evalcontextfilter`.
                 # See https://github.com/BeyondTheClouds/enos/pull/346#issuecomment-1080851796  # noqa
-                name=[ANSIBLE_PKG, 'influxdb', 'Jinja2==3.0.3', pip_package],
+                # requests/urllib3 bug: https://github.com/docker/docker-py/issues/3113  # noqa
+                name=[ANSIBLE_PKG, 'Jinja2==3.0.3', 'requests<2.29', 'urllib3<2',
+                      'influxdb', pip_package],
                 virtualenv=str(venv),
                 virtualenv_python=PY_VERSION)
 
