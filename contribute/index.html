@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Contribute &mdash; Enos 8.0.0a3 documentation</title>
+  <title>Contribute &mdash; Enos 8.0.0a4 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -34,7 +34,7 @@
             Enos
           </a>
               <div class="version">
-                8.0.0a3
+                8.0.0a4
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -138,11 +138,13 @@ $<span class="w"> </span>poetry<span class="w"> </span>run<span class="w"> </spa
 </div>
 <p>Before making a new release, make sure that tests and pep8 are happy, and write
 some appropriate changelog entries.</p>
-<p>First, update the version in <code class="docutils literal notranslate"><span class="pre">enos/utils/constants.py</span></code> and <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>.</p>
+<p>First, update the version in <code class="docutils literal notranslate"><span class="pre">enos/utils/constants.py</span></code> and <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>,
+and commit the result.</p>
 <p>Then, git tag, build a wheel with poetry, and upload it to pypi:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>tag<span class="w"> </span>v8.0.0a2
 $<span class="w"> </span>poetry<span class="w"> </span>build
 $<span class="w"> </span>poetry<span class="w"> </span>publish
+$<span class="w"> </span>git<span class="w"> </span>push
 $<span class="w"> </span>git<span class="w"> </span>push<span class="w"> </span>--tags
 </pre></div>
 </div>
