@@ -13,11 +13,11 @@ openstack image show cirros.uec || openstack image create --disk-format=qcow2 --
 
 
 ## Flavors
-openstack flavor show m1.tiny || openstack flavor create m1.tiny --id auto --ram 512 --disk 1 --vcpus 1 --public
-openstack flavor show m1.small || openstack flavor create m1.small --id auto --ram 2014 --disk 20 --vcpus 1 --public
-openstack flavor show m1.medium || openstack flavor create m1.medium --id auto --ram 4096 --disk 40 --vcpus 2 --public
-openstack flavor show m1.large || openstack flavor create m1.large --id auto --ram 8192 --disk 80 --vcpus 4 --public
-openstack flavor show m1.xlarge || openstack flavor create m1.xlarge --id auto --ram 16384 --disk 160 --vcpus 8 --public
+openstack flavor show m1.tiny || openstack flavor create m1.tiny --ram 512 --disk 1 --vcpus 1 --public
+openstack flavor show m1.small || openstack flavor create m1.small --ram 2014 --disk 20 --vcpus 1 --public
+openstack flavor show m1.medium || openstack flavor create m1.medium --ram 4096 --disk 40 --vcpus 2 --public
+openstack flavor show m1.large || openstack flavor create m1.large --ram 8192 --disk 80 --vcpus 4 --public
+openstack flavor show m1.xlarge || openstack flavor create m1.xlarge --ram 16384 --disk 160 --vcpus 8 --public
 
 
 ## Networks
