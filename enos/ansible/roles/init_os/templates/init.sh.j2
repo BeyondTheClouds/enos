@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -x
+set -e
 
 DNS_NAMESERVER={{ provider_net.dns|default("9.9.9.9", true) }}
 SUBNET_RANGE={{ provider_net.network }}
