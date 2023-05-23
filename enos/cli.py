@@ -309,6 +309,7 @@ def bench(**kwargs):
             successfully run `enos up` and `enos os` first?""")
         else:
             CLI.critical(err)
+            raise err
         sys.exit(1)
     except yaml.YAMLError as err:
         error_loc = ""
@@ -317,9 +318,6 @@ def bench(**kwargs):
             error_loc = f"at {loc.line+1}:{loc.column+1}"
         CLI.error(f'Syntax error in the file "{workload / "run.yam"}" '
                   + error_loc)
-        sys.exit(1)
-    except Exception as e:
-        CLI.critical(str(e))
         sys.exit(1)
 
 

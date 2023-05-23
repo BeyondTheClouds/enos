@@ -30,7 +30,7 @@ class Shaker():
         Reference:
           https://opendev.org/performa/shaker
         """
-        self.rsc = {'all': agents}
+        self.rsc = agents
         self.home = "~/shaker_home_" + str(uuid.uuid4())
         Shaker.pull(agents)
 
@@ -39,7 +39,7 @@ class Shaker():
         'Pulling the docker image of Shaker '
         logging.info("Pull: get docker image for Shaker")
 
-        with elib.play_on(roles={'all': agents},
+        with elib.play_on(roles=agents,
                           gather_facts=False) as yaml:
             yaml.docker_image(
                 **title(f'pulling docker image {IMG}'),
