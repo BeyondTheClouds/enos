@@ -38,8 +38,9 @@ class RallyOpenStack():
         Reference:
           https://github.com/openstack/rally-openstack
         """
-        self.rsc = {'all': agents}
+        self.rsc = agents
         self.env_name = environment_name
+        self._tasks = []
 
         RallyOpenStack.pull(agents)
 
@@ -48,7 +49,7 @@ class RallyOpenStack():
         'Installs Rally OpenStack'
         logging.info("Pull: installing rally in a virtual environment")
 
-        with elib.play_on(roles={'all': agents},
+        with elib.play_on(roles=agents,
                           priors=[elib.api.__python3__],
                           gather_facts=False) as yaml:
             yaml.pip(**title(f'install virtualenv {VENV}'), name='virtualenv')
@@ -64,7 +65,7 @@ class RallyOpenStack():
             # `rally task ...`. See
             # https://bugs.launchpad.net/rally/+bug/1922707
             yaml.pip(**title(f'install {PKG} in {VENV}'),
-                     name=[PKG, 'decorator==4.4.2'],
+                     name=[PKG, 'decorator==4.4.2', 'sqlalchemy<2'],
                      state='present',
                      virtualenv=VENV)
 
@@ -144,14 +145,14 @@ class RallyOpenStack():
 
         # Get the uuid and mark the scenario done in the tasks tracker
         uuid_by_hosts = {
-            host: values['stdout']
-            for host, values
+            result.host: result.payload['stdout']
+            for result
             in elib.run_command(
                 f'{VENV}/bin/rally task list --uuids-only'
                 f'  --deployment="{self.env_name}"'
                 f'  --tag {_tag}',
                 roles=self.rsc,
-                pattern_hosts=pattern_hosts).get('ok', {}).items()}
+                pattern_hosts=pattern_hosts)}
 
         logging.info(f"Scenario finished with uuid {uuid_by_hosts}")
         self._tasks.append((scenario_name, uuid_by_hosts))
