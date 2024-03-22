@@ -14,7 +14,7 @@ values:
 
   .. code-block:: yaml
 
-     kolla-ansible: kolla-ansible~=10.0
+     kolla-ansible: kolla-ansible~=12.0
 
 * a git repository to the Ussuri specific version of OpenStack
 
