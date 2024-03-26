@@ -157,4 +157,5 @@ def new(provider_name: str, output_path: Path):
             provider=dump(provider_conf, provider_required_keys),
             resources=yaml.dump(resources_conf),
             registry=yaml.dump(registry_conf),
+            docker_version=kolla.DOCKER_VERSION,
             kolla_ansible=kolla.KOLLA_PKG))

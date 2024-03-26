@@ -15,17 +15,17 @@ import yaml
 from ansible.plugins.loader import filter_loader as ansible_filter_loader
 from enos.utils import constants as C
 
-# Default kolla-ansible package to install (version 12 for OpenStack Wallaby)
-# We need recent fix https://review.opendev.org/c/openstack/kolla-ansible/+/872558
-# Unfortunately there are no recent releases of kolla-ansible 12 and even the
-# stable branch stable/wallaby has disappeared.
-kolla_commit_id = '6bc5dfc35117c90b8d2f9d96921286249b99a222'
-KOLLA_PKG = f'git+https://github.com/openstack/kolla-ansible.git@{kolla_commit_id}'
+# Default kolla-ansible package to install (OpenStack Wallaby)
+KOLLA_PKG = 'kolla-ansible~=12.0'
 
 # Kolla recommends installing ansible manually.  Currently 2.9 is supported.
 # Refers to the kolla-ansible User Guides for future versions. See,
 # https://docs.openstack.org/kolla-ansible/stein/user/quickstart.html#install-dependencies-not-using-a-virtual-environment
 ANSIBLE_PKG = 'ansible>=2.9,<2.10'
+
+# Kolla-ansible is highly dependent on Docker API, so we need to install a
+# specific version because the Docker API changes between major versions.
+DOCKER_VERSION = '20.10'
 
 # Current python version
 PY_VERSION = f'python{sys.version_info.major}.{sys.version_info.minor}'

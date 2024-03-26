@@ -12,7 +12,7 @@ import enoslib as elib
 import enoslib.api as elib_api
 from enoslib.enos_inventory import EnosInventory
 
-from enos.services import KollaAnsible
+from enos.services import kolla, KollaAnsible
 import enos.utils.constants as C
 from enos.utils.extra import (generate_inventory, get_vip_pool,
                               make_provider, ip_generator, seekpath)
@@ -127,17 +127,22 @@ def up(env: elib.Environment,
     docker_port = env['config']['registry'].get('port', 5000)
     docker = None
 
+    docker_version = env['config'].get('docker_version', kolla.DOCKER_VERSION)
+
     if docker_type == 'none':
         docker = elib.Docker(agent=rsc['all'],
+                             docker_version=docker_version,
                              registry_opts={'type': 'none'})
     elif docker_type == 'external':
         docker = elib.Docker(agent=rsc['all'],
+                             docker_version=docker_version,
                              registry_opts={
                                  'type': 'external',
                                  'ip': env['config']['registry']['ip'],
                                  'port': docker_port})
     elif docker_type == 'internal':
         docker = elib.Docker(agent=rsc['all'],
+                             docker_version=docker_version,
                              registry=rsc['enos/registry'],
                              registry_opts={
                                  'type': 'internal',
