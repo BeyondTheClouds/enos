@@ -43,4 +43,4 @@ NEUTRON_EXTERNAL_INTERFACE = 'neutron_external_interface'
 FAKE_NEUTRON_EXTERNAL_INTERFACE = 'nei'
 
 # ENOS Setup
-VERSION = '8.0.0a6'
+VERSION = '8.0.0a7'
