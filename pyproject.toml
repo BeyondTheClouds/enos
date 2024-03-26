@@ -30,7 +30,7 @@ include = [
 [tool.poetry.dependencies]
 python = "^3.8"
 # enoslib = { path = '../enoslib', develop = true, extras = [ "chameleon" ]  }
-enoslib = { version = "^8.3.0", extras = [ "chameleon" ] }
+enoslib = { version = "^8.3.1", extras = [ "chameleon" ] }
 # Our ansible_filter_loader hack (to load Jinja context filters from Kolla)
 # no longer works with recent versions of Ansible, so let's stick to 2.9 for now.
 ansible = { version = "~2.9" }
