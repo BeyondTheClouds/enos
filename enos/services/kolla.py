@@ -27,6 +27,10 @@ KOLLA_PKG = f'git+https://github.com/openstack/kolla-ansible.git@{kolla_commit_i
 # https://docs.openstack.org/kolla-ansible/stein/user/quickstart.html#install-dependencies-not-using-a-virtual-environment
 ANSIBLE_PKG = 'ansible>=2.9,<2.10'
 
+# Kolla-ansible is highly dependent on Docker API, so we need to install a
+# specific version because the Docker API changes between major versions.
+DOCKER_VERSION = '20.10'
+
 # Current python version
 PY_VERSION = f'python{sys.version_info.major}.{sys.version_info.minor}'
 

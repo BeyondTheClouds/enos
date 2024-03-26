@@ -107,6 +107,20 @@ Further information can be found : `see here
 <http://docs.ansible.com/ansible/intro_configuration.html>`_.
 
 
+Docker version customization
+----------------------------
+
+Kolla-ansible tightly integrates with the Docker API, and major versions
+of Docker have been known to cause Kolla-ansible to fail.
+
+Enos selects and installs an appropriate version of Docker on target nodes,
+but if you know what you are doing, you can force a specific version:
+
+.. code-block:: yaml
+
+    docker_version: 24.0
+
+
 Docker registry mirror configuration
 ------------------------------------
 

@@ -36,6 +36,11 @@ resources:
 registry:
   {{ registry | indent(2) }}
 
+# Install a specific version of the Docker daemon.
+#
+# See https://beyondtheclouds.github.io/enos/customization/index.html
+docker_version: {{ docker_version }}
+
 # Deploy a monitoring stack made of cAdvisor, collectd, influxDB and
 # Graphana.
 # See https://beyondtheclouds.github.io/enos/analysis/
