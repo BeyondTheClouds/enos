@@ -9,7 +9,7 @@ Release notes
 ------------------
 
 - **Breaking change:** the format of ``enos info`` has changed
-- Fix Docker installation
+- Install a fixed version of Docker on nodes
 - Add support for kolla-ansible 12 (Openstack Wallaby), which is now the default
 - Add support for Debian 11 base image
 - Add support for Python 3.10 and 3.11
