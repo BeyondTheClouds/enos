@@ -64,8 +64,10 @@ class RallyOpenStack():
             # XXX: We fix the version of decorator because of a bug when doing
             # `rally task ...`. See
             # https://bugs.launchpad.net/rally/+bug/1922707
+            # We also add fixtures, because it's no longer installed by default
+            # but it causes rally to crash if not installed.
             yaml.pip(**title(f'install {PKG} in {VENV}'),
-                     name=[PKG, 'decorator==4.4.2', 'sqlalchemy<2'],
+                     name=[PKG, 'decorator==4.4.2', 'sqlalchemy<2', 'fixtures'],
                      state='present',
                      virtualenv=VENV)
 
