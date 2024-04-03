@@ -132,10 +132,12 @@ def up(env: elib.Environment,
     if docker_type == 'none':
         docker = elib.Docker(agent=rsc['all'],
                              docker_version=docker_version,
+                             nvidia_toolkit=False,
                              registry_opts={'type': 'none'})
     elif docker_type == 'external':
         docker = elib.Docker(agent=rsc['all'],
                              docker_version=docker_version,
+                             nvidia_toolkit=False,
                              registry_opts={
                                  'type': 'external',
                                  'ip': env['config']['registry']['ip'],
@@ -143,6 +145,7 @@ def up(env: elib.Environment,
     elif docker_type == 'internal':
         docker = elib.Docker(agent=rsc['all'],
                              docker_version=docker_version,
+                             nvidia_toolkit=False,
                              registry=rsc['enos/registry'],
                              registry_opts={
                                  'type': 'internal',
