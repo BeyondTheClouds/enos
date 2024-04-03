@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Customizations &mdash; Enos 8.0.0a5 documentation</title>
+  <title>Customizations &mdash; Enos 8.0.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -34,7 +34,7 @@
             Enos
           </a>
               <div class="version">
-                8.0.0a5
+                8.0.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -59,6 +59,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#changing-the-topology">Changing the topology</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#ansible-configuration">Ansible configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#docker-version-customization">Docker version customization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#docker-registry-mirror-configuration">Docker registry mirror configuration</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#no-registry-mirror">No Registry mirror</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#internal-registry-mirror">Internal Registry mirror</a></li>
@@ -108,7 +109,7 @@ the package to install (with <code class="docutils literal notranslate"><span cl
 values:
 * a PyPi package</p>
 <blockquote>
-<div><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kolla-ansible~=10.0</span>
+<div><div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">kolla-ansible</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">kolla-ansible~=12.0</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -186,6 +187,16 @@ on a dedicated node.</p>
 <p>By default, Enos loads its own <code class="docutils literal notranslate"><span class="pre">ansible.cfg</span></code>. To use another Ansible
 configuration file, the <code class="docutils literal notranslate"><span class="pre">ANSIBLE_CONFIG</span></code> environment variable can be used.
 Further information can be found : <a class="reference external" href="http://docs.ansible.com/ansible/intro_configuration.html">see here</a>.</p>
+</section>
+<section id="docker-version-customization">
+<h2>Docker version customization<a class="headerlink" href="#docker-version-customization" title="Permalink to this headline">¶</a></h2>
+<p>Kolla-ansible tightly integrates with the Docker API, and major versions
+of Docker have been known to cause Kolla-ansible to fail.</p>
+<p>Enos selects and installs an appropriate version of Docker on target nodes,
+but if you know what you are doing, you can force a specific version:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">docker_version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">24.0</span>
+</pre></div>
+</div>
 </section>
 <section id="docker-registry-mirror-configuration">
 <h2>Docker registry mirror configuration<a class="headerlink" href="#docker-registry-mirror-configuration" title="Permalink to this headline">¶</a></h2>
