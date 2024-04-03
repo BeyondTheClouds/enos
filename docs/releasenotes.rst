@@ -5,7 +5,7 @@ Release notes
 
 .. _v8.0.0:
 
-8.0.0 (unreleased)
+8.0.0 (2024-04-03)
 ------------------
 
 - **Breaking change:** the format of ``enos info`` has changed

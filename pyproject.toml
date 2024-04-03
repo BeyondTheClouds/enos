@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "enos"
-version = "8.0.0a9"
+version = "8.0.0"
 description = "Experimental eNvironment for OpenStack"
 authors = ["Didier Iscovery <discovery-dev@inria.fr>"]
 license = "GPL-3.0-or-later"
