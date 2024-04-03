@@ -4079,4 +4079,4 @@ annotations = ["influxdb"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "c39449934f46542cf2d6490fc0455e9bdd6241a1d362297fbc783fd0c3120348"
+content-hash = "a006a1018ffe8efa2183bf2754171e6060c92519fa7b77c14796cfc942696c7f"

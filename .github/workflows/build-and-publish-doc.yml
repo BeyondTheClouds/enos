@@ -33,7 +33,7 @@ jobs:
 
     - name: Build the documentation
       run: |
-        poetry install
+        poetry install --only=docs
         poetry run tox -edocs
 
     - name: Deploy on gh-pages

@@ -47,7 +47,7 @@ annotations = ["influxdb"]
 [tool.poetry.scripts]
 enos = "enos.cli:main"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 isort = "^5.7.0"
 ipdb = "^0.13.7"
 tox = "^3.23.0"
@@ -55,7 +55,11 @@ pytest = "^6.2.3"
 flake8 = "^3.9.0"
 mock = "^4.0.3"
 ddt = "^1.4.2"
-# doc
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
 GitPython = ">=2.1.5"
 Sphinx = "^4.5.0"
 sphinx-autobuild = "^2021.3.14"
