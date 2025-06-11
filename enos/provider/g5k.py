@@ -2,7 +2,7 @@
 import copy
 import logging
 
-from enoslib import run_command
+from enoslib import run_command, play_on
 from enoslib.infra.enos_g5k import (provider, g5k_api_utils)
 from enoslib.infra.enos_g5k.configuration import Configuration
 
@@ -125,6 +125,18 @@ def _provision(roles):
         'apt-get update && apt-get -y --force-yes install python',
         task_name='Installing python...',
         roles=roles)
+
+    # Provision LVM disks on nodes for storage (Cinder)
+    # We allocate a file in /tmp since this is where most of the storage is
+    with play_on(roles=roles["storage"]) as p:
+        p.command("fallocate -l 150G /tmp/cinder_data.img",
+                  task_name="Allocate space for Cinder volumes")
+        p.shell("[ -f /dev/loop0 ] || losetup /dev/loop0 /tmp/cinder_data.img",
+                task_name="Create loopback device")
+        p.shell("pvs | grep -q loop0 || pvcreate /dev/loop0",
+                task_name="Create LVM physical volume")
+        p.shell("vgs | grep -q cinder-volumes || vgcreate cinder-volumes /dev/loop0",
+                task_name="Create LVM volume group 'cinder-volumes'")
 
     # Bind volumes of docker in /tmp (free storage location on G5k)
     run_command(
