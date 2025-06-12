@@ -131,7 +131,7 @@ def _provision(roles):
     with play_on(roles=roles["storage"]) as p:
         p.command("fallocate -l 150G /tmp/cinder_data.img",
                   task_name="Allocate space for Cinder volumes")
-        p.shell("[ -f /dev/loop0 ] || losetup /dev/loop0 /tmp/cinder_data.img",
+        p.shell("[ -e /dev/loop0 ] || losetup /dev/loop0 /tmp/cinder_data.img",
                 task_name="Create loopback device")
         p.shell("pvs | grep -q loop0 || pvcreate /dev/loop0",
                 task_name="Create LVM physical volume")
