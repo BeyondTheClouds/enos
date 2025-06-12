@@ -129,6 +129,8 @@ def _provision(roles):
     # Provision LVM disks on nodes for storage (Cinder)
     # We allocate a file in /tmp since this is where most of the storage is
     with play_on(roles=roles["storage"]) as p:
+        p.apt("lvm2", state="present",
+              task_name="Install LVM2")
         p.command("fallocate -l 150G /tmp/cinder_data.img",
                   task_name="Allocate space for Cinder volumes")
         p.shell("[ -e /dev/loop0 ] || losetup /dev/loop0 /tmp/cinder_data.img",
