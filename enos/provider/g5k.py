@@ -127,17 +127,25 @@ def _provision(roles):
         roles=roles)
 
     # Provision LVM disks on nodes for storage (Cinder)
-    # We allocate a file in /tmp since this is where most of the storage is
+    # We use the second disk and format it as LVM.
     with play_on(roles=roles["storage"]) as p:
+        # Make sure that there is indeed a second disk
+        p.shell("[ -e /dev/disk1 ] || echo 'You must use a cluster with multiple disks for storage nodes'",
+                task_name="Check presence of disk1")
         p.apt("lvm2", state="present",
               task_name="Install LVM2")
-        p.command("fallocate -l 150G /tmp/cinder_data.img",
-                  task_name="Allocate space for Cinder volumes")
-        p.shell("[ -e /dev/loop0 ] || losetup /dev/loop0 /tmp/cinder_data.img",
-                task_name="Create loopback device")
-        p.shell("pvs | grep -q loop0 || pvcreate /dev/loop0",
+        # For some reason the default LVM config on G5K disallows physical disks.
+        p.lineinfile(path="/etc/lvm/lvm.conf",
+                     regexp="^global_filter =",
+                     state="absent",
+                     task_name="Allow using LVM on physical disks")
+        p.shell("vgremove -ff -y -S 'vg_name=~.*' || true",
+                task_name="Cleanup all LVM LV and VG")
+        p.shell("pvremove -ff -y /dev/disk1 || true",
+                task_name="Cleanup LVM PV on disk1")
+        p.shell("pvs | grep -q disk1 || pvcreate /dev/disk1",
                 task_name="Create LVM physical volume")
-        p.shell("vgs | grep -q cinder-volumes || vgcreate cinder-volumes /dev/loop0",
+        p.shell("vgs | grep -q cinder-volumes || vgcreate cinder-volumes /dev/disk1",
                 task_name="Create LVM volume group 'cinder-volumes'")
 
     # Bind volumes of docker in /tmp (free storage location on G5k)
