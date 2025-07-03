@@ -132,7 +132,7 @@ def _provision(roles):
         # Make sure that there is indeed a second disk
         p.shell("[ -e /dev/disk1 ] || echo 'You must use a cluster with multiple disks for storage nodes'",
                 task_name="Check presence of disk1")
-        p.apt("lvm2", state="present",
+        p.apt(name="lvm2", state="present",
               task_name="Install LVM2")
         # For some reason the default LVM config on G5K disallows physical disks.
         p.lineinfile(path="/etc/lvm/lvm.conf",
