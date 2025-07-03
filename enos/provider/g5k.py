@@ -143,9 +143,9 @@ def _provision(roles):
                 task_name="Cleanup all LVM LV and VG")
         p.shell("pvremove -ff -y /dev/disk1 || true",
                 task_name="Cleanup LVM PV on disk1")
-        p.shell("pvs | grep -q disk1 || pvcreate /dev/disk1",
+        p.shell("pvs | grep -q disk1 || pvcreate -y /dev/disk1",
                 task_name="Create LVM physical volume")
-        p.shell("vgs | grep -q cinder-volumes || vgcreate cinder-volumes /dev/disk1",
+        p.shell("vgs | grep -q cinder-volumes || vgcreate -y cinder-volumes /dev/disk1",
                 task_name="Create LVM volume group 'cinder-volumes'")
 
     # Bind volumes of docker in /tmp (free storage location on G5k)
